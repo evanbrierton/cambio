@@ -1,16 +1,15 @@
 import type { Card, Deck, Hand } from "@/types";
-import type { PlayerPlugin } from "boardgame.io/plugins";
+import type { PlayerID } from "boardgame.io";
 
 export type CambioState = {
   deck: Deck
   discard: Deck
   active?: Card
+  players: Record<PlayerID, PlayerState>
+  caller?: PlayerID
 };
 
 export type PlayerState = {
+  id: PlayerID
   hand: Hand
 };
-
-export type PluginState = {
-  [key: string]: unknown
-} & PlayerPlugin<PlayerState>;

@@ -1,37 +1,47 @@
-import type { Game } from "boardgame.io";
-import type { CambioState, PlayerState, PluginState } from "./state";
-import { initialiseDeck } from "@/types";
-import { PluginPlayer } from "boardgame.io/plugins";
-import { setup } from "./phases";
+import type { Game, PlayerID } from "boardgame.io";
+import type { CambioState, PlayerState } from "./state";
+import { initializeDeck } from "@/types";
 import { draw, play } from "./stages";
 
-const playerSetup = (): PlayerState => ({
-  hand: [],
-});
-
-export const cambio: Game<CambioState, PluginState> = {
+export const cambio: Game<CambioState> = {
   name: "Cambio",
   minPlayers: 2,
 
-  setup: ({ random }) => ({
-    deck: random.Shuffle(initialiseDeck()),
-    discard: [],
-  }),
+  setup: ({ ctx, random }) => {
+    const deck = random.Shuffle(initializeDeck());
 
-  phases: {
-    setup,
+    const players = ctx.playOrder.reduce<Record<PlayerID, PlayerState>>((acc, id) => {
+      return {
+        ...acc,
+        [id]: {
+          id,
+          hand: deck.splice(0, 4).map((card, position) => ({ ...card, position })),
+        },
+      };
+    }, {});
+
+    return {
+      deck,
+      players,
+      discard: [],
+      active: undefined,
+    };
   },
 
   turn: {
+    onBegin: ({ G, ctx, events }) => {
+      const player = G.players[ctx.currentPlayer];
+
+      if (G.caller === player.id) {
+        events.endGame();
+      }
+    },
+
+    activePlayers: { currentPlayer: "draw" },
+
     stages: {
       draw,
       play,
     },
   },
-
-  plugins: [
-    PluginPlayer({
-      setup: playerSetup,
-    }),
-  ],
 };

@@ -19,11 +19,14 @@
     "@eslint/eslintrc": "^3",
     "@stylistic/eslint-plugin": "^4.2.0",
     "@tailwindcss/postcss": "^4",
+    "@tsconfig/strictest": "^2.0.5",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/redux-logger": "^3.0.13",
     "eslint": "^9.25.0",
     "eslint-config-next": "15.3.1",
+    "redux-logger": "^3.0.6",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

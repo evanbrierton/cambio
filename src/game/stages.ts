@@ -1,32 +1,20 @@
 import type { StageConfig } from "boardgame.io";
-import type { CambioState, PluginState } from "./state";
+import type { CambioState } from "./state";
+import { drawFromDeck, drawFromDiscard, playCard, swapCard } from "./moves";
 
-export const draw: StageConfig<CambioState, PluginState> = {
+export const draw: StageConfig<CambioState> = {
+
   moves: {
-    drawFromDeck: ({ G }) => {
-      const active = G.deck[0];
-      return { ...G, deck: G.deck.slice(1), active };
-    },
-
-    drawFromDiscard: ({ G }) => {
-      const active = G.discard[0];
-      return { ...G, discard: G.discard.slice(1), active };
-    },
+    drawFromDeck,
+    drawFromDiscard,
   },
 
   next: "play",
 };
 
-export const play: StageConfig<CambioState, PluginState> = {
+export const play: StageConfig<CambioState> = {
   moves: {
-    playCard: ({ G }) => {
-      return { ...G, discard: [G.active!, ...G.discard] };
-    },
-
-    swapCard: ({ G, player }, card: number) => {
-      const hand = player.get().hand.toSpliced(card, 1, G.active!);
-      player.set({ hand });
-      return { ...G, active: undefined };
-    },
+    playCard,
+    swapCard,
   },
 };
