@@ -14,7 +14,7 @@ export const Board: React.FC = () => {
           {G.deck[0] && <Card card={G.deck[0]} onClick={moves.drawFromDeck} />}
         </div>
         <div className={styles["discard"]}>
-          {G.discard[0] && <Card card={G.discard[0]} faceUp />}
+          {G.discard[0] && <Card card={G.discard[0]} faceUp onClick={moves.drawFromDiscard} />}
         </div>
       </div>
 

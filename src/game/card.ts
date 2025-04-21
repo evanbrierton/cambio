@@ -7,12 +7,14 @@ type Color = "red" | "black" | "transparent";
 
 type CardId = `${Rank}_${"hearts" | "diamonds" | "clubs" | "spades"}` | `joker_${Color}` | "empty";
 
-export type Card = { id: CardId, value: number } & (
+export type Card = { id: CardId, value: number, source?: CardSource } & (
   | { rank: Rank, suit: "hearts" | "diamonds", color: "red" }
   | { rank: Rank, suit: "clubs" | "spades", color: "black" }
   | { rank: "joker", color: "red" | "black" }
   | { rank: "empty", color: "transparent" }
 );
+
+export type CardSource = "deck" | "discard";
 
 export type CardWithPosition = Card & {
   position: number

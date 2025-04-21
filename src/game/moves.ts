@@ -43,7 +43,7 @@ export const drawFromDeck: Move<CambioState> = ({ G, events, random }) => {
 
   events.endStage();
 
-  return { ...G, deck, discard, active };
+  return { ...G, deck, discard, active: { ...active, source: "deck" } };
 };
 
 export const drawFromDiscard: Move<CambioState> = ({ G, events }) => {
@@ -56,7 +56,7 @@ export const drawFromDiscard: Move<CambioState> = ({ G, events }) => {
   const discard = G.discard.slice(1);
   events.endStage();
 
-  return { ...G, discard, active };
+  return { ...G, discard, active: { ...active, source: "discard" } };
 };
 
 export const playCard: Move<CambioState> = ({ G, events }) => {
@@ -72,6 +72,12 @@ export const playCard: Move<CambioState> = ({ G, events }) => {
   };
 
   const setNextStage = (active: Card): PeekConfig => {
+    if (active.source !== "deck") {
+      events.endStage();
+      events.endTurn();
+      return { peeksRemaining: 0, hasSwap: false };
+    }
+
     if (["7", "8"].includes(active.rank)) {
       events.setStage("peekSelfStage");
       return { peeksRemaining: 0, hasSwap: false };
