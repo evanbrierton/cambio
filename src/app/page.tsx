@@ -3,12 +3,13 @@
 import type { NextPage } from "next";
 import dynamic from "next/dynamic";
 
-const CambioClient = dynamic(() => import("../components/App"), { ssr: false });
+const CambioClient = dynamic(() => import("../components/CambioClient"), { ssr: false });
 
 const Home: NextPage = () => {
   return (
-    <div style={{ display: "flex", justifyContent: "space-around", width: "100%", marginRight: "20rem" }}>
+    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-around", width: "100%", height: "100%" }}>
       <CambioClient playerID="0" />
+      <hr />
       <CambioClient playerID="1" />
     </div>
   );

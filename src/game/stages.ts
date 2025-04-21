@@ -2,6 +2,14 @@ import type { StageConfig } from "boardgame.io";
 import type { CambioState } from "./state";
 import { callCambio, dismiss, drawFromDeck, drawFromDiscard, peekAny, peekOpponent, peekSelf, playCard, swapCards, takeCard } from "./moves";
 
+export const initialDrawStage: StageConfig<CambioState> = {
+  moves: {
+    drawFromDeck,
+    drawFromDiscard,
+  },
+  next: "drawStage",
+};
+
 export const drawStage: StageConfig<CambioState> = {
 
   moves: {

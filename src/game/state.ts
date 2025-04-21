@@ -1,4 +1,4 @@
-import type { Card, Deck, Hand } from "@/types";
+import type { Card, Deck, Hand } from "@/game/card";
 import type { PlayerID } from "boardgame.io";
 
 export type CambioState = {

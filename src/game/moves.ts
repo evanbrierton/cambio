@@ -1,5 +1,5 @@
-import type { Card, CardCoordinates, Deck } from "@/types";
 import type { FnContext, LongFormMove, PlayerID } from "boardgame.io";
+import type { Card, CardCoordinates, Deck } from "./card";
 import type { CambioState } from "./state";
 import { INVALID_MOVE } from "boardgame.io/core";
 import { getCurrentPlayer } from "./players";

@@ -1,6 +1,6 @@
 import type { Game, PlayerID } from "boardgame.io";
 import type { CambioState, PlayerState } from "./state";
-import { initializeDeck } from "@/types";
+import { initializeDeck } from "@/game/card";
 import { getCurrentPlayer } from "./players";
 import { dismissStage, drawStage, peekAnyStage, peekOpponentStage, peekSelfStage, playStage, swapStage } from "./stages";
 
@@ -49,7 +49,7 @@ export const cambio: Game<CambioState> = {
       peekSelfStage,
       peekOpponentStage,
       peekAnyStage,
-      swapStage
+      swapStage,
     },
   },
 
@@ -77,8 +77,6 @@ export const cambio: Game<CambioState> = {
     return {
       ...G,
       active: currentPlayer ? G.active : undefined,
-      players,
-      deck: G.deck.map(() => ({}))
     };
   },
 };

@@ -1,4 +1,4 @@
-import type { Card as CardType } from "@/types";
+import type { Card as CardType } from "@/game/card";
 import styles from "@/styles/Card.module.css";
 
 import Image from "next/image";

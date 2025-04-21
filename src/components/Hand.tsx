@@ -1,6 +1,6 @@
+import type { CardCoordinates, CardWithPosition, Hand as HandType } from "@/game/card";
 import type { PlayerState } from "@/game/state";
-
-import { parseCoordinates, stringifyCoordinates, type CardCoordinates, type CardWithPosition, type Hand as HandType } from "@/types";
+import { parseCoordinates, stringifyCoordinates } from "@/game/card";
 import { useBoard } from "@/providers/BoardProvider";
 import styles from "@/styles/Hand.module.css";
 import { useState } from "react";
@@ -8,11 +8,12 @@ import Card from "./Card";
 
 type Props = {
   player: PlayerState
+  selectedCards: Set<string>
+  setSelectedCards: React.Dispatch<React.SetStateAction<Set<string>>>
 };
 
-const Hand: React.FC<Props> = ({ player }) => {
+const Hand: React.FC<Props> = ({ player, selectedCards, setSelectedCards }) => {
   const { moves, ctx } = useBoard();
-  const [selectedCards, setSelectedCards] = useState<Set<string>>(new Set());
 
   const stage = ctx.activePlayers?.[ctx.currentPlayer];
 
@@ -39,6 +40,10 @@ const Hand: React.FC<Props> = ({ player }) => {
       return moves.peekSelf(coordinates);
     }
 
+    if (stage === "peekOpponentStage") {
+      return moves.peekOpponent(coordinates);
+    }
+
     if (stage === "peekAnyStage") {
       return moves.peekAny(coordinates);
     }
@@ -52,23 +57,11 @@ const Hand: React.FC<Props> = ({ player }) => {
 
   return (
     <div className={styles["hand"]}>
-      {cards.map(card => {
+      {cards.map((card) => {
         const coordinates = { player: player.id, position: card.position };
         const selected = selectedCards.has(stringifyCoordinates(coordinates));
-        return <Card key={card.id} card={card} onClick={handleClick(coordinates)} selected={selected} />
+        return <Card key={card.id} card={card} onClick={handleClick(coordinates)} selected={selected} />;
       })}
-      <button
-        className={styles["swap"]}
-        onClick={() => {
-          if (stage === "swapStage") {
-            moves.swapCards(new Set(Array.from(selectedCards).map(hash => parseCoordinates(hash))));
-            setSelectedCards(new Set());
-          }
-        }}
-        disabled={selectedCards.size !== 2}
-      >
-        Swap
-      </button>
     </div>
   );
 };

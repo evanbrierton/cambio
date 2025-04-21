@@ -2,10 +2,10 @@ import { useBoard } from "@/providers/BoardProvider";
 import styles from "@/styles/Board.module.css";
 import ActiveCard from "./ActiveCard";
 import Card from "./Card";
-import Hand from "./Hand";
+import Hands from './Hands';
 
 export const Board: React.FC = () => {
-  const { G, moves, ctx } = useBoard();
+  const { G, moves } = useBoard();
 
   return (
     <div className={styles["board"]}>
@@ -18,15 +18,7 @@ export const Board: React.FC = () => {
         </div>
       </div>
 
-      {ctx.playOrder.map((id) => {
-        const player = G.players[id]!;
-
-        return (
-          <div key={id} className={styles["hand"]}>
-            <Hand key={id} player={player} />
-          </div>
-        );
-      })}
+      <Hands />
 
       <ActiveCard />
 
