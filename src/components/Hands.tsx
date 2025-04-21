@@ -46,6 +46,17 @@ const Hands: React.FC = () => {
         >
           Skip
         </button>
+        <button
+          className={styles["swap"]}
+          onClick={() => {
+            if (stage === "drawStage") {
+              moves.callCambio();
+            }
+          }}
+          disabled={stage !== "drawStage" || ctx.currentPlayer !== playerID}
+        >
+          Cambio
+        </button>
       </div>
     </div>
   );
