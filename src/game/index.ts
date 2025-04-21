@@ -56,24 +56,6 @@ export const cambio: Game<CambioState> = {
   playerView: ({ G, ctx, playerID }) => {
     const currentPlayer = ctx.currentPlayer === playerID;
 
-    const players = Object.fromEntries(
-      Object.entries(G.players).map(([id, player]) => [
-        id,
-        {
-          ...player,
-          hand: Object.fromEntries(
-            Object.entries(player.hand).map(([position, card]) => [
-              position,
-              {
-                position: card.position,
-              },
-            ],
-            ),
-          ),
-        },
-      ]),
-    );
-
     return {
       ...G,
       active: currentPlayer ? G.active : undefined,
