@@ -2,7 +2,7 @@ import { useBoard } from "@/providers/BoardProvider";
 import styles from "@/styles/Board.module.css";
 import ActiveCard from "./ActiveCard";
 import Card from "./Card";
-import Hands from './Hands';
+import Hands from "./Hands";
 
 export const Board: React.FC = () => {
   const { G, moves } = useBoard();

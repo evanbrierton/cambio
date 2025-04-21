@@ -58,5 +58,5 @@ export const peekAnyStage: StageConfig<CambioState> = {
 export const swapStage: StageConfig<CambioState> = {
   moves: {
     swapCards,
-    },
+  },
 };
