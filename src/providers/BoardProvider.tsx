@@ -1,6 +1,6 @@
 "use client";
 
-import type { Moves } from "@/game/moves";
+import { MOVES, type Moves } from "@/game/moves";
 import type { CambioState } from "@/game/state";
 import type { BoardProps } from "boardgame.io/react";
 import type { ReactNode } from "react";
@@ -42,8 +42,7 @@ const InvalidMovesError = new Error(
 );
 
 const isValidMoves = (moves: Record<string, (...args: any[]) => void>): moves is Moves => {
-  return true;
-  // return Object.keys(moves).reduce((acc, key) => acc && MOVES.hasOwnProperty(key), true);
+  return Object.keys(moves).reduce((acc, key) => acc && MOVES.hasOwnProperty(key), true);
 };
 
 export const useBoard = (): BoardState => {
