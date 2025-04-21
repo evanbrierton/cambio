@@ -33,5 +33,7 @@ export default antfu({
     "func-style": ["error", "expression", { allowArrowFunctions: true }],
 
     "antfu/top-level-function": "off",
+
+    "dot-notation": "off",
   },
 });

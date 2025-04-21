@@ -1,7 +1,8 @@
 import type { Game, PlayerID } from "boardgame.io";
 import type { CambioState, PlayerState } from "./state";
 import { initializeDeck } from "@/types";
-import { draw, play } from "./stages";
+import { getCurrentPlayer } from "./players";
+import { dismissStage, drawStage, peekAnyStage, peekOpponentStage, peekSelfStage, playStage, swapStage } from "./stages";
 
 export const cambio: Game<CambioState> = {
   name: "Cambio",
@@ -24,24 +25,60 @@ export const cambio: Game<CambioState> = {
       deck,
       players,
       discard: [],
-      active: undefined,
+      active: null,
+      remainingPeeks: 0,
+      hasSwap: false,
     };
   },
 
   turn: {
     onBegin: ({ G, ctx, events }) => {
-      const player = G.players[ctx.currentPlayer];
+      const player = getCurrentPlayer(G, ctx);
 
       if (G.caller === player.id) {
         events.endGame();
       }
     },
 
-    activePlayers: { currentPlayer: "draw" },
+    activePlayers: { currentPlayer: "drawStage" },
 
     stages: {
-      draw,
-      play,
+      drawStage,
+      playStage,
+      dismissStage,
+      peekSelfStage,
+      peekOpponentStage,
+      peekAnyStage,
+      swapStage
     },
+  },
+
+  playerView: ({ G, ctx, playerID }) => {
+    const currentPlayer = ctx.currentPlayer === playerID;
+
+    const players = Object.fromEntries(
+      Object.entries(G.players).map(([id, player]) => [
+        id,
+        {
+          ...player,
+          hand: Object.fromEntries(
+            Object.entries(player.hand).map(([position, card]) => [
+              position,
+              {
+                position: card.position,
+              },
+            ],
+            ),
+          ),
+        },
+      ]),
+    );
+
+    return {
+      ...G,
+      active: currentPlayer ? G.active : undefined,
+      players,
+      deck: G.deck.map(() => ({}))
+    };
   },
 };

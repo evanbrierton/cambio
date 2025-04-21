@@ -1,0 +1,5 @@
+.hand {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Two columns */
+    gap: 16px; /* Optional: space between grid items */
+}

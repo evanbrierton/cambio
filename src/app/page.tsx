@@ -1,23 +1,16 @@
 "use client";
 
-import type { Game } from "boardgame.io";
 import type { NextPage } from "next";
-import { Board } from "@/components/Board";
-import { cambio } from "@/game";
-import { Client, Lobby } from "boardgame.io/react";
-import Image from "next/image";
+import dynamic from "next/dynamic";
 
-import { applyMiddleware, compose } from "redux";
-import logger from "redux-logger";
-
-const App = Client({
-  game: cambio,
-  enhancer: applyMiddleware(logger as any),
-});
+const CambioClient = dynamic(() => import("../components/App"), { ssr: false });
 
 const Home: NextPage = () => {
   return (
-    <App />
+    <div style={{ display: "flex", justifyContent: "space-around", width: "100%", marginRight: "20rem" }}>
+      <CambioClient playerID="0" />
+      <CambioClient playerID="1" />
+    </div>
   );
 };
 
