@@ -1,9 +1,8 @@
 import type { CardCoordinates, CardWithPosition, Hand as HandType } from "@/game/card";
 import type { PlayerState } from "@/game/state";
-import { parseCoordinates, stringifyCoordinates } from "@/game/card";
+import { stringifyCoordinates } from "@/game/card";
 import { useBoard } from "@/providers/BoardProvider";
 import styles from "@/styles/Hand.module.css";
-import { useState } from "react";
 import Card from "./Card";
 
 type Props = {
