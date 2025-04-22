@@ -31,7 +31,7 @@ const Hands: React.FC = () => {
               setSelectedCards(new Set());
             }
           }}
-          disabled={selectedCards.size !== 2}
+          disabled={stage !== "swapStage" || ctx.currentPlayer !== playerID || selectedCards.size !== 2}
         >
           Swap
         </button>
@@ -42,7 +42,7 @@ const Hands: React.FC = () => {
               events.endStage!();
             }
           }}
-          disabled={selectedCards.size !== 2}
+          disabled={stage !== "swapStage" || ctx.currentPlayer !== playerID}
         >
           Skip
         </button>
