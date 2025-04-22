@@ -7,7 +7,7 @@ type Color = "red" | "black" | "transparent";
 
 type CardId = `${Rank}_${"hearts" | "diamonds" | "clubs" | "spades"}` | `joker_${Color}` | "empty";
 
-export type Card = { id: CardId, value: number, source?: CardSource } & (
+export type Card = { id: CardId, value: number, source?: CardSource, coordinates?: CardCoordinates } & (
   | { rank: Rank, suit: "hearts" | "diamonds", color: "red" }
   | { rank: Rank, suit: "clubs" | "spades", color: "black" }
   | { rank: "joker", color: "red" | "black" }
@@ -16,8 +16,8 @@ export type Card = { id: CardId, value: number, source?: CardSource } & (
 
 export type CardSource = "deck" | "discard";
 
-export type CardWithPosition = Card & {
-  position: number
+export type CardWithCoordinates = Card & {
+  coordinates: CardCoordinates
 };
 
 export type CardCoordinates = {
@@ -35,7 +35,7 @@ export const parseCoordinates = (coordinates: string): CardCoordinates => {
 };
 
 export type Deck = Card[];
-export type Hand = Record<number, CardWithPosition>;
+export type Hand = Record<number, CardWithCoordinates>;
 
 export const EMPTY_CARD: Card = {
   id: "empty" as const,

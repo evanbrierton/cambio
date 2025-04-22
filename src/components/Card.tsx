@@ -7,12 +7,13 @@ type Props = {
   card: CardType
   selected?: boolean
   faceUp?: boolean
+  held?: boolean
   onClick?: React.MouseEventHandler<HTMLDivElement>
 };
 
-const getCardSrc = (card: CardType, faceUp: boolean): string => {
+const getCardSrc = (card: CardType, faceUp: boolean, held: boolean): string => {
   const getSlug = (): string => {
-    if (card.rank === "empty") {
+    if (card.rank === "empty" || held) {
       return "blank.png";
     }
 
@@ -30,8 +31,8 @@ const getCardSrc = (card: CardType, faceUp: boolean): string => {
   return `/assets/cards/${getSlug()}`;
 };
 
-const getCardAltText = (card: CardType, faceUp: boolean): string => {
-  if (card.rank === "empty") {
+const getCardAltText = (card: CardType, faceUp: boolean, held: boolean): string => {
+  if (card.rank === "empty" || held) {
     return "Empty placeholder";
   }
 
@@ -46,13 +47,14 @@ const getCardAltText = (card: CardType, faceUp: boolean): string => {
   return `${card.value} of ${card.suit}`;
 };
 
-const Card: React.FC<Props> = ({ card, selected = false, faceUp = false, onClick }) => {
+const Card: React.FC<Props> = ({ card, selected = false, faceUp = false, held = false, onClick }) => {
+
   return (
-    <div className={`${styles["card"]} ${selected ? styles["selected"] : ""}`} onClick={onClick}>
+    <div className={`${styles["card"]} ${selected ? styles["selected"] : ""}`} onClick={!held ? onClick : undefined}>
       <Image
         priority
-        src={getCardSrc(card, faceUp)}
-        alt={getCardAltText(card, faceUp)}
+        src={getCardSrc(card, faceUp, held)}
+        alt={getCardAltText(card, faceUp, held)}
         width={142}
         height={190}
       />

@@ -1,4 +1,4 @@
-import type { CardCoordinates, CardWithPosition, Hand as HandType } from "@/game/card";
+import type { CardCoordinates, CardWithCoordinates, Hand as HandType } from "@/game/card";
 import type { PlayerState } from "@/game/state";
 import { stringifyCoordinates } from "@/game/card";
 import { useBoard } from "@/providers/BoardProvider";
@@ -12,9 +12,7 @@ type Props = {
 };
 
 const Hand: React.FC<Props> = ({ player, selectedCards, setSelectedCards }) => {
-  const { moves, ctx } = useBoard();
-
-  const stage = ctx.activePlayers?.[ctx.currentPlayer];
+  const { G, moves, ctx, stage, playerID } = useBoard();
 
   const toggleSelectedCard = (coordinates: CardCoordinates): void => {
     const newSelectedCards = new Set(selectedCards);
@@ -52,14 +50,20 @@ const Hand: React.FC<Props> = ({ player, selectedCards, setSelectedCards }) => {
     }
   };
 
-  const cards = Object.assign<CardWithPosition[], HandType>([], player.hand);
+  const cards = Object.assign<CardWithCoordinates[], HandType>([], player.hand);
 
   return (
     <div className={styles["hand"]}>
       {cards.map((card) => {
-        const coordinates = { player: player.id, position: card.position };
-        const selected = selectedCards.has(stringifyCoordinates(coordinates));
-        return <Card key={card.id} card={card} onClick={handleClick(coordinates)} selected={selected} />;
+        const selected = selectedCards.has(stringifyCoordinates(card.coordinates));
+        const faceUp = stage === "drawStage" && ctx.turn === 1 && [2, 3].includes(card.coordinates.position) && player.id === playerID;
+
+        const position = G.active?.coordinates?.position;
+        const playerId = G.active?.coordinates?.player;
+
+        const isActive = playerId === player.id && position === card.coordinates.position;
+
+        return <Card key={card.id} card={card} onClick={handleClick(card.coordinates)} selected={selected} faceUp={faceUp} held={isActive} />;
       })}
     </div>
   );

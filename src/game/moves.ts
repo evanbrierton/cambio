@@ -143,7 +143,7 @@ export const takeCard: Move<CambioState, CardCoordinates> = ({ G, ctx, events },
     return INVALID_MOVE;
   }
 
-  const hand = { ...player.hand, [position]: { ...G.active, position } };
+  const hand = { ...player.hand, [position]: { ...G.active, coordinates } };
 
   const active = null;
   const players = { ...G.players, [player.id]: { ...player, hand } };

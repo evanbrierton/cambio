@@ -16,7 +16,7 @@ export const cambio: Game<CambioState> = {
         ...acc,
         [id]: {
           id,
-          hand: deck.splice(0, 4).map((card, position) => ({ ...card, position })),
+          hand: deck.splice(0, 4).map((card, position) => ({ ...card, coordinates: { position, player: id } })),
         },
       };
     }, {});
