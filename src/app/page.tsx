@@ -7,7 +7,7 @@ const CambioClient = dynamic(() => import("../components/CambioClient"), { ssr: 
 
 const Home: NextPage = () => {
   return (
-    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-around", width: "100%", height: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%", height: "200vh" }}>
       <CambioClient playerID="0" />
       <hr />
       <CambioClient playerID="1" />

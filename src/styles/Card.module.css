@@ -4,10 +4,18 @@
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   margin: 4px;
   transition: transform 0.2s;
-  width: 142px;
-  height: 190px;
   cursor: pointer;
 }
+
+@media (max-width: 844px) {
+  .card, .image {
+    width: 71px;
+    height: auto;
+  }
+}
+
+
+
 
 .selected {
   background-color: #f0f0f0;
