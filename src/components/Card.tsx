@@ -48,7 +48,6 @@ const getCardAltText = (card: CardType, faceUp: boolean, held: boolean): string 
 };
 
 const Card: React.FC<Props> = ({ card, selected = false, faceUp = false, held = false, onClick }) => {
-
   return (
     <div className={`${styles["card"]} ${selected ? styles["selected"] : ""}`} onClick={!held ? onClick : undefined}>
       <Image
