@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "serve": "node -r ./src/server.js"
+    "serve": "node -r ./src/server.js",
+    "prepare": "husky install"
   },
   "dependencies": {
     "boardgame.io": "^0.50.2",
@@ -27,8 +28,16 @@
     "@types/redux-logger": "^3.0.13",
     "eslint": "^9.25.0",
     "eslint-config-next": "15.3.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.1",
     "redux-logger": "^3.0.6",
     "tailwindcss": "^4",
     "typescript": "5.8.3"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --cache --fix"
+    ]
   }
 }
