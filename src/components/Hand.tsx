@@ -29,6 +29,10 @@ const Hand: React.FC<Props> = ({ player, selectedCards, setSelectedCards }) => {
   };
 
   const handleClick = (coordinates: CardCoordinates): React.MouseEventHandler<HTMLDivElement> => () => {
+    if (player.id !== playerID) {
+      return;
+    }
+
     if (stage === "playStage") {
       return moves.takeCard(coordinates);
     }
