@@ -2,7 +2,7 @@ import type { Game, PlayerID } from "boardgame.io";
 import type { CambioState, PlayerState } from "./state";
 import { initializeDeck } from "@/game/card";
 import { getCurrentPlayer } from "./players";
-import { dismissStage, drawStage, peekAnyStage, peekOpponentStage, peekSelfStage, playStage, swapStage } from "./stages";
+import { dismissStage, donateStage, drawStage, peekAnyStage, peekOpponentStage, peekSelfStage, playStage, snapStage, swapStage } from "./stages";
 
 export const cambio: Game<CambioState> = {
   name: "Cambio",
@@ -26,8 +26,13 @@ export const cambio: Game<CambioState> = {
       players,
       discard: [],
       active: null,
-      remainingPeeks: 0,
+      peeksRemaining: 0,
       hasSwap: false,
+      snapper: null,
+      donateState: {
+        donateQueue: [],
+        beforeDonateStage: null,
+      },
     };
   },
 
@@ -40,7 +45,7 @@ export const cambio: Game<CambioState> = {
       }
     },
 
-    activePlayers: { currentPlayer: "drawStage" },
+    activePlayers: { currentPlayer: "drawStage", others: "snapStage" },
 
     stages: {
       drawStage,
@@ -50,6 +55,8 @@ export const cambio: Game<CambioState> = {
       peekOpponentStage,
       peekAnyStage,
       swapStage,
+      snapStage,
+      donateStage,
     },
   },
 

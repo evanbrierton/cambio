@@ -12,7 +12,7 @@ type Props = {
 };
 
 const Hand: React.FC<Props> = ({ player, selectedCards, setSelectedCards }) => {
-  const { G, moves, ctx, stage, playerID } = useBoard();
+  const { G, moves, ctx, stage, currentPlayerStage, playerID } = useBoard();
 
   const toggleSelectedCard = (coordinates: CardCoordinates): void => {
     const newSelectedCards = new Set(selectedCards);
@@ -29,10 +29,6 @@ const Hand: React.FC<Props> = ({ player, selectedCards, setSelectedCards }) => {
   };
 
   const handleClick = (coordinates: CardCoordinates): React.MouseEventHandler<HTMLDivElement> => () => {
-    if (player.id !== playerID) {
-      return;
-    }
-
     if (stage === "playStage") {
       return moves.takeCard(coordinates);
     }
@@ -52,6 +48,12 @@ const Hand: React.FC<Props> = ({ player, selectedCards, setSelectedCards }) => {
     if (stage === "swapStage") {
       return toggleSelectedCard(coordinates);
     }
+
+    if (stage === "donateStage") {
+      return moves.donate(coordinates);
+    }
+
+    return moves.snap(coordinates);
   };
 
   const cards = Object.assign<CardWithCoordinates[], HandType>([], player.hand);
@@ -60,7 +62,7 @@ const Hand: React.FC<Props> = ({ player, selectedCards, setSelectedCards }) => {
     <div className={styles["hand"]}>
       {cards.map((card) => {
         const selected = selectedCards.has(stringifyCoordinates(card.coordinates));
-        const faceUp = stage === "drawStage" && ctx.turn === 1 && [2, 3].includes(card.coordinates.position) && player.id === playerID;
+        const faceUp = currentPlayerStage === "drawStage" && ctx.turn === 1 && [2, 3].includes(card.coordinates.position) && player.id === playerID;
 
         const position = G.active?.coordinates?.position;
         const playerId = G.active?.coordinates?.player;

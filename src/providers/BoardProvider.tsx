@@ -9,6 +9,7 @@ import { createContext, useContext } from "react";
 
 type BoardCustomState = {
   stage: string | undefined
+  currentPlayerStage: string | undefined
   moves: Moves
 };
 
@@ -53,13 +54,14 @@ export const useBoard = (): BoardState => {
     throw BoardProviderError;
   }
 
-  const { moves } = board;
+  const { moves, playerID } = board;
 
   if (!isValidMoves(moves)) {
     throw InvalidMovesError;
   }
 
-  const stage = board.ctx.activePlayers?.[board.ctx.currentPlayer];
+  const stage = board.ctx.activePlayers?.[playerID!];
+  const currentPlayerStage = board.ctx.activePlayers?.[board.ctx.currentPlayer];
 
-  return { ...board, moves, stage };
+  return { ...board, moves, stage, currentPlayerStage };
 };

@@ -1,7 +1,9 @@
 import type { FnContext, LongFormMove, PlayerID } from "boardgame.io";
+import type { RandomAPI } from "boardgame.io/dist/types/src/plugins/random/random";
 import type { Card, CardCoordinates, Deck } from "./card";
 import type { CambioState } from "./state";
 import { INVALID_MOVE } from "boardgame.io/core";
+import { EMPTY_CARD } from "./card";
 import { getCurrentPlayer } from "./players";
 
 type TakeFirstArg<F> = F extends (x: infer X) => infer R ? (arg: X) => R : never;
@@ -17,7 +19,19 @@ type CustomLongFormMove<G, T = void, PluginAPIs extends Record<string, unknown> 
 
 type Move<G, T = void, PluginAPIs extends Record<string, unknown> = Record<string, unknown>> = CustomMoveFn<G, T, PluginAPIs> | CustomLongFormMove<G, T, PluginAPIs>;
 
+const updateDecks = (G: CambioState, random: RandomAPI): { deck: Deck, discard: Deck } => {
+  if (G.deck.length === 1) {
+    return { deck: random.Shuffle(G.discard.slice(1)), discard: [G.discard[0]!] };
+  }
+
+  return { deck: G.deck.slice(1), discard: G.discard };
+};
+
 export const callCambio: Move<CambioState> = ({ G, ctx, events }) => {
+  if (G.donateState.donateQueue.length > 0) {
+    return INVALID_MOVE;
+  }
+
   const caller = getCurrentPlayer(G, ctx).id;
   events.endTurn();
 
@@ -27,19 +41,11 @@ export const callCambio: Move<CambioState> = ({ G, ctx, events }) => {
 export const drawFromDeck: Move<CambioState> = ({ G, events, random }) => {
   const active = G.deck[0];
 
-  if (!active) {
+  if (!active || G.donateState.donateQueue.length > 0) {
     return INVALID_MOVE;
   }
 
-  const updateDecks = (): { deck: Deck, discard: Deck } => {
-    if (G.deck.length === 1) {
-      return { deck: random.Shuffle(G.discard.slice(1)), discard: [G.discard[0]!] };
-    }
-
-    return { deck: G.deck.slice(1), discard: G.discard };
-  };
-
-  const { deck, discard } = updateDecks();
+  const { deck, discard } = updateDecks(G, random);
 
   events.endStage();
 
@@ -49,14 +55,14 @@ export const drawFromDeck: Move<CambioState> = ({ G, events, random }) => {
 export const drawFromDiscard: Move<CambioState> = ({ G, events }) => {
   const active = G.discard[0];
 
-  if (!active) {
+  if (!active || G.donateState.donateQueue.length > 0) {
     return INVALID_MOVE;
   }
 
   const discard = G.discard.slice(1);
   events.endStage();
 
-  return { ...G, discard, active: { ...active, source: "discard" } };
+  return { ...G, discard, active: { ...active, source: "discard" }, snapper: null };
 };
 
 export const playCard: Move<CambioState> = ({ G, events }) => {
@@ -99,7 +105,7 @@ export const playCard: Move<CambioState> = ({ G, events }) => {
     }
 
     if (active.rank === "king") {
-      events.setStage("dismissStage");
+      events.setStage("peekAnyStage");
       return { peeksRemaining: 1, hasSwap: true };
     }
 
@@ -109,13 +115,13 @@ export const playCard: Move<CambioState> = ({ G, events }) => {
   };
 
   const peekConfig = setNextStage(G.active);
-  return { ...G, active: null, discard, ...peekConfig };
+  return { ...G, active: null, discard, ...peekConfig, snapper: null };
 };
 
 export const dismiss: Move<CambioState> = ({ G, events }) => {
-  if (G.remainingPeeks > 0) {
+  if (G.peeksRemaining > 0) {
     events.setStage("peekAnyStage");
-    return { ...G, remainingPeeks: G.remainingPeeks - 1, active: null };
+    return { ...G, peeksRemaining: G.peeksRemaining - 1, active: null };
   }
 
   if (G.hasSwap) {
@@ -157,7 +163,7 @@ export const takeCard: Move<CambioState, CardCoordinates> = ({ G, ctx, events },
 };
 
 export const peekSelf: Move<CambioState, CardCoordinates> = ({ G, ctx, events }, coordinates: CardCoordinates) => {
-  if (coordinates.player !== ctx.currentPlayer) {
+  if (coordinates.player !== ctx.currentPlayer || G.donateState.donateQueue.length > 0) {
     return INVALID_MOVE;
   }
 
@@ -174,7 +180,7 @@ export const peekSelf: Move<CambioState, CardCoordinates> = ({ G, ctx, events },
 };
 
 export const peekOpponent: Move<CambioState, CardCoordinates> = ({ G, ctx, events }, coordinates: CardCoordinates) => {
-  if (coordinates.player === ctx.currentPlayer) {
+  if (coordinates.player === ctx.currentPlayer || G.donateState.donateQueue.length > 0) {
     return INVALID_MOVE;
   }
 
@@ -193,7 +199,7 @@ export const peekOpponent: Move<CambioState, CardCoordinates> = ({ G, ctx, event
 export const peekAny: Move<CambioState, CardCoordinates> = ({ G, events }, coordinates: CardCoordinates) => {
   const active = G.players[coordinates.player]?.hand[coordinates.position];
 
-  if (!active) {
+  if (!active || G.donateState.donateQueue.length > 0) {
     return INVALID_MOVE;
   }
 
@@ -203,7 +209,7 @@ export const peekAny: Move<CambioState, CardCoordinates> = ({ G, events }, coord
 };
 
 export const swapCards: Move<CambioState, Set<CardCoordinates>> = ({ G, events }, coordinates) => {
-  if (coordinates.size !== 2) {
+  if (coordinates.size !== 2 || G.donateState.donateQueue.length > 0) {
     return INVALID_MOVE;
   }
 
@@ -242,6 +248,113 @@ export const swapCards: Move<CambioState, Set<CardCoordinates>> = ({ G, events }
   return { ...G, players };
 };
 
+export const snap: Move<CambioState, CardCoordinates> = ({ G, ctx, playerID, random, events }, { position, player }) => {
+  if (!G.players[player]) {
+    return INVALID_MOVE;
+  }
+
+  if (G.snapper && G.snapper !== playerID) {
+    return INVALID_MOVE;
+  }
+
+  const handPlayer = G.players[player];
+
+  if (!handPlayer) {
+    return INVALID_MOVE;
+  }
+
+  const hand = handPlayer.hand;
+  const card = hand[position];
+  const top = G.discard[0];
+
+  if (!card || !top) {
+    return INVALID_MOVE;
+  }
+
+  if (card.rank !== top.rank) {
+    const snapPlayer = G.players[playerID]!;
+
+    const newCard = G.deck[0]!;
+
+    const highestPosition = Math.max(...Object.values(snapPlayer.hand).map(({ coordinates }) => coordinates.position));
+
+    const lowestAvailablePosition = Object.values(snapPlayer.hand).reduce((acc, card) => {
+      const { position } = card.coordinates;
+
+      if (card.rank === "empty" && position < acc) {
+        return position;
+      }
+
+      return acc;
+    }, highestPosition + 1);
+
+    const newHand = { ...snapPlayer.hand, [lowestAvailablePosition]: { ...newCard, coordinates: { player: snapPlayer.id, position: lowestAvailablePosition } } };
+
+    const players = { ...G.players, [playerID]: { ...snapPlayer, hand: newHand } };
+
+    const { deck, discard } = updateDecks(G, random);
+
+    return { ...G, players, deck, discard };
+  }
+
+  const newHand = { ...hand, [position]: { ...EMPTY_CARD, coordinates: card.coordinates } };
+  const players = { ...G.players, [player]: { ...handPlayer, hand: newHand } };
+  const discard = [card, ...G.discard];
+
+  const donateState = {
+    donateQueue: player === playerID ? G.donateState.donateQueue : [...G.donateState.donateQueue, { player, position }],
+    beforeDonateStage: ctx.activePlayers?.[playerID] ?? null,
+  };
+
+  if (donateState.donateQueue.length > 0) {
+    events.setStage("donateStage");
+  }
+
+  return { ...G, players, discard, snapper: playerID, donateState };
+};
+
+export const donate: Move<CambioState, CardCoordinates> = ({ G, ctx, events }, coordinates: CardCoordinates) => {
+  const player = getCurrentPlayer(G, ctx);
+
+  if (coordinates.player !== player.id) {
+    return INVALID_MOVE;
+  }
+
+  const card = player.hand[coordinates.position];
+
+  const [donateCoordinates, ...donateQueue] = G.donateState.donateQueue;
+
+  if (!donateCoordinates) {
+    return INVALID_MOVE;
+  }
+  const donater = G.players[coordinates.player];
+  const donatee = G.players[donateCoordinates.player];
+
+  if (!donater || !donatee || !card) {
+    return INVALID_MOVE;
+  }
+
+  const donaterHand = { ...donater.hand, [coordinates.position]: { ...EMPTY_CARD, coordinates } };
+  const donateeHand = { ...donatee.hand, [donateCoordinates.position]: { ...card, coordinates: donateCoordinates } };
+
+  const players = {
+    ...G.players,
+    [coordinates.player]: { ...donater, hand: donaterHand },
+    [donateCoordinates.player]: { ...donatee, hand: donateeHand },
+  };
+
+  if (donateQueue.length === 0) {
+    events.setStage(G.donateState.beforeDonateStage!);
+  }
+
+  const donateState = {
+    donateQueue,
+    beforeDonateStage: donateQueue.length > 0 ? G.donateState.beforeDonateStage : null,
+  };
+
+  return { ...G, players, donateState };
+};
+
 export const MOVES = {
   callCambio,
   drawFromDeck,
@@ -253,6 +366,8 @@ export const MOVES = {
   peekOpponent,
   peekAny,
   swapCards,
+  snap,
+  donate,
 };
 
 type OmitFirstArg<F> = F extends (x: never, ...args: infer P) => infer R ? (...args: P) => R : never;
