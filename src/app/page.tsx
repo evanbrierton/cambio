@@ -49,7 +49,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom,0px))] sm:py-16">
+    <div className="flex flex-1 flex-col items-center justify-center px-6 pt-[max(2.5rem,env(safe-area-inset-top,0px))] pb-[max(2.5rem,env(safe-area-inset-bottom,0px))] sm:pt-[max(4rem,env(safe-area-inset-top,0px))] sm:pb-[max(4rem,env(safe-area-inset-bottom,0px))]">
       <div className="w-full max-w-md space-y-6 text-center">
         <div className="space-y-2">
           <p className="font-display text-theme-muted text-xs">
