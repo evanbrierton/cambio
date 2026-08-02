@@ -12,7 +12,7 @@ import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
-import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
+import { PlayerGridStage } from "@/components/game/PlayerGridStage";
 import { SnapWindowOverlay } from "@/components/game/SnapWindowOverlay";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
 import {
@@ -777,17 +777,12 @@ export function GameTable({
     const selfIndex = activePlayers.findIndex((p) => p.id === view.playerId);
     if (selfIndex === -1) return activePlayers;
 
+    const self = activePlayers[selfIndex];
     const opponents: PublicPlayer[] = [];
     for (let i = 1; i < activePlayers.length; i++) {
       opponents.push(activePlayers[(selfIndex + i) % activePlayers.length]);
     }
-    const self = activePlayers[selfIndex];
-    const leftCount = Math.floor(opponents.length / 2);
-    return [
-      ...opponents.slice(0, leftCount),
-      self,
-      ...opponents.slice(leftCount),
-    ];
+    return [self, ...opponents];
   }, [view.players, view.playerId]);
 
   if (view.isWaiting) {
@@ -1255,14 +1250,7 @@ export function GameTable({
               </p>
 
               {playersInDisplayOrder.length > 0 && (
-                <PlayerScrollStage
-                  centerIndex={Math.max(
-                    0,
-                    playersInDisplayOrder.findIndex(
-                      (player) => player.id === view.playerId,
-                    ),
-                  )}
-                >
+                <PlayerGridStage>
                   {playersInDisplayOrder.map((player) => {
                     const isOwn = player.id === view.playerId;
                     return (
@@ -1289,7 +1277,7 @@ export function GameTable({
                       />
                     );
                   })}
-                </PlayerScrollStage>
+                </PlayerGridStage>
               )}
             </div>
           )}

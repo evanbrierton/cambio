@@ -1128,68 +1128,53 @@ html.play-scroll-lock body {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
-.players-3d-stage {
+.players-grid-stage {
   flex: 1 1 0;
   min-height: 0;
   min-width: 0;
   width: 100%;
   display: flex;
   flex-direction: column;
-  perspective: 1000px;
 }
 
-.players-3d-rail {
+.players-grid {
   flex: 1 1 0;
   min-height: 0;
   min-width: 0;
   width: 100%;
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
+  grid-auto-rows: min-content;
+  align-content: start;
+  justify-items: center;
   gap: 0.75rem;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scroll-snap-type: x proximity;
+  padding: 0.5rem;
+  overflow: auto;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  touch-action: pan-x pinch-zoom;
-  padding: 0.5rem 1rem;
-  transform-style: preserve-3d;
+  overscroll-behavior: contain;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
 @media (min-width: 640px) {
-  .players-3d-rail {
+  .players-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 10.5rem), 1fr));
     gap: 1rem;
-    padding: 0.625rem 1.25rem;
+    padding: 0.625rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .players-3d-rail {
+  .players-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 11.5rem), 1fr));
     gap: 1.25rem;
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem;
   }
 }
 
-.players-3d-edge {
-  flex: 0 0 calc(50% - 4.5rem);
-  min-width: 1rem;
-  pointer-events: none;
-}
-
-.players-3d-item {
-  flex: 0 0 auto;
-  scroll-snap-align: center;
-  transform-style: preserve-3d;
-  transition:
-    transform 0.15s ease-out,
-    opacity 0.15s ease-out;
-  will-change: transform, opacity;
-}
-
-.players-3d-spacer {
-  flex: 0 0 auto;
-  height: 1px;
-  pointer-events: none;
+.players-grid-item {
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }
 
 .mobile-game-scroll,
