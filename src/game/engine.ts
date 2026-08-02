@@ -3,8 +3,8 @@ import {
   abilityForDiscard,
   cardsSnapMatch,
   createDeck,
+  deckSize,
   type DiscardAbility,
-  FULL_DECK_SIZE,
   shuffle,
 } from "./cards";
 import { computeScores, determineWinners } from "./scoring";
@@ -24,7 +24,13 @@ import type {
   SwapFlashSlot,
 } from "./types";
 import { generateBotName, nameKey } from "./bot-names";
-import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "./types";
+import {
+  DEFAULT_JOKER_COUNT,
+  HAND_BASE_SLOTS,
+  MAX_JOKER_COUNT,
+  MIN_JOKER_COUNT,
+  SETUP_PEEK_SLOTS,
+} from "./types";
 
 const MAX_PLAYERS = 6;
 const MIN_PLAYERS = 2;
@@ -121,6 +127,7 @@ export function createRoom(
     phase: "lobby",
     isSoloMode: false,
     soloDifficulty: null,
+    jokerCount: DEFAULT_JOKER_COUNT,
     hostId: id,
     players: [
       {
@@ -371,6 +378,19 @@ function clearSnapEligibleDiscard(state: GameState): void {
   state.snapChainPlayerId = null;
 }
 
+/** When the deck is empty, shuffle the discard pile into it, keeping the top discard visible. */
+function reshuffleDiscardIntoDeck(state: GameState): boolean {
+  if (state.deck.length > 0) return false;
+  if (state.discard.length <= 1) return false;
+
+  const top = state.discard[state.discard.length - 1];
+  const toShuffle = [...state.deck, ...state.discard.slice(0, -1)];
+  state.deck = shuffle(toShuffle);
+  state.discard = [top];
+  addLog(state, "Discard pile reshuffled into the deck.");
+  return true;
+}
+
 export function finalizeRound(state: GameState): void {
   state.phase = "ended";
   state.snapWindowEndsAt = null;
@@ -443,7 +463,7 @@ function endRound(state: GameState): void {
 }
 
 function dealHands(state: GameState): void {
-  const deck = createDeck();
+  const deck = createDeck(state.jokerCount);
   const playing = state.players.filter((p) => !p.isWaiting);
   for (const player of playing) {
     const cards = deck.splice(0, 4);
@@ -485,17 +505,14 @@ function canTargetPlayer(playerId: string, state: GameState): boolean {
   return !isProtected(playerId, state);
 }
 
-function addPenalty(state: GameState, playerId: string): number | null {
+function addPenalty(
+  state: GameState,
+  playerId: string,
+): { slot: number; reshuffleFlash?: boolean } | null {
   const player = findPlayer(state, playerId);
   if (!player) return null;
 
-  if (state.deck.length === 0) {
-    if (state.discard.length <= 1) return null;
-    const top = state.discard.pop();
-    if (!top) return null;
-    state.deck = shuffle([...state.discard, top]);
-    state.discard = [];
-  }
+  const reshuffled = reshuffleDiscardIntoDeck(state);
 
   const card = state.deck.pop();
   if (!card) return null;
@@ -503,7 +520,7 @@ function addPenalty(state: GameState, playerId: string): number | null {
   const slot = placeCardInHand(player.hand, card, { isPenalty: true });
   player.penaltyCount += 1;
   addLog(state, `${player.name} received a penalty card.`);
-  return slot;
+  return { slot, reshuffleFlash: reshuffled || undefined };
 }
 
 function triggerAbility(
@@ -689,6 +706,7 @@ export function handleMessage(
   swapFlash?: { slots: SwapFlashSlot[] };
   penaltyFlash?: { playerId: string; slot: number };
   cambioFlash?: { playerId: string };
+  reshuffleFlash?: boolean;
 } {
   switch (message.type) {
     case "join": {
@@ -845,20 +863,13 @@ export function handleMessage(
       state.turnStarted = true;
 
       if (message.source === "deck") {
-        if (state.deck.length === 0) {
-          if (state.discard.length <= 1) return { error: "No cards to draw." };
-          const top = state.discard.pop();
-          if (!top) return { error: "No cards to draw." };
-          state.deck = shuffle([...state.discard, top]);
-          state.discard = [];
-          clearSnapEligibleDiscard(state);
-        }
+        const reshuffled = reshuffleDiscardIntoDeck(state);
         const card = state.deck.pop();
         if (!card) return { error: "No cards to draw." };
         state.drawnCard = card;
         state.drawnFromDiscard = false;
         addLog(state, `${player.name} drew from the deck.`);
-        return {};
+        return reshuffled ? { reshuffleFlash: true } : {};
       }
 
       if (state.discard.length === 0)
@@ -968,7 +979,7 @@ export function handleMessage(
       if (!handCard) return { error: "No card in that slot." };
 
       if (!cardsSnapMatch(handCard, top)) {
-        const penaltySlot = addPenalty(state, playerId);
+        const penaltyResult = addPenalty(state, playerId);
         if (message.targetPlayerId !== playerId) {
           addLog(
             state,
@@ -980,7 +991,10 @@ export function handleMessage(
         return {
           error: "Wrong snap! Penalty card added.",
           penaltyFlash:
-            penaltySlot !== null ? { playerId, slot: penaltySlot } : undefined,
+            penaltyResult !== null
+              ? { playerId, slot: penaltyResult.slot }
+              : undefined,
+          reshuffleFlash: penaltyResult?.reshuffleFlash,
         };
       }
 
@@ -1117,6 +1131,23 @@ export function handleMessage(
       }
       state.players = state.players.filter((p) => p.id !== message.playerId);
       addLog(state, `${bot.name} left.`);
+      return {};
+    }
+
+    case "set_joker_count": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can change joker count." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot change joker count during a game." };
+      }
+      const count = Math.min(
+        MAX_JOKER_COUNT,
+        Math.max(MIN_JOKER_COUNT, message.count),
+      );
+      if (count === state.jokerCount) return {};
+      state.jokerCount = count;
+      addLog(state, `Jokers set to ${count}.`);
       return {};
     }
 
@@ -1340,7 +1371,10 @@ export function buildPlayerView(
     phase: state.phase,
     players,
     currentPlayerIndex: state.currentPlayerIndex,
-    deckCount: state.phase === "lobby" ? FULL_DECK_SIZE : state.deck.length,
+    deckCount:
+      state.phase === "lobby"
+        ? deckSize(state.jokerCount)
+        : state.deck.length,
     discardTop:
       state.discard.length > 0 ? state.discard[state.discard.length - 1] : null,
     drawnCard: isMyTurn ? state.drawnCard : null,
@@ -1394,6 +1428,10 @@ export function buildPlayerView(
       state.isSoloMode &&
       (state.phase === "lobby" || state.phase === "ended") &&
       state.players.length < MAX_PLAYERS,
+    jokerCount: state.jokerCount,
+    canSetJokerCount:
+      viewerId === state.hostId &&
+      (state.phase === "lobby" || state.phase === "ended"),
     log: state.log,
     chatMessages: state.chatMessages,
   };

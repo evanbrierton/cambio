@@ -9,6 +9,7 @@ import {
   PixelCard,
 } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
+import { ReshuffleOverlay } from "@/components/game/ReshuffleOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
@@ -38,6 +39,7 @@ import type {
   FleetingPeek,
   PeekFlash,
   PenaltyFlash,
+  ReshuffleFlash,
   SwapFlash,
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
@@ -56,6 +58,7 @@ type GameTableProps = {
   swapFlash: SwapFlash | null;
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
+  reshuffleFlash: ReshuffleFlash | null;
   send: (message: ClientMessage) => void;
 };
 
@@ -551,6 +554,7 @@ export function GameTable({
   swapFlash,
   penaltyFlash,
   cambioFlash,
+  reshuffleFlash,
   send,
 }: GameTableProps) {
   const voice = useThemeVoice();
@@ -609,6 +613,7 @@ export function GameTable({
     peekFlash,
     swapFlash,
     cambioFlash,
+    reshuffleFlash,
     snapWindowSeconds,
   );
 
@@ -995,6 +1000,7 @@ export function GameTable({
         callerName={cambioCallerName}
         voice={voice}
       />
+      <ReshuffleOverlay reshuffleFlash={reshuffleFlash} voice={voice} />
       <SnapWindowOverlay
         active={snapWindowActive}
         seconds={snapWindowSeconds}
@@ -1103,7 +1109,15 @@ export function GameTable({
                 </div>
               </div>
             </div>
-            <div className="shrink-0" aria-live="polite">
+            <div
+              className={`shrink-0 ${
+                (hintsEnabled && actionToast) ||
+                (view.phase === "lobby" && lobbyJoinToast)
+                  ? "min-h-24"
+                  : ""
+              }`}
+              aria-live="polite"
+            >
               <AnimatePresence initial={false} mode="wait">
                 {hintsEnabled && actionToast ? (
                   <GameToast key="action" toast={actionToast} inline />
@@ -1210,6 +1224,7 @@ export function GameTable({
                           card={view.discardTop}
                           faceUp={!!view.discardTop}
                           hidden={!view.discardTop}
+                          empty={!view.discardTop}
                           sizeClass={PILE_CARD_SIZE}
                         />
                       </motion.div>

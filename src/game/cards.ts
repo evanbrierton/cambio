@@ -2,7 +2,13 @@ import { nanoid } from "nanoid";
 import type { Card, Rank, Suit } from "./types";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
-export const FULL_DECK_SIZE = 54;
+const STANDARD_DECK_SIZE = 52;
+
+export const FULL_DECK_SIZE = STANDARD_DECK_SIZE + 2;
+
+export function deckSize(jokerCount = 2): number {
+  return STANDARD_DECK_SIZE + jokerCount;
+}
 const RANKS: Rank[] = [
   "2",
   "3",
@@ -19,7 +25,7 @@ const RANKS: Rank[] = [
   "A",
 ];
 
-export function createDeck(): Card[] {
+export function createDeck(jokerCount = 2): Card[] {
   const cards: Card[] = [];
 
   for (const suit of SUITS) {
@@ -28,8 +34,9 @@ export function createDeck(): Card[] {
     }
   }
 
-  cards.push({ id: nanoid(8), suit: "joker", rank: "JOKER" });
-  cards.push({ id: nanoid(8), suit: "joker", rank: "JOKER" });
+  for (let i = 0; i < jokerCount; i += 1) {
+    cards.push({ id: nanoid(8), suit: "joker", rank: "JOKER" });
+  }
 
   return shuffle(cards);
 }

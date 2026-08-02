@@ -59,6 +59,7 @@ export default function PlayPage({
     swapFlash,
     penaltyFlash,
     cambioFlash,
+    reshuffleFlash,
     send,
   } = useGameConnection(roomId, name, sessionMode, soloOptions, debugEnabled);
 
@@ -115,6 +116,7 @@ export default function PlayPage({
         swapFlash={swapFlash}
         penaltyFlash={penaltyFlash}
         cambioFlash={cambioFlash}
+        reshuffleFlash={reshuffleFlash}
         send={send}
       />
     </div>

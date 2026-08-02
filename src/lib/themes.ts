@@ -2,6 +2,7 @@ import type { DiscardAbility } from "@/game/cards";
 
 export type ThemeId = "retro" | "casino" | "party" | "minimal" | "calm";
 
+/** @deprecated Use THEME_COOKIE_KEY from @/lib/theme-cookie */
 export const THEME_STORAGE_KEY = "cambio-theme";
 
 export type ThemeOption = {
@@ -58,6 +59,8 @@ export type ThemeVoice = {
   turn: string;
   cambio: string;
   cambioFinalRound: string;
+  reshuffle: string;
+  reshuffleDetail: string;
   away: string;
   penalty: (count: number) => string;
   tapToSwap: string;
@@ -102,6 +105,7 @@ export type ThemeVoice = {
   hintsOff: string;
   soloMode: string;
   botCountLabel: string;
+  jokerCountLabel: string;
   difficultyLabel: string;
   difficultyEasy: string;
   difficultyMedium: string;
@@ -211,6 +215,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     turn: "TURN",
     cambio: "CAMBIO",
     cambioFinalRound: "CALLED CAMBIO — FINAL ROUND!",
+    reshuffle: "RESHUFFLE!",
+    reshuffleDetail: "DISCARD PILE SHUFFLED INTO THE DECK",
     away: "AWAY",
     penalty: (n) => `+${n} PENALTY`,
     tapToSwap: "TAP CARD TO SWAP",
@@ -259,6 +265,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "HINTS OFF",
     soloMode: "SOLO MODE",
     botCountLabel: "BOTS",
+    jokerCountLabel: "JOKERS",
     difficultyLabel: "DIFFICULTY",
     difficultyEasy: "EASY",
     difficultyMedium: "MEDIUM",
@@ -333,6 +340,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     turn: "Your action",
     cambio: "Cambio",
     cambioFinalRound: "called Cambio — final round",
+    reshuffle: "Reshuffle",
+    reshuffleDetail: "Discard pile shuffled into the deck",
     away: "Away",
     penalty: (n) => `+${n} penalty`,
     tapToSwap: "Select card to swap",
@@ -380,6 +389,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo table",
     botCountLabel: "Opponents",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Skill",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -454,6 +464,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     turn: "Go go go!",
     cambio: "Cambio!",
     cambioFinalRound: "called Cambio — last dance!",
+    reshuffle: "Reshuffle!",
+    reshuffleDetail: "Discard pile shuffled back into the deck!",
     away: "Stepped out",
     penalty: (n) => `+${n} ouch!`,
     tapToSwap: "Tap to swap!",
@@ -499,6 +511,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo mode",
     botCountLabel: "Bots",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -572,6 +585,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     turn: "Turn",
     cambio: "Cambio",
     cambioFinalRound: "called Cambio — final round",
+    reshuffle: "Reshuffle",
+    reshuffleDetail: "Discard pile shuffled into the deck",
     away: "Away",
     penalty: (n) => `+${n} penalty`,
     tapToSwap: "Tap card to swap",
@@ -617,6 +632,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo",
     botCountLabel: "Bots",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -691,6 +707,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     turn: "Your turn",
     cambio: "Cambio",
     cambioFinalRound: "called Cambio — final round",
+    reshuffle: "Reshuffle",
+    reshuffleDetail: "Discard pile shuffled into the deck",
     away: "Away",
     penalty: (n) => `+${n} penalty`,
     tapToSwap: "Tap a card to swap",
@@ -738,6 +756,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo mode",
     botCountLabel: "Bots",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
