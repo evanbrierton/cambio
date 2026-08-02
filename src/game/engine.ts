@@ -54,12 +54,12 @@ export function migrateRoundHistory(
   if (!rounds) return [];
 
   return rounds.map((round) => {
-    if (round.entries) {
+    if (round.entries !== undefined) {
       return {
         roundNumber: round.roundNumber,
         entries: round.entries,
-        winnerIds: round.winnerIds,
-        cambioCallerId: round.cambioCallerId,
+        winnerIds: round.winnerIds ?? [],
+        cambioCallerId: round.cambioCallerId ?? null,
       };
     }
 
@@ -1382,8 +1382,8 @@ export function buildPlayerView(
       participants.length >= MIN_PLAYERS,
     canShowResults: viewerId === state.hostId && state.phase === "revealed",
     roundNumber: state.roundNumber,
-    roundHistory: state.roundHistory,
-    cumulativeScores: { ...state.cumulativeScores },
+    roundHistory: migrateRoundHistory(state.roundHistory),
+    cumulativeScores: { ...(state.cumulativeScores ?? {}) },
     cambioCallerId: state.cambioCallerId,
     winnerIds: state.winnerIds,
     scores: state.scores,

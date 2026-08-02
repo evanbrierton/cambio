@@ -20,12 +20,21 @@ type GameOverScreenProps = {
   send: (message: ClientMessage) => void;
 };
 
+function asArray<T>(value: T[] | null | undefined): T[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function isScoreRecord(value: unknown): value is Record<string, number> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
 function sortedRoundEntries(round: RoundResult): ScoreboardEntry[] {
-  return [...round.entries].sort((a, b) => a.score - b.score);
+  return [...asArray(round.entries)].sort((a, b) => a.score - b.score);
 }
 
 function latestRoundNumber(view: PlayerView): number {
-  return view.roundHistory.at(-1)?.roundNumber ?? view.roundNumber;
+  const rounds = asArray(view.roundHistory);
+  return rounds.at(-1)?.roundNumber ?? view.roundNumber;
 }
 
 function defaultSelectedRound(view: PlayerView): number | "total" {
@@ -34,24 +43,49 @@ function defaultSelectedRound(view: PlayerView): number | "total" {
 }
 
 function playerNameLookup(view: PlayerView): Map<string, string> {
-  const names = new Map(view.players.map((player) => [player.id, player.name]));
-  for (const round of view.roundHistory) {
-    for (const entry of round.entries) {
+  const names = new Map<string, string>();
+
+  for (const player of asArray(view.players)) {
+    names.set(player.id, player.name);
+  }
+
+  for (const round of asArray(view.roundHistory)) {
+    for (const entry of asArray(round.entries)) {
       names.set(entry.id, entry.name);
     }
   }
+
   return names;
 }
 
 function sortedCumulative(view: PlayerView): ScoreboardEntry[] {
   const names = playerNameLookup(view);
+  const totals = new Map<string, number>();
 
-  return Object.entries(view.cumulativeScores)
-    .flatMap(([id, score]): ScoreboardEntry[] => {
-      const name = names.get(id);
-      if (name === undefined) return [];
-      return [{ id, name, score }];
-    })
+  for (const id of names.keys()) {
+    totals.set(id, 0);
+  }
+
+  if (isScoreRecord(view.cumulativeScores)) {
+    for (const [id, score] of Object.entries(view.cumulativeScores)) {
+      if (names.has(id)) totals.set(id, score);
+    }
+  } else {
+    for (const round of asArray(view.roundHistory)) {
+      for (const entry of asArray(round.entries)) {
+        if (names.has(entry.id)) {
+          totals.set(entry.id, (totals.get(entry.id) ?? 0) + entry.score);
+        }
+      }
+    }
+  }
+
+  return [...names.keys()]
+    .map((id) => ({
+      id,
+      name: names.get(id) as string,
+      score: totals.get(id) ?? 0,
+    }))
     .sort((a, b) => a.score - b.score);
 }
 
@@ -81,12 +115,14 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
     });
   }, [latestRound, selectedRound]);
 
-  const winners = view.players.filter((p) => view.winnerIds.includes(p.id));
+  const winners = asArray(view.players).filter((p) =>
+    asArray(view.winnerIds).includes(p.id),
+  );
   const cumulative = sortedCumulative(view);
   const selected =
     selectedRound === "total"
       ? null
-      : view.roundHistory.find((r) => r.roundNumber === selectedRound);
+      : asArray(view.roundHistory).find((r) => r.roundNumber === selectedRound);
 
   const handlePlayAgain = () => {
     playSound("click");
@@ -153,7 +189,7 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
           >
             {voice.cumulativeScores}
           </button>
-          {view.roundHistory.map((round) => (
+          {asArray(view.roundHistory).map((round) => (
             <button
               key={round.roundNumber}
               ref={
@@ -222,7 +258,7 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
           {voice.playersInLobby}
         </p>
         <ul className="space-y-1 text-xs text-theme">
-          {view.players.map((p) => (
+          {asArray(view.players).map((p) => (
             <li key={p.id} className="player-name text-xs">
               {p.name}
               {p.isHost ? ` (${voice.host.toLowerCase()})` : ""}
