@@ -1,0 +1,5 @@
+{
+  "name": "cambio",
+  "main": "party/cambio.ts",
+  "compatibilityDate": "2024-11-01"
+}

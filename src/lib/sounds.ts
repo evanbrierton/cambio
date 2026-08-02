@@ -1,0 +1,103 @@
+export type SoundId =
+  | "flip"
+  | "snap"
+  | "snapWrong"
+  | "draw"
+  | "cambio"
+  | "gameOver"
+  | "yourTurn"
+  | "click";
+
+const STORAGE_KEY = "cambio-sound-enabled";
+
+let audioCtx: AudioContext | null = null;
+
+function getCtx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  if (!audioCtx) {
+    audioCtx = new AudioContext();
+  }
+  return audioCtx;
+}
+
+async function resumeCtx(): Promise<AudioContext | null> {
+  const ctx = getCtx();
+  if (!ctx) return null;
+  if (ctx.state === "suspended") {
+    await ctx.resume();
+  }
+  return ctx;
+}
+
+function tone(
+  ctx: AudioContext,
+  freq: number,
+  start: number,
+  duration: number,
+  type: OscillatorType = "square",
+  volume = 0.06,
+  gainEnd = 0.001,
+) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, start);
+  gain.gain.exponentialRampToValueAtTime(gainEnd, start + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(start);
+  osc.stop(start + duration + 0.02);
+}
+
+export function isSoundEnabled(): boolean {
+  if (typeof window === "undefined") return true;
+  return localStorage.getItem(STORAGE_KEY) !== "0";
+}
+
+export function setSoundEnabled(enabled: boolean): void {
+  localStorage.setItem(STORAGE_KEY, enabled ? "1" : "0");
+}
+
+export async function playSound(id: SoundId): Promise<void> {
+  if (!isSoundEnabled()) return;
+  const ctx = await resumeCtx();
+  if (!ctx) return;
+
+  const t = ctx.currentTime;
+
+  switch (id) {
+    case "flip":
+      tone(ctx, 440, t, 0.06, "square", 0.05);
+      tone(ctx, 660, t + 0.07, 0.08, "square", 0.04);
+      break;
+    case "snap":
+      tone(ctx, 880, t, 0.05, "square", 0.07);
+      tone(ctx, 1320, t + 0.04, 0.1, "square", 0.05);
+      break;
+    case "snapWrong":
+      tone(ctx, 180, t, 0.15, "sawtooth", 0.08);
+      tone(ctx, 120, t + 0.1, 0.2, "sawtooth", 0.06);
+      break;
+    case "draw":
+      tone(ctx, 520, t, 0.04, "triangle", 0.05);
+      tone(ctx, 390, t + 0.05, 0.06, "triangle", 0.04);
+      break;
+    case "cambio":
+      tone(ctx, 523, t, 0.1, "square", 0.05);
+      tone(ctx, 659, t + 0.1, 0.1, "square", 0.05);
+      tone(ctx, 784, t + 0.2, 0.15, "square", 0.05);
+      break;
+    case "gameOver":
+      tone(ctx, 392, t, 0.12, "triangle", 0.06);
+      tone(ctx, 330, t + 0.12, 0.12, "triangle", 0.05);
+      tone(ctx, 523, t + 0.28, 0.2, "triangle", 0.06);
+      break;
+    case "yourTurn":
+      tone(ctx, 740, t, 0.08, "sine", 0.04);
+      break;
+    case "click":
+      tone(ctx, 600, t, 0.03, "square", 0.03);
+      break;
+  }
+}
