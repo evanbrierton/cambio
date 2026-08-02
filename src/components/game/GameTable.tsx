@@ -2,13 +2,14 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   HAND_GRID_WIDTH,
   PILE_CARD_SIZE,
   PixelCard,
 } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
+import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
 import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
@@ -30,6 +31,7 @@ import type {
   PublicPlayer,
 } from "@/game/types";
 import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "@/game/types";
+import { useChatNotifications } from "@/hooks/useChatNotifications";
 import type {
   CambioFlash,
   FleetingPeek,
@@ -553,6 +555,37 @@ export function GameTable({
     null,
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const openSettings = useCallback(() => setSettingsOpen(true), []);
+  const { unreadCount, notification, dismissNotification } =
+    useChatNotifications({
+      messages: view.chatMessages,
+      playerId: view.playerId,
+      settingsOpen,
+      soundEnabled,
+    });
+  const chatToast = useMemo((): GameToastItem | null => {
+    if (!notification) return null;
+    return {
+      id: `chat-${notification.id}`,
+      message: voice.chatNotification(
+        notification.playerName,
+        notification.text,
+      ),
+      tone: "info",
+      action: (
+        <button
+          type="button"
+          onClick={() => {
+            openSettings();
+            dismissNotification();
+          }}
+          className="chip-btn text-[8px] px-2 py-1 border-accent text-accent hover:border-accent-alt transition-colors"
+        >
+          {voice.chatOpen}
+        </button>
+      ),
+    };
+  }, [notification, voice, openSettings, dismissNotification]);
   const [lobbyJoinToast, setLobbyJoinToast] = useState<GameToastItem | null>(
     null,
   );
@@ -629,8 +662,20 @@ export function GameTable({
       });
     }
 
+    if (chatToast) {
+      items.push(chatToast);
+    }
+
     return items;
-  }, [error, peekFlash, penaltyFlash, swapFlash, view.players, voice]);
+  }, [
+    chatToast,
+    error,
+    peekFlash,
+    penaltyFlash,
+    swapFlash,
+    view.players,
+    voice,
+  ]);
 
   const actionToast: GameToastItem | null =
     hintsEnabled && actionBanner
@@ -903,6 +948,14 @@ export function GameTable({
 
       <ThemePicker compact />
 
+      <ChatPanel
+        messages={view.chatMessages}
+        playerId={view.playerId}
+        connected={connected}
+        voice={voice}
+        onSend={(text) => send({ type: "chat", text })}
+      />
+
       <div className="pixel-border p-3 min-h-[120px] lg:min-h-[200px] lg:max-h-[50vh] lg:overflow-y-auto bg-surface">
         <p className="font-display text-[8px] text-theme-muted mb-2">
           {voice.gameLog}
@@ -1010,11 +1063,20 @@ export function GameTable({
               <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setSettingsOpen(true)}
-                  className="chip-btn chip-btn-sm border-theme-muted text-theme hover:border-accent transition-colors lg:hidden"
-                  aria-label="Game menu"
+                  onClick={openSettings}
+                  className="chip-btn chip-btn-sm border-theme-muted text-theme hover:border-accent transition-colors lg:hidden relative"
+                  aria-label={
+                    unreadCount > 0
+                      ? `Game menu (${unreadCount} unread messages)`
+                      : "Game menu"
+                  }
                 >
                   ···
+                  {unreadCount > 0 ? (
+                    <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center rounded-full bg-accent text-[8px] font-display text-surface leading-none">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  ) : null}
                 </button>
                 <Link
                   href="/"

@@ -11,6 +11,7 @@ import { computeScores, determineWinners } from "./scoring";
 import type {
   Card,
   CardSlot,
+  ChatMessage,
   ClientMessage,
   GameState,
   PeekFlash,
@@ -26,6 +27,9 @@ const MIN_PLAYERS = 2;
 const SETUP_PEEKS = 2;
 export const SNAP_WINDOW_MS = 6_000;
 const SNAP_WINDOW_GRACE_MS = 3_000;
+const MAX_CHAT_MESSAGES = 100;
+const MAX_CHAT_LENGTH = 200;
+const CHAT_COOLDOWN_MS = 500;
 
 export function createRoom(
   roomId: string,
@@ -68,11 +72,47 @@ export function createRoom(
     snapEligibleTopCardId: null,
     snapChainPlayerId: null,
     log: [`${hostName} created the room.`],
+    chatMessages: [],
   };
 }
 
 export function addLog(state: GameState, message: string): void {
   state.log = [...state.log.slice(-30), message];
+}
+
+export function addChatMessage(
+  state: GameState,
+  playerId: string,
+  text: string,
+): ChatMessage | { error: string } {
+  const player = findPlayer(state, playerId);
+  if (!player) return { error: "Player not found." };
+
+  const trimmed = text.trim();
+  if (!trimmed) return { error: "Message cannot be empty." };
+  if (trimmed.length > MAX_CHAT_LENGTH) {
+    return { error: `Message too long (max ${MAX_CHAT_LENGTH} characters).` };
+  }
+
+  const lastMessage = [...state.chatMessages]
+    .reverse()
+    .find((message) => message.playerId === playerId);
+  if (lastMessage && Date.now() - lastMessage.sentAt < CHAT_COOLDOWN_MS) {
+    return { error: "Slow down — wait a moment before sending again." };
+  }
+
+  const chatMessage: ChatMessage = {
+    id: nanoid(10),
+    playerId,
+    playerName: player.name,
+    text: trimmed,
+    sentAt: Date.now(),
+  };
+  state.chatMessages = [
+    ...state.chatMessages.slice(-(MAX_CHAT_MESSAGES - 1)),
+    chatMessage,
+  ];
+  return chatMessage;
 }
 
 function currentPlayer(state: GameState): PlayerState | undefined {
@@ -926,6 +966,12 @@ export function handleMessage(
       return {};
     }
 
+    case "chat": {
+      const result = addChatMessage(state, playerId, message.text);
+      if ("error" in result) return { error: result.error };
+      return {};
+    }
+
     case "ability_look": {
       const pending = state.pendingAbility;
       if (!pending || pending.playerId !== playerId) {
@@ -1187,5 +1233,6 @@ export function buildPlayerView(
     scores: state.scores,
     snapWindowEndsAt: state.snapWindowEndsAt,
     log: state.log,
+    chatMessages: state.chatMessages,
   };
 }
