@@ -957,8 +957,6 @@ export function GameTable({
         </div>
       )}
 
-      <ThemePicker compact />
-
       <ChatPanel
         messages={view.chatMessages}
         playerId={view.playerId}
@@ -985,6 +983,8 @@ export function GameTable({
           })}
         </div>
       </div>
+
+      <ThemePicker compact />
     </>
   );
 
@@ -1017,7 +1017,7 @@ export function GameTable({
           <div className="mobile-settings-sheet absolute inset-x-0 bottom-0 max-h-[85dvh] flex flex-col bg-surface pixel-border border-b-0 overflow-hidden">
             <div className="shrink-0 flex items-center justify-between gap-3 p-4 pb-3">
               <p className="font-display text-xs text-theme">
-                {voice.styleLabel}
+                {voice.gameMenuLabel}
               </p>
               <button
                 type="button"
