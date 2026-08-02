@@ -6,10 +6,11 @@ import { cardLabel, isRed } from "@/game/cards";
 import type { Card, PeekFlashKind } from "@/game/types";
 
 export const TABLE_CARD_SIZE = "w-20 h-28";
-export const HAND_CARD_SIZE = "w-14 h-20 text-[10px]";
-export const HAND_GRID_WIDTH = "w-[7.25rem]";
+export const HAND_CARD_SIZE =
+  "w-14 h-20 text-[10px] sm:w-16 sm:h-[4.5rem] lg:w-20 lg:h-28 lg:text-xs";
+export const HAND_GRID_WIDTH = "w-[7.25rem] sm:w-[8.25rem] lg:w-[10.375rem]";
 export const PILE_CARD_SIZE =
-  "w-14 h-20 text-[10px] lg:w-20 lg:h-28 lg:text-xs";
+  "w-14 h-20 text-[10px] sm:w-16 sm:h-[4.5rem] lg:w-20 lg:h-28 lg:text-xs";
 
 type PixelCardProps = {
   card: Card | null;
@@ -68,7 +69,7 @@ function SwapFlashOverlay({
       )}
       <span
         className={`relative font-display font-bold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] swap-flash-icon ${
-          small ? "text-3xl" : "text-5xl"
+          small ? "text-3xl lg:text-5xl" : "text-5xl"
         }`}
       >
         ↔
@@ -103,7 +104,7 @@ function PeekFlashOverlay({
       )}
       <span
         className={`relative font-display font-bold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] peek-flash-icon ${
-          small ? "text-3xl" : "text-5xl"
+          small ? "text-3xl lg:text-5xl" : "text-5xl"
         }`}
       >
         ◎
@@ -134,7 +135,7 @@ function PenaltyFlashOverlay({
       )}
       <span
         className={`relative font-display font-bold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] penalty-flash-icon ${
-          small ? "text-3xl" : "text-5xl"
+          small ? "text-3xl lg:text-5xl" : "text-5xl"
         }`}
       >
         !
@@ -148,6 +149,7 @@ function PenaltyFlashOverlay({
 
 function CardShell({
   size,
+  overlaySmall,
   swapFlashing,
   swapFlashSlotLabel,
   peekFlashing,
@@ -164,6 +166,7 @@ function CardShell({
   children,
 }: {
   size: string;
+  overlaySmall: boolean;
   swapFlashing: boolean;
   swapFlashSlotLabel?: string;
   peekFlashing: boolean;
@@ -228,21 +231,18 @@ function CardShell({
         {children}
       </Shell>
       {swapFlashing && (
-        <SwapFlashOverlay
-          small={size.includes("w-14")}
-          slotLabel={swapFlashSlotLabel}
-        />
+        <SwapFlashOverlay small={overlaySmall} slotLabel={swapFlashSlotLabel} />
       )}
       {peekFlashing && peekFlashKind && (
         <PeekFlashOverlay
-          small={size.includes("w-14")}
+          small={overlaySmall}
           kind={peekFlashKind}
           slotLabel={peekFlashSlotLabel}
         />
       )}
       {penaltyFlashing && (
         <PenaltyFlashOverlay
-          small={size.includes("w-14")}
+          small={overlaySmall}
           slotLabel={penaltyFlashSlotLabel}
         />
       )}
@@ -344,6 +344,7 @@ export function PixelCard({
     return (
       <CardShell
         size={size}
+        overlaySmall={small}
         swapFlashing={swapFlashing}
         swapFlashSlotLabel={swapFlashSlotLabel}
         peekFlashing={peekFlashing}
@@ -394,6 +395,7 @@ export function PixelCard({
   return (
     <CardShell
       size={size}
+      overlaySmall={small}
       swapFlashing={swapFlashing}
       swapFlashSlotLabel={swapFlashSlotLabel}
       peekFlashing={peekFlashing}
@@ -406,7 +408,7 @@ export function PixelCard({
       disabled={disabled}
       flipAnimation={flipAnimation}
       baseClass={baseClass}
-      faceClass={`bg-surface-card-alt ${color} flex flex-col items-center justify-center gap-1`}
+      faceClass={`bg-surface-card-alt ${color} flex flex-col items-center justify-center gap-0.5 lg:gap-1`}
     >
       {swapFirstSelected && (
         <span className="absolute -top-2 -right-2 z-20 ui-badge bg-accent-alt text-[8px] px-1.5 py-0.5 rounded-full shadow-glow-accent-alt">
@@ -416,7 +418,11 @@ export function PixelCard({
       <span className="font-display leading-none">
         {card ? cardLabel(card) : ""}
       </span>
-      <span className="text-lg leading-none">
+      <span
+        className={`leading-none ${
+          small ? "text-base sm:text-lg lg:text-xl" : "text-lg"
+        }`}
+      >
         {card ? suitGlyph[card.suit] : ""}
       </span>
     </CardShell>
