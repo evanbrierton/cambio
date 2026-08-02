@@ -184,11 +184,8 @@ function canAttemptSnap(state: GameState): boolean {
   return isSnapEligible(state) || state.phase === "snap_window";
 }
 
-function canPlayerSnap(state: GameState, playerId: string): boolean {
-  if (!canAttemptSnap(state)) return false;
-  if (state.phase === "snap_window") return true;
-  if (!state.snapChainPlayerId) return true;
-  return state.snapChainPlayerId === playerId;
+function canPlayerSnap(state: GameState): boolean {
+  return canAttemptSnap(state);
 }
 
 function revealAllHands(state: GameState): void {
@@ -221,15 +218,6 @@ function isSnapEligible(state: GameState): boolean {
 function markDiscardTopSnapEligible(state: GameState, card: Card): void {
   state.snapEligibleTopCardId = card.id;
   state.snapChainPlayerId = null;
-}
-
-function markDiscardTopAfterSnap(
-  state: GameState,
-  card: Card,
-  snapperId: string,
-): void {
-  state.snapEligibleTopCardId = card.id;
-  state.snapChainPlayerId = snapperId;
 }
 
 function clearSnapEligibleDiscard(state: GameState): void {
@@ -775,7 +763,7 @@ export function handleMessage(
       if (isSnapResolutionPending(state)) {
         return { error: "Another player is resolving a snap." };
       }
-      if (!canPlayerSnap(state, playerId)) {
+      if (!canPlayerSnap(state)) {
         return { error: "No snap available right now." };
       }
       if (
@@ -842,7 +830,7 @@ export function handleMessage(
       if (state.phase === "snap_window") {
         clearSnapEligibleDiscard(state);
       } else {
-        markDiscardTopAfterSnap(state, handCard, playerId);
+        markDiscardTopSnapEligible(state, handCard);
       }
 
       if (message.targetPlayerId === playerId) {
@@ -1174,7 +1162,7 @@ export function buildPlayerView(
       !state.pendingAbility,
     canSnap:
       (gameInteractive || snapInteractive) &&
-      canPlayerSnap(state, viewerId) &&
+      canPlayerSnap(state) &&
       !isSnapResolutionPending(state) &&
       !(viewer?.hasCalledCambio && state.phase === "cambio_final") &&
       !(gameInteractive && isMyTurn && state.drawnCard) &&
