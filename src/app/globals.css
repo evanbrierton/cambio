@@ -1364,3 +1364,54 @@ html.play-scroll-lock body {
 [data-theme="calm"] .pile-interactable-label-discard {
   text-shadow: none;
 }
+
+.snap-window-vignette {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 35%,
+    color-mix(in srgb, var(--danger) 18%, transparent) 100%
+  );
+}
+
+.snap-window-vignette-urgent {
+  background: radial-gradient(
+    ellipse at center,
+    transparent 25%,
+    color-mix(in srgb, var(--danger) 32%, transparent) 100%
+  );
+}
+
+.snap-window-active {
+  position: relative;
+}
+
+.snap-window-deck {
+  animation: snap-window-deck-pulse 1.2s ease-in-out infinite;
+}
+
+.snap-window-discard {
+  animation: snap-window-discard-pulse 0.9s ease-in-out infinite;
+  box-shadow: 0 0 18px var(--glow-accent);
+}
+
+@keyframes snap-window-deck-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 35%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 24px 4px color-mix(in srgb, var(--danger) 55%, transparent);
+  }
+}
+
+@keyframes snap-window-discard-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.04);
+    filter: brightness(1.12);
+  }
+}

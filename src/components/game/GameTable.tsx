@@ -2,16 +2,18 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   HAND_GRID_WIDTH,
   PILE_CARD_SIZE,
   PixelCard,
 } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
+import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
 import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
+import { SnapWindowOverlay } from "@/components/game/SnapWindowOverlay";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
 import {
   GameToast,
@@ -29,6 +31,7 @@ import type {
   PublicPlayer,
 } from "@/game/types";
 import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "@/game/types";
+import { useChatNotifications } from "@/hooks/useChatNotifications";
 import type {
   CambioFlash,
   FleetingPeek,
@@ -552,7 +555,6 @@ export function GameTable({
   const voice = useThemeVoice();
   const { soundEnabled, toggleSound } = useSoundEnabled();
   const { hintsEnabled, toggleHints } = useHintsEnabled();
-  useGameSounds(view, error, fleetingPeek, peekFlash, swapFlash, cambioFlash);
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
   );
@@ -561,11 +563,52 @@ export function GameTable({
     null,
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const openSettings = useCallback(() => setSettingsOpen(true), []);
+  const { unreadCount, notification, dismissNotification } =
+    useChatNotifications({
+      messages: view.chatMessages,
+      playerId: view.playerId,
+      settingsOpen,
+      soundEnabled,
+    });
+  const chatToast = useMemo((): GameToastItem | null => {
+    if (!notification) return null;
+    return {
+      id: `chat-${notification.id}`,
+      message: voice.chatNotification(
+        notification.playerName,
+        notification.text,
+      ),
+      tone: "info",
+      action: (
+        <button
+          type="button"
+          onClick={() => {
+            openSettings();
+            dismissNotification();
+          }}
+          className="chip-btn text-[8px] px-2 py-1 border-accent text-accent hover:border-accent-alt transition-colors"
+        >
+          {voice.chatOpen}
+        </button>
+      ),
+    };
+  }, [notification, voice, openSettings, dismissNotification]);
   const [lobbyJoinToast, setLobbyJoinToast] = useState<GameToastItem | null>(
     null,
   );
   const lobbyPlayersRef = useRef<Set<string>>(new Set());
   const lobbyJoinTimerRef = useRef<number | null>(null);
+
+  useGameSounds(
+    view,
+    error,
+    fleetingPeek,
+    peekFlash,
+    swapFlash,
+    cambioFlash,
+    snapWindowSeconds,
+  );
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
   const snapGiveActive = view.pendingAbility?.kind === "snap_give";
@@ -627,8 +670,20 @@ export function GameTable({
       });
     }
 
+    if (chatToast) {
+      items.push(chatToast);
+    }
+
     return items;
-  }, [error, peekFlash, penaltyFlash, swapFlash, view.players, voice]);
+  }, [
+    chatToast,
+    error,
+    peekFlash,
+    penaltyFlash,
+    swapFlash,
+    view.players,
+    voice,
+  ]);
 
   const actionToast: GameToastItem | null =
     hintsEnabled && actionBanner
@@ -748,6 +803,7 @@ export function GameTable({
     view.players.find((p) => p.id === cambioFlash?.playerId)?.name ?? "Player";
 
   const phaseLabel = voice.phases[view.phase] ?? "";
+  const snapWindowActive = view.phase === "snap_window";
 
   const isDrawnSlotMine = Boolean(view.drawnCard);
   const showDrawnFaceDown = !isDrawnSlotMine && view.hasDrawnCard;
@@ -900,6 +956,14 @@ export function GameTable({
 
       <ThemePicker compact />
 
+      <ChatPanel
+        messages={view.chatMessages}
+        playerId={view.playerId}
+        connected={connected}
+        voice={voice}
+        onSend={(text) => send({ type: "chat", text })}
+      />
+
       <div className="pixel-border p-3 min-h-[120px] lg:min-h-[200px] lg:max-h-[50vh] lg:overflow-y-auto bg-surface">
         <p className="font-display text-[8px] text-theme-muted mb-2">
           {voice.gameLog}
@@ -923,12 +987,17 @@ export function GameTable({
     <div
       className={`w-full max-w-7xl mx-auto flex flex-col ${
         isLobbyScrollLayout ? "" : "flex-1 min-h-0 h-full"
-      }`}
+      } ${snapWindowActive ? "snap-window-active" : ""}`}
     >
       <GameToastLayer toasts={gameToasts} />
       <CambioCallOverlay
         cambioFlash={cambioFlash}
         callerName={cambioCallerName}
+        voice={voice}
+      />
+      <SnapWindowOverlay
+        active={snapWindowActive}
+        seconds={snapWindowSeconds}
         voice={voice}
       />
 
@@ -1002,11 +1071,20 @@ export function GameTable({
               <div className="flex items-center gap-2 sm:gap-3 shrink-0">
                 <button
                   type="button"
-                  onClick={() => setSettingsOpen(true)}
-                  className="chip-btn chip-btn-sm border-theme-muted text-theme hover:border-accent transition-colors lg:hidden"
-                  aria-label="Game menu"
+                  onClick={openSettings}
+                  className="chip-btn chip-btn-sm border-theme-muted text-theme hover:border-accent transition-colors lg:hidden relative"
+                  aria-label={
+                    unreadCount > 0
+                      ? `Game menu (${unreadCount} unread messages)`
+                      : "Game menu"
+                  }
                 >
                   ···
+                  {unreadCount > 0 ? (
+                    <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center rounded-full bg-accent text-[8px] font-display text-surface leading-none">
+                      {unreadCount > 9 ? "9+" : unreadCount}
+                    </span>
+                  ) : null}
                 </button>
                 <Link
                   href="/"
@@ -1053,7 +1131,7 @@ export function GameTable({
             <div
               className={`table-deck shrink-0 pixel-border bg-surface px-2 py-1.5 lg:p-4 ${
                 view.canDraw ? "table-deck-drawable ring-2 ring-accent-alt" : ""
-              }`}
+              } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
             >
               <div className="flex items-end justify-center gap-1.5 sm:gap-4 lg:gap-8">
                 <button
@@ -1121,9 +1199,11 @@ export function GameTable({
                     className={`${PILE_CARD_SIZE} shrink-0 ${
                       showDiscardPileGlow
                         ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
-                        : view.canSnap
-                          ? "ring-1 ring-danger/50 rounded-card"
-                          : ""
+                        : snapWindowActive
+                          ? "ring-4 ring-danger rounded-card snap-window-discard"
+                          : view.canSnap
+                            ? "ring-1 ring-danger/50 rounded-card"
+                            : ""
                     }`}
                   >
                     <AnimatePresence mode="wait">

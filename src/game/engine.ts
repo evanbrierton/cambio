@@ -12,6 +12,7 @@ import type {
   BotDifficulty,
   Card,
   CardSlot,
+  ChatMessage,
   ClientMessage,
   GameState,
   PeekFlash,
@@ -27,6 +28,9 @@ const MIN_PLAYERS = 2;
 const SETUP_PEEKS = 2;
 export const SNAP_WINDOW_MS = 6_000;
 const SNAP_WINDOW_GRACE_MS = 3_000;
+const MAX_CHAT_MESSAGES = 100;
+const MAX_CHAT_LENGTH = 200;
+const CHAT_COOLDOWN_MS = 500;
 
 const BOT_NAMES = [
   "Pixel Pete",
@@ -123,11 +127,47 @@ export function createRoom(
     snapChainPlayerId: null,
     botThinkingId: null,
     log: [`${hostName} created the room.`],
+    chatMessages: [],
   };
 }
 
 export function addLog(state: GameState, message: string): void {
   state.log = [...state.log.slice(-30), message];
+}
+
+export function addChatMessage(
+  state: GameState,
+  playerId: string,
+  text: string,
+): ChatMessage | { error: string } {
+  const player = findPlayer(state, playerId);
+  if (!player) return { error: "Player not found." };
+
+  const trimmed = text.trim();
+  if (!trimmed) return { error: "Message cannot be empty." };
+  if (trimmed.length > MAX_CHAT_LENGTH) {
+    return { error: `Message too long (max ${MAX_CHAT_LENGTH} characters).` };
+  }
+
+  const lastMessage = [...state.chatMessages]
+    .reverse()
+    .find((message) => message.playerId === playerId);
+  if (lastMessage && Date.now() - lastMessage.sentAt < CHAT_COOLDOWN_MS) {
+    return { error: "Slow down — wait a moment before sending again." };
+  }
+
+  const chatMessage: ChatMessage = {
+    id: nanoid(10),
+    playerId,
+    playerName: player.name,
+    text: trimmed,
+    sentAt: Date.now(),
+  };
+  state.chatMessages = [
+    ...state.chatMessages.slice(-(MAX_CHAT_MESSAGES - 1)),
+    chatMessage,
+  ];
+  return chatMessage;
 }
 
 function currentPlayer(state: GameState): PlayerState | undefined {
@@ -255,6 +295,7 @@ function revealAllHands(state: GameState): void {
 }
 
 function enterRevealedPhase(state: GameState): void {
+  revealAllHands(state);
   state.phase = "revealed";
   state.snapWindowEndsAt = null;
   state.snapChainPlayerId = null;
@@ -338,7 +379,6 @@ export function expireSnapWindow(state: GameState, now = Date.now()): boolean {
 }
 
 function endRound(state: GameState): void {
-  revealAllHands(state);
   state.pendingAbility = null;
   state.drawnCard = null;
 
@@ -346,7 +386,7 @@ function endRound(state: GameState): void {
     state.phase = "snap_window";
     state.snapChainPlayerId = null;
     state.snapWindowEndsAt = Date.now() + SNAP_WINDOW_MS;
-    addLog(state, "Cards revealed — last chance to snap!");
+    addLog(state, "Last chance to snap! Cards reveal when time runs out.");
     return;
   }
 
@@ -1019,6 +1059,12 @@ export function handleMessage(
       return {};
     }
 
+    case "chat": {
+      const result = addChatMessage(state, playerId, message.text);
+      if ("error" in result) return { error: result.error };
+      return {};
+    }
+
     case "ability_look": {
       const pending = state.pendingAbility;
       if (!pending || pending.playerId !== playerId) {
@@ -1288,5 +1334,6 @@ export function buildPlayerView(
       (state.phase === "lobby" || state.phase === "ended") &&
       state.players.length < MAX_PLAYERS,
     log: state.log,
+    chatMessages: state.chatMessages,
   };
 }

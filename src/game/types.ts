@@ -71,6 +71,14 @@ export const DEFAULT_BOT_COUNT = 2;
 export const MIN_BOT_COUNT = 1;
 export const MAX_BOT_COUNT = 5;
 
+export type ChatMessage = {
+  id: string;
+  playerId: string;
+  playerName: string;
+  text: string;
+  sentAt: number;
+};
+
 export type RoundResult = {
   roundNumber: number;
   scores: Record<string, number>;
@@ -121,6 +129,7 @@ export type GameState = {
   snapChainPlayerId: string | null;
   botThinkingId: string | null;
   log: string[];
+  chatMessages: ChatMessage[];
 };
 
 export type SwapFlashSlot = {
@@ -159,6 +168,7 @@ export type ClientMessage =
   | { type: "show_results" }
   | { type: "add_bot"; difficulty?: BotDifficulty }
   | { type: "remove_bot"; playerId: string }
+  | { type: "chat"; text: string }
   | { type: "ability_look"; playerId: string; slot: number }
   | {
       type: "ability_swap";
@@ -222,6 +232,7 @@ export type PlayerView = {
   isSoloMode: boolean;
   canAddBot: boolean;
   log: string[];
+  chatMessages: ChatMessage[];
 };
 
 export type ServerMessage =
