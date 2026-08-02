@@ -30,11 +30,11 @@ import type {
 } from "@/game/types";
 import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "@/game/types";
 import type {
+  CambioFlash,
   FleetingPeek,
   PeekFlash,
   PenaltyFlash,
   SwapFlash,
-  CambioFlash,
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { useHintsEnabled } from "@/hooks/useHintsEnabled";
@@ -703,7 +703,8 @@ export function GameTable({
   }, [view.phase, view.playerId, view.players, voice]);
 
   useEffect(() => {
-    if (view.phase !== "snap_window" || !view.snapWindowEndsAt) {
+    const snapWindowEndsAt = view.snapWindowEndsAt;
+    if (view.phase !== "snap_window" || !snapWindowEndsAt) {
       setSnapWindowSeconds(null);
       return;
     }
@@ -711,7 +712,7 @@ export function GameTable({
     const update = () => {
       const remaining = Math.max(
         0,
-        Math.ceil((view.snapWindowEndsAt! - Date.now()) / 1000),
+        Math.ceil((snapWindowEndsAt - Date.now()) / 1000),
       );
       setSnapWindowSeconds(remaining);
     };
@@ -1145,10 +1146,7 @@ export function GameTable({
                   </div>
                 </button>
 
-                <div
-                  className="table-pile flex flex-col items-center gap-0.5 lg:gap-1"
-                  aria-label={voice.drawn}
-                >
+                <div className="table-pile flex flex-col items-center gap-0.5 lg:gap-1">
                   <p
                     className={`table-pile-label ${
                       isDrawnSlotMine ? "text-accent" : "text-theme-muted"
