@@ -968,20 +968,6 @@ body::after {
   filter: brightness(1.06);
 }
 
-[data-theme="party"] .btn-primary:hover,
-[data-theme="party"] .btn-secondary:hover,
-[data-theme="party"] .btn-danger:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-}
-
-[data-theme="party"] .btn-primary:active,
-[data-theme="party"] .btn-secondary:active,
-[data-theme="party"] .btn-danger:active {
-  transform: translateY(2px);
-  box-shadow: none;
-}
-
 .btn-secondary {
   background: var(--btn-secondary-bg);
   color: var(--btn-secondary-text);
@@ -1002,6 +988,20 @@ body::after {
 
 .btn-danger:hover {
   filter: brightness(1.06);
+}
+
+[data-theme="party"] .btn-primary:hover,
+[data-theme="party"] .btn-secondary:hover,
+[data-theme="party"] .btn-danger:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+[data-theme="party"] .btn-primary:active,
+[data-theme="party"] .btn-secondary:active,
+[data-theme="party"] .btn-danger:active {
+  transform: translateY(2px);
+  box-shadow: none;
 }
 
 .chip-btn {
