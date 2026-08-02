@@ -101,9 +101,12 @@ export async function playSound(id: SoundId): Promise<void> {
       tone(ctx, 392, t + 0.14, 0.06, "triangle", 0.04);
       break;
     case "cambio":
-      tone(ctx, 523, t, 0.1, "square", 0.05);
-      tone(ctx, 659, t + 0.1, 0.1, "square", 0.05);
-      tone(ctx, 784, t + 0.2, 0.15, "square", 0.05);
+      tone(ctx, 523, t, 0.1, "square", 0.09);
+      tone(ctx, 659, t + 0.1, 0.1, "square", 0.09);
+      tone(ctx, 784, t + 0.2, 0.1, "square", 0.09);
+      tone(ctx, 1047, t + 0.3, 0.2, "square", 0.1);
+      tone(ctx, 1319, t + 0.45, 0.35, "square", 0.08);
+      tone(ctx, 784, t + 0.1, 0.5, "triangle", 0.04);
       break;
     case "gameOver":
       tone(ctx, 392, t, 0.12, "triangle", 0.06);

@@ -27,6 +27,7 @@ export default function PlayPage({
     peekFlash,
     swapFlash,
     penaltyFlash,
+    cambioFlash,
     send,
   } = useGameConnection(roomId, name, sessionMode);
 
@@ -69,6 +70,7 @@ export default function PlayPage({
         peekFlash={peekFlash}
         swapFlash={swapFlash}
         penaltyFlash={penaltyFlash}
+        cambioFlash={cambioFlash}
         send={send}
       />
     </div>

@@ -6,6 +6,7 @@ import type {
   FleetingPeek,
   PeekFlash,
   SwapFlash,
+  CambioFlash,
 } from "@/hooks/useGameConnection";
 import { playSound } from "@/lib/sounds";
 
@@ -15,6 +16,7 @@ export function useGameSounds(
   fleetingPeek: FleetingPeek | null,
   peekFlash: PeekFlash | null,
   swapFlash: SwapFlash | null,
+  cambioFlash: CambioFlash | null,
 ) {
   const prevPhase = useRef<PlayerView["phase"] | null>(null);
   const prevLogLen = useRef(0);
@@ -22,6 +24,7 @@ export function useGameSounds(
   const peekKey = useRef<string | null>(null);
   const peekFlashKey = useRef<string | null>(null);
   const swapFlashKey = useRef<string | null>(null);
+  const cambioFlashKey = useRef<string | null>(null);
 
   useEffect(() => {
     if (!fleetingPeek) {
@@ -60,6 +63,16 @@ export function useGameSounds(
   }, [swapFlash]);
 
   useEffect(() => {
+    if (!cambioFlash) {
+      cambioFlashKey.current = null;
+      return;
+    }
+    if (cambioFlashKey.current === cambioFlash.playerId) return;
+    cambioFlashKey.current = cambioFlash.playerId;
+    playSound("cambio");
+  }, [cambioFlash]);
+
+  useEffect(() => {
     if (!error?.includes("Wrong snap")) return;
     playSound("snapWrong");
   }, [error]);
@@ -86,7 +99,6 @@ export function useGameSounds(
     if (view.log.length > prevLogLen.current) {
       const lastLog = view.log[view.log.length - 1] ?? "";
       if (lastLog.includes("snapped correctly")) playSound("snap");
-      else if (lastLog.includes("called CAMBIO")) playSound("cambio");
       else if (lastLog.includes("drew from") || lastLog.includes("discarded")) {
         playSound("draw");
       }

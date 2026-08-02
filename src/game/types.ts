@@ -208,5 +208,6 @@ export type ServerMessage =
     }
   | { type: "swap_flash"; slots: SwapFlashSlot[] }
   | { type: "penalty_flash"; playerId: string; slot: number }
+  | { type: "cambio_flash"; playerId: string }
   | { type: "error"; message: string }
   | { type: "room_info"; roomId: string; playerId: string };
