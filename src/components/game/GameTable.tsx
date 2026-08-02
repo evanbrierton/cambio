@@ -754,6 +754,7 @@ export function GameTable({
     return <GameOverScreen view={view} connected={connected} send={send} />;
   }
 
+  const isLobbyScrollLayout = view.phase === "lobby";
   const me = view.players.find((p) => p.id === view.playerId);
   const isHost = me?.isHost ?? false;
   const cambioCallerName =
@@ -932,7 +933,11 @@ export function GameTable({
   );
 
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col flex-1 min-h-0 h-full">
+    <div
+      className={`w-full max-w-7xl mx-auto flex flex-col ${
+        isLobbyScrollLayout ? "" : "flex-1 min-h-0 h-full"
+      }`}
+    >
       <GameToastLayer toasts={gameToasts} />
       <CambioCallOverlay
         cambioFlash={cambioFlash}
@@ -967,8 +972,16 @@ export function GameTable({
         </div>
       )}
 
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-6 lg:items-stretch flex flex-col flex-1 min-h-0 min-w-0">
-        <div className="scroll-stable flex flex-col flex-1 min-h-0 min-w-0 gap-3 sm:gap-4 lg:gap-5">
+      <div
+        className={`lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-6 lg:items-stretch flex flex-col min-w-0 ${
+          isLobbyScrollLayout ? "" : "flex-1 min-h-0"
+        }`}
+      >
+        <div
+          className={`scroll-stable flex flex-col min-w-0 gap-3 sm:gap-4 lg:gap-5 ${
+            isLobbyScrollLayout ? "" : "flex-1 min-h-0"
+          }`}
+        >
           <header className="shrink-0 flex flex-col gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
               <div className="min-w-0 flex-1">
