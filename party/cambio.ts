@@ -9,6 +9,7 @@ import {
   botThinkDelay,
   collectActingBots,
   decideBotAction,
+  forgetSnapTargetForAllBots,
   updateBotKnowledge,
 } from "../src/game/bot";
 import { botChatDelay, pickBotChatMessage } from "../src/game/bot-chat";
@@ -165,6 +166,19 @@ export class CambioParty extends Server {
     }
 
     this.applyMessageResult(playerId, message, result);
+
+    if (
+      message.type === "snap" &&
+      !result.error &&
+      "targetPlayerId" in message &&
+      "slot" in message
+    ) {
+      forgetSnapTargetForAllBots(
+        this.botKnowledge,
+        message.targetPlayerId,
+        message.slot,
+      );
+    }
 
     if (result.secretPeek) {
       this.sendToPlayer(playerId, {

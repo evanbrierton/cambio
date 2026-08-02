@@ -35,6 +35,10 @@ export class BotKnowledge {
     this.known.set(cardKey(playerId, slot), card);
   }
 
+  forget(playerId: string, slot: number): void {
+    this.known.delete(cardKey(playerId, slot));
+  }
+
   get(playerId: string, slot: number): Card | undefined {
     return this.known.get(cardKey(playerId, slot));
   }
@@ -287,7 +291,7 @@ function findSnapTarget(
 
   if (difficulty === "easy") {
     const own = matches.filter((m) => m.targetPlayerId === botId);
-    return randomItem(own.length > 0 ? own : matches);
+    return randomItem(own);
   }
 
   if (isExpert(difficulty)) {
@@ -610,6 +614,16 @@ export function decideBotAction(
   return null;
 }
 
+export function forgetSnapTargetForAllBots(
+  knowledgeMap: Map<string, BotKnowledge>,
+  targetPlayerId: string,
+  slot: number,
+): void {
+  for (const knowledge of knowledgeMap.values()) {
+    knowledge.forget(targetPlayerId, slot);
+  }
+}
+
 export function updateBotKnowledge(
   knowledge: BotKnowledge,
   state: GameState,
@@ -617,10 +631,22 @@ export function updateBotKnowledge(
   message: ClientMessage,
   result: {
     secretPeek?: { playerId: string; slot: number; card: unknown };
+    error?: string;
+    penaltyFlash?: { playerId: string; slot: number };
   },
 ): void {
   const bot = findPlayer(state, botId);
   if (!bot?.isBot) return;
+
+  if (message.type === "snap" && result.error) {
+    if (
+      result.penaltyFlash ||
+      result.error === "No card in that slot."
+    ) {
+      knowledge.forget(message.targetPlayerId, message.slot);
+    }
+    return;
+  }
 
   if (message.type === "setup_peek") {
     const card = getHandCard(bot, message.slot);
