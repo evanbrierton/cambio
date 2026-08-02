@@ -21,6 +21,7 @@ function migrateState(state: GameState): GameState {
     roundHistory: state.roundHistory ?? [],
     cumulativeScores: state.cumulativeScores ?? {},
     snapWindowEndsAt: state.snapWindowEndsAt ?? null,
+    snapEligibleTopCardId: state.snapEligibleTopCardId ?? null,
     players: state.players.map((p) => ({
       ...p,
       isWaiting: p.isWaiting ?? false,

@@ -67,6 +67,7 @@ export function createRoom(
     winnerIds: [],
     scores: null,
     snapWindowEndsAt: null,
+    snapEligibleTopCardId: null,
     log: [`${hostName} created the room.`],
   };
 }
@@ -192,7 +193,7 @@ function revealAllHands(state: GameState): void {
 }
 
 function anyoneCanSnap(state: GameState): boolean {
-  if (state.discard.length === 0) return false;
+  if (!isSnapEligible(state)) return false;
   const top = state.discard[state.discard.length - 1];
   return state.players.some(
     (player) =>
@@ -201,9 +202,30 @@ function anyoneCanSnap(state: GameState): boolean {
   );
 }
 
+/** Another player is mid-snap (giving a card back) — block all other snaps. */
+function isSnapResolutionPending(state: GameState): boolean {
+  return state.pendingAbility?.kind === "snap_give";
+}
+
+/** Snapping is only allowed against an unsnapped card currently on top of discard. */
+function isSnapEligible(state: GameState): boolean {
+  if (state.discard.length === 0 || !state.snapEligibleTopCardId) return false;
+  const top = state.discard[state.discard.length - 1];
+  return top.id === state.snapEligibleTopCardId;
+}
+
+function markDiscardTopSnapEligible(state: GameState, card: Card): void {
+  state.snapEligibleTopCardId = card.id;
+}
+
+function clearSnapEligibleDiscard(state: GameState): void {
+  state.snapEligibleTopCardId = null;
+}
+
 export function finalizeRound(state: GameState): void {
   state.phase = "ended";
   state.snapWindowEndsAt = null;
+  clearSnapEligibleDiscard(state);
   state.scores = computeScores(state);
   state.winnerIds = determineWinners(state);
 
@@ -297,6 +319,7 @@ function dealHands(state: GameState): void {
   state.pendingAbility = null;
   state.drawnCard = null;
   state.snapWindowEndsAt = null;
+  clearSnapEligibleDiscard(state);
   state.turnStarted = false;
   state.winnerIds = [];
   state.scores = null;
@@ -638,6 +661,7 @@ export function handleMessage(
           const top = state.discard.pop()!;
           state.deck = shuffle([...state.discard, top]);
           state.discard = [];
+          clearSnapEligibleDiscard(state);
         }
         const card = state.deck.pop()!;
         state.drawnCard = card;
@@ -649,6 +673,7 @@ export function handleMessage(
       if (state.discard.length === 0)
         return { error: "Discard pile is empty." };
       const card = state.discard.pop()!;
+      clearSnapEligibleDiscard(state);
       state.drawnCard = card;
       state.drawnFromDiscard = true;
       addLog(state, `${player.name} drew from the discard pile.`);
@@ -667,6 +692,7 @@ export function handleMessage(
       player.hand[message.slot] = { card: drawnCard, faceUp: false };
       if (existing.card) {
         state.discard.push(existing.card);
+        markDiscardTopSnapEligible(state, existing.card);
       }
       state.drawnCard = null;
       addLog(state, `${player.name} swapped a card.`);
@@ -687,6 +713,7 @@ export function handleMessage(
 
       const card = state.drawnCard;
       state.discard.push(card);
+      markDiscardTopSnapEligible(state, card);
       state.drawnCard = null;
       addLog(state, `${player.name} discarded ${card.rank}.`);
 
@@ -700,6 +727,12 @@ export function handleMessage(
     case "snap": {
       const player = findPlayer(state, playerId);
       if (!player) return { error: "Player not found." };
+      if (isSnapResolutionPending(state)) {
+        return { error: "Another player is resolving a snap." };
+      }
+      if (!isSnapEligible(state)) {
+        return { error: "No snap available right now." };
+      }
       if (
         state.phase !== "playing" &&
         state.phase !== "cambio_final" &&
@@ -763,6 +796,7 @@ export function handleMessage(
       const snappedCard = target.hand[message.slot].card!;
       clearHandSlot(target.hand, message.slot);
       state.discard.push(snappedCard);
+      clearSnapEligibleDiscard(state);
 
       if (message.targetPlayerId === playerId) {
         addLog(state, `${player.name} snapped correctly!`);
@@ -1079,6 +1113,8 @@ export function buildPlayerView(
       !state.pendingAbility,
     canSnap:
       (gameInteractive || snapInteractive) &&
+      isSnapEligible(state) &&
+      !isSnapResolutionPending(state) &&
       !!state.discard.length &&
       !(viewer?.hasCalledCambio && state.phase === "cambio_final") &&
       !(gameInteractive && isMyTurn && state.drawnCard) &&
