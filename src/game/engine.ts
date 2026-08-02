@@ -119,6 +119,21 @@ function currentPlayer(state: GameState): PlayerState | undefined {
   return state.players[state.currentPlayerIndex];
 }
 
+function normalizePlayerName(name: string): string {
+  return name.trim().slice(0, 24);
+}
+
+function isNameTaken(
+  state: GameState,
+  name: string,
+  excludePlayerId?: string,
+): boolean {
+  const normalized = name.toLowerCase();
+  return state.players.some(
+    (p) => p.id !== excludePlayerId && p.name.toLowerCase() === normalized,
+  );
+}
+
 function findPlayer(state: GameState, id: string): PlayerState | undefined {
   return state.players.find((p) => p.id === id);
 }
@@ -585,11 +600,23 @@ export function handleMessage(
 } {
   switch (message.type) {
     case "join": {
+      const trimmedName = normalizePlayerName(message.name);
       const existing = findPlayer(state, playerId);
       if (existing) {
         existing.connected = true;
-        if (message.name) existing.name = message.name.slice(0, 24);
+        if (trimmedName) {
+          if (isNameTaken(state, trimmedName, playerId)) {
+            return { error: "That name is already taken." };
+          }
+          existing.name = trimmedName;
+        }
         return {};
+      }
+      if (!trimmedName) {
+        return { error: "Please enter a name." };
+      }
+      if (isNameTaken(state, trimmedName)) {
+        return { error: "That name is already taken." };
       }
       if (state.players.length >= MAX_PLAYERS) {
         return { error: "Room is full." };
@@ -597,7 +624,7 @@ export function handleMessage(
       const waiting = isGameInProgress(state);
       state.players.push({
         id: playerId,
-        name: message.name.slice(0, 24),
+        name: trimmedName,
         hand: [],
         penaltyCount: 0,
         setupPeekedSlots: [],
@@ -610,10 +637,10 @@ export function handleMessage(
       if (waiting) {
         addLog(
           state,
-          `${message.name} joined — waiting for the current game to end.`,
+          `${trimmedName} joined — waiting for the current game to end.`,
         );
       } else {
-        addLog(state, `${message.name} joined.`);
+        addLog(state, `${trimmedName} joined.`);
       }
       return {};
     }

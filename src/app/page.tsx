@@ -21,10 +21,13 @@ export default function HomePage() {
     if (stored) setName(stored);
   }, []);
 
+  const trimmedName = name.trim();
+  const hasName = trimmedName.length > 0;
+
   const goToRoom = (code: string, mode: "host" | "join") => {
-    const trimmed = name.trim() || "Player";
-    localStorage.setItem(PLAYER_NAME_KEY, trimmed);
-    const params = new URLSearchParams({ name: trimmed, [mode]: "1" });
+    if (!hasName) return;
+    localStorage.setItem(PLAYER_NAME_KEY, trimmedName);
+    const params = new URLSearchParams({ name: trimmedName, [mode]: "1" });
     router.push(`/play/${code}?${params.toString()}`);
   };
 
@@ -59,6 +62,7 @@ export default function HomePage() {
 
           <RetroButton
             className="w-full"
+            disabled={!hasName}
             onClick={() => goToRoom(roomCode(), "host")}
           >
             {voice.createGame}
@@ -79,7 +83,7 @@ export default function HomePage() {
             </label>
             <RetroButton
               variant="secondary"
-              disabled={joinCode.length < 4}
+              disabled={joinCode.length < 4 || !hasName}
               onClick={() => goToRoom(joinCode.trim(), "join")}
             >
               {voice.join}
