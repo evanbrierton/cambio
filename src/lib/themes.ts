@@ -17,6 +17,7 @@ export type ThemePhases = {
   playing: string;
   cambio_final: string;
   snap_window: string;
+  revealed: string;
   ended: string;
 };
 
@@ -79,6 +80,9 @@ export type ThemeVoice = {
   drawHint: string;
   discardHint: string;
   newGame: string;
+  showResults: string;
+  revealedHostHint: string;
+  waitingForResults: string;
   gameOverTitle: string;
   cumulativeScores: string;
   roundLabel: (round: number) => string;
@@ -153,6 +157,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
       playing: "IN PLAY",
       cambio_final: "CAMBIO FINAL ROUND",
       snap_window: "LAST CHANCE TO SNAP",
+      revealed: "ALL CARDS REVEALED",
       ended: "ROUND OVER",
     },
     startGame: "START GAME",
@@ -213,6 +218,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     drawHint: "↓ TAP DECK OR DISCARD TO DRAW",
     discardHint: "↓ TAP DISCARD TO PLAY YOUR CARD, OR YOUR HAND TO SWAP",
     newGame: "NEW GAME",
+    showResults: "SHOW SCORES",
+    revealedHostHint: "ALL HANDS ARE OPEN — TAP SHOW SCORES WHEN READY",
+    waitingForResults: "ALL HANDS REVEALED — WAITING FOR HOST...",
     gameOverTitle: "GAME OVER",
     cumulativeScores: "TOTAL",
     roundLabel: (n) => `ROUND ${n}`,
@@ -252,6 +260,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
       playing: "Cards in play",
       cambio_final: "Final hand — Cambio called",
       snap_window: "Last chance to snap",
+      revealed: "All cards revealed",
       ended: "Round settled",
     },
     startGame: "Deal in",
@@ -310,6 +319,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     drawHint: "Tap the deck or discard pile to draw",
     discardHint: "Tap the discard pile to play your card, or tap your hand to swap",
     newGame: "Deal again",
+    showResults: "Show scores",
+    revealedHostHint: "All hands are open — show scores when ready",
+    waitingForResults: "All hands revealed — waiting for host...",
     gameOverTitle: "Round settled",
     cumulativeScores: "Overall",
     roundLabel: (n) => `Round ${n}`,
@@ -349,6 +361,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
       playing: "Game on!",
       cambio_final: "Last dance — Cambio!",
       snap_window: "Last chance to snap!",
+      revealed: "All cards revealed!",
       ended: "Party's over!",
     },
     startGame: "Let's play!",
@@ -406,6 +419,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     drawHint: "Tap deck or discard to grab a card!",
     discardHint: "Tap the discard pile to toss it, or swap with your hand!",
     newGame: "Play again!",
+    showResults: "Show scores!",
+    revealedHostHint: "All hands are out — tap show scores when ready!",
+    waitingForResults: "All hands revealed — waiting for host...",
     gameOverTitle: "Party's over!",
     cumulativeScores: "Total",
     roundLabel: (n) => `Round ${n}`,
@@ -444,6 +460,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
       playing: "Playing",
       cambio_final: "Cambio — final round",
       snap_window: "Last chance to snap",
+      revealed: "All cards revealed",
       ended: "Round ended",
     },
     startGame: "Start",
@@ -501,6 +518,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     drawHint: "Tap deck or discard to draw",
     discardHint: "Tap discard pile to play your card, or tap hand to swap",
     newGame: "New round",
+    showResults: "Show scores",
+    revealedHostHint: "All hands revealed — show scores when ready",
+    waitingForResults: "All hands revealed — waiting for host...",
     gameOverTitle: "Round ended",
     cumulativeScores: "Total",
     roundLabel: (n) => `Round ${n}`,
@@ -540,6 +560,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
       playing: "In progress",
       cambio_final: "Final round — Cambio",
       snap_window: "Last chance to snap",
+      revealed: "All cards revealed",
       ended: "Round complete",
     },
     startGame: "Start round",
@@ -598,6 +619,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     drawHint: "Tap the deck or discard when you're ready",
     discardHint: "Tap the discard pile to set aside your card, or swap with your hand",
     newGame: "Play another round",
+    showResults: "Show scores",
+    revealedHostHint: "All hands are open — show scores when you're ready",
+    waitingForResults: "All hands revealed — waiting for host...",
     gameOverTitle: "Round complete",
     cumulativeScores: "Overall",
     roundLabel: (n) => `Round ${n}`,

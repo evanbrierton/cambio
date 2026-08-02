@@ -179,6 +179,15 @@ function getActionBanner(
     };
   }
 
+  if (view.phase === "revealed") {
+    return {
+      text: view.canShowResults
+        ? voice.revealedHostHint
+        : voice.waitingForResults,
+      tone: "action",
+    };
+  }
+
   if (swapAbilityActive) {
     return {
       text: selectedSwapCard
@@ -838,6 +847,12 @@ export function GameTable({
       {view.canStartGame && (
         <RetroButton onClick={() => send({ type: "start_game" })}>
           {voice.startGame}
+        </RetroButton>
+      )}
+
+      {view.canShowResults && (
+        <RetroButton onClick={() => send({ type: "show_results" })}>
+          {voice.showResults}
         </RetroButton>
       )}
 
