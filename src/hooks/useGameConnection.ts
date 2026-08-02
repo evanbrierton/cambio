@@ -4,6 +4,7 @@ import { nanoid } from "nanoid";
 import PartySocket from "partysocket";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type {
+  BotDifficulty,
   Card,
   ClientMessage,
   PeekFlashKind,
@@ -58,6 +59,11 @@ type ConnectionState = {
 
 export type SessionMode = "new" | "reconnect";
 
+export type SoloOptions = {
+  botCount: number;
+  difficulty: BotDifficulty;
+};
+
 function resolvePlayerId(roomId: string, sessionMode: SessionMode): string {
   const key = storageKey(roomId);
   const seenKey = freshSessionKey(roomId);
@@ -79,6 +85,7 @@ export function useGameConnection(
   roomId: string,
   playerName: string,
   sessionMode: SessionMode = "reconnect",
+  soloOptions?: SoloOptions,
   debugEnabled = false,
 ) {
   const [state, setState] = useState<ConnectionState>({
@@ -116,6 +123,13 @@ export function useGameConnection(
       query: {
         name: playerName,
         playerId,
+        ...(soloOptions && sessionMode === "new"
+          ? {
+              solo: "1",
+              bots: String(soloOptions.botCount),
+              difficulty: soloOptions.difficulty,
+            }
+          : {}),
         ...(debugEnabled ? { debug: "1" } : {}),
       },
     });
@@ -233,7 +247,7 @@ export function useGameConnection(
       socket.close();
       socketRef.current = null;
     };
-  }, [roomId, playerName, sessionMode, debugEnabled]);
+  }, [roomId, playerName, sessionMode, soloOptions, debugEnabled]);
 
   return { ...state, send };
 }

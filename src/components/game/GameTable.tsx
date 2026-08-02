@@ -70,8 +70,8 @@ function formatPeekFlashNotice(
 ): string {
   const actor = players.find((entry) => entry.id === peekFlash.actorId);
   const target = players.find((entry) => entry.id === peekFlash.playerId);
-  const actorName = actor?.name ?? "Player";
-  const targetName = target?.name ?? "Player";
+  const actorName = actor?.name ?? "";
+  const targetName = target?.name ?? "";
   const slotLabel = `#${peekFlash.slot + 1}`;
 
   if (peekFlash.kind === "spy") {
@@ -475,10 +475,18 @@ function PlayerSeat({
           {hasPenaltyFlash && (
             <span className="ui-badge text-accent animate-pulse">PENALTY</span>
           )}
+          {player.isBot && (
+            <span className="ui-badge text-accent-alt">{voice.botBadge}</span>
+          )}
           {player.isHost && (
             <span className="ui-badge text-accent">{voice.host}</span>
           )}
-          {player.isCurrentTurn && (
+          {player.isThinking && (
+            <span className="ui-badge text-accent-alt animate-pulse">
+              {voice.botThinking}
+            </span>
+          )}
+          {player.isCurrentTurn && !player.isThinking && (
             <span className="ui-badge text-accent-alt animate-pulse">
               {voice.turn}
             </span>
@@ -794,7 +802,7 @@ export function GameTable({
   const me = view.players.find((p) => p.id === view.playerId);
   const isHost = me?.isHost ?? false;
   const cambioCallerName =
-    view.players.find((p) => p.id === cambioFlash?.playerId)?.name ?? "Player";
+    view.players.find((p) => p.id === cambioFlash?.playerId)?.name ?? "";
 
   const phaseLabel = voice.phases[view.phase] ?? "";
   const snapWindowActive = view.phase === "snap_window";
@@ -1250,7 +1258,7 @@ export function GameTable({
           )}
 
           {view.phase === "lobby" ? (
-            <LobbyPlayers view={view} voice={voice} />
+            <LobbyPlayers view={view} voice={voice} send={send} />
           ) : (
             <div className="flex flex-1 flex-col gap-2 min-h-0 min-w-0">
               <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">

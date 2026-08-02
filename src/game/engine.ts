@@ -9,6 +9,7 @@ import {
 } from "./cards";
 import { computeScores, determineWinners } from "./scoring";
 import type {
+  BotDifficulty,
   Card,
   CardSlot,
   ChatMessage,
@@ -18,8 +19,11 @@ import type {
   PeekFlashKind,
   PlayerState,
   PlayerView,
+  RoundResult,
+  ScoreboardEntry,
   SwapFlashSlot,
 } from "./types";
+import { generateBotName, nameKey } from "./bot-names";
 import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "./types";
 
 const MAX_PLAYERS = 6;
@@ -31,6 +35,81 @@ const MAX_CHAT_MESSAGES = 100;
 const MAX_CHAT_LENGTH = 200;
 const CHAT_COOLDOWN_MS = 500;
 
+export function isParticipant(player: PlayerState): boolean {
+  return !player.isWaiting && (player.connected || player.isBot);
+}
+
+type LegacyRoundResult = {
+  roundNumber: number;
+  scores?: Record<string, number>;
+  playerNames?: Record<string, string>;
+  entries?: ScoreboardEntry[];
+  winnerIds: string[];
+  cambioCallerId: string | null;
+};
+
+export function migrateRoundHistory(
+  rounds: LegacyRoundResult[] | undefined,
+): RoundResult[] {
+  if (!rounds) return [];
+
+  return rounds.map((round) => {
+    if (round.entries !== undefined) {
+      return {
+        roundNumber: round.roundNumber,
+        entries: round.entries,
+        winnerIds: round.winnerIds ?? [],
+        cambioCallerId: round.cambioCallerId ?? null,
+      };
+    }
+
+    const entries: ScoreboardEntry[] = Object.entries(round.scores ?? {}).flatMap(
+      ([id, score]) => {
+        const name = round.playerNames?.[id];
+        return name !== undefined ? [{ id, name, score }] : [];
+      },
+    );
+
+    return {
+      roundNumber: round.roundNumber,
+      entries,
+      winnerIds: round.winnerIds,
+      cambioCallerId: round.cambioCallerId,
+    };
+  });
+}
+
+export function addBotPlayer(
+  state: GameState,
+  difficulty: BotDifficulty,
+): string {
+  const id = nanoid(10);
+  const reserved = state.players.map((p) => p.name);
+  let name = generateBotName(reserved);
+
+  for (let attempt = 0; attempt < 100 && isNameTaken(state, name); attempt++) {
+    reserved.push(name);
+    name = generateBotName(reserved);
+  }
+
+  state.players.push({
+    id,
+    name,
+    hand: [],
+    penaltyCount: 0,
+    setupPeekedSlots: [],
+    hasCalledCambio: false,
+    finalTurnDone: false,
+    isWaiting: false,
+    connected: true,
+    isBot: true,
+    botDifficulty: difficulty,
+  });
+  state.cumulativeScores[id] = state.cumulativeScores[id] ?? 0;
+  addLog(state, `${name} joined as a bot.`);
+  return id;
+}
+
 export function createRoom(
   roomId: string,
   hostName: string,
@@ -40,6 +119,8 @@ export function createRoom(
   return {
     roomId,
     phase: "lobby",
+    isSoloMode: false,
+    soloDifficulty: null,
     hostId: id,
     players: [
       {
@@ -52,6 +133,8 @@ export function createRoom(
         finalTurnDone: false,
         isWaiting: false,
         connected: true,
+        isBot: false,
+        botDifficulty: null,
       },
     ],
     currentPlayerIndex: 0,
@@ -71,6 +154,7 @@ export function createRoom(
     snapWindowEndsAt: null,
     snapEligibleTopCardId: null,
     snapChainPlayerId: null,
+    botThinkingId: null,
     log: [`${hostName} created the room.`],
     chatMessages: [],
   };
@@ -84,6 +168,7 @@ export function addChatMessage(
   state: GameState,
   playerId: string,
   text: string,
+  options?: { fromBot?: boolean },
 ): ChatMessage | { error: string } {
   const player = findPlayer(state, playerId);
   if (!player) return { error: "Player not found." };
@@ -94,11 +179,13 @@ export function addChatMessage(
     return { error: `Message too long (max ${MAX_CHAT_LENGTH} characters).` };
   }
 
-  const lastMessage = [...state.chatMessages]
-    .reverse()
-    .find((message) => message.playerId === playerId);
-  if (lastMessage && Date.now() - lastMessage.sentAt < CHAT_COOLDOWN_MS) {
-    return { error: "Slow down — wait a moment before sending again." };
+  if (!options?.fromBot) {
+    const lastMessage = [...state.chatMessages]
+      .reverse()
+      .find((message) => message.playerId === playerId);
+    if (lastMessage && Date.now() - lastMessage.sentAt < CHAT_COOLDOWN_MS) {
+      return { error: "Slow down — wait a moment before sending again." };
+    }
   }
 
   const chatMessage: ChatMessage = {
@@ -128,13 +215,16 @@ function isNameTaken(
   name: string,
   excludePlayerId?: string,
 ): boolean {
-  const normalized = name.toLowerCase();
+  const normalized = nameKey(name);
   return state.players.some(
-    (p) => p.id !== excludePlayerId && p.name.toLowerCase() === normalized,
+    (p) => p.id !== excludePlayerId && nameKey(p.name) === normalized,
   );
 }
 
-function findPlayer(state: GameState, id: string): PlayerState | undefined {
+export function findPlayer(
+  state: GameState,
+  id: string,
+): PlayerState | undefined {
   return state.players.find((p) => p.id === id);
 }
 
@@ -288,25 +378,27 @@ export function finalizeRound(state: GameState): void {
   state.scores = computeScores(state);
   state.winnerIds = determineWinners(state);
 
-  const roundScores: Record<string, number> = {};
-  const roundNames: Record<string, string> = {};
+  const entries: ScoreboardEntry[] = [];
   for (const player of state.players) {
     if (player.hand.length > 0) {
-      roundScores[player.id] = state.scores[player.id] ?? 0;
-      roundNames[player.id] = player.name;
+      entries.push({
+        id: player.id,
+        name: player.name,
+        score: state.scores[player.id] ?? 0,
+      });
     }
   }
 
   state.roundHistory.push({
     roundNumber: state.roundNumber,
-    scores: roundScores,
-    playerNames: roundNames,
+    entries,
     winnerIds: [...state.winnerIds],
     cambioCallerId: state.cambioCallerId,
   });
 
-  for (const [id, score] of Object.entries(roundScores)) {
-    state.cumulativeScores[id] = (state.cumulativeScores[id] ?? 0) + score;
+  for (const entry of entries) {
+    state.cumulativeScores[entry.id] =
+      (state.cumulativeScores[entry.id] ?? 0) + entry.score;
   }
 
   for (const player of state.players) {
@@ -632,6 +724,8 @@ export function handleMessage(
         finalTurnDone: false,
         isWaiting: waiting,
         connected: true,
+        isBot: false,
+        botDifficulty: null,
       });
       state.cumulativeScores[playerId] = state.cumulativeScores[playerId] ?? 0;
       if (waiting) {
@@ -651,9 +745,7 @@ export function handleMessage(
       if (state.phase !== "lobby" && state.phase !== "ended") {
         return { error: "A game is already in progress." };
       }
-      const participants = state.players.filter(
-        (p) => !p.isWaiting && p.connected,
-      );
+      const participants = state.players.filter(isParticipant);
       if (participants.length < MIN_PLAYERS) {
         return { error: `Need at least ${MIN_PLAYERS} players.` };
       }
@@ -971,9 +1063,7 @@ export function handleMessage(
       if (state.phase === "lobby") {
         return { error: "No game to restart." };
       }
-      const participants = state.players.filter(
-        (p) => !p.isWaiting && p.connected,
-      );
+      const participants = state.players.filter(isParticipant);
       if (participants.length < MIN_PLAYERS) {
         return { error: `Need at least ${MIN_PLAYERS} players.` };
       }
@@ -990,6 +1080,43 @@ export function handleMessage(
         return { error: "Cannot show results now." };
       }
       finalizeRound(state);
+      return {};
+    }
+
+    case "add_bot": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can add bots." };
+      }
+      if (!state.isSoloMode) {
+        return { error: "Bots are only available in solo mode." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot add bots during a game." };
+      }
+      if (state.players.length >= MAX_PLAYERS) {
+        return { error: "Room is full." };
+      }
+      const difficulty = message.difficulty ?? state.soloDifficulty ?? "easy";
+      addBotPlayer(state, difficulty);
+      return {};
+    }
+
+    case "remove_bot": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can remove bots." };
+      }
+      if (!state.isSoloMode) {
+        return { error: "Bots are only available in solo mode." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot remove bots during a game." };
+      }
+      const bot = findPlayer(state, message.playerId);
+      if (!bot?.isBot) {
+        return { error: "That player is not a bot." };
+      }
+      state.players = state.players.filter((p) => p.id !== message.playerId);
+      addLog(state, `${bot.name} left.`);
       return {};
     }
 
@@ -1164,7 +1291,7 @@ export function buildPlayerView(
     state.phase !== "revealed";
   const snapInteractive = snapWindowActive && !viewerWaiting;
 
-  const participants = state.players.filter((p) => !p.isWaiting && p.connected);
+  const participants = state.players.filter(isParticipant);
 
   const players = state.players.map((p) => {
     return {
@@ -1192,8 +1319,10 @@ export function buildPlayerView(
       finalTurnDone: p.finalTurnDone,
       isWaiting: p.isWaiting,
       connected: p.connected,
+      isBot: p.isBot,
       isHost: p.id === state.hostId,
       isCurrentTurn: current?.id === p.id,
+      isThinking: state.botThinkingId === p.id,
     };
   });
 
@@ -1253,12 +1382,18 @@ export function buildPlayerView(
       participants.length >= MIN_PLAYERS,
     canShowResults: viewerId === state.hostId && state.phase === "revealed",
     roundNumber: state.roundNumber,
-    roundHistory: state.roundHistory,
-    cumulativeScores: { ...state.cumulativeScores },
+    roundHistory: migrateRoundHistory(state.roundHistory),
+    cumulativeScores: { ...(state.cumulativeScores ?? {}) },
     cambioCallerId: state.cambioCallerId,
     winnerIds: state.winnerIds,
     scores: state.scores,
     snapWindowEndsAt: state.snapWindowEndsAt,
+    isSoloMode: state.isSoloMode,
+    canAddBot:
+      viewerId === state.hostId &&
+      state.isSoloMode &&
+      (state.phase === "lobby" || state.phase === "ended") &&
+      state.players.length < MAX_PLAYERS,
     log: state.log,
     chatMessages: state.chatMessages,
   };

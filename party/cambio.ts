@@ -5,10 +5,22 @@ import {
   type WSMessage,
 } from "partyserver";
 import {
+  BotKnowledge,
+  botThinkDelay,
+  collectActingBots,
+  decideBotAction,
+  updateBotKnowledge,
+} from "../src/game/bot";
+import { botChatDelay, pickBotChatMessage } from "../src/game/bot-chat";
+import {
+  addBotPlayer,
+  addChatMessage,
   buildPlayerView,
   createRoom,
   expireSnapWindow,
+  findPlayer,
   handleMessage,
+  migrateRoundHistory,
 } from "../src/game/engine";
 import type {
   Card,
@@ -18,14 +30,23 @@ import type {
   ServerMessage,
   SwapFlashSlot,
 } from "../src/game/types";
+import {
+  DEFAULT_BOT_COUNT,
+  MAX_BOT_COUNT,
+  MIN_BOT_COUNT,
+  parseBotDifficulty,
+} from "../src/game/types";
 
 type PlayerConnectionState = { playerId?: string; debugEnabled?: boolean };
 
 function migrateState(state: GameState): GameState {
   return {
     ...state,
+    isSoloMode: state.isSoloMode ?? false,
+    soloDifficulty: state.soloDifficulty ?? null,
+    botThinkingId: null,
     roundNumber: state.roundNumber ?? 0,
-    roundHistory: state.roundHistory ?? [],
+    roundHistory: migrateRoundHistory(state.roundHistory),
     cumulativeScores: state.cumulativeScores ?? {},
     snapWindowEndsAt: state.snapWindowEndsAt ?? null,
     snapEligibleTopCardId: state.snapEligibleTopCardId ?? null,
@@ -34,6 +55,8 @@ function migrateState(state: GameState): GameState {
     players: state.players.map((p) => ({
       ...p,
       isWaiting: p.isWaiting ?? false,
+      isBot: p.isBot ?? false,
+      botDifficulty: p.botDifficulty ?? null,
     })),
   };
 }
@@ -46,17 +69,186 @@ function messageText(raw: WSMessage): string {
 
 export class CambioParty extends Server {
   state: GameState | null = null;
+  private botKnowledge = new Map<string, BotKnowledge>();
+  private botTimer: ReturnType<typeof setTimeout> | null = null;
+  private botChatTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private getBotKnowledge(botId: string): BotKnowledge {
+    let knowledge = this.botKnowledge.get(botId);
+    if (!knowledge) {
+      knowledge = new BotKnowledge();
+      this.botKnowledge.set(botId, knowledge);
+    }
+    return knowledge;
+  }
+
+  private clearBotTimer() {
+    if (this.botTimer) {
+      clearTimeout(this.botTimer);
+      this.botTimer = null;
+    }
+    if (this.state) {
+      this.state.botThinkingId = null;
+    }
+  }
+
+  private clearBotChatTimer() {
+    if (this.botChatTimer) {
+      clearTimeout(this.botChatTimer);
+      this.botChatTimer = null;
+    }
+  }
+
+  private scheduleBotChat() {
+    if (this.botChatTimer) return;
+    if (!this.state?.isSoloMode) return;
+
+    const bots = this.state.players.filter((p) => p.isBot);
+    if (bots.length === 0) return;
+
+    const delay = botChatDelay();
+    this.botChatTimer = setTimeout(() => {
+      this.botChatTimer = null;
+      void this.sendRandomBotChat();
+    }, delay);
+  }
+
+  private async sendRandomBotChat() {
+    if (!this.state?.isSoloMode) return;
+
+    const bots = this.state.players.filter((p) => p.isBot);
+    if (bots.length === 0) {
+      this.scheduleBotChat();
+      return;
+    }
+
+    const bot = bots[Math.floor(Math.random() * bots.length)];
+    const text = pickBotChatMessage(bot.botDifficulty ?? "easy");
+    const result = addChatMessage(this.state, bot.id, text, { fromBot: true });
+    if (!("error" in result)) {
+      await this.persist();
+      this.broadcastState();
+    }
+
+    this.scheduleBotChat();
+  }
+
+  private applyMessageResult(
+    botId: string,
+    message: ClientMessage,
+    result: ReturnType<typeof handleMessage>,
+  ) {
+    if (!this.state) return;
+    const bot = findPlayer(this.state, botId);
+    if (bot?.isBot) {
+      updateBotKnowledge(
+        this.getBotKnowledge(botId),
+        this.state,
+        botId,
+        message,
+        result,
+      );
+    }
+  }
+
+  private async dispatchMessage(
+    playerId: string,
+    message: ClientMessage,
+    connection?: Connection<PlayerConnectionState>,
+  ) {
+    if (!this.state) return;
+
+    const result = handleMessage(this.state, playerId, message);
+
+    if (result.error && connection) {
+      connection.send(JSON.stringify({ type: "error", message: result.error }));
+    }
+
+    this.applyMessageResult(playerId, message, result);
+
+    if (result.secretPeek) {
+      this.sendToPlayer(playerId, {
+        type: "secret_peek",
+        playerId: result.secretPeek.playerId,
+        slot: result.secretPeek.slot,
+        card: result.secretPeek.card as Card,
+      });
+    }
+
+    await this.persist();
+    await this.syncSnapWindow();
+    this.broadcastState();
+
+    if (result.swapFlash) {
+      this.broadcastSwapFlash(result.swapFlash.slots);
+    }
+    if (result.peekFlash) {
+      this.broadcastPeekFlash(result.peekFlash);
+    }
+    if (result.penaltyFlash) {
+      this.broadcastPenaltyFlash(result.penaltyFlash);
+    }
+    if (result.cambioFlash) {
+      this.broadcastCambioFlash(result.cambioFlash.playerId);
+    }
+
+    this.scheduleBotTurns();
+  }
+
+  scheduleBotTurns() {
+    this.clearBotTimer();
+    if (!this.state) return;
+
+    let scheduledBotId: string | null = null;
+    let scheduledAction: ClientMessage | null = null;
+
+    for (const botId of collectActingBots(this.state)) {
+      const bot = findPlayer(this.state, botId);
+      if (!bot?.isBot) continue;
+      const action = decideBotAction(
+        this.state,
+        botId,
+        this.getBotKnowledge(botId),
+      );
+      if (action) {
+        scheduledBotId = botId;
+        scheduledAction = action;
+        break;
+      }
+    }
+
+    if (!scheduledBotId || !scheduledAction) return;
+
+    const bot = findPlayer(this.state, scheduledBotId);
+    if (!bot?.isBot) return;
+
+    this.state.botThinkingId = scheduledBotId;
+    this.broadcastState();
+
+    const delay = botThinkDelay(bot.botDifficulty ?? "easy");
+    this.botTimer = setTimeout(() => {
+      this.botTimer = null;
+      if (!this.state) return;
+      this.state.botThinkingId = null;
+      void this.dispatchMessage(scheduledBotId, scheduledAction);
+    }, delay);
+  }
 
   async onStart() {
     const saved = await this.ctx.storage.get<GameState>("state");
     if (saved) {
       this.state = migrateState(saved);
       await this.syncSnapWindow();
+      this.scheduleBotTurns();
+      this.scheduleBotChat();
     }
   }
 
   async persist() {
-    if (this.state) await this.ctx.storage.put("state", this.state);
+    if (this.state) {
+      this.state.botThinkingId = null;
+      await this.ctx.storage.put("state", this.state);
+    }
   }
 
   async scheduleSnapWindowAlarm() {
@@ -77,6 +269,7 @@ export class CambioParty extends Server {
       await this.persist();
       await this.ctx.storage.deleteAlarm();
       this.broadcastState();
+      this.scheduleBotTurns();
       return;
     }
     await this.scheduleSnapWindowAlarm();
@@ -88,6 +281,7 @@ export class CambioParty extends Server {
       await this.persist();
       await this.ctx.storage.deleteAlarm();
       this.broadcastState();
+      this.scheduleBotTurns();
       return;
     }
     await this.scheduleSnapWindowAlarm();
@@ -166,6 +360,18 @@ export class CambioParty extends Server {
     const queryPlayerId = url.searchParams.get("playerId");
     const name = (url.searchParams.get("name") ?? "").trim().slice(0, 24);
     const debugEnabled = url.searchParams.has("debug");
+    const isSolo = url.searchParams.get("solo") === "1";
+    const botCount = Math.min(
+      MAX_BOT_COUNT,
+      Math.max(
+        MIN_BOT_COUNT,
+        Number.parseInt(
+          url.searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
+          10,
+        ) || DEFAULT_BOT_COUNT,
+      ),
+    );
+    const difficulty = parseBotDifficulty(url.searchParams.get("difficulty"));
 
     const existingPlayer = queryPlayerId
       ? this.state?.players.find((p) => p.id === queryPlayerId)
@@ -184,6 +390,14 @@ export class CambioParty extends Server {
     if (!this.state) {
       this.state = createRoom(this.name, name, queryPlayerId ?? undefined);
       playerId = this.state.hostId;
+
+      if (isSolo) {
+        this.state.isSoloMode = true;
+        this.state.soloDifficulty = difficulty;
+        for (let i = 0; i < botCount; i++) {
+          addBotPlayer(this.state, difficulty);
+        }
+      }
     } else if (queryPlayerId) {
       const existing = this.state.players.find((p) => p.id === queryPlayerId);
       if (existing) {
@@ -229,6 +443,8 @@ export class CambioParty extends Server {
 
     await this.syncSnapWindow();
     this.broadcastState();
+    this.scheduleBotTurns();
+    this.scheduleBotChat();
   }
 
   async onClose(connection: Connection<PlayerConnectionState>) {
@@ -258,6 +474,8 @@ export class CambioParty extends Server {
     const playerId = this.getPlayerId(connection);
     if (!this.state || !playerId) return;
 
+    this.clearBotTimer();
+
     let message: ClientMessage;
     try {
       message = JSON.parse(messageText(raw)) as ClientMessage;
@@ -281,39 +499,6 @@ export class CambioParty extends Server {
       return;
     }
 
-    const result = handleMessage(this.state, playerId, message);
-
-    if (result.error) {
-      connection.send(JSON.stringify({ type: "error", message: result.error }));
-    }
-
-    if (result.secretPeek) {
-      this.sendToPlayer(playerId, {
-        type: "secret_peek",
-        playerId: result.secretPeek.playerId,
-        slot: result.secretPeek.slot,
-        card: result.secretPeek.card as Card,
-      });
-    }
-
-    await this.persist();
-    await this.syncSnapWindow();
-    this.broadcastState();
-
-    if (result.swapFlash) {
-      this.broadcastSwapFlash(result.swapFlash.slots);
-    }
-
-    if (result.peekFlash) {
-      this.broadcastPeekFlash(result.peekFlash);
-    }
-
-    if (result.penaltyFlash) {
-      this.broadcastPenaltyFlash(result.penaltyFlash);
-    }
-
-    if (result.cambioFlash) {
-      this.broadcastCambioFlash(result.cambioFlash.playerId);
-    }
+    await this.dispatchMessage(playerId, message, connection);
   }
 }

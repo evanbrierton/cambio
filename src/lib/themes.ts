@@ -99,6 +99,17 @@ export type ThemeVoice = {
   soundOff: string;
   hintsOn: string;
   hintsOff: string;
+  soloMode: string;
+  botCountLabel: string;
+  difficultyLabel: string;
+  difficultyEasy: string;
+  difficultyMedium: string;
+  difficultyHard: string;
+  playVsBots: string;
+  botBadge: string;
+  botThinking: string;
+  addBot: string;
+  removeBot: string;
   chatLabel: string;
   chatPlaceholder: string;
   chatSend: string;
@@ -244,6 +255,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "SOUND OFF",
     hintsOn: "HINTS ON",
     hintsOff: "HINTS OFF",
+    soloMode: "SOLO MODE",
+    botCountLabel: "BOTS",
+    difficultyLabel: "DIFFICULTY",
+    difficultyEasy: "EASY",
+    difficultyMedium: "MEDIUM",
+    difficultyHard: "HARD",
+    playVsBots: "PLAY VS BOTS",
+    botBadge: "BOT",
+    botThinking: "THINKING...",
+    addBot: "+ ADD BOT",
+    removeBot: "REMOVE",
     chatLabel: "CHAT",
     chatPlaceholder: "Say something...",
     chatSend: "SEND",
@@ -353,6 +375,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    soloMode: "Solo table",
+    botCountLabel: "Opponents",
+    difficultyLabel: "Skill",
+    difficultyEasy: "Easy",
+    difficultyMedium: "Medium",
+    difficultyHard: "Hard",
+    playVsBots: "Solo vs bots",
+    botBadge: "Bot",
+    botThinking: "Thinking...",
+    addBot: "+ Add bot",
+    removeBot: "Remove",
     chatLabel: "Chat",
     chatPlaceholder: "Type a message...",
     chatSend: "Send",
@@ -460,6 +493,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    soloMode: "Solo mode",
+    botCountLabel: "Bots",
+    difficultyLabel: "Difficulty",
+    difficultyEasy: "Easy",
+    difficultyMedium: "Medium",
+    difficultyHard: "Hard",
+    playVsBots: "Party vs bots",
+    botBadge: "Bot",
+    botThinking: "Thinking...",
+    addBot: "+ Add bot",
+    removeBot: "Remove",
     chatLabel: "Chat",
     chatPlaceholder: "Say something fun!",
     chatSend: "Go!",
@@ -472,7 +516,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     subtitle: "Four cards. Lowest score wins. Call Cambio to end the round.",
     footer: "2–6 players · 54 cards · snap enabled",
     nicknameLabel: "Name",
-    nicknamePlaceholder: "Player",
+    nicknamePlaceholder: "Your name",
     roomCodeLabel: "Room",
     createGame: "Create",
     join: "Join",
@@ -566,6 +610,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    soloMode: "Solo",
+    botCountLabel: "Bots",
+    difficultyLabel: "Difficulty",
+    difficultyEasy: "Easy",
+    difficultyMedium: "Medium",
+    difficultyHard: "Hard",
+    playVsBots: "Play vs bots",
+    botBadge: "Bot",
+    botThinking: "Thinking...",
+    addBot: "+ Add bot",
+    removeBot: "Remove",
     chatLabel: "Chat",
     chatPlaceholder: "Message",
     chatSend: "Send",
@@ -675,6 +730,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    soloMode: "Solo mode",
+    botCountLabel: "Bots",
+    difficultyLabel: "Difficulty",
+    difficultyEasy: "Easy",
+    difficultyMedium: "Medium",
+    difficultyHard: "Hard",
+    playVsBots: "Solo vs bots",
+    botBadge: "Bot",
+    botThinking: "Thinking...",
+    addBot: "+ Add bot",
+    removeBot: "Remove",
     chatLabel: "Chat",
     chatPlaceholder: "A quiet word...",
     chatSend: "Send",

@@ -4,7 +4,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect } from "react";
 import { GameTable } from "@/components/game/GameTable";
 import type { PlayerView } from "@/game/types";
-import { type SessionMode, useGameConnection } from "@/hooks/useGameConnection";
+import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "@/game/types";
+import {
+  type SessionMode,
+  type SoloOptions,
+  useGameConnection,
+} from "@/hooks/useGameConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
 
@@ -26,6 +31,18 @@ export default function PlayPage({
   const debugEnabled = hasDebugQueryParam(searchParams);
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
+  const isSolo = searchParams.get("solo") === "1";
+  const soloOptions: SoloOptions | undefined =
+    isSolo && isNavFresh
+      ? {
+          botCount:
+            Number.parseInt(
+              searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
+              10,
+            ) || DEFAULT_BOT_COUNT,
+          difficulty: parseBotDifficulty(searchParams.get("difficulty")),
+        }
+      : undefined;
 
   useEffect(() => {
     if (isNavFresh && !name) {
@@ -43,7 +60,7 @@ export default function PlayPage({
     penaltyFlash,
     cambioFlash,
     send,
-  } = useGameConnection(roomId, name, sessionMode, debugEnabled);
+  } = useGameConnection(roomId, name, sessionMode, soloOptions, debugEnabled);
 
   useEffect(() => {
     if (!view || !isNavFresh) return;

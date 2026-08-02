@@ -59,6 +59,18 @@ export type PendingAbility = {
   snapTargetPlayerId?: string;
 };
 
+export type BotDifficulty = "easy" | "medium" | "hard";
+
+export function parseBotDifficulty(value: string | null): BotDifficulty {
+  if (value === "hard") return "hard";
+  if (value === "medium") return "medium";
+  return "easy";
+}
+
+export const DEFAULT_BOT_COUNT = 2;
+export const MIN_BOT_COUNT = 1;
+export const MAX_BOT_COUNT = 5;
+
 export type ChatMessage = {
   id: string;
   playerId: string;
@@ -67,10 +79,15 @@ export type ChatMessage = {
   sentAt: number;
 };
 
+export type ScoreboardEntry = {
+  id: string;
+  name: string;
+  score: number;
+};
+
 export type RoundResult = {
   roundNumber: number;
-  scores: Record<string, number>;
-  playerNames: Record<string, string>;
+  entries: ScoreboardEntry[];
   winnerIds: string[];
   cambioCallerId: string | null;
 };
@@ -85,11 +102,15 @@ export type PlayerState = {
   finalTurnDone: boolean;
   isWaiting: boolean;
   connected: boolean;
+  isBot: boolean;
+  botDifficulty: BotDifficulty | null;
 };
 
 export type GameState = {
   roomId: string;
   phase: GamePhase;
+  isSoloMode: boolean;
+  soloDifficulty: BotDifficulty | null;
   hostId: string;
   players: PlayerState[];
   currentPlayerIndex: number;
@@ -111,6 +132,7 @@ export type GameState = {
   snapEligibleTopCardId: string | null;
   /** During play, only this player may snap again after a correct snap. */
   snapChainPlayerId: string | null;
+  botThinkingId: string | null;
   log: string[];
   chatMessages: ChatMessage[];
 };
@@ -149,6 +171,8 @@ export type ClientMessage =
   | { type: "toggle_debug" }
   | { type: "restart_game" }
   | { type: "show_results" }
+  | { type: "add_bot"; difficulty?: BotDifficulty }
+  | { type: "remove_bot"; playerId: string }
   | { type: "chat"; text: string }
   | { type: "ability_look"; playerId: string; slot: number }
   | {
@@ -176,8 +200,10 @@ export type PublicPlayer = {
   finalTurnDone: boolean;
   isWaiting: boolean;
   connected: boolean;
+  isBot: boolean;
   isHost: boolean;
   isCurrentTurn: boolean;
+  isThinking: boolean;
 };
 
 export type PlayerView = {
@@ -208,6 +234,8 @@ export type PlayerView = {
   winnerIds: string[];
   scores: Record<string, number> | null;
   snapWindowEndsAt: number | null;
+  isSoloMode: boolean;
+  canAddBot: boolean;
   log: string[];
   chatMessages: ChatMessage[];
 };
