@@ -967,21 +967,23 @@ export function GameTable({
         onSend={(text) => send({ type: "chat", text })}
       />
 
-      <div className="pixel-border p-3 min-h-[120px] lg:min-h-[200px] lg:max-h-[50vh] lg:overflow-y-auto bg-surface">
-        <p className="font-display text-[8px] text-theme-muted mb-2">
+      <div className="pixel-border p-3 min-h-[120px] lg:min-h-[200px] bg-surface w-full min-w-0 flex flex-col">
+        <p className="font-display text-[8px] text-theme-muted mb-2 shrink-0">
           {voice.gameLog}
         </p>
-        {view.log.slice(-12).map((line, index) => {
-          const logIndex = Math.max(0, view.log.length - 12) + index;
-          return (
-            <p
-              key={`log-${logIndex}`}
-              className="font-mono text-[10px] text-theme-muted leading-relaxed"
-            >
-              {line}
-            </p>
-          );
-        })}
+        <div className="flex-1 min-h-0 lg:max-h-[50vh] lg:overflow-y-auto">
+          {view.log.slice(-12).map((line, index) => {
+            const logIndex = Math.max(0, view.log.length - 12) + index;
+            return (
+              <p
+                key={`log-${logIndex}`}
+                className="font-mono text-[10px] text-theme-muted leading-relaxed"
+              >
+                {line}
+              </p>
+            );
+          })}
+        </div>
       </div>
     </>
   );
@@ -1012,8 +1014,8 @@ export function GameTable({
             onClick={() => setSettingsOpen(false)}
             aria-label="Close menu"
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85dvh] overflow-y-auto bg-surface pixel-border border-b-0 p-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-3">
+          <div className="mobile-settings-sheet absolute inset-x-0 bottom-0 max-h-[85dvh] flex flex-col bg-surface pixel-border border-b-0 overflow-hidden">
+            <div className="shrink-0 flex items-center justify-between gap-3 p-4 pb-3">
               <p className="font-display text-xs text-theme">
                 {voice.styleLabel}
               </p>
@@ -1026,7 +1028,9 @@ export function GameTable({
                 ✕
               </button>
             </div>
-            {gameSidebar}
+            <div className="mobile-game-sheet overflow-y-auto flex-1 min-h-0 px-4 pt-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex flex-col gap-4">
+              {gameSidebar}
+            </div>
           </div>
         </div>
       )}
