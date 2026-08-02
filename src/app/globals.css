@@ -927,6 +927,18 @@ body::after {
   letter-spacing: var(--display-tracking);
 }
 
+@media (min-width: 640px) {
+  .ui-badge {
+    font-size: 9px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .ui-badge {
+    font-size: 10px;
+  }
+}
+
 .rounded-panel {
   border-radius: var(--radius-panel);
 }
@@ -1104,6 +1116,20 @@ html.play-scroll-lock body {
   transform-style: preserve-3d;
 }
 
+@media (min-width: 640px) {
+  .players-3d-rail {
+    gap: 1rem;
+    padding: 0.625rem 1.25rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .players-3d-rail {
+    gap: 1.25rem;
+    padding: 0.75rem 1.5rem;
+  }
+}
+
 .players-3d-edge {
   flex: 0 0 calc(50% - 4.5rem);
   min-width: 1rem;
@@ -1153,6 +1179,16 @@ html.play-scroll-lock body {
 .table-pile {
   width: 3.5rem;
   flex-shrink: 0;
+}
+
+@media (min-width: 640px) {
+  .table-pile-label {
+    font-size: 9px;
+  }
+
+  .table-pile {
+    width: 4rem;
+  }
 }
 
 @media (min-width: 1024px) {
