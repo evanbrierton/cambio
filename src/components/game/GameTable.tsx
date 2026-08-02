@@ -1104,30 +1104,15 @@ export function GameTable({
                 </div>
               </div>
             </div>
-            <div
-              className={`relative shrink-0 ${
-                (hintsEnabled && actionToast) ||
-                (view.phase === "lobby" && lobbyJoinToast)
-                  ? "h-14"
-                  : "h-0"
-              }`}
-              aria-live="polite"
-            >
-              <AnimatePresence initial={false}>
+            <div className="shrink-0" aria-live="polite">
+              <AnimatePresence initial={false} mode="wait">
                 {hintsEnabled && actionToast ? (
-                  <GameToast
-                    key="action"
-                    toast={actionToast}
-                    inline
-                    className="absolute inset-x-0 top-0"
-                  />
-                ) : null}
-                {view.phase === "lobby" && lobbyJoinToast ? (
+                  <GameToast key="action" toast={actionToast} inline />
+                ) : view.phase === "lobby" && lobbyJoinToast ? (
                   <GameToast
                     key={lobbyJoinToast.id}
                     toast={lobbyJoinToast}
                     inline
-                    className="absolute inset-x-0 top-0"
                   />
                 ) : null}
               </AnimatePresence>
