@@ -2,9 +2,10 @@ import type * as Party from "partykit/server";
 import {
   buildPlayerView,
   createRoom,
+  expireSnapWindow,
   handleMessage,
 } from "../src/game/engine";
-import type { Card, ClientMessage, GameState, ServerMessage } from "../src/game/types";
+import type { Card, ClientMessage, GameState, ServerMessage, SwapFlashSlot } from "../src/game/types";
 
 function migrateState(state: GameState): GameState {
   return {
@@ -12,6 +13,7 @@ function migrateState(state: GameState): GameState {
     roundNumber: state.roundNumber ?? 0,
     roundHistory: state.roundHistory ?? [],
     cumulativeScores: state.cumulativeScores ?? {},
+    snapWindowEndsAt: state.snapWindowEndsAt ?? null,
     players: state.players.map((p) => ({
       ...p,
       isWaiting: p.isWaiting ?? false,
@@ -26,11 +28,45 @@ export default class CambioParty implements Party.Server {
 
   async onStart() {
     const saved = await this.room.storage.get<GameState>("state");
-    if (saved) this.state = migrateState(saved);
+    if (saved) {
+      this.state = migrateState(saved);
+      await this.syncSnapWindow();
+    }
   }
 
   async persist() {
     if (this.state) await this.room.storage.put("state", this.state);
+  }
+
+  async scheduleSnapWindowAlarm() {
+    if (!this.state || this.state.phase !== "snap_window" || !this.state.snapWindowEndsAt) {
+      await this.room.storage.deleteAlarm();
+      return;
+    }
+    await this.room.storage.setAlarm(this.state.snapWindowEndsAt);
+  }
+
+  async syncSnapWindow() {
+    if (!this.state || this.state.phase !== "snap_window") return;
+    if (expireSnapWindow(this.state)) {
+      await this.persist();
+      await this.room.storage.deleteAlarm();
+      this.broadcastState();
+      return;
+    }
+    await this.scheduleSnapWindowAlarm();
+  }
+
+  async onAlarm() {
+    if (!this.state) return;
+    if (expireSnapWindow(this.state)) {
+      await this.persist();
+      await this.room.storage.deleteAlarm();
+      this.broadcastState();
+      return;
+    }
+    await this.scheduleSnapWindowAlarm();
+    this.broadcastState();
   }
 
   getPlayerId(connection: Party.Connection): string | null {
@@ -53,6 +89,14 @@ export default class CambioParty implements Party.Server {
       if (!playerId) continue;
       const view = buildPlayerView(this.state, playerId);
       conn.send(JSON.stringify({ type: "state", view }));
+    }
+  }
+
+  broadcastSwapFlash(slots: SwapFlashSlot[]) {
+    const message: ServerMessage = { type: "swap_flash", slots };
+    const payload = JSON.stringify(message);
+    for (const conn of this.room.getConnections()) {
+      conn.send(payload);
     }
   }
 
@@ -104,6 +148,7 @@ export default class CambioParty implements Party.Server {
       }),
     );
 
+    await this.syncSnapWindow();
     this.broadcastState();
   }
 
@@ -152,7 +197,12 @@ export default class CambioParty implements Party.Server {
     }
 
     await this.persist();
+    await this.syncSnapWindow();
     this.broadcastState();
+
+    if (result.swapFlash) {
+      this.broadcastSwapFlash(result.swapFlash.slots);
+    }
   }
 }
 

@@ -3,6 +3,7 @@ export type SoundId =
   | "snap"
   | "snapWrong"
   | "draw"
+  | "swap"
   | "cambio"
   | "gameOver"
   | "yourTurn"
@@ -82,6 +83,11 @@ export async function playSound(id: SoundId): Promise<void> {
     case "draw":
       tone(ctx, 520, t, 0.04, "triangle", 0.05);
       tone(ctx, 390, t + 0.05, 0.06, "triangle", 0.04);
+      break;
+    case "swap":
+      tone(ctx, 330, t, 0.05, "triangle", 0.05);
+      tone(ctx, 494, t + 0.07, 0.08, "triangle", 0.05);
+      tone(ctx, 392, t + 0.14, 0.06, "triangle", 0.04);
       break;
     case "cambio":
       tone(ctx, 523, t, 0.1, "square", 0.05);

@@ -1,3 +1,5 @@
+import type { DiscardAbility } from "@/game/cards";
+
 export type ThemeId = "retro" | "casino" | "party" | "minimal" | "calm";
 
 export const THEME_STORAGE_KEY = "cambio-theme";
@@ -14,6 +16,7 @@ export type ThemePhases = {
   setup_peek: string;
   playing: string;
   cambio_final: string;
+  snap_window: string;
   ended: string;
 };
 
@@ -43,6 +46,8 @@ export type ThemeVoice = {
   draw: string;
   take: string;
   discardDrawn: string;
+  discardAbilityButton: Record<DiscardAbility, string>;
+  discardAbilityHint: Record<DiscardAbility, string>;
   swapHintOptional: string;
   swapHintRequired: string;
   memorizePrefix: string;
@@ -64,6 +69,8 @@ export type ThemeVoice = {
   queenLookHint: string;
   kingLookHint: (remaining: number) => string;
   snapHint: string;
+  snapWindowHint: (seconds: number) => string;
+  swapFlashNotice: string;
   tapToSnap: string;
   snapGiveHint: string;
   debugReveal: string;
@@ -141,6 +148,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
       setup_peek: "SETUP — PEEK BOTTOM 2",
       playing: "IN PLAY",
       cambio_final: "CAMBIO FINAL ROUND",
+      snap_window: "LAST CHANCE TO SNAP",
       ended: "ROUND OVER",
     },
     startGame: "START GAME",
@@ -152,6 +160,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "DRAW",
     take: "TAKE",
     discardDrawn: "DISCARD",
+    discardAbilityButton: {
+      peek_own: "TOSS & PEEK YOURS",
+      spy: "TOSS & SPY",
+      blind_switch: "TOSS & BLIND SWAP",
+      queen_look: "TOSS, LOOK & SWAP",
+      king_look: "TOSS, LOOK 2 & SWAP",
+    },
+    discardAbilityHint: {
+      peek_own: "TOSS YOUR DRAWN CARD TO PEEK AT ONE OF YOURS",
+      spy: "TOSS YOUR DRAWN CARD TO SPY ON AN OPPONENT",
+      blind_switch: "TOSS YOUR DRAWN CARD TO BLIND-SWAP TWO CARDS",
+      queen_look: "TOSS YOUR DRAWN CARD TO LOOK, THEN SWAP",
+      king_look: "TOSS YOUR DRAWN CARD TO LOOK AT 2, THEN SWAP",
+    },
     swapHintOptional: "↓ TAP ONE OF YOUR CARDS BELOW TO SWAP",
     swapHintRequired: "↓ PICK A CARD BELOW TO SWAP (REQUIRED)",
     memorizePrefix: "MEMORIZE:",
@@ -176,6 +198,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
         ? "↓ TAP ONE MORE CARD TO LOOK"
         : "↓ TAP TWO CARDS ON THE TABLE TO LOOK",
     snapHint: "↓ TAP ANY MATCHING CARD ON THE TABLE TO SNAP",
+    snapWindowHint: (seconds) =>
+      `↓ SNAP ANY MATCHING CARD — ${seconds}s LEFT`,
+    swapFlashNotice: "↔ CARDS SWAPPED — WATCH THE HIGHLIGHTED SLOTS",
     tapToSnap: "TAP TO SNAP",
     snapGiveHint: "↓ TAP ONE OF YOUR CARDS TO GIVE THEM",
     debugReveal: "SHOW ALL CARDS",
@@ -218,6 +243,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
       setup_peek: "Place your bets — peek two",
       playing: "Cards in play",
       cambio_final: "Final hand — Cambio called",
+      snap_window: "Last chance to snap",
       ended: "Round settled",
     },
     startGame: "Deal in",
@@ -229,6 +255,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Draw card",
     take: "Take top",
     discardDrawn: "Fold card",
+    discardAbilityButton: {
+      peek_own: "Fold & peek yours",
+      spy: "Fold & spy",
+      blind_switch: "Fold & blind swap",
+      queen_look: "Fold, look & swap",
+      king_look: "Fold, look 2 & swap",
+    },
+    discardAbilityHint: {
+      peek_own: "Fold your drawn card to peek at one of yours",
+      spy: "Fold your drawn card to spy on an opponent",
+      blind_switch: "Fold your drawn card to blind-swap two cards",
+      queen_look: "Fold your drawn card to look, then swap",
+      king_look: "Fold your drawn card to look at 2, then swap",
+    },
     swapHintOptional: "Choose a card below to exchange",
     swapHintRequired: "You must swap — pick a card below",
     memorizePrefix: "Study:",
@@ -251,6 +291,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     kingLookHint: (n) =>
       n === 1 ? "Look at one more card" : "Look at two cards on the table",
     snapHint: "Tap any matching card on the table to snap",
+    snapWindowHint: (seconds) =>
+      `Snap any matching card — ${seconds}s remaining`,
+    swapFlashNotice: "↔ Cards swapped — watch the highlighted slots",
     tapToSnap: "Tap to snap",
     snapGiveHint: "Choose one of your cards to give them",
     debugReveal: "Reveal all cards",
@@ -293,6 +336,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
       setup_peek: "Peek time! Bottom two!",
       playing: "Game on!",
       cambio_final: "Last dance — Cambio!",
+      snap_window: "Last chance to snap!",
       ended: "Party's over!",
     },
     startGame: "Let's play!",
@@ -304,6 +348,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Grab one!",
     take: "Snag it!",
     discardDrawn: "Toss it!",
+    discardAbilityButton: {
+      peek_own: "Toss & peek yours!",
+      spy: "Toss & spy!",
+      blind_switch: "Toss & blind swap!",
+      queen_look: "Toss, look & swap!",
+      king_look: "Toss, look 2 & swap!",
+    },
+    discardAbilityHint: {
+      peek_own: "Toss your drawn card to peek at one of yours!",
+      spy: "Toss your drawn card to spy on someone!",
+      blind_switch: "Toss your drawn card to blind-swap two cards!",
+      queen_look: "Toss your drawn card to look, then swap!",
+      king_look: "Toss your drawn card to look at 2, then swap!",
+    },
     swapHintOptional: "↓ Tap one of your cards to swap!",
     swapHintRequired: "↓ Gotta swap — pick a card below!",
     memorizePrefix: "Quick! Remember:",
@@ -326,6 +384,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     kingLookHint: (n) =>
       n === 1 ? "↓ One more card to peek!" : "↓ Peek at two cards!",
     snapHint: "↓ Got a match? Tap any card on the table!",
+    snapWindowHint: (seconds) =>
+      `↓ Snap any match — ${seconds}s left!`,
+    swapFlashNotice: "↔ Cards swapped — check the glowing slots!",
     tapToSnap: "Tap to snap!",
     snapGiveHint: "↓ Pick a card from your hand to give them!",
     debugReveal: "Show all cards",
@@ -368,6 +429,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
       setup_peek: "Setup — peek 2",
       playing: "Playing",
       cambio_final: "Cambio — final round",
+      snap_window: "Last chance to snap",
       ended: "Round ended",
     },
     startGame: "Start",
@@ -379,6 +441,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Draw",
     take: "Take",
     discardDrawn: "Discard",
+    discardAbilityButton: {
+      peek_own: "Discard & peek",
+      spy: "Discard & spy",
+      blind_switch: "Discard & blind swap",
+      queen_look: "Discard, look & swap",
+      king_look: "Discard, look 2 & swap",
+    },
+    discardAbilityHint: {
+      peek_own: "Discard your drawn card to peek at one of yours",
+      spy: "Discard your drawn card to spy on an opponent",
+      blind_switch: "Discard your drawn card to blind-swap two cards",
+      queen_look: "Discard your drawn card to look, then swap",
+      king_look: "Discard your drawn card to look at 2, then swap",
+    },
     swapHintOptional: "Select a card below to swap",
     swapHintRequired: "Swap required — select a card below",
     memorizePrefix: "Remember:",
@@ -401,6 +477,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     kingLookHint: (n) =>
       n === 1 ? "Select one more card to look" : "Select two cards to look",
     snapHint: "Select any matching card on the table",
+    snapWindowHint: (seconds) =>
+      `Snap any matching card — ${seconds}s left`,
+    swapFlashNotice: "↔ Cards swapped — see highlighted slots",
     tapToSnap: "Tap to snap",
     snapGiveHint: "Select a card from your hand to give",
     debugReveal: "Reveal all",
@@ -443,6 +522,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
       setup_peek: "A moment to peek — two cards",
       playing: "In progress",
       cambio_final: "Final round — Cambio",
+      snap_window: "Last chance to snap",
       ended: "Round complete",
     },
     startGame: "Start round",
@@ -454,6 +534,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Draw",
     take: "Take",
     discardDrawn: "Discard",
+    discardAbilityButton: {
+      peek_own: "Discard & peek",
+      spy: "Discard & spy",
+      blind_switch: "Discard & blind swap",
+      queen_look: "Discard, look & swap",
+      king_look: "Discard, look 2 & swap",
+    },
+    discardAbilityHint: {
+      peek_own: "Set aside your drawn card to peek at one of yours",
+      spy: "Set aside your drawn card to glimpse an opponent's card",
+      blind_switch: "Set aside your drawn card to blind-swap two cards",
+      queen_look: "Set aside your drawn card to look, then swap",
+      king_look: "Set aside your drawn card to look at 2, then swap",
+    },
     swapHintOptional: "Choose one of your cards to exchange",
     swapHintRequired: "Please swap — choose a card below",
     memorizePrefix: "Take a breath. Remember:",
@@ -476,6 +570,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     kingLookHint: (n) =>
       n === 1 ? "Look at one more card" : "Look at two cards on the table",
     snapHint: "Tap any matching card on the table",
+    snapWindowHint: (seconds) =>
+      `Snap any matching card — ${seconds}s remaining`,
+    swapFlashNotice: "↔ Cards swapped — watch the highlighted slots",
     tapToSnap: "Tap to snap",
     snapGiveHint: "Choose one of your cards to offer",
     debugReveal: "Reveal all cards",

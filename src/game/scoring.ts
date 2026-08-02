@@ -7,7 +7,7 @@ export function scorePlayer(state: GameState, playerId: string): number {
 
   let total = 0;
   for (const slot of player.hand) {
-    total += cardPoints(slot.card);
+    if (slot.card) total += cardPoints(slot.card);
   }
   return total;
 }
@@ -48,7 +48,12 @@ function pickLowestCardValueWinner(
   for (const id of candidates) {
     const player = state.players.find((p) => p.id === id);
     if (!player) continue;
-    const lowestCard = Math.min(...player.hand.map((s) => cardPoints(s.card)));
+    const cardValues = player.hand
+      .map((s) => s.card)
+      .filter((card): card is Card => card !== null)
+      .map((card) => cardPoints(card));
+    if (cardValues.length === 0) continue;
+    const lowestCard = Math.min(...cardValues);
     if (lowestCard < bestValue) {
       bestValue = lowestCard;
       bestIds = [id];

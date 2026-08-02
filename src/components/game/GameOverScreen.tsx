@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ThemePicker } from "@/components/ui/ThemePicker";
 import type { ClientMessage, PlayerView, RoundResult } from "@/game/types";
@@ -17,6 +17,15 @@ type GameOverScreenProps = {
 
 function sortedRoundEntries(round: RoundResult) {
   return Object.entries(round.scores).sort(([, a], [, b]) => a - b);
+}
+
+function latestRoundNumber(view: PlayerView): number {
+  return view.roundHistory.at(-1)?.roundNumber ?? view.roundNumber;
+}
+
+function defaultSelectedRound(view: PlayerView): number | "total" {
+  const latest = latestRoundNumber(view);
+  return latest > 0 ? latest : "total";
 }
 
 function sortedCumulative(view: PlayerView) {
@@ -38,7 +47,24 @@ const fadeUp = {
 
 export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
   const voice = useThemeVoice();
-  const [selectedRound, setSelectedRound] = useState<number | "total">("total");
+  const latestRound = latestRoundNumber(view);
+  const latestRoundTabRef = useRef<HTMLButtonElement>(null);
+  const [selectedRound, setSelectedRound] = useState<number | "total">(() =>
+    defaultSelectedRound(view),
+  );
+
+  useEffect(() => {
+    setSelectedRound(defaultSelectedRound(view));
+  }, [view.roundNumber]);
+
+  useEffect(() => {
+    if (selectedRound !== latestRound) return;
+    latestRoundTabRef.current?.scrollIntoView({
+      behavior: "smooth",
+      inline: "end",
+      block: "nearest",
+    });
+  }, [latestRound, selectedRound]);
 
   const winners = view.players.filter((p) => view.winnerIds.includes(p.id));
   const cumulative = sortedCumulative(view);
@@ -95,11 +121,11 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
         {...fadeUp}
         transition={{ duration: 0.4, delay: 0.12 }}
       >
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto pb-1 scroll-stable">
           <button
             type="button"
             onClick={() => setSelectedRound("total")}
-            className={`chip-btn text-[8px] px-2 py-1 transition-colors ${
+            className={`chip-btn shrink-0 text-[8px] px-2 py-1 transition-colors ${
               selectedRound === "total"
                 ? "border-accent text-accent"
                 : "border-theme-muted text-theme-muted"
@@ -110,9 +136,10 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
           {view.roundHistory.map((round) => (
             <button
               key={round.roundNumber}
+              ref={round.roundNumber === latestRound ? latestRoundTabRef : undefined}
               type="button"
               onClick={() => setSelectedRound(round.roundNumber)}
-              className={`chip-btn text-[8px] px-2 py-1 transition-colors ${
+              className={`chip-btn shrink-0 text-[8px] px-2 py-1 transition-colors ${
                 selectedRound === round.roundNumber
                   ? "border-accent text-accent"
                   : "border-theme-muted text-theme-muted"

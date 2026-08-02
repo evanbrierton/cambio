@@ -532,17 +532,155 @@ body::after {
 @keyframes swap-selected-pulse {
   0%,
   100% {
-    box-shadow: 0 0 16px var(--glow-accent-alt);
-    transform: scale(1.1);
+    box-shadow: 0 0 12px var(--glow-accent-alt);
   }
   50% {
-    box-shadow: 0 0 28px var(--glow-accent-alt);
-    transform: scale(1.14);
+    box-shadow: 0 0 20px var(--glow-accent-alt);
   }
 }
 
 .animate-swap-selected {
   animation: swap-selected-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes swap-flash-pulse {
+  0% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent),
+      0 0 0 0 color-mix(in srgb, var(--accent-alt) 0%, transparent);
+    background-color: color-mix(in srgb, var(--accent) 0%, transparent);
+    filter: brightness(1);
+  }
+  18% {
+    box-shadow:
+      0 0 0 5px var(--accent),
+      0 0 36px 10px var(--glow-accent);
+    background-color: color-mix(in srgb, var(--accent) 55%, transparent);
+    filter: brightness(1.25);
+  }
+  42% {
+    box-shadow:
+      0 0 0 4px var(--accent-alt),
+      0 0 44px 12px var(--glow-accent-alt);
+    background-color: color-mix(in srgb, var(--accent-alt) 45%, transparent);
+    filter: brightness(1.2);
+  }
+  68% {
+    box-shadow:
+      0 0 0 5px var(--accent),
+      0 0 32px 10px var(--glow-accent);
+    background-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    filter: brightness(1.22);
+  }
+  100% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent),
+      0 0 0 0 color-mix(in srgb, var(--accent-alt) 0%, transparent);
+    background-color: color-mix(in srgb, var(--accent) 0%, transparent);
+    filter: brightness(1);
+  }
+}
+
+@keyframes swap-flash-icon {
+  0% {
+    transform: scale(0.4) rotate(-18deg);
+    opacity: 0;
+  }
+  20% {
+    transform: scale(1.5) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.25) rotate(10deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.15;
+  }
+}
+
+@keyframes swap-flash-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  35% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.15);
+    opacity: 0;
+  }
+}
+
+@keyframes swap-flash-shimmer {
+  0% {
+    transform: translateX(-100%) rotate(12deg);
+    opacity: 0.35;
+  }
+  40% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(100%) rotate(12deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes swap-flash-label {
+  0%,
+  100% {
+    opacity: 0;
+    letter-spacing: 0.05em;
+  }
+  25%,
+  70% {
+    opacity: 1;
+    letter-spacing: 0.2em;
+  }
+}
+
+@keyframes swap-seat-flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+  25%,
+  65% {
+    box-shadow: 0 0 0 4px var(--accent), 0 0 28px 8px var(--glow-accent);
+  }
+}
+
+.swap-flash-wrap {
+  z-index: 30;
+  border-radius: var(--radius-card);
+  animation: swap-flash-pulse 2.8s ease-in-out 1;
+}
+
+.swap-flash-icon {
+  animation: swap-flash-icon 2.8s ease-out 1;
+}
+
+.swap-flash-ring {
+  animation: swap-flash-ring 2.8s ease-out 1;
+}
+
+.swap-flash-shimmer {
+  animation: swap-flash-shimmer 1.4s ease-in-out 2;
+}
+
+.swap-flash-label {
+  animation: swap-flash-label 2.8s ease-in-out 1;
+}
+
+.swap-seat-flash {
+  animation: swap-seat-flash 2.8s ease-in-out 1;
+}
+
+.bg-swap-seat-flash {
+  background: color-mix(in srgb, var(--accent) 30%, var(--surface-elevated));
 }
 
 .card-red {
@@ -691,6 +829,18 @@ body::after {
 [data-theme="calm"] .shadow-glow-accent,
 [data-theme="calm"] .shadow-glow-accent-alt {
   box-shadow: none;
+}
+
+.scroll-stable {
+  overflow-anchor: none;
+}
+
+.touch-game {
+  touch-action: manipulation;
+}
+
+.play-shell {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
 }
 
 /* Table pile labels — constrain width to card column */

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import "./globals.css";
@@ -16,6 +16,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Cambio — Play Online",
   description: "Play Cambio online with friends. Lowest score wins.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -37,7 +43,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col relative z-0">
+      <body className="min-h-full flex flex-col relative z-0 pb-[env(safe-area-inset-bottom)]">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

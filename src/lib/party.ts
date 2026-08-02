@@ -1,8 +1,15 @@
+const PARTYKIT_PORT = 1999;
+
 export function getPartyHost(): string {
-  if (typeof window !== "undefined") {
-    return process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "127.0.0.1:1999";
+  if (process.env.NEXT_PUBLIC_PARTYKIT_HOST) {
+    return process.env.NEXT_PUBLIC_PARTYKIT_HOST;
   }
-  return process.env.NEXT_PUBLIC_PARTYKIT_HOST ?? "127.0.0.1:1999";
+
+  if (typeof window !== "undefined") {
+    return `${window.location.hostname}:${PARTYKIT_PORT}`;
+  }
+
+  return `127.0.0.1:${PARTYKIT_PORT}`;
 }
 
 export function storageKey(roomId: string): string {

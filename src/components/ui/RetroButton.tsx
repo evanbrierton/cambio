@@ -26,7 +26,7 @@ export function RetroButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className={`btn-theme text-[10px] sm:text-xs px-4 py-3 transition-all active:translate-y-0.5 disabled:opacity-40 ${variants[variant]} ${className}`}
+      className={`btn-theme text-[10px] sm:text-xs px-4 py-3 transition-colors active:opacity-80 disabled:opacity-40 ${variants[variant]} ${className}`}
     >
       {children}
     </button>

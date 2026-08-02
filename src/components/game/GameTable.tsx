@@ -7,14 +7,16 @@ import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
 import { PixelCard, TABLE_CARD_SIZE } from "@/components/cards/PixelCard";
 import { RetroButton } from "@/components/ui/RetroButton";
+import { GameToastLayer, type GameToastItem } from "@/components/ui/GameToastLayer";
 import { ThemePicker } from "@/components/ui/ThemePicker";
 import type { ClientMessage, PendingAbility, PlayerView, PublicPlayer } from "@/game/types";
 import { SETUP_PEEK_SLOTS } from "@/game/types";
-import { cardLabel, isRed, suitGlyph } from "@/game/cards";
-import type { FleetingPeek } from "@/hooks/useGameConnection";
+import { cardLabel, abilityForDiscard, isRed, suitGlyph } from "@/game/cards";
+import type { FleetingPeek, SwapFlash } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { useSoundEnabled } from "@/hooks/useSoundEnabled";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
+import { copyToClipboard } from "@/lib/clipboard";
 import type { ThemeVoice } from "@/lib/themes";
 
 type GameTableProps = {
@@ -22,10 +24,43 @@ type GameTableProps = {
   connected: boolean;
   error: string | null;
   fleetingPeek: FleetingPeek | null;
+  swapFlash: SwapFlash | null;
   send: (message: ClientMessage) => void;
 };
 
 type SelectedCard = { playerId: string; slot: number };
+
+function isSwapFlashing(
+  swapFlash: SwapFlash | null,
+  playerId: string,
+  slot: number,
+): boolean {
+  return (
+    swapFlash?.slots.some(
+      (entry) => entry.playerId === playerId && entry.slot === slot,
+    ) ?? false
+  );
+}
+
+function formatSwapFlashNotice(
+  swapFlash: SwapFlash,
+  players: PlayerView["players"],
+  fallback: string,
+): string {
+  const parts = swapFlash.slots.map(({ playerId, slot }) => {
+    const player = players.find((entry) => entry.id === playerId);
+    const label = `#${slot + 1}`;
+    return player ? `${player.name} ${label}` : label;
+  });
+
+  if (parts.length >= 2) {
+    return `↔ ${parts.join("  ↔  ")}`;
+  }
+  if (parts.length === 1) {
+    return `↔ ${parts[0]}`;
+  }
+  return fallback;
+}
 
 function isSwapAbility(kind: string | undefined) {
   return (
@@ -47,7 +82,15 @@ function getActionBanner(
   voice: ThemeVoice,
   swapAbilityActive: boolean,
   selectedSwapCard: SelectedCard | null,
+  snapWindowSeconds: number | null,
 ): { text: string; tone: "swap" | "action" | "snap" | "turn" } | null {
+  if (view.phase === "snap_window" && snapWindowSeconds !== null) {
+    return {
+      text: voice.snapWindowHint(snapWindowSeconds),
+      tone: "snap",
+    };
+  }
+
   if (swapAbilityActive) {
     return {
       text: selectedSwapCard
@@ -90,7 +133,11 @@ function getActionBanner(
     return { text: voice.drawHint, tone: "turn" };
   }
   if (view.canDiscardDrawn) {
-    return { text: voice.discardHint, tone: "turn" };
+    const ability = view.drawnCard ? abilityForDiscard(view.drawnCard) : null;
+    return {
+      text: ability ? voice.discardAbilityHint[ability] : voice.discardHint,
+      tone: "turn",
+    };
   }
   if (view.canSnap) {
     return { text: voice.snapHint, tone: "snap" };
@@ -105,6 +152,7 @@ function PlayerSeat({
   phase,
   cambioCallerId,
   fleetingPeek,
+  swapFlash,
   selectedSwapCard,
   canSwap,
   canSnap,
@@ -121,6 +169,7 @@ function PlayerSeat({
   phase: PlayerView["phase"];
   cambioCallerId: string | null;
   fleetingPeek: FleetingPeek | null;
+  swapFlash: SwapFlash | null;
   selectedSwapCard: SelectedCard | null;
   canSwap?: boolean;
   canSnap?: boolean;
@@ -151,6 +200,7 @@ function PlayerSeat({
 
   const canPickForLook = (slotIndex: number) => {
     if (!lookAbilityActive || !pendingLookKind) return false;
+    if (player.hand[slotIndex]?.empty) return false;
     if (pendingLookKind === "peek_own") return isOwn;
     if (pendingLookKind === "spy") return !isOwn && !isProtectedTarget;
     if (pendingLookKind === "queen_look" || pendingLookKind === "king_look") {
@@ -162,13 +212,18 @@ function PlayerSeat({
   const showLookSeatHint =
     lookAbilityActive && player.hand.some((_, index) => canPickForLook(index));
 
+  const hasSwapFlash =
+    swapFlash?.slots.some((entry) => entry.playerId === player.id) ?? false;
+
   const seatPadding = compact ? "p-2" : "p-3 sm:p-4";
   const cardGridWidth = compact ? "w-[120px]" : "w-[168px] sm:w-[184px]";
 
   return (
     <section
       className={`pixel-border ${seatPadding} w-full min-w-0 ${
-        showDrawnSwapHint || showSnapGiveHint
+        hasSwapFlash
+          ? "swap-seat-flash bg-swap-seat-flash ring-4 ring-accent shadow-glow-accent"
+        : showDrawnSwapHint || showSnapGiveHint
           ? "bg-swap-hint ring-2 ring-accent animate-pulse"
           : showLookSeatHint
             ? "bg-action-hint ring-2 ring-accent-alt"
@@ -191,7 +246,7 @@ function PlayerSeat({
         isOwn && !showDrawnSwapHint ? "lg:ring-1 lg:ring-accent" : ""
       } ${swapAbilityActive && isProtectedTarget && !isOwn ? "opacity-40" : ""}`}
     >
-      <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 ${compact ? "mb-2" : "mb-3"}`}>
+      <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 min-h-[1.75rem] ${compact ? "mb-2" : "mb-3"}`}>
         <h2 className={`player-name ${compact ? "text-[10px]" : "text-xs sm:text-sm"}`}>
           {player.name}
         </h2>
@@ -234,6 +289,11 @@ function PlayerSeat({
             CARD 1
           </span>
         )}
+        {hasSwapFlash && (
+          <span className="ui-badge text-accent animate-pulse">
+            SWAPPED
+          </span>
+        )}
         {player.isHost && (
           <span className="ui-badge text-accent">{voice.host}</span>
         )}
@@ -266,45 +326,66 @@ function PlayerSeat({
       ) : (
       <div className={`grid grid-cols-2 gap-1.5 sm:gap-3 ${cardGridWidth} mx-auto`}>
         {player.hand.map((slot, index) => {
+          const isEmpty = !!slot.empty;
           const isFleetingPeek =
             fleetingPeek?.playerId === player.id && fleetingPeek.slot === index;
           const setupLocked =
             phase === "setup_peek" &&
-            (!isOwn || !SETUP_PEEK_SLOTS.includes(index));
+            (!isOwn || !SETUP_PEEK_SLOTS.includes(index) || isEmpty);
           const abilityLocked = swapAbilityActive && !canPickForAbility;
           const lookLocked = lookAbilityActive && !canPickForLook(index);
           const isSelectedForSwap =
             selectedSwapCard?.playerId === player.id &&
             selectedSwapCard.slot === index;
+          const canInteract =
+            !isEmpty ||
+            (showDrawnSwapHint && isOwn) ||
+            (showAbilitySwapHint && !abilityLocked);
 
           return (
             <PixelCard
               key={index}
               card={isFleetingPeek ? fleetingPeek.card : slot.card}
+              empty={isEmpty && !isFleetingPeek}
               hidden={!isFleetingPeek && slot.hidden}
               faceUp={isFleetingPeek || slot.faceUp}
               revealing={isFleetingPeek}
               small={compact}
               swapFirstSelected={isSelectedForSwap && swapAbilityActive}
+              swapFlashing={isSwapFlashing(swapFlash, player.id, index)}
+              swapFlashSlotLabel={
+                isSwapFlashing(swapFlash, player.id, index)
+                  ? `#${index + 1}`
+                  : undefined
+              }
               highlightSwap={
-                (showDrawnSwapHint && !setupLocked) ||
-                (showSnapGiveHint && !setupLocked) ||
-                (showAbilitySwapHint && !setupLocked && !abilityLocked)
+                !isEmpty &&
+                ((showDrawnSwapHint && !setupLocked) ||
+                  (showSnapGiveHint && !setupLocked) ||
+                  (showAbilitySwapHint && !setupLocked && !abilityLocked))
               }
               highlightAction={
-                (showSetupPeekHint &&
+                !isEmpty &&
+                ((showSetupPeekHint &&
                   SETUP_PEEK_SLOTS.includes(index) &&
                   !setupLocked) ||
-                (lookAbilityActive && canPickForLook(index))
+                  (lookAbilityActive && canPickForLook(index)))
               }
-              highlightSnap={showSnapTarget && !setupLocked && !lookAbilityActive && !swapAbilityActive && !snapGiveActive}
+              highlightSnap={
+                !isEmpty &&
+                showSnapTarget &&
+                !setupLocked &&
+                !lookAbilityActive &&
+                !swapAbilityActive &&
+                !snapGiveActive
+              }
               isPenalty={isOwn && slot.isPenalty}
               onClick={
-                setupLocked || abilityLocked || lookLocked
+                setupLocked || abilityLocked || lookLocked || !canInteract
                   ? undefined
                   : () => onCardClick(player.id, index, isOwn)
               }
-              disabled={setupLocked || abilityLocked || lookLocked}
+              disabled={setupLocked || abilityLocked || lookLocked || !canInteract}
             />
           );
         })}
@@ -319,15 +400,17 @@ export function GameTable({
   connected,
   error,
   fleetingPeek,
+  swapFlash,
   send,
 }: GameTableProps) {
   const voice = useThemeVoice();
   const { soundEnabled, toggleSound } = useSoundEnabled();
-  useGameSounds(view, error, fleetingPeek);
+  useGameSounds(view, error, fleetingPeek, swapFlash);
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
   );
   const [roomCopied, setRoomCopied] = useState(false);
+  const [snapWindowSeconds, setSnapWindowSeconds] = useState<number | null>(null);
   const isCrowded = view.players.length >= 5;
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
@@ -341,7 +424,96 @@ export function GameTable({
     voice,
     swapAbilityActive,
     selectedSwapCard,
+    snapWindowSeconds,
   );
+
+  const gameToasts = useMemo((): GameToastItem[] => {
+    const items: GameToastItem[] = [];
+
+    if (error) {
+      items.push({ id: "error", message: error, tone: "error" });
+    }
+
+    if (swapFlash) {
+      items.push({
+        id: "swap-flash",
+        message: formatSwapFlashNotice(
+          swapFlash,
+          view.players,
+          voice.swapFlashNotice,
+        ),
+        tone: "swap",
+        pulse: true,
+      });
+    }
+
+    if (fleetingPeek) {
+      items.push({
+        id: "fleeting-peek",
+        message: (
+          <>
+            <span>{voice.memorizePrefix} </span>
+            <span className={isRed(fleetingPeek.card) ? "card-red" : "card-black"}>
+              {cardLabel(fleetingPeek.card)}
+              {fleetingPeek.card.rank !== "JOKER" && (
+                <span className="text-base ml-1">{suitGlyph(fleetingPeek.card.suit)}</span>
+              )}
+            </span>
+          </>
+        ),
+        tone: "info",
+      });
+    }
+
+    if (actionBanner) {
+      items.push({
+        id: "action",
+        message: actionBanner.text,
+        tone: actionBanner.tone,
+        pulse: swapAbilityActive && !!selectedSwapCard,
+        action:
+          swapAbilityActive && selectedSwapCard ? (
+            <button
+              type="button"
+              onClick={() => setSelectedSwapCard(null)}
+              className="chip-btn text-[8px] px-2 py-1 border-accent-alt text-accent-alt hover:border-accent transition-colors"
+            >
+              {voice.swapAbilityCancel}
+            </button>
+          ) : undefined,
+      });
+    }
+
+    return items;
+  }, [
+    actionBanner,
+    error,
+    fleetingPeek,
+    selectedSwapCard,
+    swapAbilityActive,
+    swapFlash,
+    view.players,
+    voice,
+  ]);
+
+  useEffect(() => {
+    if (view.phase !== "snap_window" || !view.snapWindowEndsAt) {
+      setSnapWindowSeconds(null);
+      return;
+    }
+
+    const update = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((view.snapWindowEndsAt! - Date.now()) / 1000),
+      );
+      setSnapWindowSeconds(remaining);
+    };
+
+    update();
+    const timer = window.setInterval(update, 250);
+    return () => window.clearInterval(timer);
+  }, [view.phase, view.snapWindowEndsAt]);
 
   useEffect(() => {
     if (!swapAbilityActive) {
@@ -374,6 +546,11 @@ export function GameTable({
   const self = view.players.find((p) => p.id === view.playerId);
 
   const phaseLabel = voice.phases[view.phase] ?? "";
+
+  const discardAbility = view.drawnCard ? abilityForDiscard(view.drawnCard) : null;
+  const discardButtonLabel = discardAbility
+    ? voice.discardAbilityButton[discardAbility]
+    : voice.discardDrawn;
 
   const handleCardClick = (
     playerId: string,
@@ -446,14 +623,12 @@ export function GameTable({
     }
   };
 
-  const copyRoomCode = async () => {
-    try {
-      await navigator.clipboard.writeText(view.roomId);
+  const copyRoomCode = () => {
+    void copyToClipboard(view.roomId).then((copied) => {
+      if (!copied) return;
       setRoomCopied(true);
       window.setTimeout(() => setRoomCopied(false), 2000);
-    } catch {
-      setRoomCopied(false);
-    }
+    });
   };
 
   const actionButtons = (
@@ -483,8 +658,9 @@ export function GameTable({
 
   return (
     <div className="w-full max-w-7xl mx-auto">
+      <GameToastLayer toasts={gameToasts} />
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-6 lg:items-start">
-        <div className="flex flex-col gap-4 sm:gap-5 min-w-0">
+        <div className="scroll-stable flex flex-col gap-4 sm:gap-5 min-w-0">
           <header className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -494,9 +670,15 @@ export function GameTable({
                 <button
                   type="button"
                   onClick={copyRoomCode}
-                  className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+                  aria-live="polite"
+                  aria-label={roomCopied ? voice.copied : voice.copy}
+                  className={`chip-btn text-[8px] px-2 py-1 transition-colors ${
+                    roomCopied
+                      ? "border-accent text-accent"
+                      : "border-theme-muted text-theme hover:border-accent"
+                  }`}
                 >
-                  {roomCopied ? voice.copied : voice.copy}
+                  {voice.copy}
                 </button>
               </div>
               <h1 className="font-display text-base sm:text-xl lg:text-2xl title-glow mt-1">
@@ -520,63 +702,6 @@ export function GameTable({
               </div>
             </div>
           </header>
-
-          {error && (
-            <div className="pixel-border bg-danger-surface text-danger-text font-display text-xs p-3">
-              {error}
-            </div>
-          )}
-
-          {fleetingPeek && (
-            <div className="pixel-border bg-surface-elevated p-3 font-display text-[10px] text-theme animate-pulse text-center">
-              <span>{voice.memorizePrefix} </span>
-              <span className={isRed(fleetingPeek.card) ? "card-red" : "card-black"}>
-                {cardLabel(fleetingPeek.card)}
-                {fleetingPeek.card.rank !== "JOKER" && (
-                  <span className="text-base ml-1">{suitGlyph(fleetingPeek.card.suit)}</span>
-                )}
-              </span>
-            </div>
-          )}
-
-          {actionBanner && !swapAbilityActive && (
-            <div
-              className={`pixel-border p-3 font-display text-[10px] text-center ${
-                actionBanner.tone === "snap"
-                  ? "bg-snap-hint ring-1 ring-danger/50 text-danger-text"
-                  : actionBanner.tone === "turn"
-                    ? "bg-swap-hint ring-2 ring-accent text-accent animate-pulse"
-                    : "bg-action-hint ring-2 ring-accent-alt text-accent-alt animate-pulse"
-              }`}
-            >
-              {actionBanner.text}
-            </div>
-          )}
-
-          {swapAbilityActive && (
-            <div
-              className={`pixel-border p-3 font-display text-[10px] text-center ${
-                selectedSwapCard
-                  ? "bg-swap-first-selected ring-2 ring-accent-alt text-accent-alt"
-                  : "bg-surface-elevated text-accent"
-              }`}
-            >
-              <p className={selectedSwapCard ? "animate-pulse" : ""}>
-                {selectedSwapCard
-                  ? voice.swapAbilityFirstSelected
-                  : voice.swapAbilityHint}
-              </p>
-              {selectedSwapCard && (
-                <button
-                  type="button"
-                  onClick={() => setSelectedSwapCard(null)}
-                  className="chip-btn mt-2 text-[8px] px-2 py-1 border-accent-alt text-accent-alt hover:border-accent transition-colors"
-                >
-                  {voice.swapAbilityCancel}
-                </button>
-              )}
-            </div>
-          )}
 
           <div
             className={`pixel-border bg-surface p-4 sm:p-5 ${
@@ -612,19 +737,20 @@ export function GameTable({
                   )}
                 </div>
                 <div
-                  className={
+                  className={`${TABLE_CARD_SIZE} shrink-0 ${
                     view.canSnap
-                      ? "ring-1 ring-danger/50 rounded-card shrink-0"
-                      : "shrink-0"
-                  }
+                      ? "ring-1 ring-danger/50 rounded-card"
+                      : ""
+                  }`}
                 >
-                  <AnimatePresence mode="popLayout">
+                  <AnimatePresence mode="wait">
                     <motion.div
                       key={view.discardTop?.id ?? "empty-discard"}
-                      initial={{ scale: 1.25, y: -16, opacity: 0 }}
-                      animate={{ scale: 1, y: 0, opacity: 1 }}
-                      exit={{ scale: 0.85, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 420, damping: 26 }}
+                      className="h-full w-full"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.18, ease: "easeOut" }}
                     >
                       <PixelCard
                         card={view.discardTop}
@@ -646,32 +772,40 @@ export function GameTable({
                 </div>
               </div>
 
-              {view.drawnCard && (
-                <div className="table-pile flex flex-col items-center gap-2">
-                  <p className="table-pile-label text-accent">{voice.drawn}</p>
-                  <div
-                    className={`shrink-0 ${
-                      view.canSwap
-                        ? "ring-2 ring-accent animate-pulse shadow-glow-accent rounded-card"
-                        : ""
-                    }`}
-                  >
+              <div className="table-pile flex flex-col items-center gap-2">
+                <p
+                  className={`table-pile-label ${
+                    view.drawnCard ? "text-accent" : "invisible"
+                  }`}
+                >
+                  {voice.drawn}
+                </p>
+                <div
+                  className={`${TABLE_CARD_SIZE} shrink-0 ${
+                    view.canSwap
+                      ? "ring-2 ring-accent shadow-glow-accent rounded-card"
+                      : ""
+                  }`}
+                >
+                  {view.drawnCard ? (
                     <PixelCard card={view.drawnCard} faceUp />
-                  </div>
-                  <div className="table-pile-action" />
+                  ) : (
+                    <div className={`${TABLE_CARD_SIZE}`} aria-hidden />
+                  )}
                 </div>
-              )}
+                <div className="table-pile-action" />
+              </div>
             </div>
-            {view.canDiscardDrawn && (
-              <div className="flex justify-center mt-4">
+            <div className="flex justify-center mt-4 min-h-[2.75rem]">
+              {view.canDiscardDrawn && (
                 <RetroButton
                   variant="secondary"
                   onClick={() => send({ type: "discard_drawn" })}
                 >
-                  {voice.discardDrawn}
+                  {discardButtonLabel}
                 </RetroButton>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {self && (
@@ -681,6 +815,7 @@ export function GameTable({
               phase={view.phase}
               cambioCallerId={view.cambioCallerId}
               fleetingPeek={fleetingPeek}
+              swapFlash={swapFlash}
               selectedSwapCard={selectedSwapCard}
               canSwap={view.canSwap}
               canSnap={view.canSnap}
@@ -697,7 +832,7 @@ export function GameTable({
             <div
               className={
                 otherPlayersInOrder.length >= 3
-                  ? "grid grid-cols-1 min-[480px]:grid-cols-2 gap-2 sm:gap-3 max-h-[52vh] overflow-y-auto overscroll-contain pr-0.5"
+                  ? "grid grid-cols-1 min-[480px]:grid-cols-2 gap-2 sm:gap-3 lg:max-h-[52vh] lg:overflow-y-auto lg:overscroll-contain lg:scroll-stable pr-0.5"
                   : "flex flex-col gap-3"
               }
             >
@@ -709,6 +844,7 @@ export function GameTable({
                   phase={view.phase}
                   cambioCallerId={view.cambioCallerId}
                   fleetingPeek={fleetingPeek}
+                  swapFlash={swapFlash}
                   selectedSwapCard={selectedSwapCard}
                   canSnap={view.canSnap}
                   snapGiveActive={snapGiveActive}
@@ -723,10 +859,10 @@ export function GameTable({
             </div>
           )}
 
-          <div className="lg:hidden">{actionButtons}</div>
+          <div className="min-h-[2.75rem] lg:hidden">{actionButtons}</div>
         </div>
 
-        <aside className="mt-6 lg:mt-0 flex flex-col gap-4 lg:sticky lg:top-4">
+        <aside className="mt-6 flex flex-col gap-4 lg:mt-0 lg:sticky lg:top-4">
           <div className="hidden lg:block">{actionButtons}</div>
 
           <button
@@ -739,7 +875,7 @@ export function GameTable({
 
           <ThemePicker compact />
 
-          <div className="pixel-border p-3 flex-1 min-h-[120px] lg:min-h-[200px] lg:max-h-[50vh] overflow-y-auto bg-surface">
+          <div className="pixel-border p-3 min-h-[120px] lg:min-h-[200px] lg:max-h-[50vh] lg:overflow-y-auto bg-surface">
             <p className="font-display text-[8px] text-theme-muted mb-2">{voice.gameLog}</p>
             {view.log.slice(-12).map((line, i) => (
               <p
