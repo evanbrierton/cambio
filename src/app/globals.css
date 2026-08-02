@@ -347,34 +347,48 @@
   }
 }
 
-body {
+html {
+  background-color: var(--background);
+}
+
+/* Fixed layer so tiled/repeating backgrounds don't shift on mobile scroll. */
+html::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
   background-color: var(--background);
   background-image: var(--bg-image);
   background-size:
     100% 100%,
     24px 24px,
     24px 24px;
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  min-height: 100vh;
+  transform: translateZ(0);
 }
 
-[data-theme="casino"] body {
+[data-theme="casino"] html::before {
   background-size:
     100% 100%,
     4px 4px,
     4px 4px;
 }
 
-[data-theme="minimal"] body {
+[data-theme="minimal"] html::before {
   background-size:
     32px 32px,
     32px 32px;
 }
 
-[data-theme="party"] body {
+[data-theme="party"] html::before {
   background-size: 400% 400%;
   animation: party-bg-shift 18s linear infinite;
+}
+
+body {
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  min-height: 100vh;
 }
 
 button:not(:disabled) {
