@@ -31,6 +31,7 @@ export type ThemeVoice = {
   createGame: string;
   join: string;
   styleLabel: string;
+  gameMenuLabel: string;
   loading: string;
   roomPrefix: string;
   copy: string;
@@ -163,6 +164,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "CREATE GAME",
     join: "JOIN",
     styleLabel: "PIXEL STYLE",
+    gameMenuLabel: "GAME MENU",
     loading: "LOADING CARTRIDGE...",
     roomPrefix: "ROOM",
     copy: "COPY",
@@ -284,6 +286,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Open a table",
     join: "Sit down",
     styleLabel: "Ambiance",
+    gameMenuLabel: "Game menu",
     loading: "Shuffling the deck...",
     roomPrefix: "Table",
     copy: "Copy code",
@@ -404,6 +407,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Start the party!",
     join: "Jump in!",
     styleLabel: "Party vibe",
+    gameMenuLabel: "Party menu",
     loading: "Getting the party ready...",
     roomPrefix: "Party",
     copy: "Share",
@@ -521,6 +525,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Create",
     join: "Join",
     styleLabel: "Theme",
+    gameMenuLabel: "Menu",
     loading: "Loading",
     roomPrefix: "Room",
     copy: "Copy",
@@ -639,6 +644,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Begin a round",
     join: "Join quietly",
     styleLabel: "Mood",
+    gameMenuLabel: "Menu",
     loading: "Setting the table...",
     roomPrefix: "Room",
     copy: "Copy",
