@@ -1029,6 +1029,25 @@ body::after {
 .theme-option-btn {
   border-radius: var(--radius-btn);
   text-transform: var(--display-transform);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.theme-option-name {
+  font-size: 8px;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+@media (min-width: 640px) {
+  .theme-option-name {
+    font-size: 10px;
+  }
+}
+
+[data-theme="retro"] .theme-option-name {
+  font-size: 7px;
+  letter-spacing: 0.04em;
 }
 
 .input-theme {
