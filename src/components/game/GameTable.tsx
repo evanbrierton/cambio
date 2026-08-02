@@ -7,7 +7,11 @@ import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
 import { PixelCard, TABLE_CARD_SIZE } from "@/components/cards/PixelCard";
 import { RetroButton } from "@/components/ui/RetroButton";
-import { GameToastLayer, type GameToastItem } from "@/components/ui/GameToastLayer";
+import {
+  GameToast,
+  GameToastLayer,
+  type GameToastItem,
+} from "@/components/ui/GameToastLayer";
 import { ThemePicker } from "@/components/ui/ThemePicker";
 import type { ClientMessage, PendingAbility, PlayerView, PublicPlayer } from "@/game/types";
 import { SETUP_PEEK_SLOTS } from "@/game/types";
@@ -539,8 +543,18 @@ export function GameTable({
       });
     }
 
-    if (actionBanner) {
-      items.push({
+    return items;
+  }, [
+    error,
+    fleetingPeek,
+    peekFlash,
+    swapFlash,
+    view.players,
+    voice,
+  ]);
+
+  const actionToast: GameToastItem | null = actionBanner
+    ? {
         id: "action",
         message: actionBanner.text,
         tone: actionBanner.tone,
@@ -555,21 +569,8 @@ export function GameTable({
               {voice.swapAbilityCancel}
             </button>
           ) : undefined,
-      });
-    }
-
-    return items;
-  }, [
-    actionBanner,
-    error,
-    fleetingPeek,
-    peekFlash,
-    selectedSwapCard,
-    swapAbilityActive,
-    swapFlash,
-    view.players,
-    voice,
-  ]);
+      }
+    : null;
 
   useEffect(() => {
     if (view.phase !== "snap_window" || !view.snapWindowEndsAt) {
@@ -777,6 +778,14 @@ export function GameTable({
               </div>
             </div>
           </header>
+
+          {actionToast ? (
+            <div aria-live="polite">
+              <AnimatePresence initial={false} mode="wait">
+                <GameToast key="action" toast={actionToast} />
+              </AnimatePresence>
+            </div>
+          ) : null}
 
           <div
             className={`pixel-border bg-surface p-4 sm:p-5 ${
