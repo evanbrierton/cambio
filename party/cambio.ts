@@ -30,6 +30,7 @@ function migrateState(state: GameState): GameState {
     snapWindowEndsAt: state.snapWindowEndsAt ?? null,
     snapEligibleTopCardId: state.snapEligibleTopCardId ?? null,
     snapChainPlayerId: state.snapChainPlayerId ?? null,
+    chatMessages: state.chatMessages ?? [],
     players: state.players.map((p) => ({
       ...p,
       isWaiting: p.isWaiting ?? false,
