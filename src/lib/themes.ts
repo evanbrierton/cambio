@@ -50,7 +50,6 @@ export type ThemeVoice = {
   discardAbilityHint: Record<DiscardAbility, string>;
   swapHintOptional: string;
   swapHintRequired: string;
-  memorizePrefix: string;
   scores: string;
   gameLog: string;
   host: string;
@@ -76,6 +75,7 @@ export type ThemeVoice = {
   snapGiveHint: string;
   debugReveal: string;
   debugHide: string;
+  debugRestart: string;
   drawHint: string;
   discardHint: string;
   newGame: string;
@@ -88,9 +88,12 @@ export type ThemeVoice = {
   waitingBadge: string;
   winnerLabel: string;
   playersInLobby: string;
+  playerJoined: (name: string) => string;
   waitingForHost: string;
   soundOn: string;
   soundOff: string;
+  hintsOn: string;
+  hintsOff: string;
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
@@ -177,7 +180,6 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     },
     swapHintOptional: "↓ TAP ONE OF YOUR CARDS BELOW TO SWAP",
     swapHintRequired: "↓ PICK A CARD BELOW TO SWAP (REQUIRED)",
-    memorizePrefix: "MEMORIZE:",
     scores: "SCORES",
     gameLog: "GAME LOG",
     host: "HOST",
@@ -187,7 +189,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     penalty: (n) => `+${n} PENALTY`,
     tapToSwap: "TAP CARD TO SWAP",
     swapAbilityHint: "Tap two cards to swap — any players, any positions",
-    swapAbilityFirstSelected: "Card 1 locked — tap a second card to complete the swap",
+    swapAbilityFirstSelected:
+      "Card 1 locked — tap a second card to complete the swap",
     swapAbilityCancel: "CLEAR SELECTION",
     leaveGame: "EXIT",
     setupPeekHint: "↓ TAP YOUR BOTTOM TWO CARDS TO PEEK",
@@ -199,16 +202,16 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
         ? "↓ TAP ONE MORE CARD TO LOOK"
         : "↓ TAP TWO CARDS ON THE TABLE TO LOOK",
     snapHint: "↓ TAP ANY MATCHING CARD ON THE TABLE TO SNAP",
-    snapWindowHint: (seconds) =>
-      `↓ SNAP ANY MATCHING CARD — ${seconds}s LEFT`,
+    snapWindowHint: (seconds) => `↓ SNAP ANY MATCHING CARD — ${seconds}s LEFT`,
     swapFlashNotice: "↔ CARDS SWAPPED — WATCH THE HIGHLIGHTED SLOTS",
     peekFlashNotice: "◎ CARD PEEKED — WATCH THE HIGHLIGHTED SLOT",
     tapToSnap: "TAP TO SNAP",
     snapGiveHint: "↓ TAP ONE OF YOUR CARDS TO GIVE THEM",
     debugReveal: "SHOW ALL CARDS",
     debugHide: "HIDE CARDS",
-    drawHint: "DRAW A CARD TO START YOUR TURN",
-    discardHint: "DISCARD OR SWAP YOUR DRAWN CARD",
+    debugRestart: "RESTART GAME",
+    drawHint: "↓ TAP DECK OR DISCARD TO DRAW",
+    discardHint: "↓ TAP DRAWN CARD TO DISCARD, OR YOUR HAND TO SWAP",
     newGame: "NEW GAME",
     gameOverTitle: "GAME OVER",
     cumulativeScores: "TOTAL",
@@ -219,9 +222,12 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     waitingBadge: "waiting",
     winnerLabel: "WINNER:",
     playersInLobby: "PLAYERS IN ROOM",
+    playerJoined: (name) => `${name.toUpperCase()} JOINED`,
     waitingForHost: "WAITING FOR HOST TO START NEXT ROUND...",
     soundOn: "SOUND ON",
     soundOff: "SOUND OFF",
+    hintsOn: "HINTS ON",
+    hintsOff: "HINTS OFF",
   },
   casino: {
     tagline: "Take a seat at the table",
@@ -273,7 +279,6 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     },
     swapHintOptional: "Choose a card below to exchange",
     swapHintRequired: "You must swap — pick a card below",
-    memorizePrefix: "Study:",
     scores: "Tally",
     gameLog: "Table talk",
     host: "Dealer",
@@ -301,8 +306,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     snapGiveHint: "Choose one of your cards to give them",
     debugReveal: "Reveal all cards",
     debugHide: "Hide cards",
-    drawHint: "Draw a card to begin your turn",
-    discardHint: "Swap or discard your drawn card",
+    debugRestart: "Restart game",
+    drawHint: "Tap the deck or discard pile to draw",
+    discardHint: "Tap your drawn card to discard, or tap your hand to swap",
     newGame: "Deal again",
     gameOverTitle: "Round settled",
     cumulativeScores: "Overall",
@@ -313,9 +319,12 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     waitingBadge: "waiting",
     winnerLabel: "Winner:",
     playersInLobby: "At the table",
+    playerJoined: (name) => `${name} joined the table`,
     waitingForHost: "Waiting for the dealer to deal again...",
     soundOn: "Sound on",
     soundOff: "Sound off",
+    hintsOn: "Hints on",
+    hintsOff: "Hints off",
   },
   party: {
     tagline: "Let's get this party started!",
@@ -367,7 +376,6 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     },
     swapHintOptional: "↓ Tap one of your cards to swap!",
     swapHintRequired: "↓ Gotta swap — pick a card below!",
-    memorizePrefix: "Quick! Remember:",
     scores: "Scoreboard",
     gameLog: "Party feed",
     host: "Host",
@@ -387,16 +395,16 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     kingLookHint: (n) =>
       n === 1 ? "↓ One more card to peek!" : "↓ Peek at two cards!",
     snapHint: "↓ Got a match? Tap any card on the table!",
-    snapWindowHint: (seconds) =>
-      `↓ Snap any match — ${seconds}s left!`,
+    snapWindowHint: (seconds) => `↓ Snap any match — ${seconds}s left!`,
     swapFlashNotice: "↔ Cards swapped — check the glowing slots!",
     peekFlashNotice: "◎ Card peeked — check the glowing slot!",
     tapToSnap: "Tap to snap!",
     snapGiveHint: "↓ Pick a card from your hand to give them!",
     debugReveal: "Show all cards",
     debugHide: "Hide cards",
-    drawHint: "Grab a card — your turn!",
-    discardHint: "Swap it or toss it!",
+    debugRestart: "Restart game",
+    drawHint: "Tap deck or discard to grab a card!",
+    discardHint: "Tap your card to toss it, or swap with your hand!",
     newGame: "Play again!",
     gameOverTitle: "Party's over!",
     cumulativeScores: "Total",
@@ -407,14 +415,16 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     waitingBadge: "waiting",
     winnerLabel: "Winner:",
     playersInLobby: "In the room",
+    playerJoined: (name) => `${name} joined!`,
     waitingForHost: "Waiting for the host to start another round!",
     soundOn: "Sound on",
     soundOff: "Sound off",
+    hintsOn: "Hints on",
+    hintsOff: "Hints off",
   },
   minimal: {
     tagline: "Online Cambio",
-    subtitle:
-      "Four cards. Lowest score wins. Call Cambio to end the round.",
+    subtitle: "Four cards. Lowest score wins. Call Cambio to end the round.",
     footer: "2–6 players · 54 cards · snap enabled",
     nicknameLabel: "Name",
     nicknamePlaceholder: "Player",
@@ -461,7 +471,6 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     },
     swapHintOptional: "Select a card below to swap",
     swapHintRequired: "Swap required — select a card below",
-    memorizePrefix: "Remember:",
     scores: "Scores",
     gameLog: "Log",
     host: "Host",
@@ -481,16 +490,16 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     kingLookHint: (n) =>
       n === 1 ? "Select one more card to look" : "Select two cards to look",
     snapHint: "Select any matching card on the table",
-    snapWindowHint: (seconds) =>
-      `Snap any matching card — ${seconds}s left`,
+    snapWindowHint: (seconds) => `Snap any matching card — ${seconds}s left`,
     swapFlashNotice: "↔ Cards swapped — see highlighted slots",
     peekFlashNotice: "◎ Card peeked — see highlighted slot",
     tapToSnap: "Tap to snap",
     snapGiveHint: "Select a card from your hand to give",
     debugReveal: "Reveal all",
     debugHide: "Hide all",
-    drawHint: "Draw a card",
-    discardHint: "Swap or discard your drawn card",
+    debugRestart: "Restart game",
+    drawHint: "Tap deck or discard to draw",
+    discardHint: "Tap drawn card to discard, or tap hand to swap",
     newGame: "New round",
     gameOverTitle: "Round ended",
     cumulativeScores: "Total",
@@ -501,9 +510,12 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     waitingBadge: "waiting",
     winnerLabel: "Winner:",
     playersInLobby: "Players",
+    playerJoined: (name) => `${name} joined`,
     waitingForHost: "Waiting for the host to start the next round.",
     soundOn: "Sound on",
     soundOff: "Sound off",
+    hintsOn: "Hints on",
+    hintsOff: "Hints off",
   },
   calm: {
     tagline: "A quiet evening of cards",
@@ -555,7 +567,6 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     },
     swapHintOptional: "Choose one of your cards to exchange",
     swapHintRequired: "Please swap — choose a card below",
-    memorizePrefix: "Take a breath. Remember:",
     scores: "Scores",
     gameLog: "Notes",
     host: "Host",
@@ -583,8 +594,9 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     snapGiveHint: "Choose one of your cards to offer",
     debugReveal: "Reveal all cards",
     debugHide: "Hide cards",
-    drawHint: "Draw a card when you're ready",
-    discardHint: "Swap or set aside your drawn card",
+    debugRestart: "Restart game",
+    drawHint: "Tap the deck or discard when you're ready",
+    discardHint: "Tap your drawn card to set aside, or swap with your hand",
     newGame: "Play another round",
     gameOverTitle: "Round complete",
     cumulativeScores: "Overall",
@@ -595,9 +607,12 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     waitingBadge: "waiting",
     winnerLabel: "Winner:",
     playersInLobby: "In the room",
+    playerJoined: (name) => `${name} has joined`,
     waitingForHost: "Waiting for the host to begin another round.",
     soundOn: "Sound on",
     soundOff: "Sound off",
+    hintsOn: "Hints on",
+    hintsOff: "Hints off",
   },
 };
 

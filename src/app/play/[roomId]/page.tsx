@@ -3,8 +3,8 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect } from "react";
 import { GameTable } from "@/components/game/GameTable";
+import { type SessionMode, useGameConnection } from "@/hooks/useGameConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
-import { useGameConnection, type SessionMode } from "@/hooks/useGameConnection";
 
 export default function PlayPage({
   params,
@@ -19,11 +19,16 @@ export default function PlayPage({
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
 
-  const { connected, view, error, fleetingPeek, peekFlash, swapFlash, send } = useGameConnection(
-    roomId,
-    name,
-    sessionMode,
-  );
+  const {
+    connected,
+    view,
+    error,
+    fleetingPeek,
+    peekFlash,
+    swapFlash,
+    penaltyFlash,
+    send,
+  } = useGameConnection(roomId, name, sessionMode);
 
   useEffect(() => {
     if (!view || !isNavFresh) return;
@@ -31,11 +36,20 @@ export default function PlayPage({
     router.replace(`/play/${roomId}?${params.toString()}`);
   }, [view, isNavFresh, name, roomId, router]);
 
+  useEffect(() => {
+    document.documentElement.classList.add("play-scroll-lock");
+    return () => {
+      document.documentElement.classList.remove("play-scroll-lock");
+    };
+  }, []);
+
   if (!view) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6">
         {error ? (
-          <p className="font-display text-sm text-red-400 text-center">{error}</p>
+          <p className="font-display text-sm text-red-400 text-center">
+            {error}
+          </p>
         ) : (
           <p className="font-display text-theme animate-pulse text-sm">
             {voice.loading}
@@ -46,7 +60,7 @@ export default function PlayPage({
   }
 
   return (
-    <div className="play-shell touch-game w-full px-3 pt-4 sm:px-6 sm:pt-6 lg:px-8">
+    <div className="play-shell touch-game fixed inset-0 z-10 flex flex-col overflow-hidden px-3 sm:px-6 lg:px-8">
       <GameTable
         view={view}
         connected={connected}
@@ -54,6 +68,7 @@ export default function PlayPage({
         fleetingPeek={fleetingPeek}
         peekFlash={peekFlash}
         swapFlash={swapFlash}
+        penaltyFlash={penaltyFlash}
         send={send}
       />
     </div>

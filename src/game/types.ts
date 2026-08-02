@@ -115,6 +115,13 @@ export type PeekFlash = {
   slot: number;
 };
 
+export const HAND_BASE_SLOTS = 4;
+
+export type PenaltyFlash = {
+  playerId: string;
+  slot: number;
+};
+
 export type ClientMessage =
   | { type: "join"; playerId?: string; name: string }
   | { type: "start_game" }
@@ -126,6 +133,7 @@ export type ClientMessage =
   | { type: "snap"; targetPlayerId: string; slot: number }
   | { type: "snap_give"; slot: number }
   | { type: "toggle_debug" }
+  | { type: "restart_game" }
   | { type: "ability_look"; playerId: string; slot: number }
   | {
       type: "ability_swap";
@@ -166,6 +174,7 @@ export type PlayerView = {
   discardTop: Card | null;
   drawnCard: Card | null;
   drawnFromDiscard: boolean;
+  hasDrawnCard: boolean;
   canCallCambio: boolean;
   canDraw: boolean;
   canSwap: boolean;
@@ -188,7 +197,14 @@ export type PlayerView = {
 export type ServerMessage =
   | { type: "state"; view: PlayerView }
   | { type: "secret_peek"; playerId: string; slot: number; card: Card }
-  | { type: "peek_flash"; kind: PeekFlashKind; actorId: string; playerId: string; slot: number }
+  | {
+      type: "peek_flash";
+      kind: PeekFlashKind;
+      actorId: string;
+      playerId: string;
+      slot: number;
+    }
   | { type: "swap_flash"; slots: SwapFlashSlot[] }
+  | { type: "penalty_flash"; playerId: string; slot: number }
   | { type: "error"; message: string }
   | { type: "room_info"; roomId: string; playerId: string };

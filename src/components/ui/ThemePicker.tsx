@@ -1,8 +1,8 @@
 "use client";
 
-import { THEME_OPTIONS } from "@/lib/themes";
 import { useTheme } from "@/context/ThemeProvider";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
+import { THEME_OPTIONS } from "@/lib/themes";
 
 export function ThemePicker({ compact = false }: { compact?: boolean }) {
   const { theme, setTheme } = useTheme();
@@ -15,7 +15,9 @@ export function ThemePicker({ compact = false }: { compact?: boolean }) {
       <p className="font-display text-[8px] sm:text-[10px] text-theme-muted mb-2">
         {voice.styleLabel}
       </p>
-      <div className={`grid gap-2 ${compact ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}>
+      <div
+        className={`grid gap-2 ${compact ? "grid-cols-2" : "grid-cols-1 sm:grid-cols-2"}`}
+      >
         {THEME_OPTIONS.map((option) => {
           const active = theme === option.id;
           return (

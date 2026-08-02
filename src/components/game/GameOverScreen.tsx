@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ThemePicker } from "@/components/ui/ThemePicker";
@@ -55,7 +55,7 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
 
   useEffect(() => {
     setSelectedRound(defaultSelectedRound(view));
-  }, [view.roundNumber]);
+  }, [view]);
 
   useEffect(() => {
     if (selectedRound !== latestRound) return;
@@ -102,7 +102,12 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
             className="text-sm text-theme mt-2 normal-case tracking-normal"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 300, damping: 22, delay: 0.2 }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 22,
+              delay: 0.2,
+            }}
           >
             {voice.winnerLabel}{" "}
             <span className="player-name">
@@ -136,7 +141,11 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
           {view.roundHistory.map((round) => (
             <button
               key={round.roundNumber}
-              ref={round.roundNumber === latestRound ? latestRoundTabRef : undefined}
+              ref={
+                round.roundNumber === latestRound
+                  ? latestRoundTabRef
+                  : undefined
+              }
               type="button"
               onClick={() => setSelectedRound(round.roundNumber)}
               className={`chip-btn shrink-0 text-[8px] px-2 py-1 transition-colors ${
@@ -216,7 +225,11 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
         {view.canStartGame ? (
           <motion.div
             animate={{ scale: [1, 1.03, 1] }}
-            transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2.2, ease: "easeInOut" }}
+            transition={{
+              repeat: Number.POSITIVE_INFINITY,
+              duration: 2.2,
+              ease: "easeInOut",
+            }}
           >
             <RetroButton onClick={handlePlayAgain}>{voice.newGame}</RetroButton>
           </motion.div>

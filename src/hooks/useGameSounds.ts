@@ -1,9 +1,13 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { playSound } from "@/lib/sounds";
 import type { PlayerView } from "@/game/types";
-import type { FleetingPeek, PeekFlash, SwapFlash } from "@/hooks/useGameConnection";
+import type {
+  FleetingPeek,
+  PeekFlash,
+  SwapFlash,
+} from "@/hooks/useGameConnection";
+import { playSound } from "@/lib/sounds";
 
 export function useGameSounds(
   view: PlayerView | null,

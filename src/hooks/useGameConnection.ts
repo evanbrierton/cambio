@@ -1,14 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { nanoid } from "nanoid";
 import PartySocket from "partysocket";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type {
+  Card,
+  ClientMessage,
+  PeekFlashKind,
+  PlayerView,
+  ServerMessage,
+} from "@/game/types";
 import { freshSessionKey, getPartyHost, storageKey } from "@/lib/party";
-import type { Card, ClientMessage, PlayerView, ServerMessage } from "@/game/types";
-import type { PeekFlashKind } from "@/game/types";
 
 const PEEK_FLASH_MS = 3500;
 export const SWAP_FLASH_MS = 3000;
+export const PENALTY_FLASH_MS = 2500;
 export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
 export type FleetingPeek = {
@@ -28,6 +34,11 @@ export type SwapFlash = {
   slots: Array<{ playerId: string; slot: number }>;
 };
 
+export type PenaltyFlash = {
+  playerId: string;
+  slot: number;
+};
+
 type ConnectionState = {
   connected: boolean;
   playerId: string | null;
@@ -36,6 +47,7 @@ type ConnectionState = {
   fleetingPeek: FleetingPeek | null;
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
+  penaltyFlash: PenaltyFlash | null;
 };
 
 export type SessionMode = "new" | "reconnect";
@@ -70,11 +82,13 @@ export function useGameConnection(
     fleetingPeek: null,
     peekFlash: null,
     swapFlash: null,
+    penaltyFlash: null,
   });
   const socketRef = useRef<PartySocket | null>(null);
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const peekEffectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const penaltyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const send = useCallback((message: ClientMessage) => {
     const socket = socketRef.current;
@@ -143,7 +157,8 @@ export function useGameConnection(
       }
 
       if (data.type === "peek_flash") {
-        if (peekEffectTimerRef.current) clearTimeout(peekEffectTimerRef.current);
+        if (peekEffectTimerRef.current)
+          clearTimeout(peekEffectTimerRef.current);
         setState((s) => ({
           ...s,
           peekFlash: {
@@ -169,6 +184,20 @@ export function useGameConnection(
         }, SWAP_FLASH_MS);
       }
 
+      if (data.type === "penalty_flash") {
+        if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
+        setState((s) => ({
+          ...s,
+          penaltyFlash: {
+            playerId: data.playerId,
+            slot: data.slot,
+          },
+        }));
+        penaltyTimerRef.current = setTimeout(() => {
+          setState((s) => ({ ...s, penaltyFlash: null }));
+        }, PENALTY_FLASH_MS);
+      }
+
       if (data.type === "error") {
         setState((s) => ({ ...s, error: data.message }));
       }
@@ -178,6 +207,7 @@ export function useGameConnection(
       if (peekTimerRef.current) clearTimeout(peekTimerRef.current);
       if (peekEffectTimerRef.current) clearTimeout(peekEffectTimerRef.current);
       if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+      if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
       socket.close();
       socketRef.current = null;
     };

@@ -39,12 +39,9 @@
   --radius-card: 0;
   --radius-chip: 0;
   --panel-shadow:
-    0 0 0 2px var(--background),
-    4px 4px 0 0 var(--glow-accent-alt),
-    0 0 20px var(--glow-accent);
-  --title-shadow:
-    0 0 8px var(--title-glow),
-    0 0 20px var(--glow-accent);
+    0 0 0 2px var(--background), 4px 4px 0 0 var(--glow-accent-alt), 0 0 20px
+    var(--glow-accent);
+  --title-shadow: 0 0 8px var(--title-glow), 0 0 20px var(--glow-accent);
   --btn-primary-shadow: 0 0 14px var(--glow-accent);
   --btn-secondary-shadow: 0 0 12px var(--glow-accent-alt);
   --btn-danger-shadow: 0 0 14px var(--glow-accent);
@@ -52,8 +49,16 @@
   --display-tracking: 0.12em;
   --btn-font-weight: 400;
   --bg-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255, 0, 170, 0.22), transparent),
-    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(0, 245, 255, 0.12), transparent);
+    radial-gradient(
+      ellipse 80% 50% at 50% -10%,
+      rgba(255, 0, 170, 0.22),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 100% 100%,
+      rgba(0, 245, 255, 0.12),
+      transparent
+    );
   --overlay-mode: scanlines;
   --text-on-card: #9efbff;
   --card-red: #ff8ecf;
@@ -78,7 +83,12 @@
   --border-muted: rgba(212, 175, 55, 0.4);
   --danger: #c94c4c;
   --danger-surface: #3d1f1f;
-  --btn-primary-bg: linear-gradient(180deg, #e8c96a 0%, #c9a227 50%, #a88620 100%);
+  --btn-primary-bg: linear-gradient(
+    180deg,
+    #e8c96a 0%,
+    #c9a227 50%,
+    #a88620 100%
+  );
   --btn-primary-text: #0a1f12;
   --btn-primary-border: #f5e6c8;
   --btn-secondary-bg: #163a24;
@@ -99,9 +109,8 @@
   --radius-card: 4px;
   --radius-chip: 4px;
   --panel-shadow:
-    inset 0 1px 0 rgba(245, 230, 200, 0.12),
-    inset 0 0 0 1px rgba(212, 175, 55, 0.25),
-    0 12px 32px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(245, 230, 200, 0.12), inset 0 0 0 1px
+    rgba(212, 175, 55, 0.25), 0 12px 32px rgba(0, 0, 0, 0.45);
   --title-shadow: 0 2px 12px rgba(212, 175, 55, 0.35);
   --btn-primary-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   --btn-secondary-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
@@ -110,7 +119,11 @@
   --display-tracking: 0.04em;
   --btn-font-weight: 600;
   --bg-image:
-    radial-gradient(ellipse 70% 45% at 50% 0%, rgba(212, 175, 55, 0.1), transparent),
+    radial-gradient(
+      ellipse 70% 45% at 50% 0%,
+      rgba(212, 175, 55, 0.1),
+      transparent
+    ),
     repeating-linear-gradient(
       0deg,
       rgba(0, 0, 0, 0.04) 0px,
@@ -149,7 +162,12 @@
   --border-muted: rgba(255, 79, 216, 0.5);
   --danger: #ff3366;
   --danger-surface: #6a1a4a;
-  --btn-primary-bg: linear-gradient(135deg, #ff4fd8 0%, #ff6b9d 50%, #ffe566 100%);
+  --btn-primary-bg: linear-gradient(
+    135deg,
+    #ff4fd8 0%,
+    #ff6b9d 50%,
+    #ffe566 100%
+  );
   --btn-primary-text: #1a0a3e;
   --btn-primary-border: #fff5a0;
   --btn-secondary-bg: #4a2d8a;
@@ -170,9 +188,8 @@
   --radius-card: 12px;
   --radius-chip: 9999px;
   --panel-shadow:
-    0 0 0 3px rgba(255, 245, 160, 0.15),
-    0 8px 0 0 rgba(255, 79, 216, 0.35),
-    0 12px 28px rgba(255, 79, 216, 0.25);
+    0 0 0 3px rgba(255, 245, 160, 0.15), 0 8px 0 0 rgba(255, 79, 216, 0.35), 0
+    12px 28px rgba(255, 79, 216, 0.25);
   --title-shadow: 0 0 16px var(--glow-accent);
   --btn-primary-shadow: 0 6px 0 rgba(255, 79, 216, 0.4);
   --btn-secondary-shadow: 0 4px 0 rgba(110, 231, 255, 0.25);
@@ -180,8 +197,13 @@
   --display-transform: none;
   --display-tracking: 0.02em;
   --btn-font-weight: 600;
-  --bg-image:
-  linear-gradient(135deg, #ff4fd8 0%, #6ee7ff 33%, #ffe566 66%, #ff4fd8 100%);
+  --bg-image: linear-gradient(
+    135deg,
+    #ff4fd8 0%,
+    #6ee7ff 33%,
+    #ffe566 66%,
+    #ff4fd8 100%
+  );
   --overlay-mode: party;
   --text-on-card: #fff8c8;
   --card-red: #ffc8f0;
@@ -282,8 +304,7 @@
   --radius-card: 10px;
   --radius-chip: 8px;
   --panel-shadow:
-    0 2px 8px rgba(61, 79, 68, 0.06),
-    0 8px 24px rgba(61, 79, 68, 0.05);
+    0 2px 8px rgba(61, 79, 68, 0.06), 0 8px 24px rgba(61, 79, 68, 0.05);
   --title-shadow: none;
   --btn-primary-shadow: 0 2px 8px rgba(61, 79, 68, 0.12);
   --btn-secondary-shadow: 0 1px 4px rgba(61, 79, 68, 0.08);
@@ -292,8 +313,16 @@
   --display-tracking: 0.02em;
   --btn-font-weight: 500;
   --bg-image:
-    radial-gradient(ellipse 80% 60% at 20% 10%, rgba(201, 123, 132, 0.06), transparent),
-    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(125, 155, 138, 0.08), transparent);
+    radial-gradient(
+      ellipse 80% 60% at 20% 10%,
+      rgba(201, 123, 132, 0.06),
+      transparent
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 90% 80%,
+      rgba(125, 155, 138, 0.08),
+      transparent
+    );
   --overlay-mode: linen;
   --text-on-card: #243028;
   --card-red: #8b4a52;
@@ -331,11 +360,16 @@ body {
 }
 
 [data-theme="casino"] body {
-  background-size: 100% 100%, 4px 4px, 4px 4px;
+  background-size:
+    100% 100%,
+    4px 4px,
+    4px 4px;
 }
 
 [data-theme="minimal"] body {
-  background-size: 32px 32px, 32px 32px;
+  background-size:
+    32px 32px,
+    32px 32px;
 }
 
 [data-theme="party"] body {
@@ -396,8 +430,12 @@ body::after {
   background-image:
     radial-gradient(circle, rgba(255, 245, 160, 0.35) 1px, transparent 1px),
     radial-gradient(circle, rgba(110, 231, 255, 0.25) 1px, transparent 1px);
-  background-size: 28px 28px, 42px 42px;
-  background-position: 0 0, 14px 14px;
+  background-size:
+    28px 28px,
+    42px 42px;
+  background-position:
+    0 0,
+    14px 14px;
   opacity: 0.35;
 }
 
@@ -518,7 +556,11 @@ body::after {
 }
 
 .bg-snap-hint {
-  background: color-mix(in srgb, var(--danger-surface) 30%, var(--surface-elevated));
+  background: color-mix(
+    in srgb,
+    var(--danger-surface) 30%,
+    var(--surface-elevated)
+  );
 }
 
 .ring-danger {
@@ -649,7 +691,9 @@ body::after {
   }
   25%,
   65% {
-    box-shadow: 0 0 0 4px var(--accent), 0 0 28px 8px var(--glow-accent);
+    box-shadow:
+      0 0 0 4px var(--accent),
+      0 0 28px 8px var(--glow-accent);
   }
 }
 
@@ -789,7 +833,9 @@ body::after {
   }
   25%,
   65% {
-    box-shadow: 0 0 0 4px var(--accent-alt), 0 0 28px 8px var(--glow-accent-alt);
+    box-shadow:
+      0 0 0 4px var(--accent-alt),
+      0 0 28px 8px var(--glow-accent-alt);
   }
 }
 
@@ -821,6 +867,32 @@ body::after {
 
 .bg-peek-seat-flash {
   background: color-mix(in srgb, var(--accent-alt) 28%, var(--surface-elevated));
+}
+
+.penalty-flash-wrap {
+  z-index: 30;
+  border-radius: var(--radius-card);
+  animation: swap-flash-pulse 2.5s ease-in-out 1;
+}
+
+.penalty-flash-icon {
+  animation: swap-flash-icon 2.5s ease-out 1;
+}
+
+.penalty-flash-ring {
+  animation: swap-flash-ring 2.5s ease-out 1;
+}
+
+.penalty-flash-shimmer {
+  animation: swap-flash-shimmer 1.2s ease-in-out 2;
+}
+
+.penalty-flash-label {
+  animation: swap-flash-label 2.5s ease-in-out 1;
+}
+
+.penalty-seat-flash {
+  animation: swap-seat-flash 2.5s ease-in-out 1;
 }
 
 .card-red {
@@ -929,6 +1001,19 @@ body::after {
   font-family: var(--font-display);
 }
 
+.chip-btn-sm {
+  font-size: 7px;
+  line-height: 1.4;
+  padding: 0.125rem 0.375rem;
+}
+
+@media (min-width: 640px) {
+  .chip-btn-sm {
+    font-size: 8px;
+    padding: 0.1875rem 0.5rem;
+  }
+}
+
 .theme-option-btn {
   border-radius: var(--radius-btn);
   text-transform: var(--display-transform);
@@ -975,19 +1060,91 @@ body::after {
   overflow-anchor: none;
 }
 
+html.play-scroll-lock,
+html.play-scroll-lock body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  height: 100%;
+}
+
 .touch-game {
   touch-action: manipulation;
 }
 
 .play-shell {
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  padding-top: max(1rem, env(safe-area-inset-top, 0px));
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+
+.players-3d-stage {
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  perspective: 900px;
+  perspective-origin: center center;
+}
+
+.players-3d-rail {
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  overflow-y: visible;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x pinch-zoom;
+  padding: 0.75rem 1rem 1rem;
+  transform-style: preserve-3d;
+}
+
+.players-3d-edge {
+  flex: 0 0 calc(50% - 4.5rem);
+  min-width: 1rem;
+  pointer-events: none;
+}
+
+.players-3d-item {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  transform-style: preserve-3d;
+  transform-origin: center center;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  position: relative;
+}
+
+.players-3d-spacer {
+  flex: 0 0 auto;
+  height: 1px;
+  pointer-events: none;
+}
+
+.mobile-game-scroll,
+.players-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 1024px) {
+  .play-shell {
+    padding-top: 1.5rem;
+    padding-bottom: 1rem;
+  }
 }
 
 /* Table pile labels — constrain width to card column */
 .table-pile-label {
   font-family: var(--font-display);
-  font-size: 10px;
-  line-height: 1.6;
+  font-size: 8px;
+  line-height: 1.3;
   text-align: center;
   width: 100%;
   text-transform: var(--display-transform);
@@ -995,25 +1152,19 @@ body::after {
 }
 
 .table-pile {
-  width: 5rem;
+  width: 3.5rem;
   flex-shrink: 0;
 }
 
-.table-pile-labels {
-  min-height: 2.5rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  width: 100%;
-}
+@media (min-width: 1024px) {
+  .table-pile-label {
+    font-size: 10px;
+    line-height: 1.6;
+  }
 
-.table-pile-action {
-  min-height: 2.75rem;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  width: 100%;
+  .table-pile {
+    width: 5rem;
+  }
 }
 
 /* Retro: smaller labels + tighter card shadows (avoid glow blowout) */
@@ -1028,4 +1179,153 @@ body::after {
   box-shadow:
     0 0 0 2px var(--background),
     3px 3px 0 0 color-mix(in srgb, var(--accent-alt) 75%, transparent);
+}
+
+@keyframes pile-glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 6px var(--glow-accent-alt);
+  }
+  50% {
+    box-shadow:
+      0 0 16px var(--glow-accent-alt),
+      0 0 28px color-mix(in srgb, var(--glow-accent-alt) 45%, transparent);
+  }
+}
+
+@keyframes pile-discard-glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 6px var(--glow-accent);
+  }
+  50% {
+    box-shadow:
+      0 0 16px var(--glow-accent),
+      0 0 28px color-mix(in srgb, var(--glow-accent) 45%, transparent);
+  }
+}
+
+@keyframes pile-lift-hint {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes pile-shimmer {
+  0% {
+    transform: translateX(-120%) rotate(12deg);
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(120%) rotate(12deg);
+    opacity: 0;
+  }
+}
+
+.pile-interactable-btn {
+  position: relative;
+}
+
+.pile-interactable-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  animation:
+    pile-glow-pulse 1.8s ease-in-out infinite,
+    pile-lift-hint 1.8s ease-in-out infinite;
+  transition: transform 0.15s ease-out;
+}
+
+.pile-interactable-card::after {
+  content: "";
+  position: absolute;
+  inset: -20% -40%;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    color-mix(in srgb, var(--accent-alt) 55%, transparent) 50%,
+    transparent 65%
+  );
+  animation: pile-shimmer 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.pile-interactable-discard {
+  animation:
+    pile-discard-glow-pulse 1.8s ease-in-out infinite,
+    pile-lift-hint 1.8s ease-in-out infinite;
+}
+
+.pile-interactable-discard::after {
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    color-mix(in srgb, var(--accent) 55%, transparent) 50%,
+    transparent 65%
+  );
+}
+
+.pile-interactable-btn:not(:disabled):hover .pile-interactable-card,
+.pile-interactable-btn:not(:disabled):hover .pile-interactable-discard {
+  transform: translateY(-4px) scale(1.03);
+  animation: none;
+  box-shadow: 0 0 20px var(--glow-accent-alt);
+}
+
+.pile-interactable-btn:not(:disabled):hover .pile-interactable-discard {
+  box-shadow: 0 0 20px var(--glow-accent);
+}
+
+.pile-interactable-label {
+  color: var(--accent-alt);
+  text-shadow: 0 0 8px var(--glow-accent-alt);
+  animation: pile-label-pulse 1.8s ease-in-out infinite;
+}
+
+.pile-interactable-label-discard {
+  color: var(--accent);
+  text-shadow: 0 0 8px var(--glow-accent);
+}
+
+@keyframes pile-label-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.72;
+  }
+}
+
+.table-deck-drawable {
+  background: color-mix(in srgb, var(--accent-alt) 10%, var(--surface));
+}
+
+[data-theme="minimal"] .pile-interactable-card,
+[data-theme="minimal"] .pile-interactable-discard,
+[data-theme="calm"] .pile-interactable-card,
+[data-theme="calm"] .pile-interactable-discard {
+  animation: pile-lift-hint 1.8s ease-in-out infinite;
+  box-shadow: none;
+}
+
+[data-theme="minimal"] .pile-interactable-card::after,
+[data-theme="minimal"] .pile-interactable-discard::after,
+[data-theme="calm"] .pile-interactable-card::after,
+[data-theme="calm"] .pile-interactable-discard::after {
+  display: none;
+}
+
+[data-theme="minimal"] .pile-interactable-label,
+[data-theme="calm"] .pile-interactable-label,
+[data-theme="minimal"] .pile-interactable-label-discard,
+[data-theme="calm"] .pile-interactable-label-discard {
+  text-shadow: none;
 }
