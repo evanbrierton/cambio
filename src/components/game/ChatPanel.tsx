@@ -90,7 +90,7 @@ export function ChatPanel({
           placeholder={voice.chatPlaceholder}
           maxLength={200}
           disabled={!connected}
-          className="flex-1 min-w-0 px-2 py-1.5 font-mono text-[10px] bg-surface border border-theme-muted text-theme placeholder:text-theme-muted/60 focus:outline-none focus:border-accent transition-colors disabled:opacity-50"
+          className="flex-1 min-w-0 px-2 py-1.5 font-mono text-base sm:text-[10px] bg-surface border border-theme-muted text-theme placeholder:text-theme-muted/60 focus:outline-none focus:border-accent transition-colors disabled:opacity-50"
           aria-label={voice.chatPlaceholder}
         />
         <button

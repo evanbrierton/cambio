@@ -73,7 +73,7 @@ export default function HomePage() {
               onChange={(e) => setName(e.target.value)}
               placeholder={voice.nicknamePlaceholder}
               maxLength={24}
-              className="mt-2 w-full input-theme px-3 py-2 font-mono text-sm normal-case"
+              className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
             />
           </label>
 
@@ -95,7 +95,7 @@ export default function HomePage() {
                 onChange={(e) => setJoinCode(e.target.value.toLowerCase())}
                 placeholder="abc123"
                 maxLength={6}
-                className="mt-2 w-full input-theme input-theme-accent px-3 py-2 font-mono text-sm uppercase"
+                className="mt-2 w-full input-theme input-theme-accent px-3 py-2 font-mono uppercase"
               />
             </label>
             <RetroButton
@@ -121,7 +121,7 @@ export default function HomePage() {
               <select
                 value={botCount}
                 onChange={(e) => setBotCount(Number(e.target.value))}
-                className="mt-2 w-full input-theme px-3 py-2 font-mono text-sm normal-case"
+                className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
               >
                 {Array.from(
                   { length: MAX_BOT_COUNT - MIN_BOT_COUNT + 1 },
@@ -141,7 +141,7 @@ export default function HomePage() {
               <select
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value as BotDifficulty)}
-                className="mt-2 w-full input-theme px-3 py-2 font-mono text-sm normal-case"
+                className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
               >
                 <option value="easy">{voice.difficultyEasy}</option>
                 <option value="medium">{voice.difficultyMedium}</option>

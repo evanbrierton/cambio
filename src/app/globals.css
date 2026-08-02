@@ -1071,6 +1071,13 @@ body::after {
   border-color: var(--border-muted);
   border-radius: var(--radius-btn);
   color: var(--foreground);
+  font-size: 16px;
+}
+
+@media (min-width: 640px) {
+  .input-theme {
+    font-size: 0.875rem;
+  }
 }
 
 .input-theme::placeholder {
