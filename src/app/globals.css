@@ -1134,6 +1134,29 @@ html.play-scroll-lock body {
   overscroll-behavior: contain;
 }
 
+.players-grid-stage {
+  perspective: 1000px;
+}
+
+.players-grid-scroll {
+  transform-style: preserve-3d;
+}
+
+.players-grid-item {
+  transform-style: preserve-3d;
+  transition:
+    transform 0.15s ease-out,
+    opacity 0.15s ease-out;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .players-grid-item {
+    transition: none;
+    will-change: auto;
+  }
+}
+
 /* Bottom sheet: keep the frame border on a non-scrolling shell. */
 .mobile-settings-sheet {
   border-bottom: none;
