@@ -222,6 +222,9 @@ function getActionBanner(
   if (view.phase === "setup_peek") {
     return { text: voice.setupPeekHint, tone: "action" };
   }
+  if (view.canSnap && view.canDraw) {
+    return { text: voice.snapHint, tone: "snap" };
+  }
   if (view.canSwap) {
     return {
       text: view.drawnFromDiscard
@@ -323,8 +326,7 @@ function PlayerSeat({
 
   const seatPadding = "p-1.5 sm:p-2 lg:p-2.5";
 
-  const isPenaltyCard = (slot: PublicCardSlot, index: number) =>
-    !!slot.isPenalty || index >= HAND_BASE_SLOTS;
+  const isPenaltyColumnSlot = (index: number) => index >= HAND_BASE_SLOTS;
 
   const baseGridSlots = Array.from({ length: HAND_BASE_SLOTS }, (_, index) => {
     const slot = player.hand[index] ?? {
@@ -333,35 +335,14 @@ function PlayerSeat({
       hidden: false,
       empty: true,
     };
-    if (!slot.empty && isPenaltyCard(slot, index)) {
-      return {
-        slot: {
-          card: null,
-          faceUp: false,
-          hidden: false,
-          empty: true,
-        } satisfies PublicCardSlot,
-        index,
-      };
-    }
     return { slot, index };
   });
 
   const penaltySlots = player.hand
     .map((slot, index) => ({ slot, index }))
-    .filter(({ slot, index }) => !slot.empty && isPenaltyCard(slot, index));
+    .filter(({ slot, index }) => !slot.empty && isPenaltyColumnSlot(index));
 
-  const flashingPenaltyIndex =
-    penaltyFlash?.playerId === player.id
-      ? penaltySlots.findIndex(({ index }) => index === penaltyFlash.slot)
-      : -1;
-
-  const renderHandSlot = (
-    slot: PublicCardSlot,
-    index: number,
-    allowPenaltyFlash = false,
-    penaltyIndex?: number,
-  ) => {
+  const renderHandSlot = (slot: PublicCardSlot, index: number) => {
     const isEmpty = !!slot.empty;
     const isFleetingPeek =
       fleetingPeek?.playerId === player.id && fleetingPeek.slot === index;
@@ -381,13 +362,11 @@ function PlayerSeat({
     const isPeekFlashOnSlot = isPeekFlashing(peekFlash, player.id, index);
     const showPeekFlashOverlay = isPeekFlashOnSlot && !isFleetingPeek;
     const showPenalty =
-      allowPenaltyFlash &&
-      penaltyIndex !== undefined &&
-      penaltyIndex === flashingPenaltyIndex;
+      penaltyFlash?.playerId === player.id && penaltyFlash.slot === index;
 
     return (
       <PixelCard
-        key={allowPenaltyFlash ? `penalty-${index}` : `base-${index}`}
+        key={`hand-${index}`}
         card={isFleetingPeek ? fleetingPeek.card : slot.card}
         empty={isEmpty && !isFleetingPeek}
         hidden={!isFleetingPeek && slot.hidden}
@@ -540,7 +519,7 @@ function PlayerSeat({
                   key={`penalty-wrap-${index}`}
                   style={penaltyGridPosition(penaltyIndex)}
                 >
-                  {renderHandSlot(slot, index, true, penaltyIndex)}
+                  {renderHandSlot(slot, index)}
                 </div>
               ))}
             </div>
@@ -754,6 +733,7 @@ export function GameTable({
     return <GameOverScreen view={view} connected={connected} send={send} />;
   }
 
+  const isLobbyScrollLayout = view.phase === "lobby";
   const me = view.players.find((p) => p.id === view.playerId);
   const isHost = me?.isHost ?? false;
   const cambioCallerName =
@@ -932,7 +912,11 @@ export function GameTable({
   );
 
   return (
-    <div className="w-full max-w-7xl mx-auto flex flex-col flex-1 min-h-0 h-full">
+    <div
+      className={`w-full max-w-7xl mx-auto flex flex-col ${
+        isLobbyScrollLayout ? "" : "flex-1 min-h-0 h-full"
+      }`}
+    >
       <GameToastLayer toasts={gameToasts} />
       <CambioCallOverlay
         cambioFlash={cambioFlash}
@@ -967,8 +951,16 @@ export function GameTable({
         </div>
       )}
 
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-6 lg:items-stretch flex flex-col flex-1 min-h-0 min-w-0">
-        <div className="scroll-stable flex flex-col flex-1 min-h-0 min-w-0 gap-3 sm:gap-4 lg:gap-5">
+      <div
+        className={`lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-6 lg:items-stretch flex flex-col min-w-0 ${
+          isLobbyScrollLayout ? "" : "flex-1 min-h-0"
+        }`}
+      >
+        <div
+          className={`scroll-stable flex flex-col min-w-0 gap-3 sm:gap-4 lg:gap-5 ${
+            isLobbyScrollLayout ? "" : "flex-1 min-h-0"
+          }`}
+        >
           <header className="shrink-0 flex flex-col gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
               <div className="min-w-0 flex-1">

@@ -19,7 +19,7 @@ export function LobbyPlayers({ view, voice }: LobbyPlayersProps) {
   const emptySlots = Math.max(0, MAX_PLAYERS - view.players.length);
 
   return (
-    <div className="flex flex-1 flex-col gap-2 min-h-0 min-w-0">
+    <div className="flex flex-col gap-2 min-w-0">
       <div className="flex items-center justify-between shrink-0 px-1">
         <p className="font-display text-[8px] text-theme-muted tracking-widest">
           {voice.playersInLobby}
@@ -29,7 +29,7 @@ export function LobbyPlayers({ view, voice }: LobbyPlayersProps) {
         </p>
       </div>
 
-      <div className="pixel-border bg-surface p-3 sm:p-4 flex-1 min-h-[8rem] overflow-y-auto">
+      <div className="pixel-border bg-surface p-3 sm:p-4">
         <ul className="space-y-2">
           {view.players.map((player, index) => {
             const isSelf = player.id === view.playerId;
