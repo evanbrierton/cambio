@@ -755,6 +755,8 @@ export function GameTable({
   const isDrawnSlotMine = Boolean(view.drawnCard);
   const showDrawnFaceDown = !isDrawnSlotMine && view.hasDrawnCard;
   const canTakeFromDiscard = view.canDraw && Boolean(view.discardTop);
+  const canInteractWithDiscard = canTakeFromDiscard || view.canDiscardDrawn;
+  const showDiscardPileGlow = canInteractWithDiscard || isDrawnSlotMine;
 
   const handleCardClick = (playerId: string, slot: number, isOwn: boolean) => {
     if (view.phase === "setup_peek" && !isOwn) return;
@@ -1053,18 +1055,28 @@ export function GameTable({
 
               <button
                 type="button"
-                disabled={!canTakeFromDiscard}
-                onClick={() => send({ type: "draw", source: "discard" })}
+                disabled={!canInteractWithDiscard}
+                onClick={() => {
+                  if (view.canDiscardDrawn) {
+                    send({ type: "discard_drawn" });
+                    return;
+                  }
+                  if (canTakeFromDiscard) {
+                    send({ type: "draw", source: "discard" });
+                  }
+                }}
                 className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                  canTakeFromDiscard
+                  canInteractWithDiscard
                     ? "pile-interactable-btn cursor-pointer active:opacity-80"
                     : ""
                 }`}
-                aria-label={voice.take}
+                aria-label={
+                  view.canDiscardDrawn ? voice.discardDrawn : voice.take
+                }
               >
                 <p
                   className={`table-pile-label ${
-                    canTakeFromDiscard
+                    showDiscardPileGlow
                       ? "pile-interactable-label pile-interactable-label-discard"
                       : "text-theme-muted"
                   }`}
@@ -1073,7 +1085,7 @@ export function GameTable({
                 </p>
                 <div
                   className={`${PILE_CARD_SIZE} shrink-0 ${
-                    canTakeFromDiscard
+                    showDiscardPileGlow
                       ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
                       : view.canSnap
                         ? "ring-1 ring-danger/50 rounded-card"
@@ -1100,14 +1112,9 @@ export function GameTable({
                 </div>
               </button>
 
-              <button
-                type="button"
-                disabled={!view.canDiscardDrawn}
-                onClick={() => send({ type: "discard_drawn" })}
-                className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                  view.canDiscardDrawn ? "cursor-pointer active:opacity-80" : ""
-                }`}
-                aria-label={voice.discardDrawn}
+              <div
+                className="table-pile flex flex-col items-center gap-0.5 lg:gap-1"
+                aria-label={voice.drawn}
               >
                 <p
                   className={`table-pile-label ${
@@ -1120,9 +1127,7 @@ export function GameTable({
                   className={`${PILE_CARD_SIZE} shrink-0 ${
                     view.canSwap
                       ? "ring-2 ring-accent shadow-glow-accent rounded-card"
-                      : view.canDiscardDrawn
-                        ? "ring-2 ring-accent-alt rounded-card"
-                        : ""
+                      : ""
                   }`}
                 >
                   <PixelCard
@@ -1133,7 +1138,7 @@ export function GameTable({
                     sizeClass={PILE_CARD_SIZE}
                   />
                 </div>
-              </button>
+              </div>
             </div>
           </div>
 
