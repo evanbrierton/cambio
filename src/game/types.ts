@@ -59,6 +59,14 @@ export type PendingAbility = {
   snapTargetPlayerId?: string;
 };
 
+export type ChatMessage = {
+  id: string;
+  playerId: string;
+  playerName: string;
+  text: string;
+  sentAt: number;
+};
+
 export type RoundResult = {
   roundNumber: number;
   scores: Record<string, number>;
@@ -104,6 +112,7 @@ export type GameState = {
   /** During play, only this player may snap again after a correct snap. */
   snapChainPlayerId: string | null;
   log: string[];
+  chatMessages: ChatMessage[];
 };
 
 export type SwapFlashSlot = {
@@ -140,6 +149,7 @@ export type ClientMessage =
   | { type: "toggle_debug" }
   | { type: "restart_game" }
   | { type: "show_results" }
+  | { type: "chat"; text: string }
   | { type: "ability_look"; playerId: string; slot: number }
   | {
       type: "ability_swap";
@@ -199,6 +209,7 @@ export type PlayerView = {
   scores: Record<string, number> | null;
   snapWindowEndsAt: number | null;
   log: string[];
+  chatMessages: ChatMessage[];
 };
 
 export type ServerMessage =

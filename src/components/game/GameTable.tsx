@@ -9,6 +9,7 @@ import {
   PixelCard,
 } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
+import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
 import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
@@ -891,6 +892,14 @@ export function GameTable({
       )}
 
       <ThemePicker compact />
+
+      <ChatPanel
+        messages={view.chatMessages}
+        playerId={view.playerId}
+        connected={connected}
+        voice={voice}
+        onSend={(text) => send({ type: "chat", text })}
+      />
 
       <div className="pixel-border p-3 min-h-[120px] lg:min-h-[200px] lg:max-h-[50vh] lg:overflow-y-auto bg-surface">
         <p className="font-display text-[8px] text-theme-muted mb-2">
