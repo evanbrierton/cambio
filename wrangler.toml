@@ -1,16 +1,12 @@
-# PartyKit cloud-prem deploy requires SQLite-backed Durable Objects on the free plan.
-# Note: `partykit deploy` may ignore this file and upload via the PartyKit API instead.
-# If deploy still fails, migrate to partyserver + `wrangler deploy` (see README or ask).
-
 name = "cambio"
-main = "party/cambio.ts"
+main = "party/worker.ts"
 compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
 [[durable_objects.bindings]]
-name = "PARTYKIT_DURABLE"
-class_name = "PartyKitDurable"
+name = "Main"
+class_name = "CambioParty"
 
 [[migrations]]
 tag = "v1"
-new_sqlite_classes = ["PartyKitDurable"]
+new_sqlite_classes = ["CambioParty"]

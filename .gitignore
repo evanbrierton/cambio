@@ -36,8 +36,8 @@ yarn-error.log*
 # vercel
 .vercel
 
-# partykit
-.partykit/
+# cloudflare workers
+.wrangler/
 
 # typescript
 *.tsbuildinfo

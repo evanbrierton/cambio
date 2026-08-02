@@ -1,4 +1,9 @@
-import type * as Party from "partykit/server";
+import {
+  type Connection,
+  type ConnectionContext,
+  Server,
+  type WSMessage,
+} from "partyserver";
 import {
   buildPlayerView,
   createRoom,
@@ -14,6 +19,8 @@ import type {
   SwapFlashSlot,
 } from "../src/game/types";
 
+type PlayerConnectionState = { playerId?: string };
+
 function migrateState(state: GameState): GameState {
   return {
     ...state,
@@ -22,7 +29,6 @@ function migrateState(state: GameState): GameState {
     cumulativeScores: state.cumulativeScores ?? {},
     snapWindowEndsAt: state.snapWindowEndsAt ?? null,
     snapEligibleTopCardId: state.snapEligibleTopCardId ?? null,
-    snapChainPlayerId: state.snapChainPlayerId ?? null,
     players: state.players.map((p) => ({
       ...p,
       isWaiting: p.isWaiting ?? false,
@@ -30,13 +36,17 @@ function migrateState(state: GameState): GameState {
   };
 }
 
-export default class CambioParty implements Party.Server {
+function messageText(raw: WSMessage): string {
+  if (typeof raw === "string") return raw;
+  if (raw instanceof ArrayBuffer) return new TextDecoder().decode(raw);
+  return new TextDecoder().decode(raw);
+}
+
+export class CambioParty extends Server {
   state: GameState | null = null;
 
-  constructor(readonly room: Party.Room) {}
-
   async onStart() {
-    const saved = await this.room.storage.get<GameState>("state");
+    const saved = await this.ctx.storage.get<GameState>("state");
     if (saved) {
       this.state = migrateState(saved);
       await this.syncSnapWindow();
@@ -44,7 +54,7 @@ export default class CambioParty implements Party.Server {
   }
 
   async persist() {
-    if (this.state) await this.room.storage.put("state", this.state);
+    if (this.state) await this.ctx.storage.put("state", this.state);
   }
 
   async scheduleSnapWindowAlarm() {
@@ -53,17 +63,17 @@ export default class CambioParty implements Party.Server {
       this.state.phase !== "snap_window" ||
       !this.state.snapWindowEndsAt
     ) {
-      await this.room.storage.deleteAlarm();
+      await this.ctx.storage.deleteAlarm();
       return;
     }
-    await this.room.storage.setAlarm(this.state.snapWindowEndsAt);
+    await this.ctx.storage.setAlarm(this.state.snapWindowEndsAt);
   }
 
   async syncSnapWindow() {
     if (!this.state || this.state.phase !== "snap_window") return;
     if (expireSnapWindow(this.state)) {
       await this.persist();
-      await this.room.storage.deleteAlarm();
+      await this.ctx.storage.deleteAlarm();
       this.broadcastState();
       return;
     }
@@ -74,7 +84,7 @@ export default class CambioParty implements Party.Server {
     if (!this.state) return;
     if (expireSnapWindow(this.state)) {
       await this.persist();
-      await this.room.storage.deleteAlarm();
+      await this.ctx.storage.deleteAlarm();
       this.broadcastState();
       return;
     }
@@ -82,14 +92,12 @@ export default class CambioParty implements Party.Server {
     this.broadcastState();
   }
 
-  getPlayerId(connection: Party.Connection): string | null {
-    const id = (connection.state as { playerId?: string } | undefined)
-      ?.playerId;
-    return id ?? null;
+  getPlayerId(connection: Connection<PlayerConnectionState>): string | null {
+    return connection.state?.playerId ?? null;
   }
 
   sendToPlayer(playerId: string, message: ServerMessage) {
-    for (const conn of this.room.getConnections()) {
+    for (const conn of this.getConnections<PlayerConnectionState>()) {
       if (this.getPlayerId(conn) === playerId) {
         conn.send(JSON.stringify(message));
       }
@@ -98,7 +106,7 @@ export default class CambioParty implements Party.Server {
 
   broadcastState() {
     if (!this.state) return;
-    for (const conn of this.room.getConnections()) {
+    for (const conn of this.getConnections<PlayerConnectionState>()) {
       const playerId = this.getPlayerId(conn);
       if (!playerId) continue;
       const view = buildPlayerView(this.state, playerId);
@@ -109,7 +117,7 @@ export default class CambioParty implements Party.Server {
   broadcastSwapFlash(slots: SwapFlashSlot[]) {
     const message: ServerMessage = { type: "swap_flash", slots };
     const payload = JSON.stringify(message);
-    for (const conn of this.room.getConnections()) {
+    for (const conn of this.getConnections()) {
       conn.send(payload);
     }
   }
@@ -123,7 +131,7 @@ export default class CambioParty implements Party.Server {
       slot: peekFlash.slot,
     };
     const payload = JSON.stringify(message);
-    for (const conn of this.room.getConnections()) {
+    for (const conn of this.getConnections()) {
       conn.send(payload);
     }
   }
@@ -135,7 +143,7 @@ export default class CambioParty implements Party.Server {
       slot: penaltyFlash.slot,
     };
     const payload = JSON.stringify(message);
-    for (const conn of this.room.getConnections()) {
+    for (const conn of this.getConnections()) {
       conn.send(payload);
     }
   }
@@ -143,12 +151,15 @@ export default class CambioParty implements Party.Server {
   broadcastCambioFlash(playerId: string) {
     const message: ServerMessage = { type: "cambio_flash", playerId };
     const payload = JSON.stringify(message);
-    for (const conn of this.room.getConnections()) {
+    for (const conn of this.getConnections()) {
       conn.send(payload);
     }
   }
 
-  async onConnect(connection: Party.Connection, ctx: Party.ConnectionContext) {
+  async onConnect(
+    connection: Connection<PlayerConnectionState>,
+    ctx: ConnectionContext,
+  ) {
     const url = new URL(ctx.request.url);
     const queryPlayerId = url.searchParams.get("playerId");
     const name = (url.searchParams.get("name") ?? "Player").slice(0, 24);
@@ -156,14 +167,13 @@ export default class CambioParty implements Party.Server {
     let playerId = queryPlayerId ?? crypto.randomUUID().slice(0, 10);
 
     if (!this.state) {
-      this.state = createRoom(this.room.id, name, queryPlayerId ?? undefined);
+      this.state = createRoom(this.name, name, queryPlayerId ?? undefined);
       playerId = this.state.hostId;
     } else if (queryPlayerId) {
       const existing = this.state.players.find((p) => p.id === queryPlayerId);
       if (existing) {
-        // Same seat reconnecting (e.g. refresh) — reclaim id and drop stale socket.
         playerId = queryPlayerId;
-        for (const conn of this.room.getConnections()) {
+        for (const conn of this.getConnections<PlayerConnectionState>()) {
           if (
             conn.id !== connection.id &&
             this.getPlayerId(conn) === queryPlayerId
@@ -172,7 +182,6 @@ export default class CambioParty implements Party.Server {
           }
         }
       } else {
-        // Stale localStorage from another room/session — join as a new player.
         playerId = crypto.randomUUID().slice(0, 10);
       }
     }
@@ -194,7 +203,7 @@ export default class CambioParty implements Party.Server {
     connection.send(
       JSON.stringify({
         type: "room_info",
-        roomId: this.room.id,
+        roomId: this.name,
         playerId,
       }),
     );
@@ -203,11 +212,13 @@ export default class CambioParty implements Party.Server {
     this.broadcastState();
   }
 
-  async onClose(connection: Party.Connection) {
+  async onClose(connection: Connection<PlayerConnectionState>) {
     const playerId = this.getPlayerId(connection);
     if (!this.state || !playerId) return;
 
-    const stillConnected = [...this.room.getConnections()].some(
+    const stillConnected = [
+      ...this.getConnections<PlayerConnectionState>(),
+    ].some(
       (conn) =>
         conn.id !== connection.id && this.getPlayerId(conn) === playerId,
     );
@@ -221,15 +232,18 @@ export default class CambioParty implements Party.Server {
     }
   }
 
-  async onMessage(raw: string | ArrayBuffer, sender: Party.Connection) {
-    const playerId = this.getPlayerId(sender);
+  async onMessage(
+    connection: Connection<PlayerConnectionState>,
+    raw: WSMessage,
+  ) {
+    const playerId = this.getPlayerId(connection);
     if (!this.state || !playerId) return;
 
     let message: ClientMessage;
     try {
-      message = JSON.parse(typeof raw === "string" ? raw : "") as ClientMessage;
+      message = JSON.parse(messageText(raw)) as ClientMessage;
     } catch {
-      sender.send(
+      connection.send(
         JSON.stringify({ type: "error", message: "Invalid message." }),
       );
       return;
@@ -238,7 +252,7 @@ export default class CambioParty implements Party.Server {
     const result = handleMessage(this.state, playerId, message);
 
     if (result.error) {
-      sender.send(JSON.stringify({ type: "error", message: result.error }));
+      connection.send(JSON.stringify({ type: "error", message: result.error }));
     }
 
     if (result.secretPeek) {
@@ -271,5 +285,3 @@ export default class CambioParty implements Party.Server {
     }
   }
 }
-
-CambioParty satisfies Party.Worker;
