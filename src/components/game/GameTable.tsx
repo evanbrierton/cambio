@@ -7,7 +7,11 @@ import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
 import { PixelCard, TABLE_CARD_SIZE } from "@/components/cards/PixelCard";
 import { RetroButton } from "@/components/ui/RetroButton";
-import { GameToastLayer, type GameToastItem } from "@/components/ui/GameToastLayer";
+import {
+  GameToast,
+  GameToastLayer,
+  type GameToastItem,
+} from "@/components/ui/GameToastLayer";
 import { ThemePicker } from "@/components/ui/ThemePicker";
 import type { ClientMessage, PendingAbility, PlayerView, PublicPlayer } from "@/game/types";
 import { SETUP_PEEK_SLOTS } from "@/game/types";
@@ -60,12 +64,6 @@ function isPeekFlashing(
   slot: number,
 ): boolean {
   return peekFlash?.playerId === playerId && peekFlash.slot === slot;
-}
-
-function peekFlashSeatLabel(kind: PeekFlash["kind"]): string {
-  if (kind === "spy") return "SPY";
-  if (kind === "look") return "LOOK";
-  return "PEEK";
 }
 
 function isSwapFlashing(
@@ -265,9 +263,9 @@ function PlayerSeat({
     <section
       className={`pixel-border ${seatPadding} w-full min-w-0 ${
         hasSwapFlash
-          ? "swap-seat-flash bg-swap-seat-flash ring-4 ring-accent shadow-glow-accent"
+          ? "swap-seat-flash bg-swap-seat-flash ring-2 ring-accent shadow-glow-accent"
         : hasPeekFlash
-          ? "peek-seat-flash bg-peek-seat-flash ring-4 ring-accent-alt shadow-glow-accent-alt"
+          ? "peek-seat-flash bg-peek-seat-flash ring-2 ring-accent-alt shadow-glow-accent-alt"
         : showDrawnSwapHint || showSnapGiveHint
           ? "bg-swap-hint ring-2 ring-accent animate-pulse"
           : showLookSeatHint
@@ -291,7 +289,7 @@ function PlayerSeat({
         isOwn && !showDrawnSwapHint ? "lg:ring-1 lg:ring-accent" : ""
       } ${swapAbilityActive && isProtectedTarget && !isOwn ? "opacity-40" : ""}`}
     >
-      <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 min-h-[1.75rem] ${compact ? "mb-2" : "mb-3"}`}>
+      <div className={`flex flex-wrap items-center justify-center sm:justify-start gap-1.5 sm:gap-2 min-h-[2.75rem] ${compact ? "mb-2" : "mb-3"}`}>
         <h2 className={`player-name ${compact ? "text-[10px]" : "text-xs sm:text-sm"}`}>
           {player.name}
         </h2>
@@ -337,11 +335,6 @@ function PlayerSeat({
         {hasSwapFlash && (
           <span className="ui-badge text-accent animate-pulse">
             SWAPPED
-          </span>
-        )}
-        {hasPeekFlash && peekFlash && (
-          <span className="ui-badge text-accent-alt animate-pulse">
-            {peekFlashSeatLabel(peekFlash.kind)}
           </span>
         )}
         {player.isHost && (
@@ -539,8 +532,18 @@ export function GameTable({
       });
     }
 
-    if (actionBanner) {
-      items.push({
+    return items;
+  }, [
+    error,
+    fleetingPeek,
+    peekFlash,
+    swapFlash,
+    view.players,
+    voice,
+  ]);
+
+  const actionToast: GameToastItem | null = actionBanner
+    ? {
         id: "action",
         message: actionBanner.text,
         tone: actionBanner.tone,
@@ -555,21 +558,8 @@ export function GameTable({
               {voice.swapAbilityCancel}
             </button>
           ) : undefined,
-      });
-    }
-
-    return items;
-  }, [
-    actionBanner,
-    error,
-    fleetingPeek,
-    peekFlash,
-    selectedSwapCard,
-    swapAbilityActive,
-    swapFlash,
-    view.players,
-    voice,
-  ]);
+      }
+    : null;
 
   useEffect(() => {
     if (view.phase !== "snap_window" || !view.snapWindowEndsAt) {
@@ -736,7 +726,8 @@ export function GameTable({
       <GameToastLayer toasts={gameToasts} />
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-6 lg:items-start">
         <div className="scroll-stable flex flex-col gap-4 sm:gap-5 min-w-0">
-          <header className="flex flex-wrap items-center justify-between gap-3">
+          <header className="flex flex-col gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <p className="font-display text-theme-muted text-[10px] sm:text-xs">
@@ -775,6 +766,19 @@ export function GameTable({
               <div className="font-display text-[10px] text-theme-muted">
                 {connected ? voice.online : voice.reconnecting}
               </div>
+            </div>
+            </div>
+            <div className="relative h-14 shrink-0" aria-live="polite">
+              <AnimatePresence initial={false}>
+                {actionToast ? (
+                  <GameToast
+                    key="action"
+                    toast={actionToast}
+                    inline
+                    className="absolute inset-x-0 top-0"
+                  />
+                ) : null}
+              </AnimatePresence>
             </div>
           </header>
 
