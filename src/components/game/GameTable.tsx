@@ -222,6 +222,9 @@ function getActionBanner(
   if (view.phase === "setup_peek") {
     return { text: voice.setupPeekHint, tone: "action" };
   }
+  if (view.canSnap && view.canDraw) {
+    return { text: voice.snapHint, tone: "snap" };
+  }
   if (view.canSwap) {
     return {
       text: view.drawnFromDiscard

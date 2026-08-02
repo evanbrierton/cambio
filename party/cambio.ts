@@ -22,6 +22,7 @@ function migrateState(state: GameState): GameState {
     cumulativeScores: state.cumulativeScores ?? {},
     snapWindowEndsAt: state.snapWindowEndsAt ?? null,
     snapEligibleTopCardId: state.snapEligibleTopCardId ?? null,
+    snapChainPlayerId: state.snapChainPlayerId ?? null,
     players: state.players.map((p) => ({
       ...p,
       isWaiting: p.isWaiting ?? false,
