@@ -34,6 +34,7 @@ export type GamePhase =
   | "playing"
   | "cambio_final"
   | "snap_window"
+  | "revealed"
   | "ended";
 
 /** Bottom row indices in the 2×2 hand grid. */
@@ -136,6 +137,7 @@ export type ClientMessage =
   | { type: "snap_give"; slot: number }
   | { type: "toggle_debug" }
   | { type: "restart_game" }
+  | { type: "show_results" }
   | { type: "ability_look"; playerId: string; slot: number }
   | {
       type: "ability_swap";
@@ -186,6 +188,7 @@ export type PlayerView = {
   debugReveal: boolean;
   isWaiting: boolean;
   canStartGame: boolean;
+  canShowResults: boolean;
   roundNumber: number;
   roundHistory: RoundResult[];
   cumulativeScores: Record<string, number>;

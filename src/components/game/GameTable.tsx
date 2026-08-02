@@ -30,11 +30,11 @@ import type {
 } from "@/game/types";
 import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "@/game/types";
 import type {
+  CambioFlash,
   FleetingPeek,
   PeekFlash,
   PenaltyFlash,
   SwapFlash,
-  CambioFlash,
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { useHintsEnabled } from "@/hooks/useHintsEnabled";
@@ -180,6 +180,15 @@ function getActionBanner(
     return {
       text: voice.snapWindowHint(snapWindowSeconds),
       tone: "snap",
+    };
+  }
+
+  if (view.phase === "revealed") {
+    return {
+      text: view.canShowResults
+        ? voice.revealedHostHint
+        : voice.waitingForResults,
+      tone: "action",
     };
   }
 
@@ -569,7 +578,7 @@ export function GameTable({
     null,
   );
   const lobbyPlayersRef = useRef<Set<string>>(new Set());
-  const lobbyJoinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lobbyJoinTimerRef = useRef<number | null>(null);
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
   const snapGiveActive = view.pendingAbility?.kind === "snap_give";
@@ -694,7 +703,8 @@ export function GameTable({
   }, [view.phase, view.playerId, view.players, voice]);
 
   useEffect(() => {
-    if (view.phase !== "snap_window" || !view.snapWindowEndsAt) {
+    const snapWindowEndsAt = view.snapWindowEndsAt;
+    if (view.phase !== "snap_window" || !snapWindowEndsAt) {
       setSnapWindowSeconds(null);
       return;
     }
@@ -702,7 +712,7 @@ export function GameTable({
     const update = () => {
       const remaining = Math.max(
         0,
-        Math.ceil((view.snapWindowEndsAt! - Date.now()) / 1000),
+        Math.ceil((snapWindowEndsAt - Date.now()) / 1000),
       );
       setSnapWindowSeconds(remaining);
     };
@@ -837,6 +847,12 @@ export function GameTable({
       {view.canStartGame && (
         <RetroButton onClick={() => send({ type: "start_game" })}>
           {voice.startGame}
+        </RetroButton>
+      )}
+
+      {view.canShowResults && (
+        <RetroButton onClick={() => send({ type: "show_results" })}>
+          {voice.showResults}
         </RetroButton>
       )}
 
@@ -1130,10 +1146,7 @@ export function GameTable({
                   </div>
                 </button>
 
-                <div
-                  className="table-pile flex flex-col items-center gap-0.5 lg:gap-1"
-                  aria-label={voice.drawn}
-                >
+                <div className="table-pile flex flex-col items-center gap-0.5 lg:gap-1">
                   <p
                     className={`table-pile-label ${
                       isDrawnSlotMine ? "text-accent" : "text-theme-muted"
