@@ -422,7 +422,7 @@ function PlayerSeat({
 
   return (
     <section
-      className={`pixel-border ${seatPadding} w-fit max-w-full shrink-0 ${
+      className={`pixel-border ${seatPadding} w-full max-w-full shrink-0 flex flex-col items-center ${
         hasSwapFlash
           ? "swap-seat-flash bg-swap-seat-flash ring-2 ring-accent shadow-glow-accent"
           : hasPeekFlash
@@ -511,7 +511,7 @@ function PlayerSeat({
           {voice.waitingBadge}
         </p>
       ) : (
-        <div className="flex flex-row items-end gap-1 lg:gap-1.5 w-fit max-w-full">
+        <div className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit max-w-full">
           <div
             className={`grid grid-cols-2 gap-1 lg:gap-1.5 ${HAND_GRID_WIDTH} shrink-0`}
           >
@@ -986,7 +986,7 @@ export function GameTable({
   return (
     <div
       className={`w-full max-w-7xl mx-auto flex flex-col ${
-        isLobbyScrollLayout ? "" : "flex-1 min-h-0 h-full"
+        isLobbyScrollLayout ? "" : "flex-1 min-h-0 overflow-hidden"
       } ${snapWindowActive ? "snap-window-active" : ""}`}
     >
       <GameToastLayer toasts={gameToasts} />
@@ -1031,13 +1031,17 @@ export function GameTable({
       )}
 
       <div
-        className={`lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-6 lg:items-stretch flex flex-col min-w-0 ${
-          isLobbyScrollLayout ? "" : "flex-1 min-h-0"
+        className={`lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-6 flex flex-col min-w-0 ${
+          isLobbyScrollLayout
+            ? "lg:items-stretch"
+            : "flex-1 min-h-0 overflow-hidden lg:grid-rows-[minmax(0,1fr)]"
         }`}
       >
         <div
           className={`scroll-stable flex flex-col min-w-0 gap-3 sm:gap-4 lg:gap-5 ${
-            isLobbyScrollLayout ? "" : "flex-1 min-h-0"
+            isLobbyScrollLayout
+              ? ""
+              : "flex-1 min-h-0 overflow-hidden"
           }`}
         >
           <header className="shrink-0 flex flex-col gap-2">
@@ -1244,12 +1248,12 @@ export function GameTable({
           {view.phase === "lobby" ? (
             <LobbyPlayers view={view} voice={voice} send={send} />
           ) : (
-            <div className="flex flex-1 flex-col gap-2 min-h-0 min-w-0">
+            <div className="flex flex-1 flex-col gap-2 min-h-0 min-w-0 overflow-hidden">
               <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">
                 PLAYERS
               </p>
 
-              {playersInDisplayOrder.length > 0 && (
+              {playersInDisplayOrder.length > 0 ? (
                 <PlayerGridStage>
                   {playersInDisplayOrder.map((player) => {
                     const isOwn = player.id === view.playerId;
@@ -1278,7 +1282,7 @@ export function GameTable({
                     );
                   })}
                 </PlayerGridStage>
-              )}
+              ) : null}
             </div>
           )}
 
