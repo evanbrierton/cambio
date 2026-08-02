@@ -20,6 +20,7 @@ import {
   expireSnapWindow,
   findPlayer,
   handleMessage,
+  migrateRoundHistory,
 } from "../src/game/engine";
 import type {
   Card,
@@ -45,7 +46,7 @@ function migrateState(state: GameState): GameState {
     soloDifficulty: state.soloDifficulty ?? null,
     botThinkingId: null,
     roundNumber: state.roundNumber ?? 0,
-    roundHistory: state.roundHistory ?? [],
+    roundHistory: migrateRoundHistory(state.roundHistory),
     cumulativeScores: state.cumulativeScores ?? {},
     snapWindowEndsAt: state.snapWindowEndsAt ?? null,
     snapEligibleTopCardId: state.snapEligibleTopCardId ?? null,

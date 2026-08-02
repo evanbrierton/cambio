@@ -99,7 +99,7 @@ export type ThemeVoice = {
   soundOff: string;
   hintsOn: string;
   hintsOff: string;
-  practiceMode: string;
+  soloMode: string;
   botCountLabel: string;
   difficultyLabel: string;
   difficultyEasy: string;
@@ -255,7 +255,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "SOUND OFF",
     hintsOn: "HINTS ON",
     hintsOff: "HINTS OFF",
-    practiceMode: "PRACTICE MODE",
+    soloMode: "SOLO MODE",
     botCountLabel: "BOTS",
     difficultyLabel: "DIFFICULTY",
     difficultyEasy: "EASY",
@@ -375,13 +375,13 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
-    practiceMode: "Practice table",
+    soloMode: "Solo table",
     botCountLabel: "Opponents",
     difficultyLabel: "Skill",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
     difficultyHard: "Hard",
-    playVsBots: "Practice vs bots",
+    playVsBots: "Solo vs bots",
     botBadge: "Bot",
     botThinking: "Thinking...",
     addBot: "+ Add bot",
@@ -493,7 +493,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
-    practiceMode: "Solo party",
+    soloMode: "Solo mode",
     botCountLabel: "Bots",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
@@ -516,7 +516,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     subtitle: "Four cards. Lowest score wins. Call Cambio to end the round.",
     footer: "2–6 players · 54 cards · snap enabled",
     nicknameLabel: "Name",
-    nicknamePlaceholder: "Player",
+    nicknamePlaceholder: "Your name",
     roomCodeLabel: "Room",
     createGame: "Create",
     join: "Join",
@@ -610,7 +610,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
-    practiceMode: "Practice",
+    soloMode: "Solo",
     botCountLabel: "Bots",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
@@ -730,13 +730,13 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
-    practiceMode: "Quiet practice",
+    soloMode: "Solo mode",
     botCountLabel: "Bots",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
     difficultyHard: "Hard",
-    playVsBots: "Practice vs bots",
+    playVsBots: "Solo vs bots",
     botBadge: "Bot",
     botThinking: "Thinking...",
     addBot: "+ Add bot",

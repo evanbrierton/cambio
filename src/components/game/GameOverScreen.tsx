@@ -5,7 +5,12 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ThemePicker } from "@/components/ui/ThemePicker";
-import type { ClientMessage, PlayerView, RoundResult } from "@/game/types";
+import type {
+  ClientMessage,
+  PlayerView,
+  RoundResult,
+  ScoreboardEntry,
+} from "@/game/types";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { playSound } from "@/lib/sounds";
 
@@ -15,8 +20,8 @@ type GameOverScreenProps = {
   send: (message: ClientMessage) => void;
 };
 
-function sortedRoundEntries(round: RoundResult) {
-  return Object.entries(round.scores).sort(([, a], [, b]) => a - b);
+function sortedRoundEntries(round: RoundResult): ScoreboardEntry[] {
+  return [...round.entries].sort((a, b) => a.score - b.score);
 }
 
 function latestRoundNumber(view: PlayerView): number {
@@ -28,15 +33,25 @@ function defaultSelectedRound(view: PlayerView): number | "total" {
   return latest > 0 ? latest : "total";
 }
 
-function sortedCumulative(view: PlayerView) {
-  const names = new Map(view.players.map((p) => [p.id, p.name]));
+function playerNameLookup(view: PlayerView): Map<string, string> {
+  const names = new Map(view.players.map((player) => [player.id, player.name]));
   for (const round of view.roundHistory) {
-    for (const [id, name] of Object.entries(round.playerNames)) {
-      names.set(id, name);
+    for (const entry of round.entries) {
+      names.set(entry.id, entry.name);
     }
   }
+  return names;
+}
+
+function sortedCumulative(view: PlayerView): ScoreboardEntry[] {
+  const names = playerNameLookup(view);
+
   return Object.entries(view.cumulativeScores)
-    .map(([id, score]) => ({ id, name: names.get(id) ?? "Player", score }))
+    .flatMap(([id, score]): ScoreboardEntry[] => {
+      const name = names.get(id);
+      if (name === undefined) return [];
+      return [{ id, name, score }];
+    })
     .sort((a, b) => a.score - b.score);
 }
 
@@ -179,19 +194,19 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
           </ul>
         ) : selected ? (
           <ul className="space-y-2 text-xs">
-            {sortedRoundEntries(selected).map(([id, score], index) => (
+            {sortedRoundEntries(selected).map((entry, index) => (
               <li
-                key={id}
+                key={entry.id}
                 className="flex justify-between gap-4 font-display text-theme"
               >
                 <span>
                   <span className="text-theme-muted mr-2">#{index + 1}</span>
                   <span className="player-name text-xs">
-                    {selected.playerNames[id] ?? "Player"}
-                    {selected.winnerIds.includes(id) ? " ★" : ""}
+                    {entry.name}
+                    {selected.winnerIds.includes(entry.id) ? " ★" : ""}
                   </span>
                 </span>
-                <span>{score}</span>
+                <span>{entry.score}</span>
               </li>
             ))}
           </ul>

@@ -10,7 +10,7 @@ const EASY_MESSAGES = [
   "Hope you're having as much fun as I am!",
   "Such a friendly table!",
   "Great moves — keep it up!",
-  "This is my favorite way to practice!",
+  "I love playing solo like this!",
   "Sending good vibes your way!",
   "Nice to meet you at the table!",
   "Every round is a good round with friends!",

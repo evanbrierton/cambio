@@ -70,8 +70,8 @@ function formatPeekFlashNotice(
 ): string {
   const actor = players.find((entry) => entry.id === peekFlash.actorId);
   const target = players.find((entry) => entry.id === peekFlash.playerId);
-  const actorName = actor?.name ?? "Player";
-  const targetName = target?.name ?? "Player";
+  const actorName = actor?.name ?? "";
+  const targetName = target?.name ?? "";
   const slotLabel = `#${peekFlash.slot + 1}`;
 
   if (peekFlash.kind === "spy") {
@@ -802,7 +802,7 @@ export function GameTable({
   const me = view.players.find((p) => p.id === view.playerId);
   const isHost = me?.isHost ?? false;
   const cambioCallerName =
-    view.players.find((p) => p.id === cambioFlash?.playerId)?.name ?? "Player";
+    view.players.find((p) => p.id === cambioFlash?.playerId)?.name ?? "";
 
   const phaseLabel = voice.phases[view.phase] ?? "";
   const snapWindowActive = view.phase === "snap_window";

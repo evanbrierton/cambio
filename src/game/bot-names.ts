@@ -68,13 +68,20 @@ function pick<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-export function generateBotName(usedNames: Set<string>): string {
+/** Case-insensitive key for lobby name uniqueness. */
+export function nameKey(name: string): string {
+  return name.trim().toLowerCase();
+}
+
+export function generateBotName(usedNames: Iterable<string>): string {
+  const taken = new Set([...usedNames].map(nameKey));
+
   for (let attempt = 0; attempt < 80; attempt++) {
     const name = `${pick(ADJECTIVES)} ${pick(NOUNS)}`;
-    if (!usedNames.has(name)) return name;
+    if (!taken.has(nameKey(name))) return name;
   }
 
   let suffix = 2;
-  while (usedNames.has(`Bot ${suffix}`)) suffix++;
+  while (taken.has(nameKey(`Bot ${suffix}`))) suffix++;
   return `Bot ${suffix}`;
 }

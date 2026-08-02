@@ -23,7 +23,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
     <div className="flex flex-col gap-2 min-w-0">
       <div className="flex items-center justify-between shrink-0 px-1">
         <p className="font-display text-[8px] text-theme-muted tracking-widest">
-          {view.isSoloMode ? voice.practiceMode : voice.playersInLobby}
+          {view.isSoloMode ? voice.soloMode : voice.playersInLobby}
         </p>
         <p className="font-display text-[8px] text-theme-muted tabular-nums">
           {readyCount}/{MAX_PLAYERS}

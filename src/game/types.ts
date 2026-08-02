@@ -79,10 +79,15 @@ export type ChatMessage = {
   sentAt: number;
 };
 
+export type ScoreboardEntry = {
+  id: string;
+  name: string;
+  score: number;
+};
+
 export type RoundResult = {
   roundNumber: number;
-  scores: Record<string, number>;
-  playerNames: Record<string, string>;
+  entries: ScoreboardEntry[];
   winnerIds: string[];
   cambioCallerId: string | null;
 };

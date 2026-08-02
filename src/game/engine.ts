@@ -19,9 +19,11 @@ import type {
   PeekFlashKind,
   PlayerState,
   PlayerView,
+  RoundResult,
+  ScoreboardEntry,
   SwapFlashSlot,
 } from "./types";
-import { generateBotName } from "./bot-names";
+import { generateBotName, nameKey } from "./bot-names";
 import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "./types";
 
 const MAX_PLAYERS = 6;
@@ -37,13 +39,59 @@ export function isParticipant(player: PlayerState): boolean {
   return !player.isWaiting && (player.connected || player.isBot);
 }
 
+type LegacyRoundResult = {
+  roundNumber: number;
+  scores?: Record<string, number>;
+  playerNames?: Record<string, string>;
+  entries?: ScoreboardEntry[];
+  winnerIds: string[];
+  cambioCallerId: string | null;
+};
+
+export function migrateRoundHistory(
+  rounds: LegacyRoundResult[] | undefined,
+): RoundResult[] {
+  if (!rounds) return [];
+
+  return rounds.map((round) => {
+    if (round.entries) {
+      return {
+        roundNumber: round.roundNumber,
+        entries: round.entries,
+        winnerIds: round.winnerIds,
+        cambioCallerId: round.cambioCallerId,
+      };
+    }
+
+    const entries: ScoreboardEntry[] = Object.entries(round.scores ?? {}).flatMap(
+      ([id, score]) => {
+        const name = round.playerNames?.[id];
+        return name !== undefined ? [{ id, name, score }] : [];
+      },
+    );
+
+    return {
+      roundNumber: round.roundNumber,
+      entries,
+      winnerIds: round.winnerIds,
+      cambioCallerId: round.cambioCallerId,
+    };
+  });
+}
+
 export function addBotPlayer(
   state: GameState,
   difficulty: BotDifficulty,
 ): string {
-  const usedNames = new Set(state.players.map((p) => p.name));
   const id = nanoid(10);
-  const name = generateBotName(usedNames);
+  const reserved = state.players.map((p) => p.name);
+  let name = generateBotName(reserved);
+
+  for (let attempt = 0; attempt < 100 && isNameTaken(state, name); attempt++) {
+    reserved.push(name);
+    name = generateBotName(reserved);
+  }
+
   state.players.push({
     id,
     name,
@@ -167,9 +215,9 @@ function isNameTaken(
   name: string,
   excludePlayerId?: string,
 ): boolean {
-  const normalized = name.toLowerCase();
+  const normalized = nameKey(name);
   return state.players.some(
-    (p) => p.id !== excludePlayerId && p.name.toLowerCase() === normalized,
+    (p) => p.id !== excludePlayerId && nameKey(p.name) === normalized,
   );
 }
 
@@ -330,25 +378,27 @@ export function finalizeRound(state: GameState): void {
   state.scores = computeScores(state);
   state.winnerIds = determineWinners(state);
 
-  const roundScores: Record<string, number> = {};
-  const roundNames: Record<string, string> = {};
+  const entries: ScoreboardEntry[] = [];
   for (const player of state.players) {
     if (player.hand.length > 0) {
-      roundScores[player.id] = state.scores[player.id] ?? 0;
-      roundNames[player.id] = player.name;
+      entries.push({
+        id: player.id,
+        name: player.name,
+        score: state.scores[player.id] ?? 0,
+      });
     }
   }
 
   state.roundHistory.push({
     roundNumber: state.roundNumber,
-    scores: roundScores,
-    playerNames: roundNames,
+    entries,
     winnerIds: [...state.winnerIds],
     cambioCallerId: state.cambioCallerId,
   });
 
-  for (const [id, score] of Object.entries(roundScores)) {
-    state.cumulativeScores[id] = (state.cumulativeScores[id] ?? 0) + score;
+  for (const entry of entries) {
+    state.cumulativeScores[entry.id] =
+      (state.cumulativeScores[entry.id] ?? 0) + entry.score;
   }
 
   for (const player of state.players) {
@@ -1038,7 +1088,7 @@ export function handleMessage(
         return { error: "Only the host can add bots." };
       }
       if (!state.isSoloMode) {
-        return { error: "Bots are only available in practice mode." };
+        return { error: "Bots are only available in solo mode." };
       }
       if (state.phase !== "lobby" && state.phase !== "ended") {
         return { error: "Cannot add bots during a game." };
@@ -1056,7 +1106,7 @@ export function handleMessage(
         return { error: "Only the host can remove bots." };
       }
       if (!state.isSoloMode) {
-        return { error: "Bots are only available in practice mode." };
+        return { error: "Bots are only available in solo mode." };
       }
       if (state.phase !== "lobby" && state.phase !== "ended") {
         return { error: "Cannot remove bots during a game." };

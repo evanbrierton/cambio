@@ -35,11 +35,11 @@ export default function HomePage() {
     router.push(`/play/${code}?${params.toString()}`);
   };
 
-  const goToPractice = () => {
-    const trimmed = name.trim() || "Player";
-    localStorage.setItem(PLAYER_NAME_KEY, trimmed);
+  const goToSolo = () => {
+    if (!hasName) return;
+    localStorage.setItem(PLAYER_NAME_KEY, trimmedName);
     const params = new URLSearchParams({
-      name: trimmed,
+      name: trimmedName,
       host: "1",
       solo: "1",
       bots: String(botCount),
@@ -110,7 +110,7 @@ export default function HomePage() {
 
         <div className="pixel-border p-6 space-y-4 bg-surface-elevated text-left">
           <p className="font-display text-[10px] text-theme-muted">
-            {voice.practiceMode}
+            {voice.soloMode}
           </p>
 
           <div className="grid grid-cols-2 gap-3">
@@ -150,7 +150,7 @@ export default function HomePage() {
             </label>
           </div>
 
-          <RetroButton className="w-full" onClick={goToPractice}>
+          <RetroButton className="w-full" disabled={!hasName} onClick={goToSolo}>
             {voice.playVsBots}
           </RetroButton>
         </div>
