@@ -437,8 +437,15 @@ function placeCardInHand(
   return hand.length - 1;
 }
 
+function trimTrailingEmptySlots(hand: CardSlot[]): void {
+  while (hand.length > 0 && hand[hand.length - 1].card === null) {
+    hand.pop();
+  }
+}
+
 function clearHandSlot(hand: CardSlot[], slot: number): void {
   hand[slot] = { card: null, faceUp: false };
+  trimTrailingEmptySlots(hand);
 }
 
 function isValidHandSlot(player: PlayerState, slot: number): boolean {
