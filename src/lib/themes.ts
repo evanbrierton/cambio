@@ -2,6 +2,7 @@ import type { DiscardAbility } from "@/game/cards";
 
 export type ThemeId = "retro" | "casino" | "party" | "minimal" | "calm";
 
+/** @deprecated Use THEME_COOKIE_KEY from @/lib/theme-cookie */
 export const THEME_STORAGE_KEY = "cambio-theme";
 
 export type ThemeOption = {
@@ -104,6 +105,7 @@ export type ThemeVoice = {
   hintsOff: string;
   soloMode: string;
   botCountLabel: string;
+  jokerCountLabel: string;
   difficultyLabel: string;
   difficultyEasy: string;
   difficultyMedium: string;
@@ -263,6 +265,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "HINTS OFF",
     soloMode: "SOLO MODE",
     botCountLabel: "BOTS",
+    jokerCountLabel: "JOKERS",
     difficultyLabel: "DIFFICULTY",
     difficultyEasy: "EASY",
     difficultyMedium: "MEDIUM",
@@ -386,6 +389,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo table",
     botCountLabel: "Opponents",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Skill",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -507,6 +511,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo mode",
     botCountLabel: "Bots",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -627,6 +632,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo",
     botCountLabel: "Bots",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -750,6 +756,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo mode",
     botCountLabel: "Bots",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",

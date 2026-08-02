@@ -6,14 +6,10 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useSyncExternalStore,
+  useState,
 } from "react";
-import {
-  DEFAULT_THEME,
-  isThemeId,
-  THEME_STORAGE_KEY,
-  type ThemeId,
-} from "@/lib/themes";
+import { setThemeCookie } from "@/lib/theme-cookie";
+import { DEFAULT_THEME, isThemeId, THEME_STORAGE_KEY, type ThemeId } from "@/lib/themes";
 
 type ThemeContextValue = {
   theme: ThemeId;
@@ -22,63 +18,31 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-let themeListeners: Array<() => void> = [];
-let hasHydratedTheme = false;
+export function ThemeProvider({
+  children,
+  initialTheme = DEFAULT_THEME,
+}: {
+  children: ReactNode;
+  initialTheme?: ThemeId;
+}) {
+  const [theme, setThemeState] = useState<ThemeId>(initialTheme);
 
-function subscribeTheme(listener: () => void) {
-  themeListeners.push(listener);
-  return () => {
-    themeListeners = themeListeners.filter((l) => l !== listener);
-  };
-}
-
-function notifyThemeListeners() {
-  for (const listener of themeListeners) {
-    listener();
-  }
-}
-
-function readStoredTheme(): ThemeId {
-  try {
+  useEffect(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if (stored && isThemeId(stored)) return stored;
-  } catch {
-    // localStorage may be unavailable in private browsing / SSR guards.
-  }
-  return DEFAULT_THEME;
-}
+    if (!stored || !isThemeId(stored)) return;
 
-function getThemeSnapshot(): ThemeId {
-  if (!hasHydratedTheme) return DEFAULT_THEME;
-  return readStoredTheme();
-}
+    localStorage.removeItem(THEME_STORAGE_KEY);
+    if (stored === initialTheme) return;
 
-function getServerThemeSnapshot(): ThemeId {
-  return DEFAULT_THEME;
-}
-
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const theme = useSyncExternalStore(
-    subscribeTheme,
-    getThemeSnapshot,
-    getServerThemeSnapshot,
-  );
-
-  useEffect(() => {
-    hasHydratedTheme = true;
-    document.documentElement.dataset.theme = readStoredTheme();
-    notifyThemeListeners();
-  }, []);
-
-  useEffect(() => {
-    if (!hasHydratedTheme) return;
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
+    setThemeState(stored);
+    setThemeCookie(stored);
+    document.documentElement.dataset.theme = stored;
+  }, [initialTheme]);
 
   const setTheme = useCallback((next: ThemeId) => {
-    localStorage.setItem(THEME_STORAGE_KEY, next);
+    setThemeState(next);
+    setThemeCookie(next);
     document.documentElement.dataset.theme = next;
-    notifyThemeListeners();
   }, []);
 
   return (

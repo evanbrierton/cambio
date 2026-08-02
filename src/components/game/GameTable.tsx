@@ -1225,6 +1225,7 @@ export function GameTable({
                           card={view.discardTop}
                           faceUp={!!view.discardTop}
                           hidden={!view.discardTop}
+                          empty={!view.discardTop}
                           sizeClass={PILE_CARD_SIZE}
                         />
                       </motion.div>
