@@ -79,6 +79,7 @@ export function useGameConnection(
   roomId: string,
   playerName: string,
   sessionMode: SessionMode = "reconnect",
+  debugEnabled = false,
 ) {
   const [state, setState] = useState<ConnectionState>({
     connected: false,
@@ -115,6 +116,7 @@ export function useGameConnection(
       query: {
         name: playerName,
         playerId,
+        ...(debugEnabled ? { debug: "1" } : {}),
       },
     });
 
@@ -231,7 +233,7 @@ export function useGameConnection(
       socket.close();
       socketRef.current = null;
     };
-  }, [roomId, playerName, sessionMode]);
+  }, [roomId, playerName, sessionMode, debugEnabled]);
 
   return { ...state, send };
 }

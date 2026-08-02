@@ -6,6 +6,7 @@ import { GameTable } from "@/components/game/GameTable";
 import type { PlayerView } from "@/game/types";
 import { type SessionMode, useGameConnection } from "@/hooks/useGameConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
+import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
 
 function allowsPageScroll(view: PlayerView | null): boolean {
   if (!view) return true;
@@ -22,6 +23,7 @@ export default function PlayPage({
   const router = useRouter();
   const voice = useThemeVoice();
   const name = searchParams.get("name") ?? "Player";
+  const debugEnabled = hasDebugQueryParam(searchParams);
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
 
@@ -35,13 +37,14 @@ export default function PlayPage({
     penaltyFlash,
     cambioFlash,
     send,
-  } = useGameConnection(roomId, name, sessionMode);
+  } = useGameConnection(roomId, name, sessionMode, debugEnabled);
 
   useEffect(() => {
     if (!view || !isNavFresh) return;
     const params = new URLSearchParams({ name });
+    if (debugEnabled) appendDebugQueryParam(params);
     router.replace(`/play/${roomId}?${params.toString()}`);
-  }, [view, isNavFresh, name, roomId, router]);
+  }, [debugEnabled, view, isNavFresh, name, roomId, router]);
 
   const pageScrollable = allowsPageScroll(view);
 

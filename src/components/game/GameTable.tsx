@@ -30,6 +30,7 @@ import type {
   PublicPlayer,
 } from "@/game/types";
 import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "@/game/types";
+import { useDebugEnabled } from "@/hooks/useDebugEnabled";
 import type {
   CambioFlash,
   FleetingPeek,
@@ -545,6 +546,7 @@ export function GameTable({
   const voice = useThemeVoice();
   const { soundEnabled, toggleSound } = useSoundEnabled();
   const { hintsEnabled, toggleHints } = useHintsEnabled();
+  const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
   );
@@ -859,6 +861,7 @@ export function GameTable({
   );
 
   const canDebugRestart =
+    debugEnabled &&
     isHost &&
     view.phase !== "lobby" &&
     view.players.filter((p) => !p.isWaiting).length >= 2;
@@ -1001,7 +1004,7 @@ export function GameTable({
                 <h1 className="font-display text-sm sm:text-xl lg:text-2xl title-glow mt-0.5 sm:mt-1 truncate">
                   {phaseLabel}
                 </h1>
-                {view.debugReveal && (
+                {debugEnabled && view.debugReveal && (
                   <p className="font-display text-[8px] text-accent-alt mt-1">
                     DEBUG: ALL CARDS VISIBLE
                   </p>
