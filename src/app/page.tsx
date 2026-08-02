@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { customAlphabet } from "nanoid";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ThemePicker } from "@/components/ui/ThemePicker";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
@@ -29,7 +29,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 sm:py-16">
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom,0px))] sm:py-16">
       <div className="w-full max-w-md space-y-6 text-center">
         <div className="space-y-2">
           <p className="font-display text-theme-muted text-xs">

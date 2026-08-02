@@ -5,7 +5,14 @@ import {
   expireSnapWindow,
   handleMessage,
 } from "../src/game/engine";
-import type { Card, ClientMessage, GameState, PeekFlash, ServerMessage, SwapFlashSlot } from "../src/game/types";
+import type {
+  Card,
+  ClientMessage,
+  GameState,
+  PeekFlash,
+  ServerMessage,
+  SwapFlashSlot,
+} from "../src/game/types";
 
 function migrateState(state: GameState): GameState {
   return {
@@ -39,7 +46,11 @@ export default class CambioParty implements Party.Server {
   }
 
   async scheduleSnapWindowAlarm() {
-    if (!this.state || this.state.phase !== "snap_window" || !this.state.snapWindowEndsAt) {
+    if (
+      !this.state ||
+      this.state.phase !== "snap_window" ||
+      !this.state.snapWindowEndsAt
+    ) {
       await this.room.storage.deleteAlarm();
       return;
     }
@@ -70,7 +81,8 @@ export default class CambioParty implements Party.Server {
   }
 
   getPlayerId(connection: Party.Connection): string | null {
-    const id = (connection.state as { playerId?: string } | undefined)?.playerId;
+    const id = (connection.state as { playerId?: string } | undefined)
+      ?.playerId;
     return id ?? null;
   }
 
@@ -114,6 +126,18 @@ export default class CambioParty implements Party.Server {
     }
   }
 
+  broadcastPenaltyFlash(penaltyFlash: { playerId: string; slot: number }) {
+    const message: ServerMessage = {
+      type: "penalty_flash",
+      playerId: penaltyFlash.playerId,
+      slot: penaltyFlash.slot,
+    };
+    const payload = JSON.stringify(message);
+    for (const conn of this.room.getConnections()) {
+      conn.send(payload);
+    }
+  }
+
   async onConnect(connection: Party.Connection, ctx: Party.ConnectionContext) {
     const url = new URL(ctx.request.url);
     const queryPlayerId = url.searchParams.get("playerId");
@@ -130,7 +154,10 @@ export default class CambioParty implements Party.Server {
         // Same seat reconnecting (e.g. refresh) — reclaim id and drop stale socket.
         playerId = queryPlayerId;
         for (const conn of this.room.getConnections()) {
-          if (conn.id !== connection.id && this.getPlayerId(conn) === queryPlayerId) {
+          if (
+            conn.id !== connection.id &&
+            this.getPlayerId(conn) === queryPlayerId
+          ) {
             conn.close(1000, "reconnected");
           }
         }
@@ -171,7 +198,8 @@ export default class CambioParty implements Party.Server {
     if (!this.state || !playerId) return;
 
     const stillConnected = [...this.room.getConnections()].some(
-      (conn) => conn.id !== connection.id && this.getPlayerId(conn) === playerId,
+      (conn) =>
+        conn.id !== connection.id && this.getPlayerId(conn) === playerId,
     );
     if (stillConnected) return;
 
@@ -191,7 +219,9 @@ export default class CambioParty implements Party.Server {
     try {
       message = JSON.parse(typeof raw === "string" ? raw : "") as ClientMessage;
     } catch {
-      sender.send(JSON.stringify({ type: "error", message: "Invalid message." }));
+      sender.send(
+        JSON.stringify({ type: "error", message: "Invalid message." }),
+      );
       return;
     }
 
@@ -220,6 +250,10 @@ export default class CambioParty implements Party.Server {
 
     if (result.peekFlash) {
       this.broadcastPeekFlash(result.peekFlash);
+    }
+
+    if (result.penaltyFlash) {
+      this.broadcastPenaltyFlash(result.penaltyFlash);
     }
   }
 }

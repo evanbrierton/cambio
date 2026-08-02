@@ -38,12 +38,13 @@ export default function RootLayout({
     >
       <head>
         <script
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: inline theme bootstrap before paint
           dangerouslySetInnerHTML={{
             __html: `(function(){try{var t=localStorage.getItem("cambio-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}})();`,
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col relative z-0 pb-[env(safe-area-inset-bottom)]">
+      <body className="min-h-full flex flex-col relative z-0">
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
