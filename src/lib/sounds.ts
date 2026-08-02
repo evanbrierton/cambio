@@ -4,6 +4,8 @@ export type SoundId =
   | "spy"
   | "snap"
   | "snapWrong"
+  | "snapWindowStart"
+  | "snapCountdown"
   | "draw"
   | "swap"
   | "cambio"
@@ -90,6 +92,15 @@ export async function playSound(id: SoundId): Promise<void> {
     case "snapWrong":
       tone(ctx, 180, t, 0.15, "sawtooth", 0.08);
       tone(ctx, 120, t + 0.1, 0.2, "sawtooth", 0.06);
+      break;
+    case "snapWindowStart":
+      tone(ctx, 440, t, 0.08, "square", 0.07);
+      tone(ctx, 660, t + 0.1, 0.1, "square", 0.08);
+      tone(ctx, 880, t + 0.22, 0.14, "square", 0.09);
+      break;
+    case "snapCountdown":
+      tone(ctx, 740, t, 0.05, "square", 0.06);
+      tone(ctx, 980, t + 0.05, 0.07, "square", 0.05);
       break;
     case "draw":
       tone(ctx, 520, t, 0.04, "triangle", 0.05);

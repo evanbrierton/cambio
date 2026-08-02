@@ -12,6 +12,7 @@ import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
 import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
+import { SnapWindowOverlay } from "@/components/game/SnapWindowOverlay";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
 import {
   GameToast,
@@ -544,7 +545,6 @@ export function GameTable({
   const voice = useThemeVoice();
   const { soundEnabled, toggleSound } = useSoundEnabled();
   const { hintsEnabled, toggleHints } = useHintsEnabled();
-  useGameSounds(view, error, fleetingPeek, peekFlash, swapFlash, cambioFlash);
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
   );
@@ -558,6 +558,16 @@ export function GameTable({
   );
   const lobbyPlayersRef = useRef<Set<string>>(new Set());
   const lobbyJoinTimerRef = useRef<number | null>(null);
+
+  useGameSounds(
+    view,
+    error,
+    fleetingPeek,
+    peekFlash,
+    swapFlash,
+    cambioFlash,
+    snapWindowSeconds,
+  );
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
   const snapGiveActive = view.pendingAbility?.kind === "snap_give";
@@ -740,6 +750,7 @@ export function GameTable({
     view.players.find((p) => p.id === cambioFlash?.playerId)?.name ?? "Player";
 
   const phaseLabel = voice.phases[view.phase] ?? "";
+  const snapWindowActive = view.phase === "snap_window";
 
   const isDrawnSlotMine = Boolean(view.drawnCard);
   const showDrawnFaceDown = !isDrawnSlotMine && view.hasDrawnCard;
@@ -915,12 +926,17 @@ export function GameTable({
     <div
       className={`w-full max-w-7xl mx-auto flex flex-col ${
         isLobbyScrollLayout ? "" : "flex-1 min-h-0 h-full"
-      }`}
+      } ${snapWindowActive ? "snap-window-active" : ""}`}
     >
       <GameToastLayer toasts={gameToasts} />
       <CambioCallOverlay
         cambioFlash={cambioFlash}
         callerName={cambioCallerName}
+        voice={voice}
+      />
+      <SnapWindowOverlay
+        active={snapWindowActive}
+        seconds={snapWindowSeconds}
         voice={voice}
       />
 
@@ -1045,7 +1061,7 @@ export function GameTable({
             <div
               className={`table-deck shrink-0 pixel-border bg-surface px-2 py-1.5 lg:p-4 ${
                 view.canDraw ? "table-deck-drawable ring-2 ring-accent-alt" : ""
-              }`}
+              } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
             >
               <div className="flex items-end justify-center gap-1.5 sm:gap-4 lg:gap-8">
                 <button
@@ -1113,9 +1129,11 @@ export function GameTable({
                     className={`${PILE_CARD_SIZE} shrink-0 ${
                       showDiscardPileGlow
                         ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
-                        : view.canSnap
-                          ? "ring-1 ring-danger/50 rounded-card"
-                          : ""
+                        : snapWindowActive
+                          ? "ring-4 ring-danger rounded-card snap-window-discard"
+                          : view.canSnap
+                            ? "ring-1 ring-danger/50 rounded-card"
+                            : ""
                     }`}
                   >
                     <AnimatePresence mode="wait">

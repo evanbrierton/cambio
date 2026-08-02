@@ -197,6 +197,7 @@ function revealAllHands(state: GameState): void {
 }
 
 function enterRevealedPhase(state: GameState): void {
+  revealAllHands(state);
   state.phase = "revealed";
   state.snapWindowEndsAt = null;
   state.snapChainPlayerId = null;
@@ -280,7 +281,6 @@ export function expireSnapWindow(state: GameState, now = Date.now()): boolean {
 }
 
 function endRound(state: GameState): void {
-  revealAllHands(state);
   state.pendingAbility = null;
   state.drawnCard = null;
 
@@ -288,7 +288,7 @@ function endRound(state: GameState): void {
     state.phase = "snap_window";
     state.snapChainPlayerId = null;
     state.snapWindowEndsAt = Date.now() + SNAP_WINDOW_MS;
-    addLog(state, "Cards revealed — last chance to snap!");
+    addLog(state, "Last chance to snap! Cards reveal when time runs out.");
     return;
   }
 
