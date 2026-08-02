@@ -23,7 +23,7 @@ export type Card = {
 };
 
 export type CardSlot = {
-  card: Card;
+  card: Card | null;
   faceUp: boolean;
   isPenalty?: boolean;
 };
@@ -33,6 +33,7 @@ export type GamePhase =
   | "setup_peek"
   | "playing"
   | "cambio_final"
+  | "snap_window"
   | "ended";
 
 /** Bottom row indices in the 2×2 hand grid. */
@@ -96,13 +97,49 @@ export type GameState = {
   cumulativeScores: Record<string, number>;
   winnerIds: string[];
   scores: Record<string, number> | null;
+  snapWindowEndsAt: number | null;
   log: string[];
 };
+
+export type SwapFlashSlot = {
+  playerId: string;
+  slot: number;
+};
+
+export type PeekFlashKind = "setup_peek" | "peek_own" | "spy" | "look";
+
+export type PeekFlash = {
+  kind: PeekFlashKind;
+  actorId: string;
+  playerId: string;
+  slot: number;
+};
+
+export type ClientMessage =
+  | { type: "join"; playerId?: string; name: string }
+  | { type: "start_game" }
+  | { type: "setup_peek"; slot: number }
+  | { type: "draw"; source: "deck" | "discard" }
+  | { type: "swap"; slot: number }
+  | { type: "discard_drawn" }
+  | { type: "call_cambio" }
+  | { type: "snap"; targetPlayerId: string; slot: number }
+  | { type: "snap_give"; slot: number }
+  | { type: "toggle_debug" }
+  | { type: "ability_look"; playerId: string; slot: number }
+  | {
+      type: "ability_swap";
+      fromPlayerId: string;
+      fromSlot: number;
+      toPlayerId: string;
+      toSlot: number;
+    };
 
 export type PublicCardSlot = {
   card: Card | null;
   faceUp: boolean;
   hidden: boolean;
+  empty?: boolean;
   isPenalty?: boolean;
 };
 
@@ -144,31 +181,14 @@ export type PlayerView = {
   cambioCallerId: string | null;
   winnerIds: string[];
   scores: Record<string, number> | null;
+  snapWindowEndsAt: number | null;
   log: string[];
 };
-
-export type ClientMessage =
-  | { type: "join"; playerId?: string; name: string }
-  | { type: "start_game" }
-  | { type: "setup_peek"; slot: number }
-  | { type: "draw"; source: "deck" | "discard" }
-  | { type: "swap"; slot: number }
-  | { type: "discard_drawn" }
-  | { type: "call_cambio" }
-  | { type: "snap"; targetPlayerId: string; slot: number }
-  | { type: "snap_give"; slot: number }
-  | { type: "toggle_debug" }
-  | { type: "ability_look"; playerId: string; slot: number }
-  | {
-      type: "ability_swap";
-      fromPlayerId: string;
-      fromSlot: number;
-      toPlayerId: string;
-      toSlot: number;
-    };
 
 export type ServerMessage =
   | { type: "state"; view: PlayerView }
   | { type: "secret_peek"; playerId: string; slot: number; card: Card }
+  | { type: "peek_flash"; kind: PeekFlashKind; actorId: string; playerId: string; slot: number }
+  | { type: "swap_flash"; slots: SwapFlashSlot[] }
   | { type: "error"; message: string }
   | { type: "room_info"; roomId: string; playerId: string };

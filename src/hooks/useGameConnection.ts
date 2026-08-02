@@ -1,16 +1,31 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { nanoid } from "nanoid";
 import PartySocket from "partysocket";
 import { freshSessionKey, getPartyHost, storageKey } from "@/lib/party";
 import type { Card, ClientMessage, PlayerView, ServerMessage } from "@/game/types";
+import type { PeekFlashKind } from "@/game/types";
 
 const PEEK_FLASH_MS = 3500;
+export const SWAP_FLASH_MS = 3000;
+export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
 export type FleetingPeek = {
   playerId: string;
   slot: number;
   card: Card;
+};
+
+export type PeekFlash = {
+  kind: PeekFlashKind;
+  actorId: string;
+  playerId: string;
+  slot: number;
+};
+
+export type SwapFlash = {
+  slots: Array<{ playerId: string; slot: number }>;
 };
 
 type ConnectionState = {
@@ -19,6 +34,8 @@ type ConnectionState = {
   view: PlayerView | null;
   error: string | null;
   fleetingPeek: FleetingPeek | null;
+  peekFlash: PeekFlash | null;
+  swapFlash: SwapFlash | null;
 };
 
 export type SessionMode = "new" | "reconnect";
@@ -35,7 +52,7 @@ function resolvePlayerId(roomId: string, sessionMode: SessionMode): string {
   const stored =
     localStorage.getItem(key) ?? sessionStorage.getItem(key) ?? undefined;
 
-  const playerId = stored ?? crypto.randomUUID().slice(0, 10);
+  const playerId = stored ?? nanoid(10);
   sessionStorage.setItem(key, playerId);
   return playerId;
 }
@@ -51,9 +68,13 @@ export function useGameConnection(
     view: null,
     error: null,
     fleetingPeek: null,
+    peekFlash: null,
+    swapFlash: null,
   });
   const socketRef = useRef<PartySocket | null>(null);
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const peekEffectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const send = useCallback((message: ClientMessage) => {
     const socket = socketRef.current;
@@ -85,6 +106,13 @@ export function useGameConnection(
       setState((s) => ({ ...s, connected: false }));
     });
 
+    socket.addEventListener("error", () => {
+      setState((s) => ({
+        ...s,
+        error: s.error ?? "Could not connect to game server.",
+      }));
+    });
+
     socket.addEventListener("message", (event) => {
       const data = JSON.parse(event.data as string) as ServerMessage;
 
@@ -114,6 +142,33 @@ export function useGameConnection(
         }, PEEK_FLASH_MS);
       }
 
+      if (data.type === "peek_flash") {
+        if (peekEffectTimerRef.current) clearTimeout(peekEffectTimerRef.current);
+        setState((s) => ({
+          ...s,
+          peekFlash: {
+            kind: data.kind,
+            actorId: data.actorId,
+            playerId: data.playerId,
+            slot: data.slot,
+          },
+        }));
+        peekEffectTimerRef.current = setTimeout(() => {
+          setState((s) => ({ ...s, peekFlash: null }));
+        }, PEEK_FLASH_MS);
+      }
+
+      if (data.type === "swap_flash") {
+        if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+        setState((s) => ({
+          ...s,
+          swapFlash: { slots: data.slots },
+        }));
+        swapTimerRef.current = setTimeout(() => {
+          setState((s) => ({ ...s, swapFlash: null }));
+        }, SWAP_FLASH_MS);
+      }
+
       if (data.type === "error") {
         setState((s) => ({ ...s, error: data.message }));
       }
@@ -121,6 +176,8 @@ export function useGameConnection(
 
     return () => {
       if (peekTimerRef.current) clearTimeout(peekTimerRef.current);
+      if (peekEffectTimerRef.current) clearTimeout(peekEffectTimerRef.current);
+      if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
       socket.close();
       socketRef.current = null;
     };

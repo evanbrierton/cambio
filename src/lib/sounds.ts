@@ -1,8 +1,11 @@
 export type SoundId =
   | "flip"
+  | "peek"
+  | "spy"
   | "snap"
   | "snapWrong"
   | "draw"
+  | "swap"
   | "cambio"
   | "gameOver"
   | "yourTurn"
@@ -71,6 +74,15 @@ export async function playSound(id: SoundId): Promise<void> {
       tone(ctx, 440, t, 0.06, "square", 0.05);
       tone(ctx, 660, t + 0.07, 0.08, "square", 0.04);
       break;
+    case "peek":
+      tone(ctx, 620, t, 0.05, "sine", 0.05);
+      tone(ctx, 880, t + 0.06, 0.1, "sine", 0.04);
+      break;
+    case "spy":
+      tone(ctx, 520, t, 0.04, "triangle", 0.05);
+      tone(ctx, 780, t + 0.05, 0.07, "triangle", 0.05);
+      tone(ctx, 1040, t + 0.1, 0.08, "triangle", 0.04);
+      break;
     case "snap":
       tone(ctx, 880, t, 0.05, "square", 0.07);
       tone(ctx, 1320, t + 0.04, 0.1, "square", 0.05);
@@ -82,6 +94,11 @@ export async function playSound(id: SoundId): Promise<void> {
     case "draw":
       tone(ctx, 520, t, 0.04, "triangle", 0.05);
       tone(ctx, 390, t + 0.05, 0.06, "triangle", 0.04);
+      break;
+    case "swap":
+      tone(ctx, 330, t, 0.05, "triangle", 0.05);
+      tone(ctx, 494, t + 0.07, 0.08, "triangle", 0.05);
+      tone(ctx, 392, t + 0.14, 0.06, "triangle", 0.04);
       break;
     case "cambio":
       tone(ctx, 523, t, 0.1, "square", 0.05);

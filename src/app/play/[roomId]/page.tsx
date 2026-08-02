@@ -19,7 +19,7 @@ export default function PlayPage({
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
 
-  const { connected, view, error, fleetingPeek, send } = useGameConnection(
+  const { connected, view, error, fleetingPeek, peekFlash, swapFlash, send } = useGameConnection(
     roomId,
     name,
     sessionMode,
@@ -33,21 +33,27 @@ export default function PlayPage({
 
   if (!view) {
     return (
-      <div className="flex flex-1 items-center justify-center">
-        <p className="font-display text-theme animate-pulse text-sm">
-          {voice.loading}
-        </p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6">
+        {error ? (
+          <p className="font-display text-sm text-red-400 text-center">{error}</p>
+        ) : (
+          <p className="font-display text-theme animate-pulse text-sm">
+            {voice.loading}
+          </p>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-1 w-full px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
+    <div className="play-shell touch-game w-full px-3 pt-4 sm:px-6 sm:pt-6 lg:px-8">
       <GameTable
         view={view}
         connected={connected}
         error={error}
         fleetingPeek={fleetingPeek}
+        peekFlash={peekFlash}
+        swapFlash={swapFlash}
         send={send}
       />
     </div>

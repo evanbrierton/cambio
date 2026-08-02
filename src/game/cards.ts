@@ -88,7 +88,14 @@ export function cardsSnapMatch(a: Card, b: Card): boolean {
   return a.rank === b.rank;
 }
 
-export function abilityForDiscard(card: Card): string | null {
+export type DiscardAbility =
+  | "peek_own"
+  | "spy"
+  | "blind_switch"
+  | "queen_look"
+  | "king_look";
+
+export function abilityForDiscard(card: Card): DiscardAbility | null {
   if (card.rank === "7" || card.rank === "8") return "peek_own";
   if (card.rank === "9" || card.rank === "10") return "spy";
   if (card.rank === "J") return "blind_switch";

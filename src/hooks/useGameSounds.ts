@@ -3,17 +3,21 @@
 import { useEffect, useRef } from "react";
 import { playSound } from "@/lib/sounds";
 import type { PlayerView } from "@/game/types";
-import type { FleetingPeek } from "@/hooks/useGameConnection";
+import type { FleetingPeek, PeekFlash, SwapFlash } from "@/hooks/useGameConnection";
 
 export function useGameSounds(
   view: PlayerView | null,
   error: string | null,
   fleetingPeek: FleetingPeek | null,
+  peekFlash: PeekFlash | null,
+  swapFlash: SwapFlash | null,
 ) {
   const prevPhase = useRef<PlayerView["phase"] | null>(null);
   const prevLogLen = useRef(0);
   const prevMyTurn = useRef(false);
   const peekKey = useRef<string | null>(null);
+  const peekFlashKey = useRef<string | null>(null);
+  const swapFlashKey = useRef<string | null>(null);
 
   useEffect(() => {
     if (!fleetingPeek) {
@@ -25,6 +29,31 @@ export function useGameSounds(
     peekKey.current = key;
     playSound("flip");
   }, [fleetingPeek]);
+
+  useEffect(() => {
+    if (!peekFlash) {
+      peekFlashKey.current = null;
+      return;
+    }
+    const key = `${peekFlash.kind}-${peekFlash.actorId}-${peekFlash.playerId}-${peekFlash.slot}`;
+    if (peekFlashKey.current === key) return;
+    peekFlashKey.current = key;
+    playSound(peekFlash.kind === "spy" ? "spy" : "peek");
+  }, [peekFlash]);
+
+  useEffect(() => {
+    if (!swapFlash) {
+      swapFlashKey.current = null;
+      return;
+    }
+    const key = swapFlash.slots
+      .map((slot) => `${slot.playerId}-${slot.slot}`)
+      .sort()
+      .join("|");
+    if (swapFlashKey.current === key) return;
+    swapFlashKey.current = key;
+    playSound("swap");
+  }, [swapFlash]);
 
   useEffect(() => {
     if (!error?.includes("Wrong snap")) return;
