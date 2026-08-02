@@ -1,7 +1,6 @@
 import { nanoid } from "nanoid";
 import {
   abilityForDiscard,
-  cardsMatch,
   cardsSnapMatch,
   createDeck,
   type DiscardAbility,
@@ -16,7 +15,6 @@ import type {
   GameState,
   PeekFlash,
   PeekFlashKind,
-  PendingAbility,
   PlayerState,
   PlayerView,
   SwapFlashSlot,
@@ -90,10 +88,6 @@ function isGameInProgress(state: GameState): boolean {
 
 function isPlayingPlayer(player: PlayerState): boolean {
   return !player.isWaiting && player.hand.length > 0;
-}
-
-function activePlayers(state: GameState): PlayerState[] {
-  return state.players.filter(isPlayingPlayer);
 }
 
 function firstActivePlayerIndex(state: GameState): number {
@@ -346,7 +340,8 @@ function addPenalty(state: GameState, playerId: string): number | null {
 
   if (state.deck.length === 0) {
     if (state.discard.length <= 1) return null;
-    const top = state.discard.pop()!;
+    const top = state.discard.pop();
+    if (!top) return null;
     state.deck = shuffle([...state.discard, top]);
     state.discard = [];
   }
@@ -485,6 +480,11 @@ function slotHasCard(player: PlayerState, slot: number): boolean {
   return isValidHandSlot(player, slot) && player.hand[slot].card !== null;
 }
 
+function getHandCard(player: PlayerState, slot: number): Card | null {
+  if (!slotHasCard(player, slot)) return null;
+  return player.hand[slot].card;
+}
+
 function swapSlots(
   state: GameState,
   playerAId: string,
@@ -599,6 +599,9 @@ export function handleMessage(
         return { error: "Invalid slot." };
       }
 
+      const peekedCard = getHandCard(player, message.slot);
+      if (!peekedCard) return { error: "Invalid slot." };
+
       player.setupPeekedSlots = [...player.setupPeekedSlots, message.slot];
       addLog(state, `${player.name} peeked at a card.`);
 
@@ -615,7 +618,7 @@ export function handleMessage(
         secretPeek: {
           playerId,
           slot: message.slot,
-          card: player.hand[message.slot].card!,
+          card: peekedCard,
         },
         peekFlash: {
           kind: "setup_peek",
@@ -665,12 +668,14 @@ export function handleMessage(
       if (message.source === "deck") {
         if (state.deck.length === 0) {
           if (state.discard.length <= 1) return { error: "No cards to draw." };
-          const top = state.discard.pop()!;
+          const top = state.discard.pop();
+          if (!top) return { error: "No cards to draw." };
           state.deck = shuffle([...state.discard, top]);
           state.discard = [];
           clearSnapEligibleDiscard(state);
         }
-        const card = state.deck.pop()!;
+        const card = state.deck.pop();
+        if (!card) return { error: "No cards to draw." };
         state.drawnCard = card;
         state.drawnFromDiscard = false;
         addLog(state, `${player.name} drew from the deck.`);
@@ -679,7 +684,8 @@ export function handleMessage(
 
       if (state.discard.length === 0)
         return { error: "Discard pile is empty." };
-      const card = state.discard.pop()!;
+      const card = state.discard.pop();
+      if (!card) return { error: "Discard pile is empty." };
       clearSnapEligibleDiscard(state);
       state.drawnCard = card;
       state.drawnFromDiscard = true;
@@ -779,7 +785,8 @@ export function handleMessage(
       }
 
       const top = state.discard[state.discard.length - 1];
-      const handCard = target.hand[message.slot].card!;
+      const handCard = getHandCard(target, message.slot);
+      if (!handCard) return { error: "No card in that slot." };
 
       if (!cardsSnapMatch(handCard, top)) {
         const penaltySlot = addPenalty(state, playerId);
@@ -794,15 +801,12 @@ export function handleMessage(
         return {
           error: "Wrong snap! Penalty card added.",
           penaltyFlash:
-            penaltySlot !== null
-              ? { playerId, slot: penaltySlot }
-              : undefined,
+            penaltySlot !== null ? { playerId, slot: penaltySlot } : undefined,
         };
       }
 
-      const snappedCard = target.hand[message.slot].card!;
       clearHandSlot(target.hand, message.slot);
-      state.discard.push(snappedCard);
+      state.discard.push(handCard);
       clearSnapEligibleDiscard(state);
 
       if (message.targetPlayerId === playerId) {
@@ -843,7 +847,8 @@ export function handleMessage(
         return { error: "Invalid slot." };
       }
 
-      const givenCard = snapper.hand[message.slot].card!;
+      const givenCard = getHandCard(snapper, message.slot);
+      if (!givenCard) return { error: "Invalid slot." };
       clearHandSlot(snapper.hand, message.slot);
       placeCardInHand(recipient.hand, givenCard);
       state.pendingAbility = null;
@@ -939,7 +944,8 @@ export function handleMessage(
         return { error: "Already looked enough cards." };
       }
 
-      const card = target.hand[message.slot].card!;
+      const card = getHandCard(target, message.slot);
+      if (!card) return { error: "No card in that slot." };
       pending.lookedCards.push({
         playerId: message.playerId,
         slot: message.slot,
@@ -1149,8 +1155,7 @@ export function buildPlayerView(
       viewerId === state.hostId &&
       (state.phase === "lobby" || state.phase === "ended") &&
       participants.length >= MIN_PLAYERS,
-    canShowResults:
-      viewerId === state.hostId && state.phase === "revealed",
+    canShowResults: viewerId === state.hostId && state.phase === "revealed",
     roundNumber: state.roundNumber,
     roundHistory: state.roundHistory,
     cumulativeScores: { ...state.cumulativeScores },
