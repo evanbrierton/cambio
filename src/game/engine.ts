@@ -19,7 +19,7 @@ import type {
   PlayerView,
   SwapFlashSlot,
 } from "./types";
-import { SETUP_PEEK_SLOTS } from "./types";
+import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "./types";
 
 const MAX_PLAYERS = 6;
 const MIN_PLAYERS = 2;
@@ -441,6 +441,16 @@ function firstEmptySlot(hand: CardSlot[]): number {
   return hand.findIndex((slot) => slot.card === null);
 }
 
+/** First open slot in the original 2×2 hand grid (including gaps after snaps). */
+function firstEmptyBaseSlot(hand: CardSlot[]): number {
+  for (let i = 0; i < HAND_BASE_SLOTS; i++) {
+    if (i >= hand.length || hand[i].card === null) {
+      return i;
+    }
+  }
+  return -1;
+}
+
 function placeCardInHand(
   hand: CardSlot[],
   card: Card,
@@ -452,9 +462,15 @@ function placeCardInHand(
     isPenalty: options.isPenalty,
   };
 
-  const emptyIndex = firstEmptySlot(hand);
+  const emptyIndex = options.isPenalty
+    ? firstEmptyBaseSlot(hand)
+    : firstEmptySlot(hand);
   if (emptyIndex !== -1) {
-    hand[emptyIndex] = entry;
+    if (emptyIndex === hand.length) {
+      hand.push(entry);
+    } else {
+      hand[emptyIndex] = entry;
+    }
     return emptyIndex;
   }
   hand.push(entry);
