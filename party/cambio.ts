@@ -36,7 +36,7 @@ import {
   parseBotDifficulty,
 } from "../src/game/types";
 
-type PlayerConnectionState = { playerId?: string };
+type PlayerConnectionState = { playerId?: string; debugEnabled?: boolean };
 
 function migrateState(state: GameState): GameState {
   return {
@@ -357,7 +357,8 @@ export class CambioParty extends Server {
   ) {
     const url = new URL(ctx.request.url);
     const queryPlayerId = url.searchParams.get("playerId");
-    const name = (url.searchParams.get("name") ?? "Player").slice(0, 24);
+    const name = (url.searchParams.get("name") ?? "").trim().slice(0, 24);
+    const debugEnabled = url.searchParams.has("debug");
     const isSolo = url.searchParams.get("solo") === "1";
     const botCount = Math.min(
       MAX_BOT_COUNT,
@@ -370,6 +371,18 @@ export class CambioParty extends Server {
       ),
     );
     const difficulty = parseBotDifficulty(url.searchParams.get("difficulty"));
+
+    const existingPlayer = queryPlayerId
+      ? this.state?.players.find((p) => p.id === queryPlayerId)
+      : undefined;
+
+    if (!existingPlayer && !name) {
+      connection.send(
+        JSON.stringify({ type: "error", message: "Please enter a name." }),
+      );
+      connection.close(1008, "Name required");
+      return;
+    }
 
     let playerId = queryPlayerId ?? crypto.randomUUID().slice(0, 10);
 
@@ -401,7 +414,7 @@ export class CambioParty extends Server {
       }
     }
 
-    connection.setState({ playerId });
+    connection.setState({ playerId, debugEnabled });
 
     const result = handleMessage(this.state, playerId, {
       type: "join",
@@ -411,6 +424,10 @@ export class CambioParty extends Server {
 
     if (result.error) {
       connection.send(JSON.stringify({ type: "error", message: result.error }));
+      if (!this.state.players.some((p) => p.id === playerId)) {
+        connection.close(1008, result.error);
+        return;
+      }
     }
 
     await this.persist();
@@ -464,6 +481,19 @@ export class CambioParty extends Server {
     } catch {
       connection.send(
         JSON.stringify({ type: "error", message: "Invalid message." }),
+      );
+      return;
+    }
+
+    if (
+      (message.type === "toggle_debug" || message.type === "restart_game") &&
+      !connection.state?.debugEnabled
+    ) {
+      connection.send(
+        JSON.stringify({
+          type: "error",
+          message: "Debug options are not enabled for this session.",
+        }),
       );
       return;
     }

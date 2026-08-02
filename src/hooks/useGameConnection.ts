@@ -86,6 +86,7 @@ export function useGameConnection(
   playerName: string,
   sessionMode: SessionMode = "reconnect",
   soloOptions?: SoloOptions,
+  debugEnabled = false,
 ) {
   const [state, setState] = useState<ConnectionState>({
     connected: false,
@@ -129,6 +130,7 @@ export function useGameConnection(
               difficulty: soloOptions.difficulty,
             }
           : {}),
+        ...(debugEnabled ? { debug: "1" } : {}),
       },
     });
 
@@ -245,7 +247,7 @@ export function useGameConnection(
       socket.close();
       socketRef.current = null;
     };
-  }, [roomId, playerName, sessionMode, soloOptions]);
+  }, [roomId, playerName, sessionMode, soloOptions, debugEnabled]);
 
   return { ...state, send };
 }

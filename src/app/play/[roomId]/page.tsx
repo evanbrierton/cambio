@@ -11,6 +11,7 @@ import {
   useGameConnection,
 } from "@/hooks/useGameConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
+import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
 
 function allowsPageScroll(view: PlayerView | null): boolean {
   if (!view) return true;
@@ -26,7 +27,8 @@ export default function PlayPage({
   const searchParams = useSearchParams();
   const router = useRouter();
   const voice = useThemeVoice();
-  const name = searchParams.get("name") ?? "Player";
+  const name = searchParams.get("name")?.trim() ?? "";
+  const debugEnabled = hasDebugQueryParam(searchParams);
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
   const isSolo = searchParams.get("solo") === "1";
@@ -42,6 +44,12 @@ export default function PlayPage({
         }
       : undefined;
 
+  useEffect(() => {
+    if (isNavFresh && !name) {
+      router.replace("/");
+    }
+  }, [isNavFresh, name, router]);
+
   const {
     connected,
     view,
@@ -52,13 +60,14 @@ export default function PlayPage({
     penaltyFlash,
     cambioFlash,
     send,
-  } = useGameConnection(roomId, name, sessionMode, soloOptions);
+  } = useGameConnection(roomId, name, sessionMode, soloOptions, debugEnabled);
 
   useEffect(() => {
     if (!view || !isNavFresh) return;
     const params = new URLSearchParams({ name });
+    if (debugEnabled) appendDebugQueryParam(params);
     router.replace(`/play/${roomId}?${params.toString()}`);
-  }, [view, isNavFresh, name, roomId, router]);
+  }, [debugEnabled, view, isNavFresh, name, roomId, router]);
 
   const pageScrollable = allowsPageScroll(view);
 
