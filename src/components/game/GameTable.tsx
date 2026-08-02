@@ -471,10 +471,18 @@ function PlayerSeat({
           {hasPenaltyFlash && (
             <span className="ui-badge text-accent animate-pulse">PENALTY</span>
           )}
+          {player.isBot && (
+            <span className="ui-badge text-accent-alt">{voice.botBadge}</span>
+          )}
           {player.isHost && (
             <span className="ui-badge text-accent">{voice.host}</span>
           )}
-          {player.isCurrentTurn && (
+          {player.isThinking && (
+            <span className="ui-badge text-accent-alt animate-pulse">
+              {voice.botThinking}
+            </span>
+          )}
+          {player.isCurrentTurn && !player.isThinking && (
             <span className="ui-badge text-accent-alt animate-pulse">
               {voice.turn}
             </span>
@@ -1167,7 +1175,7 @@ export function GameTable({
           )}
 
           {view.phase === "lobby" ? (
-            <LobbyPlayers view={view} voice={voice} />
+            <LobbyPlayers view={view} voice={voice} send={send} />
           ) : (
             <div className="flex flex-1 flex-col gap-2 min-h-0 min-w-0">
               <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">

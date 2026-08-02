@@ -4,7 +4,12 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect } from "react";
 import { GameTable } from "@/components/game/GameTable";
 import type { PlayerView } from "@/game/types";
-import { type SessionMode, useGameConnection } from "@/hooks/useGameConnection";
+import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "@/game/types";
+import {
+  type SessionMode,
+  type SoloOptions,
+  useGameConnection,
+} from "@/hooks/useGameConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 
 function allowsPageScroll(view: PlayerView | null): boolean {
@@ -24,6 +29,18 @@ export default function PlayPage({
   const name = searchParams.get("name") ?? "Player";
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
+  const isSolo = searchParams.get("solo") === "1";
+  const soloOptions: SoloOptions | undefined =
+    isSolo && isNavFresh
+      ? {
+          botCount:
+            Number.parseInt(
+              searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
+              10,
+            ) || DEFAULT_BOT_COUNT,
+          difficulty: parseBotDifficulty(searchParams.get("difficulty")),
+        }
+      : undefined;
 
   const {
     connected,
@@ -35,7 +52,7 @@ export default function PlayPage({
     penaltyFlash,
     cambioFlash,
     send,
-  } = useGameConnection(roomId, name, sessionMode);
+  } = useGameConnection(roomId, name, sessionMode, soloOptions);
 
   useEffect(() => {
     if (!view || !isNavFresh) return;

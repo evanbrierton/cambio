@@ -9,6 +9,7 @@ import {
 } from "./cards";
 import { computeScores, determineWinners } from "./scoring";
 import type {
+  BotDifficulty,
   Card,
   CardSlot,
   ClientMessage,
@@ -27,6 +28,55 @@ const SETUP_PEEKS = 2;
 export const SNAP_WINDOW_MS = 6_000;
 const SNAP_WINDOW_GRACE_MS = 3_000;
 
+const BOT_NAMES = [
+  "Pixel Pete",
+  "Card Bot",
+  "Dealer Dan",
+  "Ace Annie",
+  "Chip Charlie",
+  "Lucky Lou",
+  "Queen Quinn",
+  "King Kyle",
+  "Joker Jay",
+  "Snap Sally",
+];
+
+export function isParticipant(player: PlayerState): boolean {
+  return !player.isWaiting && (player.connected || player.isBot);
+}
+
+function pickBotName(usedNames: Set<string>): string {
+  for (const name of BOT_NAMES) {
+    if (!usedNames.has(name)) return name;
+  }
+  return `Bot ${usedNames.size + 1}`;
+}
+
+export function addBotPlayer(
+  state: GameState,
+  difficulty: BotDifficulty,
+): string {
+  const usedNames = new Set(state.players.map((p) => p.name));
+  const id = nanoid(10);
+  const name = pickBotName(usedNames);
+  state.players.push({
+    id,
+    name,
+    hand: [],
+    penaltyCount: 0,
+    setupPeekedSlots: [],
+    hasCalledCambio: false,
+    finalTurnDone: false,
+    isWaiting: false,
+    connected: true,
+    isBot: true,
+    botDifficulty: difficulty,
+  });
+  state.cumulativeScores[id] = state.cumulativeScores[id] ?? 0;
+  addLog(state, `${name} joined as a bot.`);
+  return id;
+}
+
 export function createRoom(
   roomId: string,
   hostName: string,
@@ -36,6 +86,8 @@ export function createRoom(
   return {
     roomId,
     phase: "lobby",
+    isSoloMode: false,
+    soloDifficulty: null,
     hostId: id,
     players: [
       {
@@ -48,6 +100,8 @@ export function createRoom(
         finalTurnDone: false,
         isWaiting: false,
         connected: true,
+        isBot: false,
+        botDifficulty: null,
       },
     ],
     currentPlayerIndex: 0,
@@ -67,6 +121,7 @@ export function createRoom(
     snapWindowEndsAt: null,
     snapEligibleTopCardId: null,
     snapChainPlayerId: null,
+    botThinkingId: null,
     log: [`${hostName} created the room.`],
   };
 }
@@ -79,7 +134,10 @@ function currentPlayer(state: GameState): PlayerState | undefined {
   return state.players[state.currentPlayerIndex];
 }
 
-function findPlayer(state: GameState, id: string): PlayerState | undefined {
+export function findPlayer(
+  state: GameState,
+  id: string,
+): PlayerState | undefined {
   return state.players.find((p) => p.id === id);
 }
 
@@ -565,6 +623,8 @@ export function handleMessage(
         finalTurnDone: false,
         isWaiting: waiting,
         connected: true,
+        isBot: false,
+        botDifficulty: null,
       });
       state.cumulativeScores[playerId] = state.cumulativeScores[playerId] ?? 0;
       if (waiting) {
@@ -584,9 +644,7 @@ export function handleMessage(
       if (state.phase !== "lobby" && state.phase !== "ended") {
         return { error: "A game is already in progress." };
       }
-      const participants = state.players.filter(
-        (p) => !p.isWaiting && p.connected,
-      );
+      const participants = state.players.filter(isParticipant);
       if (participants.length < MIN_PLAYERS) {
         return { error: `Need at least ${MIN_PLAYERS} players.` };
       }
@@ -904,9 +962,7 @@ export function handleMessage(
       if (state.phase === "lobby") {
         return { error: "No game to restart." };
       }
-      const participants = state.players.filter(
-        (p) => !p.isWaiting && p.connected,
-      );
+      const participants = state.players.filter(isParticipant);
       if (participants.length < MIN_PLAYERS) {
         return { error: `Need at least ${MIN_PLAYERS} players.` };
       }
@@ -923,6 +979,43 @@ export function handleMessage(
         return { error: "Cannot show results now." };
       }
       finalizeRound(state);
+      return {};
+    }
+
+    case "add_bot": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can add bots." };
+      }
+      if (!state.isSoloMode) {
+        return { error: "Bots are only available in practice mode." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot add bots during a game." };
+      }
+      if (state.players.length >= MAX_PLAYERS) {
+        return { error: "Room is full." };
+      }
+      const difficulty = message.difficulty ?? state.soloDifficulty ?? "easy";
+      addBotPlayer(state, difficulty);
+      return {};
+    }
+
+    case "remove_bot": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can remove bots." };
+      }
+      if (!state.isSoloMode) {
+        return { error: "Bots are only available in practice mode." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot remove bots during a game." };
+      }
+      const bot = findPlayer(state, message.playerId);
+      if (!bot?.isBot) {
+        return { error: "That player is not a bot." };
+      }
+      state.players = state.players.filter((p) => p.id !== message.playerId);
+      addLog(state, `${bot.name} left.`);
       return {};
     }
 
@@ -1091,7 +1184,7 @@ export function buildPlayerView(
     state.phase !== "revealed";
   const snapInteractive = snapWindowActive && !viewerWaiting;
 
-  const participants = state.players.filter((p) => !p.isWaiting && p.connected);
+  const participants = state.players.filter(isParticipant);
 
   const players = state.players.map((p) => {
     return {
@@ -1119,8 +1212,10 @@ export function buildPlayerView(
       finalTurnDone: p.finalTurnDone,
       isWaiting: p.isWaiting,
       connected: p.connected,
+      isBot: p.isBot,
       isHost: p.id === state.hostId,
       isCurrentTurn: current?.id === p.id,
+      isThinking: state.botThinkingId === p.id,
     };
   });
 
@@ -1186,6 +1281,12 @@ export function buildPlayerView(
     winnerIds: state.winnerIds,
     scores: state.scores,
     snapWindowEndsAt: state.snapWindowEndsAt,
+    isSoloMode: state.isSoloMode,
+    canAddBot:
+      viewerId === state.hostId &&
+      state.isSoloMode &&
+      (state.phase === "lobby" || state.phase === "ended") &&
+      state.players.length < MAX_PLAYERS,
     log: state.log,
   };
 }

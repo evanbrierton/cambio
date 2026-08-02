@@ -99,6 +99,17 @@ export type ThemeVoice = {
   soundOff: string;
   hintsOn: string;
   hintsOff: string;
+  practiceMode: string;
+  botCountLabel: string;
+  difficultyLabel: string;
+  difficultyEasy: string;
+  difficultyMedium: string;
+  difficultyHard: string;
+  playVsBots: string;
+  botBadge: string;
+  botThinking: string;
+  addBot: string;
+  removeBot: string;
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
@@ -238,6 +249,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "SOUND OFF",
     hintsOn: "HINTS ON",
     hintsOff: "HINTS OFF",
+    practiceMode: "PRACTICE MODE",
+    botCountLabel: "BOTS",
+    difficultyLabel: "DIFFICULTY",
+    difficultyEasy: "EASY",
+    difficultyMedium: "MEDIUM",
+    difficultyHard: "HARD",
+    playVsBots: "PLAY VS BOTS",
+    botBadge: "BOT",
+    botThinking: "THINKING...",
+    addBot: "+ ADD BOT",
+    removeBot: "REMOVE",
   },
   casino: {
     tagline: "Take a seat at the table",
@@ -341,6 +363,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    practiceMode: "Practice table",
+    botCountLabel: "Opponents",
+    difficultyLabel: "Skill",
+    difficultyEasy: "Easy",
+    difficultyMedium: "Medium",
+    difficultyHard: "Hard",
+    playVsBots: "Practice vs bots",
+    botBadge: "Bot",
+    botThinking: "Thinking...",
+    addBot: "+ Add bot",
+    removeBot: "Remove",
   },
   party: {
     tagline: "Let's get this party started!",
@@ -442,6 +475,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    practiceMode: "Solo party",
+    botCountLabel: "Bots",
+    difficultyLabel: "Difficulty",
+    difficultyEasy: "Easy",
+    difficultyMedium: "Medium",
+    difficultyHard: "Hard",
+    playVsBots: "Party vs bots",
+    botBadge: "Bot",
+    botThinking: "Thinking...",
+    addBot: "+ Add bot",
+    removeBot: "Remove",
   },
   minimal: {
     tagline: "Online Cambio",
@@ -542,6 +586,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    practiceMode: "Practice",
+    botCountLabel: "Bots",
+    difficultyLabel: "Difficulty",
+    difficultyEasy: "Easy",
+    difficultyMedium: "Medium",
+    difficultyHard: "Hard",
+    playVsBots: "Play vs bots",
+    botBadge: "Bot",
+    botThinking: "Thinking...",
+    addBot: "+ Add bot",
+    removeBot: "Remove",
   },
   calm: {
     tagline: "A quiet evening of cards",
@@ -645,6 +700,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    practiceMode: "Quiet practice",
+    botCountLabel: "Bots",
+    difficultyLabel: "Difficulty",
+    difficultyEasy: "Easy",
+    difficultyMedium: "Medium",
+    difficultyHard: "Hard",
+    playVsBots: "Practice vs bots",
+    botBadge: "Bot",
+    botThinking: "Thinking...",
+    addBot: "+ Add bot",
+    removeBot: "Remove",
   },
 };
 
