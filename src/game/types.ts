@@ -106,6 +106,15 @@ export type SwapFlashSlot = {
   slot: number;
 };
 
+export type PeekFlashKind = "setup_peek" | "peek_own" | "spy" | "look";
+
+export type PeekFlash = {
+  kind: PeekFlashKind;
+  actorId: string;
+  playerId: string;
+  slot: number;
+};
+
 export type ClientMessage =
   | { type: "join"; playerId?: string; name: string }
   | { type: "start_game" }
@@ -179,6 +188,7 @@ export type PlayerView = {
 export type ServerMessage =
   | { type: "state"; view: PlayerView }
   | { type: "secret_peek"; playerId: string; slot: number; card: Card }
+  | { type: "peek_flash"; kind: PeekFlashKind; actorId: string; playerId: string; slot: number }
   | { type: "swap_flash"; slots: SwapFlashSlot[] }
   | { type: "error"; message: string }
   | { type: "room_info"; roomId: string; playerId: string };

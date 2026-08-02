@@ -1,5 +1,5 @@
 import { cardPoints } from "./cards";
-import type { Card, GameState } from "./types";
+import type { GameState } from "./types";
 
 export function scorePlayer(state: GameState, playerId: string): number {
   const player = state.players.find((p) => p.id === playerId);
@@ -28,39 +28,7 @@ export function determineWinners(state: GameState): string[] {
 
   if (tied.length === 1) return tied;
 
-  const caller = state.cambioCallerId;
-  const nonCallers = tied.filter((id) => id !== caller);
-  if (nonCallers.length === 1) return nonCallers;
-  if (nonCallers.length > 1) {
-    return pickLowestCardValueWinner(state, nonCallers);
-  }
-
-  return pickLowestCardValueWinner(state, tied);
-}
-
-function pickLowestCardValueWinner(
-  state: GameState,
-  candidates: string[],
-): string[] {
-  let bestIds: string[] = [];
-  let bestValue = Infinity;
-
-  for (const id of candidates) {
-    const player = state.players.find((p) => p.id === id);
-    if (!player) continue;
-    const cardValues = player.hand
-      .map((s) => s.card)
-      .filter((card): card is Card => card !== null)
-      .map((card) => cardPoints(card));
-    if (cardValues.length === 0) continue;
-    const lowestCard = Math.min(...cardValues);
-    if (lowestCard < bestValue) {
-      bestValue = lowestCard;
-      bestIds = [id];
-    } else if (lowestCard === bestValue) {
-      bestIds.push(id);
-    }
-  }
-
-  return bestIds.length > 0 ? bestIds : candidates;
+  // On a draw, the Cambio caller ranks lower; other tied players share the win.
+  const nonCallers = tied.filter((id) => id !== state.cambioCallerId);
+  return nonCallers.length > 0 ? nonCallers : tied;
 }

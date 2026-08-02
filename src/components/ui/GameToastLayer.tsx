@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
-export type GameToastTone = "error" | "snap" | "turn" | "action" | "swap" | "info";
+export type GameToastTone = "error" | "snap" | "turn" | "action" | "swap" | "peek" | "info";
 
 export type GameToastItem = {
   id: string;
@@ -19,6 +19,7 @@ const toneClass: Record<GameToastTone, string> = {
   turn: "bg-swap-hint text-accent ring-accent",
   action: "bg-action-hint text-accent-alt ring-accent-alt",
   swap: "bg-swap-first-selected text-accent-alt ring-accent-alt",
+  peek: "bg-peek-seat-flash text-accent-alt ring-accent-alt",
   info: "bg-surface-elevated text-theme ring-theme-muted",
 };
 

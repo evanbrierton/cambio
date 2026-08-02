@@ -19,7 +19,7 @@ export default function PlayPage({
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
 
-  const { connected, view, error, fleetingPeek, swapFlash, send } = useGameConnection(
+  const { connected, view, error, fleetingPeek, peekFlash, swapFlash, send } = useGameConnection(
     roomId,
     name,
     sessionMode,
@@ -52,6 +52,7 @@ export default function PlayPage({
         connected={connected}
         error={error}
         fleetingPeek={fleetingPeek}
+        peekFlash={peekFlash}
         swapFlash={swapFlash}
         send={send}
       />

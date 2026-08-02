@@ -15,6 +15,8 @@ import type {
   ClientMessage,
   GameState,
   PendingAbility,
+  PeekFlash,
+  PeekFlashKind,
   PlayerState,
   PlayerView,
   SwapFlashSlot,
@@ -462,6 +464,7 @@ export function handleMessage(
 ): {
   error?: string;
   secretPeek?: { playerId: string; slot: number; card: unknown };
+  peekFlash?: PeekFlash;
   swapFlash?: { slots: SwapFlashSlot[] };
 } {
   switch (message.type) {
@@ -550,6 +553,12 @@ export function handleMessage(
           playerId,
           slot: message.slot,
           card: player.hand[message.slot].card!,
+        },
+        peekFlash: {
+          kind: "setup_peek",
+          actorId: playerId,
+          playerId,
+          slot: message.slot,
         },
       };
     }
@@ -824,11 +833,24 @@ export function handleMessage(
 
       tryPassTurnAfterAction(state, playerId);
 
+      const peekKind: PeekFlashKind =
+        pending.kind === "spy"
+          ? "spy"
+          : pending.kind === "peek_own"
+            ? "peek_own"
+            : "look";
+
       return {
         secretPeek: {
           playerId: message.playerId,
           slot: message.slot,
           card,
+        },
+        peekFlash: {
+          kind: peekKind,
+          actorId: playerId,
+          playerId: message.playerId,
+          slot: message.slot,
         },
       };
     }

@@ -5,7 +5,7 @@ import {
   expireSnapWindow,
   handleMessage,
 } from "../src/game/engine";
-import type { Card, ClientMessage, GameState, ServerMessage, SwapFlashSlot } from "../src/game/types";
+import type { Card, ClientMessage, GameState, PeekFlash, ServerMessage, SwapFlashSlot } from "../src/game/types";
 
 function migrateState(state: GameState): GameState {
   return {
@@ -94,6 +94,20 @@ export default class CambioParty implements Party.Server {
 
   broadcastSwapFlash(slots: SwapFlashSlot[]) {
     const message: ServerMessage = { type: "swap_flash", slots };
+    const payload = JSON.stringify(message);
+    for (const conn of this.room.getConnections()) {
+      conn.send(payload);
+    }
+  }
+
+  broadcastPeekFlash(peekFlash: PeekFlash) {
+    const message: ServerMessage = {
+      type: "peek_flash",
+      kind: peekFlash.kind,
+      actorId: peekFlash.actorId,
+      playerId: peekFlash.playerId,
+      slot: peekFlash.slot,
+    };
     const payload = JSON.stringify(message);
     for (const conn of this.room.getConnections()) {
       conn.send(payload);
@@ -202,6 +216,10 @@ export default class CambioParty implements Party.Server {
 
     if (result.swapFlash) {
       this.broadcastSwapFlash(result.swapFlash.slots);
+    }
+
+    if (result.peekFlash) {
+      this.broadcastPeekFlash(result.peekFlash);
     }
   }
 }

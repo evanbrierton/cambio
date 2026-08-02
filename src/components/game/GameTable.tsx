@@ -12,7 +12,7 @@ import { ThemePicker } from "@/components/ui/ThemePicker";
 import type { ClientMessage, PendingAbility, PlayerView, PublicPlayer } from "@/game/types";
 import { SETUP_PEEK_SLOTS } from "@/game/types";
 import { cardLabel, abilityForDiscard, isRed, suitGlyph } from "@/game/cards";
-import type { FleetingPeek, SwapFlash } from "@/hooks/useGameConnection";
+import type { FleetingPeek, PeekFlash, SwapFlash } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { useSoundEnabled } from "@/hooks/useSoundEnabled";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
@@ -24,11 +24,49 @@ type GameTableProps = {
   connected: boolean;
   error: string | null;
   fleetingPeek: FleetingPeek | null;
+  peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
   send: (message: ClientMessage) => void;
 };
 
 type SelectedCard = { playerId: string; slot: number };
+
+function formatPeekFlashNotice(
+  peekFlash: PeekFlash,
+  players: PlayerView["players"],
+  fallback: string,
+): string {
+  const actor = players.find((entry) => entry.id === peekFlash.actorId);
+  const target = players.find((entry) => entry.id === peekFlash.playerId);
+  const actorName = actor?.name ?? "Player";
+  const targetName = target?.name ?? "Player";
+  const slotLabel = `#${peekFlash.slot + 1}`;
+
+  if (peekFlash.kind === "spy") {
+    return `◎ ${actorName} spied ${targetName} ${slotLabel}`;
+  }
+  if (peekFlash.kind === "look") {
+    return `◎ ${actorName} looked at ${targetName} ${slotLabel}`;
+  }
+  if (peekFlash.actorId === peekFlash.playerId) {
+    return `◎ ${actorName} peeked ${slotLabel}`;
+  }
+  return fallback;
+}
+
+function isPeekFlashing(
+  peekFlash: PeekFlash | null,
+  playerId: string,
+  slot: number,
+): boolean {
+  return peekFlash?.playerId === playerId && peekFlash.slot === slot;
+}
+
+function peekFlashSeatLabel(kind: PeekFlash["kind"]): string {
+  if (kind === "spy") return "SPY";
+  if (kind === "look") return "LOOK";
+  return "PEEK";
+}
 
 function isSwapFlashing(
   swapFlash: SwapFlash | null,
@@ -152,6 +190,7 @@ function PlayerSeat({
   phase,
   cambioCallerId,
   fleetingPeek,
+  peekFlash,
   swapFlash,
   selectedSwapCard,
   canSwap,
@@ -169,6 +208,7 @@ function PlayerSeat({
   phase: PlayerView["phase"];
   cambioCallerId: string | null;
   fleetingPeek: FleetingPeek | null;
+  peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
   selectedSwapCard: SelectedCard | null;
   canSwap?: boolean;
@@ -214,6 +254,9 @@ function PlayerSeat({
 
   const hasSwapFlash =
     swapFlash?.slots.some((entry) => entry.playerId === player.id) ?? false;
+  const hasPeekFlash =
+    peekFlash?.playerId === player.id ||
+    peekFlash?.actorId === player.id;
 
   const seatPadding = compact ? "p-2" : "p-3 sm:p-4";
   const cardGridWidth = compact ? "w-[120px]" : "w-[168px] sm:w-[184px]";
@@ -223,6 +266,8 @@ function PlayerSeat({
       className={`pixel-border ${seatPadding} w-full min-w-0 ${
         hasSwapFlash
           ? "swap-seat-flash bg-swap-seat-flash ring-4 ring-accent shadow-glow-accent"
+        : hasPeekFlash
+          ? "peek-seat-flash bg-peek-seat-flash ring-4 ring-accent-alt shadow-glow-accent-alt"
         : showDrawnSwapHint || showSnapGiveHint
           ? "bg-swap-hint ring-2 ring-accent animate-pulse"
           : showLookSeatHint
@@ -294,6 +339,11 @@ function PlayerSeat({
             SWAPPED
           </span>
         )}
+        {hasPeekFlash && peekFlash && (
+          <span className="ui-badge text-accent-alt animate-pulse">
+            {peekFlashSeatLabel(peekFlash.kind)}
+          </span>
+        )}
         {player.isHost && (
           <span className="ui-badge text-accent">{voice.host}</span>
         )}
@@ -342,6 +392,9 @@ function PlayerSeat({
             (showDrawnSwapHint && isOwn) ||
             (showAbilitySwapHint && !abilityLocked);
 
+          const isPeekFlashOnSlot = isPeekFlashing(peekFlash, player.id, index);
+          const showPeekFlashOverlay = isPeekFlashOnSlot && !isFleetingPeek;
+
           return (
             <PixelCard
               key={index}
@@ -357,6 +410,13 @@ function PlayerSeat({
                 isSwapFlashing(swapFlash, player.id, index)
                   ? `#${index + 1}`
                   : undefined
+              }
+              peekFlashing={showPeekFlashOverlay}
+              peekFlashKind={
+                showPeekFlashOverlay ? peekFlash?.kind : undefined
+              }
+              peekFlashSlotLabel={
+                showPeekFlashOverlay ? `#${index + 1}` : undefined
               }
               highlightSwap={
                 !isEmpty &&
@@ -400,12 +460,13 @@ export function GameTable({
   connected,
   error,
   fleetingPeek,
+  peekFlash,
   swapFlash,
   send,
 }: GameTableProps) {
   const voice = useThemeVoice();
   const { soundEnabled, toggleSound } = useSoundEnabled();
-  useGameSounds(view, error, fleetingPeek, swapFlash);
+  useGameSounds(view, error, fleetingPeek, peekFlash, swapFlash);
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
   );
@@ -443,6 +504,19 @@ export function GameTable({
           voice.swapFlashNotice,
         ),
         tone: "swap",
+        pulse: true,
+      });
+    }
+
+    if (peekFlash) {
+      items.push({
+        id: "peek-flash",
+        message: formatPeekFlashNotice(
+          peekFlash,
+          view.players,
+          voice.peekFlashNotice,
+        ),
+        tone: "peek",
         pulse: true,
       });
     }
@@ -489,6 +563,7 @@ export function GameTable({
     actionBanner,
     error,
     fleetingPeek,
+    peekFlash,
     selectedSwapCard,
     swapAbilityActive,
     swapFlash,
@@ -624,7 +699,7 @@ export function GameTable({
   };
 
   const copyRoomCode = () => {
-    void copyToClipboard(view.roomId).then((copied) => {
+    void copyToClipboard(view.roomId.toUpperCase()).then((copied) => {
       if (!copied) return;
       setRoomCopied(true);
       window.setTimeout(() => setRoomCopied(false), 2000);
@@ -815,6 +890,7 @@ export function GameTable({
               phase={view.phase}
               cambioCallerId={view.cambioCallerId}
               fleetingPeek={fleetingPeek}
+              peekFlash={peekFlash}
               swapFlash={swapFlash}
               selectedSwapCard={selectedSwapCard}
               canSwap={view.canSwap}
@@ -844,6 +920,7 @@ export function GameTable({
                   phase={view.phase}
                   cambioCallerId={view.cambioCallerId}
                   fleetingPeek={fleetingPeek}
+                  peekFlash={peekFlash}
                   swapFlash={swapFlash}
                   selectedSwapCard={selectedSwapCard}
                   canSnap={view.canSnap}

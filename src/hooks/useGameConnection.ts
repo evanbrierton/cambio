@@ -5,14 +5,23 @@ import { nanoid } from "nanoid";
 import PartySocket from "partysocket";
 import { freshSessionKey, getPartyHost, storageKey } from "@/lib/party";
 import type { Card, ClientMessage, PlayerView, ServerMessage } from "@/game/types";
+import type { PeekFlashKind } from "@/game/types";
 
 const PEEK_FLASH_MS = 3500;
 export const SWAP_FLASH_MS = 3000;
+export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
 export type FleetingPeek = {
   playerId: string;
   slot: number;
   card: Card;
+};
+
+export type PeekFlash = {
+  kind: PeekFlashKind;
+  actorId: string;
+  playerId: string;
+  slot: number;
 };
 
 export type SwapFlash = {
@@ -25,6 +34,7 @@ type ConnectionState = {
   view: PlayerView | null;
   error: string | null;
   fleetingPeek: FleetingPeek | null;
+  peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
 };
 
@@ -58,10 +68,12 @@ export function useGameConnection(
     view: null,
     error: null,
     fleetingPeek: null,
+    peekFlash: null,
     swapFlash: null,
   });
   const socketRef = useRef<PartySocket | null>(null);
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const peekEffectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const send = useCallback((message: ClientMessage) => {
@@ -130,6 +142,22 @@ export function useGameConnection(
         }, PEEK_FLASH_MS);
       }
 
+      if (data.type === "peek_flash") {
+        if (peekEffectTimerRef.current) clearTimeout(peekEffectTimerRef.current);
+        setState((s) => ({
+          ...s,
+          peekFlash: {
+            kind: data.kind,
+            actorId: data.actorId,
+            playerId: data.playerId,
+            slot: data.slot,
+          },
+        }));
+        peekEffectTimerRef.current = setTimeout(() => {
+          setState((s) => ({ ...s, peekFlash: null }));
+        }, PEEK_FLASH_MS);
+      }
+
       if (data.type === "swap_flash") {
         if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
         setState((s) => ({
@@ -148,6 +176,7 @@ export function useGameConnection(
 
     return () => {
       if (peekTimerRef.current) clearTimeout(peekTimerRef.current);
+      if (peekEffectTimerRef.current) clearTimeout(peekEffectTimerRef.current);
       if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
       socket.close();
       socketRef.current = null;

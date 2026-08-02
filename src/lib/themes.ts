@@ -71,6 +71,7 @@ export type ThemeVoice = {
   snapHint: string;
   snapWindowHint: (seconds: number) => string;
   swapFlashNotice: string;
+  peekFlashNotice: string;
   tapToSnap: string;
   snapGiveHint: string;
   debugReveal: string;
@@ -201,6 +202,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     snapWindowHint: (seconds) =>
       `↓ SNAP ANY MATCHING CARD — ${seconds}s LEFT`,
     swapFlashNotice: "↔ CARDS SWAPPED — WATCH THE HIGHLIGHTED SLOTS",
+    peekFlashNotice: "◎ CARD PEEKED — WATCH THE HIGHLIGHTED SLOT",
     tapToSnap: "TAP TO SNAP",
     snapGiveHint: "↓ TAP ONE OF YOUR CARDS TO GIVE THEM",
     debugReveal: "SHOW ALL CARDS",
@@ -294,6 +296,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     snapWindowHint: (seconds) =>
       `Snap any matching card — ${seconds}s remaining`,
     swapFlashNotice: "↔ Cards swapped — watch the highlighted slots",
+    peekFlashNotice: "◎ Card peeked — watch the highlighted slot",
     tapToSnap: "Tap to snap",
     snapGiveHint: "Choose one of your cards to give them",
     debugReveal: "Reveal all cards",
@@ -387,6 +390,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     snapWindowHint: (seconds) =>
       `↓ Snap any match — ${seconds}s left!`,
     swapFlashNotice: "↔ Cards swapped — check the glowing slots!",
+    peekFlashNotice: "◎ Card peeked — check the glowing slot!",
     tapToSnap: "Tap to snap!",
     snapGiveHint: "↓ Pick a card from your hand to give them!",
     debugReveal: "Show all cards",
@@ -480,6 +484,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     snapWindowHint: (seconds) =>
       `Snap any matching card — ${seconds}s left`,
     swapFlashNotice: "↔ Cards swapped — see highlighted slots",
+    peekFlashNotice: "◎ Card peeked — see highlighted slot",
     tapToSnap: "Tap to snap",
     snapGiveHint: "Select a card from your hand to give",
     debugReveal: "Reveal all",
@@ -573,6 +578,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     snapWindowHint: (seconds) =>
       `Snap any matching card — ${seconds}s remaining`,
     swapFlashNotice: "↔ Cards swapped — watch the highlighted slots",
+    peekFlashNotice: "◎ Card peeked — watch the highlighted slot",
     tapToSnap: "Tap to snap",
     snapGiveHint: "Choose one of your cards to offer",
     debugReveal: "Reveal all cards",
