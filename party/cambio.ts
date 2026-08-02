@@ -33,6 +33,7 @@ import type {
 } from "../src/game/types";
 import {
   DEFAULT_BOT_COUNT,
+  DEFAULT_JOKER_COUNT,
   MAX_BOT_COUNT,
   MIN_BOT_COUNT,
   parseBotDifficulty,
@@ -45,6 +46,7 @@ function migrateState(state: GameState): GameState {
     ...state,
     isSoloMode: state.isSoloMode ?? false,
     soloDifficulty: state.soloDifficulty ?? null,
+    jokerCount: state.jokerCount ?? DEFAULT_JOKER_COUNT,
     botThinkingId: null,
     roundNumber: state.roundNumber ?? 0,
     roundHistory: migrateRoundHistory(state.roundHistory),

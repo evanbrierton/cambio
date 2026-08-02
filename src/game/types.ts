@@ -71,6 +71,10 @@ export const DEFAULT_BOT_COUNT = 2;
 export const MIN_BOT_COUNT = 1;
 export const MAX_BOT_COUNT = 5;
 
+export const DEFAULT_JOKER_COUNT = 2;
+export const MIN_JOKER_COUNT = 2;
+export const MAX_JOKER_COUNT = 4;
+
 export type ChatMessage = {
   id: string;
   playerId: string;
@@ -111,6 +115,7 @@ export type GameState = {
   phase: GamePhase;
   isSoloMode: boolean;
   soloDifficulty: BotDifficulty | null;
+  jokerCount: number;
   hostId: string;
   players: PlayerState[];
   currentPlayerIndex: number;
@@ -173,6 +178,7 @@ export type ClientMessage =
   | { type: "show_results" }
   | { type: "add_bot"; difficulty?: BotDifficulty }
   | { type: "remove_bot"; playerId: string }
+  | { type: "set_joker_count"; count: number }
   | { type: "chat"; text: string }
   | { type: "ability_look"; playerId: string; slot: number }
   | {
@@ -236,6 +242,8 @@ export type PlayerView = {
   snapWindowEndsAt: number | null;
   isSoloMode: boolean;
   canAddBot: boolean;
+  jokerCount: number;
+  canSetJokerCount: boolean;
   log: string[];
   chatMessages: ChatMessage[];
 };

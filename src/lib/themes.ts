@@ -102,6 +102,7 @@ export type ThemeVoice = {
   hintsOff: string;
   soloMode: string;
   botCountLabel: string;
+  jokerCountLabel: string;
   difficultyLabel: string;
   difficultyEasy: string;
   difficultyMedium: string;
@@ -259,6 +260,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "HINTS OFF",
     soloMode: "SOLO MODE",
     botCountLabel: "BOTS",
+    jokerCountLabel: "JOKERS",
     difficultyLabel: "DIFFICULTY",
     difficultyEasy: "EASY",
     difficultyMedium: "MEDIUM",
@@ -380,6 +382,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo table",
     botCountLabel: "Opponents",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Skill",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -499,6 +502,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo mode",
     botCountLabel: "Bots",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -617,6 +621,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo",
     botCountLabel: "Bots",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -738,6 +743,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     hintsOff: "Hints off",
     soloMode: "Solo mode",
     botCountLabel: "Bots",
+    jokerCountLabel: "Jokers",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
