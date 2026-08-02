@@ -9,6 +9,7 @@ import {
   PixelCard,
 } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
+import { ReshuffleOverlay } from "@/components/game/ReshuffleOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
@@ -38,6 +39,7 @@ import type {
   FleetingPeek,
   PeekFlash,
   PenaltyFlash,
+  ReshuffleFlash,
   SwapFlash,
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
@@ -56,6 +58,7 @@ type GameTableProps = {
   swapFlash: SwapFlash | null;
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
+  reshuffleFlash: ReshuffleFlash | null;
   send: (message: ClientMessage) => void;
 };
 
@@ -551,6 +554,7 @@ export function GameTable({
   swapFlash,
   penaltyFlash,
   cambioFlash,
+  reshuffleFlash,
   send,
 }: GameTableProps) {
   const voice = useThemeVoice();
@@ -609,6 +613,7 @@ export function GameTable({
     peekFlash,
     swapFlash,
     cambioFlash,
+    reshuffleFlash,
     snapWindowSeconds,
   );
 
@@ -1000,6 +1005,7 @@ export function GameTable({
         callerName={cambioCallerName}
         voice={voice}
       />
+      <ReshuffleOverlay reshuffleFlash={reshuffleFlash} voice={voice} />
       <SnapWindowOverlay
         active={snapWindowActive}
         seconds={snapWindowSeconds}

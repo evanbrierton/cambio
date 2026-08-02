@@ -205,6 +205,9 @@ export class CambioParty extends Server {
     if (result.cambioFlash) {
       this.broadcastCambioFlash(result.cambioFlash.playerId);
     }
+    if (result.reshuffleFlash) {
+      this.broadcastReshuffleFlash();
+    }
 
     this.scheduleBotTurns();
   }
@@ -360,6 +363,14 @@ export class CambioParty extends Server {
 
   broadcastCambioFlash(playerId: string) {
     const message: ServerMessage = { type: "cambio_flash", playerId };
+    const payload = JSON.stringify(message);
+    for (const conn of this.getConnections()) {
+      conn.send(payload);
+    }
+  }
+
+  broadcastReshuffleFlash() {
+    const message: ServerMessage = { type: "reshuffle_flash" };
     const payload = JSON.stringify(message);
     for (const conn of this.getConnections()) {
       conn.send(payload);

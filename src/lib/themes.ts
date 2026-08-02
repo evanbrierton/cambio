@@ -58,6 +58,8 @@ export type ThemeVoice = {
   turn: string;
   cambio: string;
   cambioFinalRound: string;
+  reshuffle: string;
+  reshuffleDetail: string;
   away: string;
   penalty: (count: number) => string;
   tapToSwap: string;
@@ -211,6 +213,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     turn: "TURN",
     cambio: "CAMBIO",
     cambioFinalRound: "CALLED CAMBIO — FINAL ROUND!",
+    reshuffle: "RESHUFFLE!",
+    reshuffleDetail: "DISCARD PILE SHUFFLED INTO THE DECK",
     away: "AWAY",
     penalty: (n) => `+${n} PENALTY`,
     tapToSwap: "TAP CARD TO SWAP",
@@ -333,6 +337,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     turn: "Your action",
     cambio: "Cambio",
     cambioFinalRound: "called Cambio — final round",
+    reshuffle: "Reshuffle",
+    reshuffleDetail: "Discard pile shuffled into the deck",
     away: "Away",
     penalty: (n) => `+${n} penalty`,
     tapToSwap: "Select card to swap",
@@ -454,6 +460,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     turn: "Go go go!",
     cambio: "Cambio!",
     cambioFinalRound: "called Cambio — last dance!",
+    reshuffle: "Reshuffle!",
+    reshuffleDetail: "Discard pile shuffled back into the deck!",
     away: "Stepped out",
     penalty: (n) => `+${n} ouch!`,
     tapToSwap: "Tap to swap!",
@@ -572,6 +580,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     turn: "Turn",
     cambio: "Cambio",
     cambioFinalRound: "called Cambio — final round",
+    reshuffle: "Reshuffle",
+    reshuffleDetail: "Discard pile shuffled into the deck",
     away: "Away",
     penalty: (n) => `+${n} penalty`,
     tapToSwap: "Tap card to swap",
@@ -691,6 +701,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     turn: "Your turn",
     cambio: "Cambio",
     cambioFinalRound: "called Cambio — final round",
+    reshuffle: "Reshuffle",
+    reshuffleDetail: "Discard pile shuffled into the deck",
     away: "Away",
     penalty: (n) => `+${n} penalty`,
     tapToSwap: "Tap a card to swap",

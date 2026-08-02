@@ -17,6 +17,7 @@ const PEEK_FLASH_MS = 3500;
 export const SWAP_FLASH_MS = 3000;
 export const PENALTY_FLASH_MS = 2500;
 export const CAMBIO_FLASH_MS = 3500;
+export const RESHUFFLE_FLASH_MS = 3500;
 export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
 export type FleetingPeek = {
@@ -45,6 +46,10 @@ export type CambioFlash = {
   playerId: string;
 };
 
+export type ReshuffleFlash = {
+  id: number;
+};
+
 type ConnectionState = {
   connected: boolean;
   playerId: string | null;
@@ -55,6 +60,7 @@ type ConnectionState = {
   swapFlash: SwapFlash | null;
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
+  reshuffleFlash: ReshuffleFlash | null;
 };
 
 export type SessionMode = "new" | "reconnect";
@@ -98,6 +104,7 @@ export function useGameConnection(
     swapFlash: null,
     penaltyFlash: null,
     cambioFlash: null,
+    reshuffleFlash: null,
   });
   const socketRef = useRef<PartySocket | null>(null);
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -105,6 +112,7 @@ export function useGameConnection(
   const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const penaltyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cambioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reshuffleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const send = useCallback((message: ClientMessage) => {
     const socket = socketRef.current;
@@ -233,6 +241,17 @@ export function useGameConnection(
         }, CAMBIO_FLASH_MS);
       }
 
+      if (data.type === "reshuffle_flash") {
+        if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);
+        setState((s) => ({
+          ...s,
+          reshuffleFlash: { id: (s.reshuffleFlash?.id ?? 0) + 1 },
+        }));
+        reshuffleTimerRef.current = setTimeout(() => {
+          setState((s) => ({ ...s, reshuffleFlash: null }));
+        }, RESHUFFLE_FLASH_MS);
+      }
+
       if (data.type === "error") {
         setState((s) => ({ ...s, error: data.message }));
       }
@@ -244,6 +263,7 @@ export function useGameConnection(
       if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
       if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
       if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
+      if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);
       socket.close();
       socketRef.current = null;
     };
