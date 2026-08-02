@@ -3,8 +3,8 @@ import {
   abilityForDiscard,
   cardsSnapMatch,
   createDeck,
+  deckSize,
   type DiscardAbility,
-  FULL_DECK_SIZE,
   shuffle,
 } from "./cards";
 import { computeScores, determineWinners } from "./scoring";
@@ -24,7 +24,13 @@ import type {
   SwapFlashSlot,
 } from "./types";
 import { generateBotName, nameKey } from "./bot-names";
-import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "./types";
+import {
+  DEFAULT_JOKER_COUNT,
+  HAND_BASE_SLOTS,
+  MAX_JOKER_COUNT,
+  MIN_JOKER_COUNT,
+  SETUP_PEEK_SLOTS,
+} from "./types";
 
 const MAX_PLAYERS = 6;
 const MIN_PLAYERS = 2;
@@ -121,6 +127,7 @@ export function createRoom(
     phase: "lobby",
     isSoloMode: false,
     soloDifficulty: null,
+    jokerCount: DEFAULT_JOKER_COUNT,
     hostId: id,
     players: [
       {
@@ -456,7 +463,7 @@ function endRound(state: GameState): void {
 }
 
 function dealHands(state: GameState): void {
-  const deck = createDeck();
+  const deck = createDeck(state.jokerCount);
   const playing = state.players.filter((p) => !p.isWaiting);
   for (const player of playing) {
     const cards = deck.splice(0, 4);
@@ -1127,6 +1134,23 @@ export function handleMessage(
       return {};
     }
 
+    case "set_joker_count": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can change joker count." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot change joker count during a game." };
+      }
+      const count = Math.min(
+        MAX_JOKER_COUNT,
+        Math.max(MIN_JOKER_COUNT, message.count),
+      );
+      if (count === state.jokerCount) return {};
+      state.jokerCount = count;
+      addLog(state, `Jokers set to ${count}.`);
+      return {};
+    }
+
     case "chat": {
       const result = addChatMessage(state, playerId, message.text);
       if ("error" in result) return { error: result.error };
@@ -1347,7 +1371,10 @@ export function buildPlayerView(
     phase: state.phase,
     players,
     currentPlayerIndex: state.currentPlayerIndex,
-    deckCount: state.phase === "lobby" ? FULL_DECK_SIZE : state.deck.length,
+    deckCount:
+      state.phase === "lobby"
+        ? deckSize(state.jokerCount)
+        : state.deck.length,
     discardTop:
       state.discard.length > 0 ? state.discard[state.discard.length - 1] : null,
     drawnCard: isMyTurn ? state.drawnCard : null,
@@ -1401,6 +1428,10 @@ export function buildPlayerView(
       state.isSoloMode &&
       (state.phase === "lobby" || state.phase === "ended") &&
       state.players.length < MAX_PLAYERS,
+    jokerCount: state.jokerCount,
+    canSetJokerCount:
+      viewerId === state.hostId &&
+      (state.phase === "lobby" || state.phase === "ended"),
     log: state.log,
     chatMessages: state.chatMessages,
   };

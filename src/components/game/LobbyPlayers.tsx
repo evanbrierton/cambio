@@ -2,6 +2,10 @@
 
 import { motion } from "framer-motion";
 import type { ClientMessage, PlayerView } from "@/game/types";
+import {
+  MAX_JOKER_COUNT,
+  MIN_JOKER_COUNT,
+} from "@/game/types";
 import type { ThemeVoice } from "@/lib/themes";
 
 const MAX_PLAYERS = 6;
@@ -111,6 +115,37 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
             {voice.addBot}
           </button>
         )}
+
+        <div className="mt-3 flex items-center justify-between gap-3 px-1">
+          <span className="font-display text-[10px] text-theme-muted">
+            {voice.jokerCountLabel}
+          </span>
+          {view.canSetJokerCount ? (
+            <select
+              value={view.jokerCount}
+              onChange={(e) =>
+                send({
+                  type: "set_joker_count",
+                  count: Number(e.target.value),
+                })
+              }
+              className="input-theme px-2 py-1 font-mono text-[10px] normal-case"
+            >
+              {Array.from(
+                { length: MAX_JOKER_COUNT - MIN_JOKER_COUNT + 1 },
+                (_, index) => MIN_JOKER_COUNT + index,
+              ).map((count) => (
+                <option key={count} value={count}>
+                  {count}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <span className="font-display text-[10px] text-theme tabular-nums">
+              {view.jokerCount}
+            </span>
+          )}
+        </div>
 
         {!view.canStartGame && !me?.isHost ? (
           <p className="font-display text-[10px] text-theme-muted text-center mt-4 animate-pulse">
