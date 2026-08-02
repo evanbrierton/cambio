@@ -103,6 +103,8 @@ export type ThemeVoice = {
   chatPlaceholder: string;
   chatSend: string;
   chatEmpty: string;
+  chatNotification: (name: string, text: string) => string;
+  chatOpen: string;
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
@@ -246,6 +248,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatPlaceholder: "Say something...",
     chatSend: "SEND",
     chatEmpty: "No messages yet — say hi!",
+    chatNotification: (name, text) => `💬 ${name}: ${text}`,
+    chatOpen: "OPEN CHAT",
   },
   casino: {
     tagline: "Take a seat at the table",
@@ -353,6 +357,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatPlaceholder: "Type a message...",
     chatSend: "Send",
     chatEmpty: "No messages yet — break the ice!",
+    chatNotification: (name, text) => `${name}: ${text}`,
+    chatOpen: "Open chat",
   },
   party: {
     tagline: "Let's get this party started!",
@@ -458,6 +464,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatPlaceholder: "Say something fun!",
     chatSend: "Go!",
     chatEmpty: "The chat's quiet — start the banter!",
+    chatNotification: (name, text) => `💬 ${name}: ${text}`,
+    chatOpen: "Open chat",
   },
   minimal: {
     tagline: "Online Cambio",
@@ -562,6 +570,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatPlaceholder: "Message",
     chatSend: "Send",
     chatEmpty: "No messages yet.",
+    chatNotification: (name, text) => `${name}: ${text}`,
+    chatOpen: "View chat",
   },
   calm: {
     tagline: "A quiet evening of cards",
@@ -669,6 +679,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatPlaceholder: "A quiet word...",
     chatSend: "Send",
     chatEmpty: "The room is peaceful — say hello when you're ready.",
+    chatNotification: (name, text) => `${name}: ${text}`,
+    chatOpen: "Open chat",
   },
 };
 
