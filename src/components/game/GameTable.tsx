@@ -14,6 +14,7 @@ import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
 import { PlayerGridStage } from "@/components/game/PlayerGridStage";
+import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
 import { SnapWindowOverlay } from "@/components/game/SnapWindowOverlay";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
 import {
@@ -44,6 +45,7 @@ import type {
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { useHintsEnabled } from "@/hooks/useHintsEnabled";
+import { usePlayerGridEnabled } from "@/hooks/usePlayerGridEnabled";
 import { useSoundEnabled } from "@/hooks/useSoundEnabled";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { copyToClipboard } from "@/lib/clipboard";
@@ -560,6 +562,7 @@ export function GameTable({
   const voice = useThemeVoice();
   const { soundEnabled, toggleSound } = useSoundEnabled();
   const { hintsEnabled, toggleHints } = useHintsEnabled();
+  const { playerGridEnabled, togglePlayerGrid } = usePlayerGridEnabled();
   const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
@@ -777,7 +780,7 @@ export function GameTable({
     }
   }, [swapAbilityActive]);
 
-  const playersInDisplayOrder = useMemo(() => {
+  const playersInGridOrder = useMemo(() => {
     const activePlayers = view.players.filter((player) => !player.isWaiting);
     const selfIndex = activePlayers.findIndex((p) => p.id === view.playerId);
     if (selfIndex === -1) return activePlayers;
@@ -789,6 +792,28 @@ export function GameTable({
     }
     return [self, ...opponents];
   }, [view.players, view.playerId]);
+
+  const playersInCarouselOrder = useMemo(() => {
+    const activePlayers = view.players.filter((player) => !player.isWaiting);
+    const selfIndex = activePlayers.findIndex((p) => p.id === view.playerId);
+    if (selfIndex === -1) return activePlayers;
+
+    const opponents: PublicPlayer[] = [];
+    for (let i = 1; i < activePlayers.length; i++) {
+      opponents.push(activePlayers[(selfIndex + i) % activePlayers.length]);
+    }
+    const self = activePlayers[selfIndex];
+    const leftCount = Math.floor(opponents.length / 2);
+    return [
+      ...opponents.slice(0, leftCount),
+      self,
+      ...opponents.slice(leftCount),
+    ];
+  }, [view.players, view.playerId]);
+
+  const orderedPlayers = playerGridEnabled
+    ? playersInGridOrder
+    : playersInCarouselOrder;
 
   if (view.isWaiting) {
     return <WaitingScreen view={view} connected={connected} />;
@@ -888,6 +913,33 @@ export function GameTable({
     });
   };
 
+  const playerSeats = orderedPlayers.map((player) => {
+    const isOwn = player.id === view.playerId;
+    return (
+      <PlayerSeat
+        key={player.id}
+        player={player}
+        viewerId={view.playerId}
+        phase={view.phase}
+        cambioCallerId={view.cambioCallerId}
+        fleetingPeek={fleetingPeek}
+        peekFlash={peekFlash}
+        swapFlash={swapFlash}
+        penaltyFlash={penaltyFlash}
+        selectedSwapCard={selectedSwapCard}
+        canSwap={isOwn ? view.canSwap : undefined}
+        canSnap={view.canSnap}
+        snapGiveActive={snapGiveActive}
+        swapAbilityActive={swapAbilityActive}
+        lookAbilityActive={lookAbilityActive}
+        pendingLookKind={pendingLookKind}
+        compact
+        voice={voice}
+        onCardClick={handleCardClick}
+      />
+    );
+  });
+
   const actionButtons = (
     <div className="flex flex-wrap gap-2 sm:gap-3 justify-center lg:justify-start">
       {view.canStartGame && (
@@ -935,6 +987,13 @@ export function GameTable({
           className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
         >
           {hintsEnabled ? voice.hintsOn : voice.hintsOff}
+        </button>
+        <button
+          type="button"
+          onClick={togglePlayerGrid}
+          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+        >
+          {playerGridEnabled ? voice.playerGridOn : voice.playerGridOff}
         </button>
       </div>
 
@@ -1268,35 +1327,21 @@ export function GameTable({
                 PLAYERS
               </p>
 
-              {playersInDisplayOrder.length > 0 ? (
-                <PlayerGridStage>
-                  {playersInDisplayOrder.map((player) => {
-                    const isOwn = player.id === view.playerId;
-                    return (
-                      <PlayerSeat
-                        key={player.id}
-                        player={player}
-                        viewerId={view.playerId}
-                        phase={view.phase}
-                        cambioCallerId={view.cambioCallerId}
-                        fleetingPeek={fleetingPeek}
-                        peekFlash={peekFlash}
-                        swapFlash={swapFlash}
-                        penaltyFlash={penaltyFlash}
-                        selectedSwapCard={selectedSwapCard}
-                        canSwap={isOwn ? view.canSwap : undefined}
-                        canSnap={view.canSnap}
-                        snapGiveActive={snapGiveActive}
-                        swapAbilityActive={swapAbilityActive}
-                        lookAbilityActive={lookAbilityActive}
-                        pendingLookKind={pendingLookKind}
-                        compact
-                        voice={voice}
-                        onCardClick={handleCardClick}
-                      />
-                    );
-                  })}
-                </PlayerGridStage>
+              {orderedPlayers.length > 0 ? (
+                playerGridEnabled ? (
+                  <PlayerGridStage>{playerSeats}</PlayerGridStage>
+                ) : (
+                  <PlayerScrollStage
+                    centerIndex={Math.max(
+                      0,
+                      playersInCarouselOrder.findIndex(
+                        (player) => player.id === view.playerId,
+                      ),
+                    )}
+                  >
+                    {playerSeats}
+                  </PlayerScrollStage>
+                )
               ) : null}
             </div>
           )}
