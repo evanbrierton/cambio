@@ -6,6 +6,7 @@ import type {
   CambioFlash,
   FleetingPeek,
   PeekFlash,
+  ReshuffleFlash,
   SwapFlash,
 } from "@/hooks/useGameConnection";
 import { playSound } from "@/lib/sounds";
@@ -17,6 +18,7 @@ export function useGameSounds(
   peekFlash: PeekFlash | null,
   swapFlash: SwapFlash | null,
   cambioFlash: CambioFlash | null,
+  reshuffleFlash: ReshuffleFlash | null,
   snapWindowSeconds: number | null,
 ) {
   const prevPhase = useRef<PlayerView["phase"] | null>(null);
@@ -26,6 +28,7 @@ export function useGameSounds(
   const peekFlashKey = useRef<string | null>(null);
   const swapFlashKey = useRef<string | null>(null);
   const cambioFlashKey = useRef<string | null>(null);
+  const reshuffleFlashKey = useRef<number | null>(null);
   const prevSnapSeconds = useRef<number | null>(null);
 
   useEffect(() => {
@@ -73,6 +76,16 @@ export function useGameSounds(
     cambioFlashKey.current = cambioFlash.playerId;
     playSound("cambio");
   }, [cambioFlash]);
+
+  useEffect(() => {
+    if (!reshuffleFlash) {
+      reshuffleFlashKey.current = null;
+      return;
+    }
+    if (reshuffleFlashKey.current === reshuffleFlash.id) return;
+    reshuffleFlashKey.current = reshuffleFlash.id;
+    playSound("draw");
+  }, [reshuffleFlash]);
 
   useEffect(() => {
     if (!error?.includes("Wrong snap")) return;

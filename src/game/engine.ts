@@ -371,6 +371,19 @@ function clearSnapEligibleDiscard(state: GameState): void {
   state.snapChainPlayerId = null;
 }
 
+/** When the deck is empty, shuffle the discard pile into it, keeping the top discard visible. */
+function reshuffleDiscardIntoDeck(state: GameState): boolean {
+  if (state.deck.length > 0) return false;
+  if (state.discard.length <= 1) return false;
+
+  const top = state.discard[state.discard.length - 1];
+  const toShuffle = [...state.deck, ...state.discard.slice(0, -1)];
+  state.deck = shuffle(toShuffle);
+  state.discard = [top];
+  addLog(state, "Discard pile reshuffled into the deck.");
+  return true;
+}
+
 export function finalizeRound(state: GameState): void {
   state.phase = "ended";
   state.snapWindowEndsAt = null;
@@ -485,17 +498,14 @@ function canTargetPlayer(playerId: string, state: GameState): boolean {
   return !isProtected(playerId, state);
 }
 
-function addPenalty(state: GameState, playerId: string): number | null {
+function addPenalty(
+  state: GameState,
+  playerId: string,
+): { slot: number; reshuffleFlash?: boolean } | null {
   const player = findPlayer(state, playerId);
   if (!player) return null;
 
-  if (state.deck.length === 0) {
-    if (state.discard.length <= 1) return null;
-    const top = state.discard.pop();
-    if (!top) return null;
-    state.deck = shuffle([...state.discard, top]);
-    state.discard = [];
-  }
+  const reshuffled = reshuffleDiscardIntoDeck(state);
 
   const card = state.deck.pop();
   if (!card) return null;
@@ -503,7 +513,7 @@ function addPenalty(state: GameState, playerId: string): number | null {
   const slot = placeCardInHand(player.hand, card, { isPenalty: true });
   player.penaltyCount += 1;
   addLog(state, `${player.name} received a penalty card.`);
-  return slot;
+  return { slot, reshuffleFlash: reshuffled || undefined };
 }
 
 function triggerAbility(
@@ -689,6 +699,7 @@ export function handleMessage(
   swapFlash?: { slots: SwapFlashSlot[] };
   penaltyFlash?: { playerId: string; slot: number };
   cambioFlash?: { playerId: string };
+  reshuffleFlash?: boolean;
 } {
   switch (message.type) {
     case "join": {
@@ -845,20 +856,13 @@ export function handleMessage(
       state.turnStarted = true;
 
       if (message.source === "deck") {
-        if (state.deck.length === 0) {
-          if (state.discard.length <= 1) return { error: "No cards to draw." };
-          const top = state.discard.pop();
-          if (!top) return { error: "No cards to draw." };
-          state.deck = shuffle([...state.discard, top]);
-          state.discard = [];
-          clearSnapEligibleDiscard(state);
-        }
+        const reshuffled = reshuffleDiscardIntoDeck(state);
         const card = state.deck.pop();
         if (!card) return { error: "No cards to draw." };
         state.drawnCard = card;
         state.drawnFromDiscard = false;
         addLog(state, `${player.name} drew from the deck.`);
-        return {};
+        return reshuffled ? { reshuffleFlash: true } : {};
       }
 
       if (state.discard.length === 0)
@@ -968,7 +972,7 @@ export function handleMessage(
       if (!handCard) return { error: "No card in that slot." };
 
       if (!cardsSnapMatch(handCard, top)) {
-        const penaltySlot = addPenalty(state, playerId);
+        const penaltyResult = addPenalty(state, playerId);
         if (message.targetPlayerId !== playerId) {
           addLog(
             state,
@@ -980,7 +984,10 @@ export function handleMessage(
         return {
           error: "Wrong snap! Penalty card added.",
           penaltyFlash:
-            penaltySlot !== null ? { playerId, slot: penaltySlot } : undefined,
+            penaltyResult !== null
+              ? { playerId, slot: penaltyResult.slot }
+              : undefined,
+          reshuffleFlash: penaltyResult?.reshuffleFlash,
         };
       }
 
