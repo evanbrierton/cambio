@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import { PwaRegistrar } from "@/components/PwaRegistrar";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import { getSiteUrl, siteConfig } from "@/lib/site";
+import { parseThemeCookie, THEME_COOKIE_KEY } from "@/lib/theme-cookie";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -68,29 +70,24 @@ export const viewport: Viewport = {
   themeColor: siteConfig.themeColor,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const theme = parseThemeCookie(cookieStore.get(THEME_COOKIE_KEY)?.value);
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
-      data-theme="retro"
+      data-theme={theme}
       suppressHydrationWarning
     >
-      <head>
-        <script
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: inline theme bootstrap before paint
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem("cambio-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}})();`,
-          }}
-        />
-      </head>
       <body className="min-h-full flex flex-col relative z-0">
         <PwaRegistrar />
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider initialTheme={theme}>{children}</ThemeProvider>
       </body>
     </html>
   );

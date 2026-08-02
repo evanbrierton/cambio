@@ -2,6 +2,7 @@ import type { DiscardAbility } from "@/game/cards";
 
 export type ThemeId = "retro" | "casino" | "party" | "minimal" | "calm";
 
+/** @deprecated Use THEME_COOKIE_KEY from @/lib/theme-cookie */
 export const THEME_STORAGE_KEY = "cambio-theme";
 
 export type ThemeOption = {
