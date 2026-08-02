@@ -1011,7 +1011,6 @@ export function buildPlayerView(
   const participants = state.players.filter((p) => !p.isWaiting && p.connected);
 
   const players = state.players.map((p) => {
-    const isOwnHand = p.id === viewerId;
     return {
       id: p.id,
       name: p.name,
@@ -1029,7 +1028,7 @@ export function buildPlayerView(
           card: reveal ? slot.card : null,
           faceUp: reveal,
           hidden: !reveal,
-          isPenalty: isOwnHand && slot.isPenalty ? true : undefined,
+          isPenalty: slot.isPenalty ? true : undefined,
         };
       }),
       penaltyCount: p.penaltyCount,
