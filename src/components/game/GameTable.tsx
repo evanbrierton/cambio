@@ -308,7 +308,7 @@ function PlayerSeat({
     peekFlash?.playerId === player.id || peekFlash?.actorId === player.id;
   const hasPenaltyFlash = penaltyFlash?.playerId === player.id;
 
-  const seatPadding = "p-1.5";
+  const seatPadding = "p-1.5 sm:p-2 lg:p-2.5";
 
   const isPenaltyCard = (slot: PublicCardSlot, index: number) =>
     isOwn ? !!slot.isPenalty : index >= HAND_BASE_SLOTS;
@@ -462,8 +462,8 @@ function PlayerSeat({
         isOwn && !showDrawnSwapHint ? "lg:ring-1 lg:ring-accent" : ""
       } ${swapAbilityActive && isProtectedTarget && !isOwn ? "opacity-40" : ""}`}
     >
-      <div className={`${HAND_GRID_WIDTH} mb-1 space-y-1`}>
-        <h2 className="player-name text-[10px] truncate text-center">
+      <div className={`${HAND_GRID_WIDTH} mb-1 sm:mb-1.5 space-y-1`}>
+        <h2 className="player-name text-[10px] sm:text-xs truncate text-center">
           {player.name}
           {isOwn ? " (you)" : ""}
         </h2>
@@ -502,20 +502,22 @@ function PlayerSeat({
       </div>
       {player.isWaiting && phase !== "lobby" ? (
         <p
-          className={`font-display text-[10px] text-theme-muted text-center py-2 ${HAND_GRID_WIDTH}`}
+          className={`font-display text-[10px] sm:text-xs text-theme-muted text-center py-2 ${HAND_GRID_WIDTH}`}
         >
           {voice.waitingBadge}
         </p>
       ) : (
-        <div className="flex flex-row items-end gap-1 w-fit max-w-full">
-          <div className={`grid grid-cols-2 gap-1 ${HAND_GRID_WIDTH} shrink-0`}>
+        <div className="flex flex-row items-end gap-1 lg:gap-1.5 w-fit max-w-full">
+          <div
+            className={`grid grid-cols-2 gap-1 lg:gap-1.5 ${HAND_GRID_WIDTH} shrink-0`}
+          >
             {baseGridSlots.map(({ slot, index }) =>
               renderHandSlot(slot, index),
             )}
           </div>
           {penaltySlots.length > 0 && (
             <div
-              className="grid grid-rows-2 grid-flow-col gap-1 shrink-0"
+              className="grid grid-rows-2 grid-flow-col gap-1 lg:gap-1.5 shrink-0"
               style={{
                 gridTemplateColumns: `repeat(${penaltyGridColumns(penaltySlots.length)}, auto)`,
               }}
@@ -1017,7 +1019,7 @@ export function GameTable({
               view.canDraw ? "table-deck-drawable ring-2 ring-accent-alt" : ""
             }`}
           >
-            <div className="flex items-end justify-center gap-1.5 lg:gap-8">
+            <div className="flex items-end justify-center gap-1.5 sm:gap-4 lg:gap-8">
               <button
                 type="button"
                 disabled={!view.canDraw}
@@ -1103,9 +1105,7 @@ export function GameTable({
                 disabled={!view.canDiscardDrawn}
                 onClick={() => send({ type: "discard_drawn" })}
                 className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                  view.canDiscardDrawn
-                    ? "cursor-pointer active:opacity-80"
-                    : ""
+                  view.canDiscardDrawn ? "cursor-pointer active:opacity-80" : ""
                 }`}
                 aria-label={voice.discardDrawn}
               >
