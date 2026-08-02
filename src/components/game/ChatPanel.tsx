@@ -40,7 +40,7 @@ export function ChatPanel({
   };
 
   return (
-    <div className="pixel-border p-3 flex flex-col gap-2 bg-surface min-h-[140px] lg:min-h-[180px]">
+    <div className="pixel-border p-3 flex flex-col gap-2 bg-surface min-h-[140px] lg:min-h-[180px] w-full min-w-0">
       <p className="font-display text-[8px] text-theme-muted">
         {voice.chatLabel}
       </p>

@@ -1198,6 +1198,27 @@ html.play-scroll-lock body {
   overscroll-behavior: contain;
 }
 
+/* Bottom sheet: keep the frame border on a non-scrolling shell. */
+.mobile-settings-sheet {
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top-left-radius: var(--radius-panel);
+  border-top-right-radius: var(--radius-panel);
+  box-shadow: none;
+}
+
+/* Panel shadows extend outside the box and get clipped inside overflow scroll areas. */
+.mobile-game-sheet .pixel-border {
+  box-shadow: none;
+}
+
+[data-theme="retro"] .mobile-game-sheet .pixel-border {
+  box-shadow:
+    0 0 0 2px var(--background),
+    3px 3px 0 0 color-mix(in srgb, var(--accent-alt) 75%, transparent);
+}
+
 @media (min-width: 1024px) {
   .play-shell {
     padding-top: 1.5rem;
