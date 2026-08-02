@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "party:dev": "wrangler dev",
+    "dev:lan": "bash scripts/dev-lan.sh",
+    "party:dev": "wrangler dev --ip 0.0.0.0 --port 8787",
     "party:deploy": "wrangler deploy",
     "build": "next build",
     "vercel-build": "bash scripts/vercel-build.sh",
