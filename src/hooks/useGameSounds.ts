@@ -17,6 +17,7 @@ export function useGameSounds(
   peekFlash: PeekFlash | null,
   swapFlash: SwapFlash | null,
   cambioFlash: CambioFlash | null,
+  snapWindowSeconds: number | null,
 ) {
   const prevPhase = useRef<PlayerView["phase"] | null>(null);
   const prevLogLen = useRef(0);
@@ -25,6 +26,7 @@ export function useGameSounds(
   const peekFlashKey = useRef<string | null>(null);
   const swapFlashKey = useRef<string | null>(null);
   const cambioFlashKey = useRef<string | null>(null);
+  const prevSnapSeconds = useRef<number | null>(null);
 
   useEffect(() => {
     if (!fleetingPeek) {
@@ -80,6 +82,10 @@ export function useGameSounds(
   useEffect(() => {
     if (!view) return;
 
+    if (view.phase === "snap_window" && prevPhase.current !== "snap_window") {
+      playSound("snapWindowStart");
+    }
+
     if (view.phase === "ended" && prevPhase.current !== "ended") {
       playSound("gameOver");
     }
@@ -105,4 +111,20 @@ export function useGameSounds(
     }
     prevLogLen.current = view.log.length;
   }, [view]);
+
+  useEffect(() => {
+    if (view?.phase !== "snap_window" || snapWindowSeconds === null) {
+      prevSnapSeconds.current = null;
+      return;
+    }
+
+    if (
+      prevSnapSeconds.current !== null &&
+      snapWindowSeconds < prevSnapSeconds.current &&
+      snapWindowSeconds > 0
+    ) {
+      playSound("snapCountdown");
+    }
+    prevSnapSeconds.current = snapWindowSeconds;
+  }, [view?.phase, snapWindowSeconds]);
 }
