@@ -326,8 +326,7 @@ function PlayerSeat({
 
   const seatPadding = "p-1.5 sm:p-2 lg:p-2.5";
 
-  const isPenaltyCard = (slot: PublicCardSlot, index: number) =>
-    !!slot.isPenalty || index >= HAND_BASE_SLOTS;
+  const isPenaltyColumnSlot = (index: number) => index >= HAND_BASE_SLOTS;
 
   const baseGridSlots = Array.from({ length: HAND_BASE_SLOTS }, (_, index) => {
     const slot = player.hand[index] ?? {
@@ -336,35 +335,14 @@ function PlayerSeat({
       hidden: false,
       empty: true,
     };
-    if (!slot.empty && isPenaltyCard(slot, index)) {
-      return {
-        slot: {
-          card: null,
-          faceUp: false,
-          hidden: false,
-          empty: true,
-        } satisfies PublicCardSlot,
-        index,
-      };
-    }
     return { slot, index };
   });
 
   const penaltySlots = player.hand
     .map((slot, index) => ({ slot, index }))
-    .filter(({ slot, index }) => !slot.empty && isPenaltyCard(slot, index));
+    .filter(({ slot, index }) => !slot.empty && isPenaltyColumnSlot(index));
 
-  const flashingPenaltyIndex =
-    penaltyFlash?.playerId === player.id
-      ? penaltySlots.findIndex(({ index }) => index === penaltyFlash.slot)
-      : -1;
-
-  const renderHandSlot = (
-    slot: PublicCardSlot,
-    index: number,
-    allowPenaltyFlash = false,
-    penaltyIndex?: number,
-  ) => {
+  const renderHandSlot = (slot: PublicCardSlot, index: number) => {
     const isEmpty = !!slot.empty;
     const isFleetingPeek =
       fleetingPeek?.playerId === player.id && fleetingPeek.slot === index;
@@ -384,13 +362,11 @@ function PlayerSeat({
     const isPeekFlashOnSlot = isPeekFlashing(peekFlash, player.id, index);
     const showPeekFlashOverlay = isPeekFlashOnSlot && !isFleetingPeek;
     const showPenalty =
-      allowPenaltyFlash &&
-      penaltyIndex !== undefined &&
-      penaltyIndex === flashingPenaltyIndex;
+      penaltyFlash?.playerId === player.id && penaltyFlash.slot === index;
 
     return (
       <PixelCard
-        key={allowPenaltyFlash ? `penalty-${index}` : `base-${index}`}
+        key={`hand-${index}`}
         card={isFleetingPeek ? fleetingPeek.card : slot.card}
         empty={isEmpty && !isFleetingPeek}
         hidden={!isFleetingPeek && slot.hidden}
@@ -543,7 +519,7 @@ function PlayerSeat({
                   key={`penalty-wrap-${index}`}
                   style={penaltyGridPosition(penaltyIndex)}
                 >
-                  {renderHandSlot(slot, index, true, penaltyIndex)}
+                  {renderHandSlot(slot, index)}
                 </div>
               ))}
             </div>
