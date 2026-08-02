@@ -1,4 +1,4 @@
-const PARTYKIT_PORT = 1999;
+const PARTYKIT_PORT = 8787;
 
 export function getPartyHost(): string {
   if (process.env.NEXT_PUBLIC_PARTYKIT_HOST) {
