@@ -101,6 +101,8 @@ export type GameState = {
   snapWindowEndsAt: number | null;
   /** ID of the discard-top card placed by draw/swap discard; cleared after a snap. */
   snapEligibleTopCardId: string | null;
+  /** During play, only this player may snap again after a correct snap. */
+  snapChainPlayerId: string | null;
   log: string[];
 };
 

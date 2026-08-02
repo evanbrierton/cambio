@@ -1,7 +1,6 @@
 import { nanoid } from "nanoid";
 import {
   abilityForDiscard,
-  cardsMatch,
   cardsSnapMatch,
   createDeck,
   type DiscardAbility,
@@ -68,6 +67,7 @@ export function createRoom(
     scores: null,
     snapWindowEndsAt: null,
     snapEligibleTopCardId: null,
+    snapChainPlayerId: null,
     log: [`${hostName} created the room.`],
   };
 }
@@ -184,6 +184,18 @@ function tryPassTurnAfterAction(
   passTurn(state, actingPlayerId);
 }
 
+function canAttemptSnap(state: GameState): boolean {
+  if (state.discard.length === 0) return false;
+  return isSnapEligible(state) || state.phase === "snap_window";
+}
+
+function canPlayerSnap(state: GameState, playerId: string): boolean {
+  if (!canAttemptSnap(state)) return false;
+  if (state.phase === "snap_window") return true;
+  if (!state.snapChainPlayerId) return true;
+  return state.snapChainPlayerId === playerId;
+}
+
 function revealAllHands(state: GameState): void {
   for (const player of state.players) {
     for (const slot of player.hand) {
@@ -192,19 +204,10 @@ function revealAllHands(state: GameState): void {
   }
 }
 
-function anyoneCanSnap(state: GameState): boolean {
-  if (!isSnapEligible(state)) return false;
-  const top = state.discard[state.discard.length - 1];
-  return state.players.some(
-    (player) =>
-      isPlayingPlayer(player) &&
-      player.hand.some((slot) => slot.card && cardsSnapMatch(slot.card, top)),
-  );
-}
-
 function enterRevealedPhase(state: GameState): void {
   state.phase = "revealed";
   state.snapWindowEndsAt = null;
+  state.snapChainPlayerId = null;
   addLog(state, "All cards revealed — waiting for host to show results.");
 }
 
@@ -222,10 +225,21 @@ function isSnapEligible(state: GameState): boolean {
 
 function markDiscardTopSnapEligible(state: GameState, card: Card): void {
   state.snapEligibleTopCardId = card.id;
+  state.snapChainPlayerId = null;
+}
+
+function markDiscardTopAfterSnap(
+  state: GameState,
+  card: Card,
+  snapperId: string,
+): void {
+  state.snapEligibleTopCardId = card.id;
+  state.snapChainPlayerId = snapperId;
 }
 
 function clearSnapEligibleDiscard(state: GameState): void {
   state.snapEligibleTopCardId = null;
+  state.snapChainPlayerId = null;
 }
 
 export function finalizeRound(state: GameState): void {
@@ -287,8 +301,9 @@ function endRound(state: GameState): void {
   state.pendingAbility = null;
   state.drawnCard = null;
 
-  if (anyoneCanSnap(state)) {
+  if (state.discard.length > 0) {
     state.phase = "snap_window";
+    state.snapChainPlayerId = null;
     state.snapWindowEndsAt = Date.now() + SNAP_WINDOW_MS;
     addLog(state, "Cards revealed — last chance to snap!");
     return;
@@ -737,7 +752,7 @@ export function handleMessage(
       if (isSnapResolutionPending(state)) {
         return { error: "Another player is resolving a snap." };
       }
-      if (!isSnapEligible(state)) {
+      if (!canPlayerSnap(state, playerId)) {
         return { error: "No snap available right now." };
       }
       if (
@@ -794,16 +809,18 @@ export function handleMessage(
         return {
           error: "Wrong snap! Penalty card added.",
           penaltyFlash:
-            penaltySlot !== null
-              ? { playerId, slot: penaltySlot }
-              : undefined,
+            penaltySlot !== null ? { playerId, slot: penaltySlot } : undefined,
         };
       }
 
       const snappedCard = target.hand[message.slot].card!;
       clearHandSlot(target.hand, message.slot);
       state.discard.push(snappedCard);
-      clearSnapEligibleDiscard(state);
+      if (state.phase === "snap_window") {
+        clearSnapEligibleDiscard(state);
+      } else {
+        markDiscardTopAfterSnap(state, snappedCard, playerId);
+      }
 
       if (message.targetPlayerId === playerId) {
         addLog(state, `${player.name} snapped correctly!`);
@@ -1132,9 +1149,8 @@ export function buildPlayerView(
       !state.pendingAbility,
     canSnap:
       (gameInteractive || snapInteractive) &&
-      isSnapEligible(state) &&
+      canPlayerSnap(state, viewerId) &&
       !isSnapResolutionPending(state) &&
-      !!state.discard.length &&
       !(viewer?.hasCalledCambio && state.phase === "cambio_final") &&
       !(gameInteractive && isMyTurn && state.drawnCard) &&
       state.pendingAbility?.playerId !== viewerId,
@@ -1149,8 +1165,7 @@ export function buildPlayerView(
       viewerId === state.hostId &&
       (state.phase === "lobby" || state.phase === "ended") &&
       participants.length >= MIN_PLAYERS,
-    canShowResults:
-      viewerId === state.hostId && state.phase === "revealed",
+    canShowResults: viewerId === state.hostId && state.phase === "revealed",
     roundNumber: state.roundNumber,
     roundHistory: state.roundHistory,
     cumulativeScores: { ...state.cumulativeScores },

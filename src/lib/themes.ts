@@ -320,7 +320,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap the deck or discard pile to draw",
-    discardHint: "Tap the discard pile to play your card, or tap your hand to swap",
+    discardHint:
+      "Tap the discard pile to play your card, or tap your hand to swap",
     newGame: "Deal again",
     showResults: "Show scores",
     revealedHostHint: "All hands are open — show scores when ready",
@@ -623,7 +624,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap the deck or discard when you're ready",
-    discardHint: "Tap the discard pile to set aside your card, or swap with your hand",
+    discardHint:
+      "Tap the discard pile to set aside your card, or swap with your hand",
     newGame: "Play another round",
     showResults: "Show scores",
     revealedHostHint: "All hands are open — show scores when you're ready",
