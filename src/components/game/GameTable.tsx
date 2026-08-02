@@ -311,7 +311,7 @@ function PlayerSeat({
   const seatPadding = "p-1.5 sm:p-2 lg:p-2.5";
 
   const isPenaltyCard = (slot: PublicCardSlot, index: number) =>
-    isOwn ? !!slot.isPenalty : index >= HAND_BASE_SLOTS;
+    !!slot.isPenalty || index >= HAND_BASE_SLOTS;
 
   const baseGridSlots = Array.from({ length: HAND_BASE_SLOTS }, (_, index) => {
     const slot = player.hand[index] ?? {
