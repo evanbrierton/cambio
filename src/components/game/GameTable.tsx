@@ -183,6 +183,15 @@ function getActionBanner(
     };
   }
 
+  if (view.phase === "revealed") {
+    return {
+      text: view.canShowResults
+        ? voice.revealedHostHint
+        : voice.waitingForResults,
+      tone: "action",
+    };
+  }
+
   if (swapAbilityActive) {
     return {
       text: selectedSwapCard
@@ -569,7 +578,7 @@ export function GameTable({
     null,
   );
   const lobbyPlayersRef = useRef<Set<string>>(new Set());
-  const lobbyJoinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lobbyJoinTimerRef = useRef<number | null>(null);
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
   const snapGiveActive = view.pendingAbility?.kind === "snap_give";
@@ -837,6 +846,12 @@ export function GameTable({
       {view.canStartGame && (
         <RetroButton onClick={() => send({ type: "start_game" })}>
           {voice.startGame}
+        </RetroButton>
+      )}
+
+      {view.canShowResults && (
+        <RetroButton onClick={() => send({ type: "show_results" })}>
+          {voice.showResults}
         </RetroButton>
       )}
 

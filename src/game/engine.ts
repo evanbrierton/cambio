@@ -202,6 +202,12 @@ function anyoneCanSnap(state: GameState): boolean {
   );
 }
 
+function enterRevealedPhase(state: GameState): void {
+  state.phase = "revealed";
+  state.snapWindowEndsAt = null;
+  addLog(state, "All cards revealed — waiting for host to show results.");
+}
+
 /** Another player is mid-snap (giving a card back) — block all other snaps. */
 function isSnapResolutionPending(state: GameState): boolean {
   return state.pendingAbility?.kind === "snap_give";
@@ -272,7 +278,7 @@ export function expireSnapWindow(state: GameState, now = Date.now()): boolean {
     state.snapWindowEndsAt = now + SNAP_WINDOW_GRACE_MS;
     return false;
   }
-  finalizeRound(state);
+  enterRevealedPhase(state);
   return true;
 }
 
@@ -288,7 +294,7 @@ function endRound(state: GameState): void {
     return;
   }
 
-  finalizeRound(state);
+  enterRevealedPhase(state);
 }
 
 function dealHands(state: GameState): void {
@@ -880,6 +886,17 @@ export function handleMessage(
       return {};
     }
 
+    case "show_results": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can show results." };
+      }
+      if (state.phase !== "revealed") {
+        return { error: "Cannot show results now." };
+      }
+      finalizeRound(state);
+      return {};
+    }
+
     case "ability_look": {
       const pending = state.pendingAbility;
       if (!pending || pending.playerId !== playerId) {
@@ -1040,7 +1057,8 @@ export function buildPlayerView(
     !viewerWaiting &&
     state.phase !== "lobby" &&
     state.phase !== "ended" &&
-    state.phase !== "snap_window";
+    state.phase !== "snap_window" &&
+    state.phase !== "revealed";
   const snapInteractive = snapWindowActive && !viewerWaiting;
 
   const participants = state.players.filter((p) => !p.isWaiting && p.connected);
@@ -1131,6 +1149,8 @@ export function buildPlayerView(
       viewerId === state.hostId &&
       (state.phase === "lobby" || state.phase === "ended") &&
       participants.length >= MIN_PLAYERS,
+    canShowResults:
+      viewerId === state.hostId && state.phase === "revealed",
     roundNumber: state.roundNumber,
     roundHistory: state.roundHistory,
     cumulativeScores: { ...state.cumulativeScores },
