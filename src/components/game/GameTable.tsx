@@ -574,7 +574,7 @@ export function GameTable({
     null,
   );
   const lobbyPlayersRef = useRef<Set<string>>(new Set());
-  const lobbyJoinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lobbyJoinTimerRef = useRef<number | null>(null);
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
   const snapGiveActive = view.pendingAbility?.kind === "snap_give";
