@@ -26,20 +26,30 @@ const toneClass: Record<GameToastTone, string> = {
 export function GameToast({
   toast,
   fromBottom = false,
+  inline = false,
   className = "",
 }: {
   toast: GameToastItem;
   fromBottom?: boolean;
+  inline?: boolean;
   className?: string;
 }) {
   const offset = fromBottom ? 12 : -12;
+  const motionState = inline
+    ? {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+      }
+    : {
+        initial: { opacity: 0, y: offset, scale: 0.96 },
+        animate: { opacity: 1, y: 0, scale: 1 },
+        exit: { opacity: 0, y: offset / 1.5, scale: 0.96 },
+      };
 
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: offset, scale: 0.96 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, y: offset / 1.5, scale: 0.96 }}
+      {...motionState}
       transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
       className={`pixel-border ring-2 p-3 font-display text-[10px] sm:text-xs text-center shadow-glow-accent max-w-lg w-full sm:w-auto sm:min-w-[min(100%,20rem)] mx-auto ${toneClass[toast.tone]} ${toast.pulse ? "animate-pulse" : ""} ${className}`}
     >
