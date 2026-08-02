@@ -8,6 +8,7 @@ import {
   PILE_CARD_SIZE,
   PixelCard,
 } from "@/components/cards/PixelCard";
+import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
 import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
@@ -33,6 +34,7 @@ import type {
   PeekFlash,
   PenaltyFlash,
   SwapFlash,
+  CambioFlash,
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { useHintsEnabled } from "@/hooks/useHintsEnabled";
@@ -49,6 +51,7 @@ type GameTableProps = {
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
   penaltyFlash: PenaltyFlash | null;
+  cambioFlash: CambioFlash | null;
   send: (message: ClientMessage) => void;
 };
 
@@ -547,12 +550,13 @@ export function GameTable({
   peekFlash,
   swapFlash,
   penaltyFlash,
+  cambioFlash,
   send,
 }: GameTableProps) {
   const voice = useThemeVoice();
   const { soundEnabled, toggleSound } = useSoundEnabled();
   const { hintsEnabled, toggleHints } = useHintsEnabled();
-  useGameSounds(view, error, fleetingPeek, peekFlash, swapFlash);
+  useGameSounds(view, error, fleetingPeek, peekFlash, swapFlash, cambioFlash);
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
   );
@@ -742,6 +746,8 @@ export function GameTable({
 
   const me = view.players.find((p) => p.id === view.playerId);
   const isHost = me?.isHost ?? false;
+  const cambioCallerName =
+    view.players.find((p) => p.id === cambioFlash?.playerId)?.name ?? "Player";
 
   const phaseLabel = voice.phases[view.phase] ?? "";
 
@@ -912,6 +918,11 @@ export function GameTable({
   return (
     <div className="w-full max-w-7xl mx-auto flex flex-col flex-1 min-h-0 h-full">
       <GameToastLayer toasts={gameToasts} />
+      <CambioCallOverlay
+        cambioFlash={cambioFlash}
+        callerName={cambioCallerName}
+        voice={voice}
+      />
 
       {settingsOpen && (
         <div className="lg:hidden fixed inset-0 z-[90]">

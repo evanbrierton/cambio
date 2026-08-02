@@ -55,6 +55,7 @@ export type ThemeVoice = {
   host: string;
   turn: string;
   cambio: string;
+  cambioFinalRound: string;
   away: string;
   penalty: (count: number) => string;
   tapToSwap: string;
@@ -185,6 +186,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "HOST",
     turn: "TURN",
     cambio: "CAMBIO",
+    cambioFinalRound: "CALLED CAMBIO — FINAL ROUND!",
     away: "AWAY",
     penalty: (n) => `+${n} PENALTY`,
     tapToSwap: "TAP CARD TO SWAP",
@@ -284,6 +286,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Dealer",
     turn: "Your action",
     cambio: "Cambio",
+    cambioFinalRound: "called Cambio — final round",
     away: "Away",
     penalty: (n) => `+${n} penalty`,
     tapToSwap: "Select card to swap",
@@ -381,6 +384,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Host",
     turn: "Go go go!",
     cambio: "Cambio!",
+    cambioFinalRound: "called Cambio — last dance!",
     away: "Stepped out",
     penalty: (n) => `+${n} ouch!`,
     tapToSwap: "Tap to swap!",
@@ -476,6 +480,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Host",
     turn: "Turn",
     cambio: "Cambio",
+    cambioFinalRound: "called Cambio — final round",
     away: "Away",
     penalty: (n) => `+${n} penalty`,
     tapToSwap: "Tap card to swap",
@@ -572,6 +577,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Host",
     turn: "Your turn",
     cambio: "Cambio",
+    cambioFinalRound: "called Cambio — final round",
     away: "Away",
     penalty: (n) => `+${n} penalty`,
     tapToSwap: "Tap a card to swap",

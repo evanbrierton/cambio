@@ -139,6 +139,14 @@ export default class CambioParty implements Party.Server {
     }
   }
 
+  broadcastCambioFlash(playerId: string) {
+    const message: ServerMessage = { type: "cambio_flash", playerId };
+    const payload = JSON.stringify(message);
+    for (const conn of this.room.getConnections()) {
+      conn.send(payload);
+    }
+  }
+
   async onConnect(connection: Party.Connection, ctx: Party.ConnectionContext) {
     const url = new URL(ctx.request.url);
     const queryPlayerId = url.searchParams.get("playerId");
@@ -255,6 +263,10 @@ export default class CambioParty implements Party.Server {
 
     if (result.penaltyFlash) {
       this.broadcastPenaltyFlash(result.penaltyFlash);
+    }
+
+    if (result.cambioFlash) {
+      this.broadcastCambioFlash(result.cambioFlash.playerId);
     }
   }
 }

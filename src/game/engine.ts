@@ -515,6 +515,7 @@ export function handleMessage(
   peekFlash?: PeekFlash;
   swapFlash?: { slots: SwapFlashSlot[] };
   penaltyFlash?: { playerId: string; slot: number };
+  cambioFlash?: { playerId: string };
 } {
   switch (message.type) {
     case "join": {
@@ -640,7 +641,7 @@ export function handleMessage(
       } else {
         advanceTurn(state);
       }
-      return {};
+      return { cambioFlash: { playerId } };
     }
 
     case "draw": {

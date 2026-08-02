@@ -15,6 +15,7 @@ import { freshSessionKey, getPartyHost, storageKey } from "@/lib/party";
 const PEEK_FLASH_MS = 3500;
 export const SWAP_FLASH_MS = 3000;
 export const PENALTY_FLASH_MS = 2500;
+export const CAMBIO_FLASH_MS = 3500;
 export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
 export type FleetingPeek = {
@@ -39,6 +40,10 @@ export type PenaltyFlash = {
   slot: number;
 };
 
+export type CambioFlash = {
+  playerId: string;
+};
+
 type ConnectionState = {
   connected: boolean;
   playerId: string | null;
@@ -48,6 +53,7 @@ type ConnectionState = {
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
   penaltyFlash: PenaltyFlash | null;
+  cambioFlash: CambioFlash | null;
 };
 
 export type SessionMode = "new" | "reconnect";
@@ -83,12 +89,14 @@ export function useGameConnection(
     peekFlash: null,
     swapFlash: null,
     penaltyFlash: null,
+    cambioFlash: null,
   });
   const socketRef = useRef<PartySocket | null>(null);
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const peekEffectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const penaltyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cambioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const send = useCallback((message: ClientMessage) => {
     const socket = socketRef.current;
@@ -198,6 +206,17 @@ export function useGameConnection(
         }, PENALTY_FLASH_MS);
       }
 
+      if (data.type === "cambio_flash") {
+        if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
+        setState((s) => ({
+          ...s,
+          cambioFlash: { playerId: data.playerId },
+        }));
+        cambioTimerRef.current = setTimeout(() => {
+          setState((s) => ({ ...s, cambioFlash: null }));
+        }, CAMBIO_FLASH_MS);
+      }
+
       if (data.type === "error") {
         setState((s) => ({ ...s, error: data.message }));
       }
@@ -208,6 +227,7 @@ export function useGameConnection(
       if (peekEffectTimerRef.current) clearTimeout(peekEffectTimerRef.current);
       if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
       if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
+      if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
       socket.close();
       socketRef.current = null;
     };
