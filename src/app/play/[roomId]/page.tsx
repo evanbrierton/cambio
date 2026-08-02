@@ -22,10 +22,16 @@ export default function PlayPage({
   const searchParams = useSearchParams();
   const router = useRouter();
   const voice = useThemeVoice();
-  const name = searchParams.get("name") ?? "Player";
+  const name = searchParams.get("name")?.trim() ?? "";
   const debugEnabled = hasDebugQueryParam(searchParams);
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
+
+  useEffect(() => {
+    if (isNavFresh && !name) {
+      router.replace("/");
+    }
+  }, [isNavFresh, name, router]);
 
   const {
     connected,
