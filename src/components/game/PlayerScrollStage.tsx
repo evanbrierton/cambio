@@ -14,11 +14,6 @@ type PlayerScrollStageProps = {
   centerIndex?: number;
 };
 
-const MAX_ROTATE_Y = 44;
-const MIN_SCALE = 0.78;
-const MIN_OPACITY = 0.48;
-const MAX_TRANSLATE_Z = 36;
-
 export function PlayerScrollStage({
   children,
   centerIndex = 0,
@@ -57,25 +52,22 @@ export function PlayerScrollStage({
       trailSpacerRef.current.style.width = `${spacerWidth}px`;
     }
 
-    const scrollCenter = rail.scrollLeft + rail.clientWidth / 2;
-    const halfRail = Math.max(rail.clientWidth / 2, 1);
+    const railRect = rail.getBoundingClientRect();
+    const center = railRect.left + railRect.width / 2;
 
     itemRefs.current.forEach((item) => {
       if (!item) return;
 
-      const itemCenter = item.offsetLeft + item.offsetWidth / 2;
-      const offset = (itemCenter - scrollCenter) / halfRail;
+      const rect = item.getBoundingClientRect();
+      const itemCenter = rect.left + rect.width / 2;
+      const offset = (itemCenter - center) / Math.max(railRect.width, 1);
       const clamped = Math.max(-1, Math.min(1, offset));
-      const distance = Math.abs(clamped);
-
-      const rotateY = clamped * -MAX_ROTATE_Y;
-      const scale = 1 - distance * (1 - MIN_SCALE);
-      const translateZ = (1 - distance) * MAX_TRANSLATE_Z;
-      const opacity = 1 - distance * (1 - MIN_OPACITY);
+      const rotateY = clamped * -28;
+      const scale = 1 - Math.abs(clamped) * 0.1;
+      const translateZ = (1 - Math.abs(clamped)) * 24;
 
       item.style.transform = `rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
-      item.style.opacity = String(opacity);
-      item.style.zIndex = String(Math.round((1 - distance) * 100));
+      item.style.opacity = String(1 - Math.abs(clamped) * 0.28);
     });
   }, [centerIndex]);
 
@@ -87,22 +79,13 @@ export function PlayerScrollStage({
     const rail = railRef.current;
     if (!rail) return;
 
-    let rafId: number | null = null;
-    const scheduleLayout = () => {
-      if (rafId !== null) return;
-      rafId = requestAnimationFrame(() => {
-        rafId = null;
-        updateLayout();
-      });
-    };
-
     const frame = requestAnimationFrame(() => {
       updateLayout();
       requestAnimationFrame(() => scrollToCenter(centerIndex));
     });
 
-    rail.addEventListener("scroll", scheduleLayout, { passive: true });
-    window.addEventListener("resize", scheduleLayout);
+    rail.addEventListener("scroll", updateLayout, { passive: true });
+    window.addEventListener("resize", updateLayout);
 
     const observer = new ResizeObserver(() => {
       updateLayout();
@@ -112,9 +95,8 @@ export function PlayerScrollStage({
 
     return () => {
       cancelAnimationFrame(frame);
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      rail.removeEventListener("scroll", scheduleLayout);
-      window.removeEventListener("resize", scheduleLayout);
+      rail.removeEventListener("scroll", updateLayout);
+      window.removeEventListener("resize", updateLayout);
       observer.disconnect();
     };
   }, [centerIndex, scrollToCenter, updateLayout]);
