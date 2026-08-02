@@ -21,6 +21,7 @@ import type {
   PlayerView,
   SwapFlashSlot,
 } from "./types";
+import { generateBotName } from "./bot-names";
 import { HAND_BASE_SLOTS, SETUP_PEEK_SLOTS } from "./types";
 
 const MAX_PLAYERS = 6;
@@ -32,28 +33,8 @@ const MAX_CHAT_MESSAGES = 100;
 const MAX_CHAT_LENGTH = 200;
 const CHAT_COOLDOWN_MS = 500;
 
-const BOT_NAMES = [
-  "Pixel Pete",
-  "Card Bot",
-  "Dealer Dan",
-  "Ace Annie",
-  "Chip Charlie",
-  "Lucky Lou",
-  "Queen Quinn",
-  "King Kyle",
-  "Joker Jay",
-  "Snap Sally",
-];
-
 export function isParticipant(player: PlayerState): boolean {
   return !player.isWaiting && (player.connected || player.isBot);
-}
-
-function pickBotName(usedNames: Set<string>): string {
-  for (const name of BOT_NAMES) {
-    if (!usedNames.has(name)) return name;
-  }
-  return `Bot ${usedNames.size + 1}`;
 }
 
 export function addBotPlayer(
@@ -62,7 +43,7 @@ export function addBotPlayer(
 ): string {
   const usedNames = new Set(state.players.map((p) => p.name));
   const id = nanoid(10);
-  const name = pickBotName(usedNames);
+  const name = generateBotName(usedNames);
   state.players.push({
     id,
     name,
@@ -139,6 +120,7 @@ export function addChatMessage(
   state: GameState,
   playerId: string,
   text: string,
+  options?: { fromBot?: boolean },
 ): ChatMessage | { error: string } {
   const player = findPlayer(state, playerId);
   if (!player) return { error: "Player not found." };
@@ -149,11 +131,13 @@ export function addChatMessage(
     return { error: `Message too long (max ${MAX_CHAT_LENGTH} characters).` };
   }
 
-  const lastMessage = [...state.chatMessages]
-    .reverse()
-    .find((message) => message.playerId === playerId);
-  if (lastMessage && Date.now() - lastMessage.sentAt < CHAT_COOLDOWN_MS) {
-    return { error: "Slow down — wait a moment before sending again." };
+  if (!options?.fromBot) {
+    const lastMessage = [...state.chatMessages]
+      .reverse()
+      .find((message) => message.playerId === playerId);
+    if (lastMessage && Date.now() - lastMessage.sentAt < CHAT_COOLDOWN_MS) {
+      return { error: "Slow down — wait a moment before sending again." };
+    }
   }
 
   const chatMessage: ChatMessage = {

@@ -11,8 +11,10 @@ import {
   decideBotAction,
   updateBotKnowledge,
 } from "../src/game/bot";
+import { botChatDelay, pickBotChatMessage } from "../src/game/bot-chat";
 import {
   addBotPlayer,
+  addChatMessage,
   buildPlayerView,
   createRoom,
   expireSnapWindow,
@@ -68,6 +70,7 @@ export class CambioParty extends Server {
   state: GameState | null = null;
   private botKnowledge = new Map<string, BotKnowledge>();
   private botTimer: ReturnType<typeof setTimeout> | null = null;
+  private botChatTimer: ReturnType<typeof setTimeout> | null = null;
 
   private getBotKnowledge(botId: string): BotKnowledge {
     let knowledge = this.botKnowledge.get(botId);
@@ -86,6 +89,47 @@ export class CambioParty extends Server {
     if (this.state) {
       this.state.botThinkingId = null;
     }
+  }
+
+  private clearBotChatTimer() {
+    if (this.botChatTimer) {
+      clearTimeout(this.botChatTimer);
+      this.botChatTimer = null;
+    }
+  }
+
+  private scheduleBotChat() {
+    if (this.botChatTimer) return;
+    if (!this.state?.isSoloMode) return;
+
+    const bots = this.state.players.filter((p) => p.isBot);
+    if (bots.length === 0) return;
+
+    const delay = botChatDelay();
+    this.botChatTimer = setTimeout(() => {
+      this.botChatTimer = null;
+      void this.sendRandomBotChat();
+    }, delay);
+  }
+
+  private async sendRandomBotChat() {
+    if (!this.state?.isSoloMode) return;
+
+    const bots = this.state.players.filter((p) => p.isBot);
+    if (bots.length === 0) {
+      this.scheduleBotChat();
+      return;
+    }
+
+    const bot = bots[Math.floor(Math.random() * bots.length)];
+    const text = pickBotChatMessage(bot.botDifficulty ?? "easy");
+    const result = addChatMessage(this.state, bot.id, text, { fromBot: true });
+    if (!("error" in result)) {
+      await this.persist();
+      this.broadcastState();
+    }
+
+    this.scheduleBotChat();
   }
 
   private applyMessageResult(
@@ -195,6 +239,7 @@ export class CambioParty extends Server {
       this.state = migrateState(saved);
       await this.syncSnapWindow();
       this.scheduleBotTurns();
+      this.scheduleBotChat();
     }
   }
 
@@ -381,6 +426,7 @@ export class CambioParty extends Server {
     await this.syncSnapWindow();
     this.broadcastState();
     this.scheduleBotTurns();
+    this.scheduleBotChat();
   }
 
   async onClose(connection: Connection<PlayerConnectionState>) {
