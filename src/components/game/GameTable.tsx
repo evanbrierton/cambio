@@ -9,6 +9,7 @@ import {
   PixelCard,
 } from "@/components/cards/PixelCard";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
+import { LobbyPlayers } from "@/components/game/LobbyPlayers";
 import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
 import {
@@ -320,7 +321,7 @@ function PlayerSeat({
   const seatPadding = "p-1.5 sm:p-2 lg:p-2.5";
 
   const isPenaltyCard = (slot: PublicCardSlot, index: number) =>
-    isOwn ? !!slot.isPenalty : index >= HAND_BASE_SLOTS;
+    !!slot.isPenalty || index >= HAND_BASE_SLOTS;
 
   const baseGridSlots = Array.from({ length: HAND_BASE_SLOTS }, (_, index) => {
     const slot = player.hand[index] ?? {
@@ -573,6 +574,7 @@ export function GameTable({
     null,
   );
   const lobbyPlayersRef = useRef<Set<string>>(new Set());
+  const lobbyJoinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
   const snapGiveActive = view.pendingAbility?.kind === "snap_give";
@@ -634,20 +636,8 @@ export function GameTable({
       });
     }
 
-    if (lobbyJoinToast) {
-      items.push(lobbyJoinToast);
-    }
-
     return items;
-  }, [
-    error,
-    lobbyJoinToast,
-    peekFlash,
-    penaltyFlash,
-    swapFlash,
-    view.players,
-    voice,
-  ]);
+  }, [error, peekFlash, penaltyFlash, swapFlash, view.players, voice]);
 
   const actionToast: GameToastItem | null =
     hintsEnabled && actionBanner
@@ -677,6 +667,10 @@ export function GameTable({
           .map((player) => player.id),
       );
       setLobbyJoinToast(null);
+      if (lobbyJoinTimerRef.current) {
+        window.clearTimeout(lobbyJoinTimerRef.current);
+        lobbyJoinTimerRef.current = null;
+      }
       return;
     }
 
@@ -686,23 +680,22 @@ export function GameTable({
       (player) => !previous.has(player.id) && player.id !== view.playerId,
     );
 
+    lobbyPlayersRef.current = new Set(activePlayers.map((player) => player.id));
+
     if (previous.size > 0 && newcomer) {
       setLobbyJoinToast({
         id: `lobby-join-${newcomer.id}`,
         message: voice.playerJoined(newcomer.name),
         tone: "info",
       });
-      const timer = window.setTimeout(
-        () => setLobbyJoinToast(null),
-        LOBBY_JOIN_TOAST_MS,
-      );
-      lobbyPlayersRef.current = new Set(
-        activePlayers.map((player) => player.id),
-      );
-      return () => window.clearTimeout(timer);
+      if (lobbyJoinTimerRef.current) {
+        window.clearTimeout(lobbyJoinTimerRef.current);
+      }
+      lobbyJoinTimerRef.current = window.setTimeout(() => {
+        setLobbyJoinToast(null);
+        lobbyJoinTimerRef.current = null;
+      }, LOBBY_JOIN_TOAST_MS);
     }
-
-    lobbyPlayersRef.current = new Set(activePlayers.map((player) => player.id));
   }, [view.phase, view.playerId, view.players, voice]);
 
   useEffect(() => {
@@ -1015,14 +1008,27 @@ export function GameTable({
               </div>
             </div>
             <div
-              className={`relative shrink-0 ${hintsEnabled ? "h-14" : "h-0"}`}
+              className={`relative shrink-0 ${
+                (hintsEnabled && actionToast) ||
+                (view.phase === "lobby" && lobbyJoinToast)
+                  ? "h-14"
+                  : "h-0"
+              }`}
               aria-live="polite"
             >
               <AnimatePresence initial={false}>
-                {actionToast ? (
+                {hintsEnabled && actionToast ? (
                   <GameToast
                     key="action"
                     toast={actionToast}
+                    inline
+                    className="absolute inset-x-0 top-0"
+                  />
+                ) : null}
+                {view.phase === "lobby" && lobbyJoinToast ? (
+                  <GameToast
+                    key={lobbyJoinToast.id}
+                    toast={lobbyJoinToast}
                     inline
                     className="absolute inset-x-0 top-0"
                   />
@@ -1031,133 +1037,137 @@ export function GameTable({
             </div>
           </header>
 
-          <div
-            className={`table-deck shrink-0 pixel-border bg-surface px-2 py-1.5 lg:p-4 ${
-              view.canDraw ? "table-deck-drawable ring-2 ring-accent-alt" : ""
-            }`}
-          >
-            <div className="flex items-end justify-center gap-1.5 sm:gap-4 lg:gap-8">
-              <button
-                type="button"
-                disabled={!view.canDraw}
-                onClick={() => send({ type: "draw", source: "deck" })}
-                className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                  view.canDraw
-                    ? "pile-interactable-btn cursor-pointer active:opacity-80"
-                    : ""
-                }`}
-                aria-label={voice.draw}
-              >
-                <p
-                  className={`table-pile-label ${
+          {view.phase !== "lobby" && (
+            <div
+              className={`table-deck shrink-0 pixel-border bg-surface px-2 py-1.5 lg:p-4 ${
+                view.canDraw ? "table-deck-drawable ring-2 ring-accent-alt" : ""
+              }`}
+            >
+              <div className="flex items-end justify-center gap-1.5 sm:gap-4 lg:gap-8">
+                <button
+                  type="button"
+                  disabled={!view.canDraw}
+                  onClick={() => send({ type: "draw", source: "deck" })}
+                  className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
                     view.canDraw
-                      ? "pile-interactable-label"
-                      : "text-theme-muted"
-                  }`}
-                >
-                  {voice.deck}
-                </p>
-                <div
-                  className={`table-pile-card pixel-border rounded-card ${PILE_CARD_SIZE} bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
-                    view.canDraw
-                      ? "pile-interactable-card ring-2 ring-accent-alt"
+                      ? "pile-interactable-btn cursor-pointer active:opacity-80"
                       : ""
                   }`}
+                  aria-label={voice.draw}
                 >
-                  {view.deckCount}
-                </div>
-              </button>
-
-              <button
-                type="button"
-                disabled={!canInteractWithDiscard}
-                onClick={() => {
-                  if (view.canDiscardDrawn) {
-                    send({ type: "discard_drawn" });
-                    return;
-                  }
-                  if (canTakeFromDiscard) {
-                    send({ type: "draw", source: "discard" });
-                  }
-                }}
-                className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                  canInteractWithDiscard
-                    ? "pile-interactable-btn cursor-pointer active:opacity-80"
-                    : ""
-                }`}
-                aria-label={
-                  view.canDiscardDrawn ? voice.discardDrawn : voice.take
-                }
-              >
-                <p
-                  className={`table-pile-label ${
-                    showDiscardPileGlow
-                      ? "pile-interactable-label pile-interactable-label-discard"
-                      : "text-theme-muted"
-                  }`}
-                >
-                  {voice.discard}
-                </p>
-                <div
-                  className={`${PILE_CARD_SIZE} shrink-0 ${
-                    showDiscardPileGlow
-                      ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
-                      : view.canSnap
-                        ? "ring-1 ring-danger/50 rounded-card"
+                  <p
+                    className={`table-pile-label ${
+                      view.canDraw
+                        ? "pile-interactable-label"
+                        : "text-theme-muted"
+                    }`}
+                  >
+                    {voice.deck}
+                  </p>
+                  <div
+                    className={`table-pile-card pixel-border rounded-card ${PILE_CARD_SIZE} bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
+                      view.canDraw
+                        ? "pile-interactable-card ring-2 ring-accent-alt"
                         : ""
-                  }`}
-                >
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={view.discardTop?.id ?? "empty-discard"}
-                      className="h-full w-full"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.18, ease: "easeOut" }}
-                    >
-                      <PixelCard
-                        card={view.discardTop}
-                        faceUp={!!view.discardTop}
-                        hidden={!view.discardTop}
-                        sizeClass={PILE_CARD_SIZE}
-                      />
-                    </motion.div>
-                  </AnimatePresence>
-                </div>
-              </button>
+                    }`}
+                  >
+                    {view.deckCount}
+                  </div>
+                </button>
 
-              <div
-                className="table-pile flex flex-col items-center gap-0.5 lg:gap-1"
-                aria-label={voice.drawn}
-              >
-                <p
-                  className={`table-pile-label ${
-                    isDrawnSlotMine ? "text-accent" : "text-theme-muted"
-                  }`}
-                >
-                  {voice.drawn}
-                </p>
-                <div
-                  className={`${PILE_CARD_SIZE} shrink-0 ${
-                    view.canSwap
-                      ? "ring-2 ring-accent shadow-glow-accent rounded-card"
+                <button
+                  type="button"
+                  disabled={!canInteractWithDiscard}
+                  onClick={() => {
+                    if (view.canDiscardDrawn) {
+                      send({ type: "discard_drawn" });
+                      return;
+                    }
+                    if (canTakeFromDiscard) {
+                      send({ type: "draw", source: "discard" });
+                    }
+                  }}
+                  className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
+                    canInteractWithDiscard
+                      ? "pile-interactable-btn cursor-pointer active:opacity-80"
                       : ""
                   }`}
+                  aria-label={
+                    view.canDiscardDrawn ? voice.discardDrawn : voice.take
+                  }
                 >
-                  <PixelCard
-                    card={view.drawnCard}
-                    faceUp={isDrawnSlotMine}
-                    hidden={showDrawnFaceDown}
-                    empty={!isDrawnSlotMine && !view.hasDrawnCard}
-                    sizeClass={PILE_CARD_SIZE}
-                  />
+                  <p
+                    className={`table-pile-label ${
+                      showDiscardPileGlow
+                        ? "pile-interactable-label pile-interactable-label-discard"
+                        : "text-theme-muted"
+                    }`}
+                  >
+                    {voice.discard}
+                  </p>
+                  <div
+                    className={`${PILE_CARD_SIZE} shrink-0 ${
+                      showDiscardPileGlow
+                        ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
+                        : view.canSnap
+                          ? "ring-1 ring-danger/50 rounded-card"
+                          : ""
+                    }`}
+                  >
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={view.discardTop?.id ?? "empty-discard"}
+                        className="h-full w-full"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.18, ease: "easeOut" }}
+                      >
+                        <PixelCard
+                          card={view.discardTop}
+                          faceUp={!!view.discardTop}
+                          hidden={!view.discardTop}
+                          sizeClass={PILE_CARD_SIZE}
+                        />
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                </button>
+
+                <div
+                  className="table-pile flex flex-col items-center gap-0.5 lg:gap-1"
+                  aria-label={voice.drawn}
+                >
+                  <p
+                    className={`table-pile-label ${
+                      isDrawnSlotMine ? "text-accent" : "text-theme-muted"
+                    }`}
+                  >
+                    {voice.drawn}
+                  </p>
+                  <div
+                    className={`${PILE_CARD_SIZE} shrink-0 ${
+                      view.canSwap
+                        ? "ring-2 ring-accent shadow-glow-accent rounded-card"
+                        : ""
+                    }`}
+                  >
+                    <PixelCard
+                      card={view.drawnCard}
+                      faceUp={isDrawnSlotMine}
+                      hidden={showDrawnFaceDown}
+                      empty={!isDrawnSlotMine && !view.hasDrawnCard}
+                      sizeClass={PILE_CARD_SIZE}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {view.phase !== "lobby" && (
+          {view.phase === "lobby" ? (
+            <LobbyPlayers view={view} voice={voice} />
+          ) : (
             <div className="flex flex-1 flex-col gap-2 min-h-0 min-w-0">
               <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">
                 PLAYERS

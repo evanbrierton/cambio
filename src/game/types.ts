@@ -99,6 +99,8 @@ export type GameState = {
   winnerIds: string[];
   scores: Record<string, number> | null;
   snapWindowEndsAt: number | null;
+  /** ID of the discard-top card placed by draw/swap discard; cleared after a snap. */
+  snapEligibleTopCardId: string | null;
   log: string[];
 };
 
