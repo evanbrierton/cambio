@@ -40,14 +40,14 @@ export function ChatPanel({
   };
 
   return (
-    <div className="pixel-border p-3 flex flex-col gap-2 bg-surface min-h-[140px] lg:min-h-[180px] w-full min-w-0">
+    <div className="pixel-border p-3 flex flex-col gap-2 bg-surface w-full min-w-0 overflow-hidden shrink-0">
       <p className="font-display text-[8px] text-theme-muted">
         {voice.chatLabel}
       </p>
 
       <div
         ref={listRef}
-        className="flex-1 min-h-[72px] max-h-[160px] lg:max-h-[200px] overflow-y-auto space-y-1.5"
+        className="min-h-[72px] max-h-[160px] lg:max-h-[200px] overflow-y-auto overflow-x-hidden space-y-1.5"
         aria-live="polite"
         aria-relevant="additions"
       >

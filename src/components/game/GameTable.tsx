@@ -973,7 +973,7 @@ export function GameTable({
 
   const gameSidebar = (
     <>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 shrink-0">
         <button
           type="button"
           onClick={toggleSound}
@@ -998,7 +998,7 @@ export function GameTable({
       </div>
 
       {canDebugRestart && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 shrink-0">
           <button
             type="button"
             onClick={() => send({ type: "toggle_debug" })}
@@ -1024,17 +1024,17 @@ export function GameTable({
         onSend={(text) => send({ type: "chat", text })}
       />
 
-      <div className="pixel-border p-3 min-h-[120px] lg:min-h-[200px] bg-surface w-full min-w-0 flex flex-col">
+      <div className="pixel-border p-3 bg-surface w-full min-w-0 flex flex-col overflow-hidden shrink-0 lg:flex-1 lg:min-h-0">
         <p className="font-display text-[8px] text-theme-muted mb-2 shrink-0">
           {voice.gameLog}
         </p>
-        <div className="flex-1 min-h-0 lg:max-h-[50vh] lg:overflow-y-auto">
+        <div className="min-h-[72px] max-h-[140px] lg:max-h-none lg:flex-1 lg:min-h-0 overflow-y-auto overflow-x-hidden">
           {view.log.slice(-12).map((line, index) => {
             const logIndex = Math.max(0, view.log.length - 12) + index;
             return (
               <p
                 key={`log-${logIndex}`}
-                className="font-mono text-[10px] text-theme-muted leading-relaxed"
+                className="font-mono text-[10px] text-theme-muted leading-relaxed break-words"
               >
                 {line}
               </p>
@@ -1043,7 +1043,9 @@ export function GameTable({
         </div>
       </div>
 
-      <ThemePicker compact />
+      <div className="shrink-0">
+        <ThemePicker compact />
+      </div>
     </>
   );
 
@@ -1351,9 +1353,11 @@ export function GameTable({
           </div>
         </div>
 
-        <aside className="hidden lg:flex flex-col gap-4 lg:sticky lg:top-4">
-          {actionButtons}
-          {gameSidebar}
+        <aside className="hidden lg:flex flex-col gap-4 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100dvh-2.5rem)] lg:min-h-0 min-w-0">
+          <div className="shrink-0">{actionButtons}</div>
+          <div className="flex flex-col gap-4 flex-1 min-h-0 min-w-0">
+            {gameSidebar}
+          </div>
         </aside>
       </div>
     </div>
