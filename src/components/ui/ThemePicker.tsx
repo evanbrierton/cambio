@@ -37,7 +37,7 @@ export function ThemePicker({ compact = false }: { compact?: boolean }) {
         className={`grid gap-2 ${
           compact
             ? "grid-cols-[repeat(2,minmax(0,1fr))]"
-            : "grid-cols-[minmax(0,1fr)] sm:grid-cols-[repeat(2,minmax(0,1fr))]"
+            : "grid-cols-[minmax(0,1fr)] sm:grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-[repeat(4,minmax(0,1fr))]"
         }`}
       >
         {THEME_OPTIONS.map((option) => {
@@ -47,7 +47,7 @@ export function ThemePicker({ compact = false }: { compact?: boolean }) {
               key={option.id}
               type="button"
               onClick={() => setTheme(option.id)}
-              className={`theme-option-btn min-w-0 text-left px-3 py-2 border-2 transition-all font-sans ${
+              className={`theme-option-btn min-w-0 text-left px-3 py-2 border-2 transition-[border-color,background-color,color,box-shadow] font-sans ${
                 active
                   ? "border-accent-alt bg-surface text-accent shadow-glow-accent"
                   : "border-theme-muted bg-surface text-theme-muted hover:border-accent"
