@@ -8,6 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { applyThemeFontClass } from "@/lib/theme-fonts";
 import { setThemeCookie } from "@/lib/theme-cookie";
 import { DEFAULT_THEME, isThemeId, THEME_STORAGE_KEY, type ThemeId } from "@/lib/themes";
 
@@ -37,12 +38,14 @@ export function ThemeProvider({
     setThemeState(stored);
     setThemeCookie(stored);
     document.documentElement.dataset.theme = stored;
+    applyThemeFontClass(stored);
   }, [initialTheme]);
 
   const setTheme = useCallback((next: ThemeId) => {
     setThemeState(next);
     setThemeCookie(next);
     document.documentElement.dataset.theme = next;
+    applyThemeFontClass(next);
   }, []);
 
   return (
