@@ -1128,6 +1128,35 @@ html.play-scroll-lock body {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
+.mobile-game-scroll,
+.players-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.players-grid-stage {
+  perspective: 1000px;
+}
+
+.players-grid-scroll {
+  transform-style: preserve-3d;
+}
+
+.players-grid-item {
+  transform-style: preserve-3d;
+  transition:
+    transform 0.15s ease-out,
+    opacity 0.15s ease-out;
+  will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .players-grid-item {
+    transition: none;
+    will-change: auto;
+  }
+}
+
 .players-3d-stage {
   flex: 1 1 0;
   min-height: 0;
@@ -1170,12 +1199,6 @@ html.play-scroll-lock body {
   }
 }
 
-.players-3d-edge {
-  flex: 0 0 calc(50% - 4.5rem);
-  min-width: 1rem;
-  pointer-events: none;
-}
-
 .players-3d-item {
   flex: 0 0 auto;
   scroll-snap-align: center;
@@ -1186,16 +1209,17 @@ html.play-scroll-lock body {
   will-change: transform, opacity;
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .players-3d-item {
+    transition: none;
+    will-change: auto;
+  }
+}
+
 .players-3d-spacer {
   flex: 0 0 auto;
   height: 1px;
   pointer-events: none;
-}
-
-.mobile-game-scroll,
-.players-scroll {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
 }
 
 /* Bottom sheet: keep the frame border on a non-scrolling shell. */
