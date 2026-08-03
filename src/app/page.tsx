@@ -8,6 +8,7 @@ import { ThemePicker } from "@/components/ui/ThemePicker";
 import type { BotDifficulty } from "@/game/types";
 import { DEFAULT_BOT_COUNT, MAX_BOT_COUNT, MIN_BOT_COUNT } from "@/game/types";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
+import { loadBotSettings, saveBotSettings } from "@/lib/bot-settings";
 import { PLAYER_NAME_KEY } from "@/lib/party";
 
 const roomCode = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 6);
@@ -19,11 +20,24 @@ export default function HomePage() {
   const [joinCode, setJoinCode] = useState("");
   const [botCount, setBotCount] = useState(DEFAULT_BOT_COUNT);
   const [difficulty, setDifficulty] = useState<BotDifficulty>("easy");
+  const [botSettingsLoaded, setBotSettingsLoaded] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem(PLAYER_NAME_KEY);
     if (stored) setName(stored);
   }, []);
+
+  useEffect(() => {
+    const stored = loadBotSettings();
+    setBotCount(stored.botCount);
+    setDifficulty(stored.difficulty);
+    setBotSettingsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!botSettingsLoaded) return;
+    saveBotSettings({ botCount, difficulty });
+  }, [botSettingsLoaded, botCount, difficulty]);
 
   const trimmedName = name.trim();
   const hasName = trimmedName.length > 0;
@@ -150,7 +164,11 @@ export default function HomePage() {
             </label>
           </div>
 
-          <RetroButton className="w-full" disabled={!hasName} onClick={goToSolo}>
+          <RetroButton
+            className="w-full"
+            disabled={!hasName}
+            onClick={goToSolo}
+          >
             {voice.playVsBots}
           </RetroButton>
         </div>

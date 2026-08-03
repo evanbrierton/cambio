@@ -12,7 +12,14 @@ import {
   forgetSnapTargetForAllBots,
   updateBotKnowledge,
 } from "../src/game/bot";
-import { botChatDelay, pickBotChatMessage } from "../src/game/bot-chat";
+import { botChatDelay, shouldFocusTarpingForChat } from "../src/game/bot-chat";
+import {
+  capturePreMoveSnapshot,
+  detectMoveReaction,
+  type GameMoveReaction,
+  shouldReactToMove,
+} from "../src/game/bot-chat-events";
+import { generateBotChatMessage } from "../src/game/bot-chat-llm";
 import {
   addBotPlayer,
   addChatMessage,
@@ -40,6 +47,8 @@ import {
 } from "../src/game/types";
 
 type PlayerConnectionState = { playerId?: string; debugEnabled?: boolean };
+
+const MOVE_REACTION_COOLDOWN_MS = 12_000;
 
 function migrateState(state: GameState): GameState {
   return {
@@ -70,11 +79,14 @@ function messageText(raw: WSMessage): string {
   return new TextDecoder().decode(raw);
 }
 
-export class CambioParty extends Server {
+export class CambioParty extends Server<Env> {
   state: GameState | null = null;
   private botKnowledge = new Map<string, BotKnowledge>();
   private botTimer: ReturnType<typeof setTimeout> | null = null;
   private botChatTimer: ReturnType<typeof setTimeout> | null = null;
+  private botChatReplyTimer: ReturnType<typeof setTimeout> | null = null;
+  private humanSnapStreak = 0;
+  private lastMoveReactionAt = 0;
 
   private getBotKnowledge(botId: string): BotKnowledge {
     let knowledge = this.botKnowledge.get(botId);
@@ -102,6 +114,13 @@ export class CambioParty extends Server {
     }
   }
 
+  private clearBotChatReplyTimer() {
+    if (this.botChatReplyTimer) {
+      clearTimeout(this.botChatReplyTimer);
+      this.botChatReplyTimer = null;
+    }
+  }
+
   private scheduleBotChat() {
     if (this.botChatTimer) return;
     if (!this.state?.isSoloMode) return;
@@ -112,28 +131,86 @@ export class CambioParty extends Server {
     const delay = botChatDelay();
     this.botChatTimer = setTimeout(() => {
       this.botChatTimer = null;
-      void this.sendRandomBotChat();
+      void this.sendBotChat();
     }, delay);
   }
 
-  private async sendRandomBotChat() {
+  private scheduleBotChatReply(playerName: string, text: string) {
+    if (!this.state?.isSoloMode) return;
+
+    this.clearBotChatReplyTimer();
+    const delay = 2_000 + Math.floor(Math.random() * 3_000);
+    this.botChatReplyTimer = setTimeout(() => {
+      this.botChatReplyTimer = null;
+      void this.sendBotChat({ replyTo: { playerName, text } });
+    }, delay);
+  }
+
+  private scheduleBotMoveReaction(reaction: GameMoveReaction) {
+    if (!this.state?.isSoloMode) return;
+
+    const now = Date.now();
+    if (now - this.lastMoveReactionAt < MOVE_REACTION_COOLDOWN_MS) return;
+
+    this.clearBotChatReplyTimer();
+    this.lastMoveReactionAt = now;
+    const delay = 1_500 + Math.floor(Math.random() * 2_500);
+    this.botChatReplyTimer = setTimeout(() => {
+      this.botChatReplyTimer = null;
+      void this.sendBotChat({ gameMove: reaction });
+    }, delay);
+  }
+
+  private async sendBotChat(options?: {
+    replyTo?: { playerName: string; text: string };
+    gameMove?: GameMoveReaction;
+  }) {
     if (!this.state?.isSoloMode) return;
 
     const bots = this.state.players.filter((p) => p.isBot);
     if (bots.length === 0) {
-      this.scheduleBotChat();
+      if (!options?.replyTo) this.scheduleBotChat();
       return;
     }
 
     const bot = bots[Math.floor(Math.random() * bots.length)];
-    const text = pickBotChatMessage(bot.botDifficulty ?? "easy");
-    const result = addChatMessage(this.state, bot.id, text, { fromBot: true });
-    if (!("error" in result)) {
+    const botIds = new Set(bots.map((entry) => entry.id));
+    const humanChatTexts = this.state.chatMessages
+      .slice(-12)
+      .filter((message) => !botIds.has(message.playerId))
+      .map((message) => message.text);
+    const focusTarping = options?.gameMove
+      ? false
+      : shouldFocusTarpingForChat({
+          replyText: options?.replyTo?.text,
+          humanChatTexts,
+        });
+    const result = await generateBotChatMessage(this.env.GROQ_API_KEY, {
+      difficulty: bot.botDifficulty ?? "easy",
+      botName: bot.name,
+      recentChat: this.state.chatMessages.slice(-12),
+      gamePhase: this.state.phase,
+      roundNumber: this.state.roundNumber,
+      replyTo: options?.replyTo,
+      gameMove: options?.gameMove,
+      focusTarping,
+    });
+
+    if (result.source === "template" && result.fallbackReason) {
+      console.log(
+        `[bot-chat] template fallback (${result.fallbackReason}) for ${bot.name}`,
+      );
+    }
+
+    const posted = addChatMessage(this.state, bot.id, result.text, {
+      fromBot: true,
+    });
+    if (!("error" in posted)) {
       await this.persist();
       this.broadcastState();
     }
 
-    this.scheduleBotChat();
+    if (!options?.replyTo && !options?.gameMove) this.scheduleBotChat();
   }
 
   private applyMessageResult(
@@ -160,6 +237,13 @@ export class CambioParty extends Server {
     connection?: Connection<PlayerConnectionState>,
   ) {
     if (!this.state) return;
+
+    const actor = findPlayer(this.state, playerId);
+    const isHuman = actor !== undefined && !actor.isBot;
+    const snapshot =
+      isHuman && actor
+        ? capturePreMoveSnapshot(this.state, playerId, message)
+        : null;
 
     const result = handleMessage(this.state, playerId, message);
 
@@ -209,6 +293,38 @@ export class CambioParty extends Server {
     }
     if (result.reshuffleFlash) {
       this.broadcastReshuffleFlash();
+    }
+
+    if (message.type === "chat" && !result.error) {
+      const player = findPlayer(this.state, playerId);
+      if (player && !player.isBot) {
+        this.scheduleBotChatReply(player.name, message.text);
+      }
+    }
+
+    if (isHuman && actor && !result.error) {
+      if (message.type === "start_game" || message.type === "restart_game") {
+        this.humanSnapStreak = 0;
+      }
+
+      if (message.type === "snap") {
+        if (result.penaltyFlash) {
+          this.humanSnapStreak = 0;
+        } else {
+          this.humanSnapStreak += 1;
+        }
+      }
+
+      const moveReaction = detectMoveReaction(
+        actor,
+        message,
+        result,
+        snapshot,
+        this.humanSnapStreak,
+      );
+      if (moveReaction && shouldReactToMove(moveReaction)) {
+        this.scheduleBotMoveReaction(moveReaction);
+      }
     }
 
     this.scheduleBotTurns();
@@ -485,6 +601,9 @@ export class CambioParty extends Server {
         conn.id !== connection.id && this.getPlayerId(conn) === playerId,
     );
     if (stillConnected) return;
+
+    this.clearBotChatTimer();
+    this.clearBotChatReplyTimer();
 
     const player = this.state.players.find((p) => p.id === playerId);
     if (player) {
