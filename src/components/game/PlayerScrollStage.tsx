@@ -41,6 +41,9 @@ export function PlayerScrollStage({
     const rail = railRef.current;
     if (!rail) return;
 
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     const centerItem = itemRefs.current[centerIndex];
     const itemHalf = centerItem ? centerItem.offsetWidth / 2 : 58;
     const spacerWidth = Math.max(16, rail.clientWidth / 2 - itemHalf);
@@ -57,6 +60,12 @@ export function PlayerScrollStage({
 
     itemRefs.current.forEach((item) => {
       if (!item) return;
+
+      if (reducedMotion) {
+        item.style.transform = "";
+        item.style.opacity = "";
+        return;
+      }
 
       const rect = item.getBoundingClientRect();
       const itemCenter = rect.left + rect.width / 2;
