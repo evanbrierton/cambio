@@ -111,6 +111,8 @@ export type ThemeVoice = {
   soundOff: string;
   hintsOn: string;
   hintsOff: string;
+  playerGridOn: string;
+  playerGridOff: string;
   soloMode: string;
   botCountLabel: string;
   jokerCountLabel: string;
@@ -289,6 +291,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "SOUND OFF",
     hintsOn: "HINTS ON",
     hintsOff: "HINTS OFF",
+    playerGridOn: "GRID VIEW",
+    playerGridOff: "CAROUSEL",
     soloMode: "SOLO MODE",
     botCountLabel: "BOTS",
     jokerCountLabel: "JOKERS",
@@ -413,6 +417,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    playerGridOn: "Grid view",
+    playerGridOff: "Carousel",
     soloMode: "Solo table",
     botCountLabel: "Opponents",
     jokerCountLabel: "Jokers",
@@ -535,6 +541,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    playerGridOn: "Grid view",
+    playerGridOff: "Carousel",
     soloMode: "Solo mode",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
@@ -656,6 +664,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    playerGridOn: "Grid view",
+    playerGridOff: "Carousel",
     soloMode: "Solo",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
@@ -780,6 +790,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soundOff: "Sound off",
     hintsOn: "Hints on",
     hintsOff: "Hints off",
+    playerGridOn: "Grid view",
+    playerGridOff: "Carousel",
     soloMode: "Solo mode",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
