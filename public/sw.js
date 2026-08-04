@@ -1,4 +1,4 @@
-const CACHE_NAME = "cambio-v1";
+const CACHE_NAME = "cambio-v2";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(self.skipWaiting());
@@ -25,6 +25,13 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
+  // Never cache-first document navigations — stale HTML + new chunk hashes
+  // causes an infinite reload loop after deploys.
+  if (event.request.mode === "navigate" || isDocumentPath(url.pathname)) {
+    event.respondWith(networkOnly(event.request));
+    return;
+  }
+
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
       const cached = await cache.match(event.request);
@@ -39,9 +46,20 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-function shouldCache(pathname) {
+function isDocumentPath(pathname) {
   return (
     pathname === "/" ||
+    pathname.startsWith("/play/") ||
+    pathname === "/play"
+  );
+}
+
+async function networkOnly(request) {
+  return fetch(request);
+}
+
+function shouldCache(pathname) {
+  return (
     pathname.startsWith("/_next/static/") ||
     pathname === "/manifest.webmanifest" ||
     pathname === "/icon-192" ||
