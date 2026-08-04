@@ -35,5 +35,13 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["public/**/*.svg"],
+      "linter": {
+        "enabled": false
+      }
+    }
+  ]
 }

@@ -6,6 +6,7 @@ import { MAX_JOKER_COUNT, MIN_JOKER_COUNT } from "@/game/types";
 import type { ThemeVoice } from "@/lib/themes";
 
 const MAX_PLAYERS = 6;
+const LOBBY_SLOTS = [0, 1, 2, 3, 4, 5] as const;
 
 type LobbyPlayersProps = {
   view: PlayerView;
@@ -18,7 +19,6 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
   const readyCount = view.players.filter(
     (player) => (player.connected || player.isBot) && !player.isWaiting,
   ).length;
-  const emptySlots = Math.max(0, MAX_PLAYERS - view.players.length);
 
   return (
     <div className="flex flex-col gap-2 min-w-0">
@@ -91,16 +91,18 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
             );
           })}
 
-          {Array.from({ length: emptySlots }, (_, slotIndex) => (
-            <li
-              key={`empty-slot-${view.players.length + slotIndex}`}
-              className="flex items-center px-3 py-2.5 rounded-panel border border-dashed border-theme-muted/25"
-            >
-              <span className="font-display text-[10px] text-theme-muted/40">
-                ···
-              </span>
-            </li>
-          ))}
+          {LOBBY_SLOTS.filter((slot) => slot >= view.players.length).map(
+            (slot) => (
+              <li
+                key={`empty-slot-${slot}`}
+                className="flex items-center px-3 py-2.5 rounded-panel border border-dashed border-theme-muted/25"
+              >
+                <span className="font-display text-[10px] text-theme-muted/40">
+                  ···
+                </span>
+              </li>
+            ),
+          )}
         </ul>
 
         {view.canAddBot && (

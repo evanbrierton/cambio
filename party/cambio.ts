@@ -387,11 +387,7 @@ export class CambioParty extends Server<Env> {
   }
 
   async scheduleSnapWindowAlarm() {
-    if (
-      !this.state ||
-      this.state.phase !== "snap_window" ||
-      !this.state.snapWindowEndsAt
-    ) {
+    if (this.state?.phase !== "snap_window" || !this.state.snapWindowEndsAt) {
       await this.ctx.storage.deleteAlarm();
       return;
     }
@@ -399,7 +395,7 @@ export class CambioParty extends Server<Env> {
   }
 
   async syncSnapWindow() {
-    if (!this.state || this.state.phase !== "snap_window") return;
+    if (this.state?.phase !== "snap_window") return;
     if (expireSnapWindow(this.state)) {
       await this.persist();
       await this.ctx.storage.deleteAlarm();
