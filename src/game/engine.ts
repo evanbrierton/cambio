@@ -1,10 +1,11 @@
 import { nanoid } from "nanoid";
+import { generateBotName, nameKey } from "./bot-names";
 import {
   abilityForDiscard,
   cardsSnapMatch,
   createDeck,
-  deckSize,
   type DiscardAbility,
+  deckSize,
   shuffle,
 } from "./cards";
 import { computeScores, determineWinners } from "./scoring";
@@ -23,7 +24,6 @@ import type {
   ScoreboardEntry,
   SwapFlashSlot,
 } from "./types";
-import { generateBotName, nameKey } from "./bot-names";
 import {
   DEFAULT_JOKER_COUNT,
   HAND_BASE_SLOTS,
@@ -69,12 +69,12 @@ export function migrateRoundHistory(
       };
     }
 
-    const entries: ScoreboardEntry[] = Object.entries(round.scores ?? {}).flatMap(
-      ([id, score]) => {
-        const name = round.playerNames?.[id];
-        return name !== undefined ? [{ id, name, score }] : [];
-      },
-    );
+    const entries: ScoreboardEntry[] = Object.entries(
+      round.scores ?? {},
+    ).flatMap(([id, score]) => {
+      const name = round.playerNames?.[id];
+      return name !== undefined ? [{ id, name, score }] : [];
+    });
 
     return {
       roundNumber: round.roundNumber,
@@ -1372,9 +1372,7 @@ export function buildPlayerView(
     players,
     currentPlayerIndex: state.currentPlayerIndex,
     deckCount:
-      state.phase === "lobby"
-        ? deckSize(state.jokerCount)
-        : state.deck.length,
+      state.phase === "lobby" ? deckSize(state.jokerCount) : state.deck.length,
     discardTop:
       state.discard.length > 0 ? state.discard[state.discard.length - 1] : null,
     drawnCard: isMyTurn ? state.drawnCard : null,

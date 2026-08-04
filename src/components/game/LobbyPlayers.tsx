@@ -2,10 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { ClientMessage, PlayerView } from "@/game/types";
-import {
-  MAX_JOKER_COUNT,
-  MIN_JOKER_COUNT,
-} from "@/game/types";
+import { MAX_JOKER_COUNT, MIN_JOKER_COUNT } from "@/game/types";
 import type { ThemeVoice } from "@/lib/themes";
 
 const MAX_PLAYERS = 6;

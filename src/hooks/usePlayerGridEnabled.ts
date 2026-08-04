@@ -1,10 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import {
-  isPlayerGridEnabled,
-  setPlayerGridEnabled,
-} from "@/lib/player-layout";
+import { isPlayerGridEnabled, setPlayerGridEnabled } from "@/lib/player-layout";
 
 export function usePlayerGridEnabled() {
   const [enabled, setEnabled] = useState(false);
