@@ -48,9 +48,7 @@ self.addEventListener("fetch", (event) => {
 
 function isDocumentPath(pathname) {
   return (
-    pathname === "/" ||
-    pathname.startsWith("/play/") ||
-    pathname === "/play"
+    pathname === "/" || pathname.startsWith("/play/") || pathname === "/play"
   );
 }
 

@@ -639,10 +639,7 @@ export function updateBotKnowledge(
   if (!bot?.isBot) return;
 
   if (message.type === "snap" && result.error) {
-    if (
-      result.penaltyFlash ||
-      result.error === "No card in that slot."
-    ) {
+    if (result.penaltyFlash || result.error === "No card in that slot.") {
       knowledge.forget(message.targetPlayerId, message.slot);
     }
     return;
