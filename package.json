@@ -7,11 +7,15 @@
     "dev:lan": "bash scripts/dev-lan.sh",
     "party:dev": "wrangler dev --ip 0.0.0.0 --port 8787",
     "party:deploy": "wrangler deploy",
+    "party:check": "wrangler deploy --dry-run",
     "build": "next build",
     "vercel-build": "bash scripts/vercel-build.sh",
     "start": "next start",
     "lint": "biome check",
-    "format": "biome format --write"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "format": "biome format --write",
+    "ci": "pnpm lint && pnpm typecheck && pnpm test && pnpm party:check && pnpm build"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
@@ -36,6 +40,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vitest": "^4.1.10",
     "wrangler": "^4.118.0"
   }
 }
