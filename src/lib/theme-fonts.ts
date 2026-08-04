@@ -55,6 +55,7 @@ const lora = Lora({
 
 const notoSerifJP = Noto_Serif_JP({
   weight: ["400", "500", "600"],
+  subsets: ["latin"],
   variable: "--font-noto-serif-jp",
   display: "swap",
   preload: false,

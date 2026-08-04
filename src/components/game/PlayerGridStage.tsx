@@ -60,7 +60,9 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
 
   useEffect(() => {
     itemRefs.current.length = childCount;
-  }, [childCount]);
+    const frame = requestAnimationFrame(updateLayout);
+    return () => cancelAnimationFrame(frame);
+  }, [childCount, updateLayout]);
 
   useEffect(() => {
     const scrollEl = scrollRef.current;
@@ -80,7 +82,7 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
       window.removeEventListener("resize", updateLayout);
       observer.disconnect();
     };
-  }, [updateLayout, childCount]);
+  }, [updateLayout]);
 
   return (
     <div className="players-grid-stage flex flex-1 flex-col min-h-0 min-w-0 overflow-hidden">

@@ -3,6 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
+import Script from "next/script";
 import { PwaRegistrar } from "@/components/PwaRegistrar";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import { getSiteUrl, siteConfig } from "@/lib/site";
@@ -93,10 +94,13 @@ export default async function RootLayout({
       style={{ backgroundColor: THEME_BACKGROUNDS[theme] }}
       suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_MIGRATE_SCRIPT }} />
-      </head>
       <body className="min-h-full flex flex-col relative z-0">
+        <Script
+          id="theme-migrate"
+          strategy="beforeInteractive"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: migrate localStorage theme before paint
+          dangerouslySetInnerHTML={{ __html: THEME_MIGRATE_SCRIPT }}
+        />
         <PwaRegistrar />
         <ThemeProvider initialTheme={theme}>{children}</ThemeProvider>
         <Analytics />
