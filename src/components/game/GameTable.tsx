@@ -9,12 +9,12 @@ import {
   PixelCard,
 } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
-import { ReshuffleOverlay } from "@/components/game/ReshuffleOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
 import { PlayerGridStage } from "@/components/game/PlayerGridStage";
 import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
+import { ReshuffleOverlay } from "@/components/game/ReshuffleOverlay";
 import { SnapWindowOverlay } from "@/components/game/SnapWindowOverlay";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
 import {
@@ -1106,9 +1106,7 @@ export function GameTable({
       >
         <div
           className={`scroll-stable flex flex-col min-w-0 gap-3 sm:gap-4 lg:gap-5 ${
-            isLobbyScrollLayout
-              ? ""
-              : "flex-1 min-h-0 overflow-hidden"
+            isLobbyScrollLayout ? "" : "flex-1 min-h-0 overflow-hidden"
           }`}
         >
           <header className="shrink-0 flex flex-col gap-2">

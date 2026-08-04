@@ -8,9 +8,14 @@ import {
   useEffect,
   useState,
 } from "react";
-import { applyThemeFontClass } from "@/lib/theme-fonts";
 import { setThemeCookie } from "@/lib/theme-cookie";
-import { DEFAULT_THEME, isThemeId, THEME_STORAGE_KEY, type ThemeId } from "@/lib/themes";
+import { applyThemeFontClass } from "@/lib/theme-fonts";
+import {
+  DEFAULT_THEME,
+  isThemeId,
+  THEME_STORAGE_KEY,
+  type ThemeId,
+} from "@/lib/themes";
 
 type ThemeContextValue = {
   theme: ThemeId;

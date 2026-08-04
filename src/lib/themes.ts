@@ -1009,8 +1009,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     kingLookHint: (n) =>
       n === 1 ? "Look at one more card" : "Look at two cards on the table",
     snapHint: "Tap any matching card on the table",
-    snapWindowHint: (seconds) =>
-      `Snap any matching card — ${seconds}s left`,
+    snapWindowHint: (seconds) => `Snap any matching card — ${seconds}s left`,
     swapFlashNotice: "↔ Cards swapped — watch the glowing slots",
     peekFlashNotice: "◎ Card peeked — watch the glowing slot",
     tapToSnap: "Tap to snap",

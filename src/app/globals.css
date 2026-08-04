@@ -520,18 +520,18 @@
   --display-tracking: 0.04em;
   --btn-font-weight: 500;
   --bg-image:
-  radial-gradient(
-    ellipse 70% 50% at 30% 20%,
-    rgba(194, 60, 42, 0.04),
-    transparent
-  ),
-  repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 3px,
-    rgba(26, 26, 26, 0.015) 3px,
-    rgba(26, 26, 26, 0.015) 4px
-  );
+    radial-gradient(
+      ellipse 70% 50% at 30% 20%,
+      rgba(194, 60, 42, 0.04),
+      transparent
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 3px,
+      rgba(26, 26, 26, 0.015) 3px,
+      rgba(26, 26, 26, 0.015) 4px
+    );
   --overlay-mode: linen;
   --text-on-card: #1a1a1a;
   --card-red: #c23c2a;
