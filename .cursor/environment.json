@@ -1,0 +1,20 @@
+{
+  "name": "Cambio",
+  "install": "pnpm install --frozen-lockfile",
+  "terminals": [
+    {
+      "name": "party-server",
+      "command": "pnpm party:dev",
+      "description": "Cloudflare Workers game backend (partyserver + durable object) on 0.0.0.0:8787. The web client connects to it over a WebSocket for realtime game state."
+    },
+    {
+      "name": "next-dev",
+      "command": "pnpm dev",
+      "description": "Next.js dev server on http://localhost:3000. Serves the Cambio game UI; open this to play."
+    }
+  ],
+  "ports": [
+    { "name": "next-dev", "port": 3000 },
+    { "name": "party-server", "port": 8787 }
+  ]
+}
