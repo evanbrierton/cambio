@@ -1027,11 +1027,7 @@ export function handleMessage(
 
     case "snap_give": {
       const pending = state.pendingAbility;
-      if (
-        !pending ||
-        pending.kind !== "snap_give" ||
-        pending.playerId !== playerId
-      ) {
+      if (pending?.kind !== "snap_give" || pending.playerId !== playerId) {
         return { error: "No snap give pending." };
       }
       const recipientId = pending.snapTargetPlayerId;

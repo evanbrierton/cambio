@@ -10,9 +10,6 @@ export type ThemeId =
   | "lodge"
   | "ink";
 
-/** @deprecated Use THEME_COOKIE_KEY from @/lib/theme-cookie */
-export const THEME_STORAGE_KEY = "cambio-theme";
-
 export type ThemeOption = {
   id: ThemeId;
   name: string;

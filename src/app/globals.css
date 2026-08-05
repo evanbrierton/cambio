@@ -38,8 +38,8 @@
   --radius-card: 0;
   --radius-chip: 0;
   --panel-shadow:
-    0 0 0 2px var(--background), 4px 4px 0 0 var(--glow-accent-alt), 0 0 20px
-    var(--glow-accent);
+    0 0 0 2px var(--background), 4px 4px 0 0 var(--glow-accent-alt),
+    0 0 20px var(--glow-accent);
   --title-shadow: 0 0 8px var(--title-glow), 0 0 20px var(--glow-accent);
   --btn-primary-shadow: 0 0 14px var(--glow-accent);
   --btn-secondary-shadow: 0 0 12px var(--glow-accent-alt);
@@ -108,8 +108,8 @@
   --radius-card: 4px;
   --radius-chip: 4px;
   --panel-shadow:
-    inset 0 1px 0 rgba(245, 230, 200, 0.12), inset 0 0 0 1px
-    rgba(212, 175, 55, 0.25), 0 12px 32px rgba(0, 0, 0, 0.45);
+    inset 0 1px 0 rgba(245, 230, 200, 0.12),
+    inset 0 0 0 1px rgba(212, 175, 55, 0.25), 0 12px 32px rgba(0, 0, 0, 0.45);
   --title-shadow: 0 2px 12px rgba(212, 175, 55, 0.35);
   --btn-primary-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
   --btn-secondary-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
@@ -187,8 +187,8 @@
   --radius-card: 12px;
   --radius-chip: 9999px;
   --panel-shadow:
-    0 0 0 3px rgba(255, 245, 160, 0.15), 0 8px 0 0 rgba(255, 79, 216, 0.35), 0
-    12px 28px rgba(255, 79, 216, 0.25);
+    0 0 0 3px rgba(255, 245, 160, 0.15), 0 8px 0 0 rgba(255, 79, 216, 0.35),
+    0 12px 28px rgba(255, 79, 216, 0.25);
   --title-shadow: 0 0 16px var(--glow-accent);
   --btn-primary-shadow: 0 6px 0 rgba(255, 79, 216, 0.4);
   --btn-secondary-shadow: 0 4px 0 rgba(110, 231, 255, 0.25);
@@ -798,7 +798,11 @@ body::after {
 }
 
 .bg-action-hint {
-  background: color-mix(in srgb, var(--accent-alt) 16%, var(--surface-elevated));
+  background: color-mix(
+    in srgb,
+    var(--accent-alt) 16%,
+    var(--surface-elevated)
+  );
 }
 
 .bg-snap-hint {
@@ -814,7 +818,11 @@ body::after {
 }
 
 .bg-swap-first-selected {
-  background: color-mix(in srgb, var(--accent-alt) 18%, var(--surface-elevated));
+  background: color-mix(
+    in srgb,
+    var(--accent-alt) 18%,
+    var(--surface-elevated)
+  );
 }
 
 @keyframes swap-selected-pulse {
@@ -1112,7 +1120,11 @@ body::after {
 }
 
 .bg-peek-seat-flash {
-  background: color-mix(in srgb, var(--accent-alt) 28%, var(--surface-elevated));
+  background: color-mix(
+    in srgb,
+    var(--accent-alt) 28%,
+    var(--surface-elevated)
+  );
 }
 
 .penalty-flash-wrap {
