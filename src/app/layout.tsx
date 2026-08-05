@@ -3,7 +3,6 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
-import Script from "next/script";
 import { PwaRegistrar } from "@/components/PwaRegistrar";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import { getSiteUrl, siteConfig } from "@/lib/site";
@@ -21,8 +20,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-const THEME_MIGRATE_SCRIPT = `(function(){try{var b={retro:"#12061f",casino:"#0a1f12",party:"#1a0a3e",minimal:"#0c0c10",calm:"#f4f0ea",library:"#1c1410",lodge:"#0f1a14",ink:"#f5f0e8"};var k="cambio-theme",s=localStorage.getItem(k);if(s){localStorage.removeItem(k);var v=["retro","casino","party","minimal","calm","library","lodge","ink"];if(v.indexOf(s)!==-1){document.documentElement.dataset.theme=s;document.documentElement.style.backgroundColor=b[s];document.cookie="cambio-theme="+s+";path=/;max-age=31536000;SameSite=Lax"}}else{var t=document.documentElement.dataset.theme;if(t&&b[t])document.documentElement.style.backgroundColor=b[t]}}catch(e){}})();`;
 
 export const metadata: Metadata = {
   metadataBase: getSiteUrl(),
@@ -92,15 +89,8 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${themeFontClass} h-full`}
       data-theme={theme}
       style={{ backgroundColor: THEME_BACKGROUNDS[theme] }}
-      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col relative z-0">
-        <Script
-          id="theme-migrate"
-          strategy="beforeInteractive"
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: migrate localStorage theme before paint
-          dangerouslySetInnerHTML={{ __html: THEME_MIGRATE_SCRIPT }}
-        />
         <PwaRegistrar />
         <ThemeProvider initialTheme={theme}>{children}</ThemeProvider>
         <Analytics />

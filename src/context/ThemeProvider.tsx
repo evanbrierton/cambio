@@ -5,17 +5,11 @@ import {
   type ReactNode,
   useCallback,
   useContext,
-  useEffect,
   useState,
 } from "react";
 import { setThemeCookie } from "@/lib/theme-cookie";
 import { applyThemeFontClass } from "@/lib/theme-fonts";
-import {
-  DEFAULT_THEME,
-  isThemeId,
-  THEME_STORAGE_KEY,
-  type ThemeId,
-} from "@/lib/themes";
+import { DEFAULT_THEME, type ThemeId } from "@/lib/themes";
 
 type ThemeContextValue = {
   theme: ThemeId;
@@ -32,19 +26,6 @@ export function ThemeProvider({
   initialTheme?: ThemeId;
 }) {
   const [theme, setThemeState] = useState<ThemeId>(initialTheme);
-
-  useEffect(() => {
-    const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if (!stored || !isThemeId(stored)) return;
-
-    localStorage.removeItem(THEME_STORAGE_KEY);
-    if (stored === initialTheme) return;
-
-    setThemeState(stored);
-    setThemeCookie(stored);
-    document.documentElement.dataset.theme = stored;
-    applyThemeFontClass(stored);
-  }, [initialTheme]);
 
   const setTheme = useCallback((next: ThemeId) => {
     setThemeState(next);
