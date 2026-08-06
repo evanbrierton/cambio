@@ -400,13 +400,11 @@ export function finalizeRound(state: GameState): void {
 
   const entries: ScoreboardEntry[] = [];
   for (const player of state.players) {
-    if (player.hand.length > 0) {
-      entries.push({
-        id: player.id,
-        name: player.name,
-        score: state.scores[player.id] ?? 0,
-      });
-    }
+    entries.push({
+      id: player.id,
+      name: player.name,
+      score: state.scores[player.id] ?? 0,
+    });
   }
 
   state.roundHistory.push({
