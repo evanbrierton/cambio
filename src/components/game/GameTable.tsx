@@ -837,6 +837,13 @@ export function GameTable({
   const canTakeFromDiscard = view.canDraw && Boolean(view.discardTop);
   const canInteractWithDiscard = canTakeFromDiscard || view.canDiscardDrawn;
   const showDiscardPileGlow = canInteractWithDiscard || isDrawnSlotMine;
+  const drawnDiscardAbility =
+    view.canDiscardDrawn && view.drawnCard
+      ? abilityForDiscard(view.drawnCard)
+      : null;
+  const discardActionLabel = drawnDiscardAbility
+    ? voice.discardAbilityButton[drawnDiscardAbility]
+    : voice.discardDrawn;
 
   const handleCardClick = (playerId: string, slot: number, isOwn: boolean) => {
     if (view.phase === "setup_peek" && !isOwn) return;
@@ -1247,7 +1254,7 @@ export function GameTable({
                       : ""
                   }`}
                   aria-label={
-                    view.canDiscardDrawn ? voice.discardDrawn : voice.take
+                    view.canDiscardDrawn ? discardActionLabel : voice.take
                   }
                 >
                   <p
@@ -1257,7 +1264,7 @@ export function GameTable({
                         : "text-theme-muted"
                     }`}
                   >
-                    {voice.discard}
+                    {drawnDiscardAbility ? discardActionLabel : voice.discard}
                   </p>
                   <div
                     className={`${PILE_CARD_SIZE} shrink-0 ${
