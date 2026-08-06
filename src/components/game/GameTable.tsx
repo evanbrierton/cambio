@@ -1208,131 +1208,164 @@ export function GameTable({
           </header>
 
           {view.phase !== "lobby" && (
-            <div
-              className={`table-deck shrink-0 pixel-border bg-surface px-2 py-1.5 lg:p-4 ${
-                view.canDraw && !snapGivePending
-                  ? "table-deck-drawable ring-2 ring-accent-alt"
-                  : ""
-              } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
-            >
-              <div className="flex items-end justify-center gap-1.5 sm:gap-4 lg:gap-8">
-                <button
-                  type="button"
-                  disabled={!view.canDraw || snapGivePending}
-                  onClick={() => send({ type: "draw", source: "deck" })}
-                  className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                    view.canDraw && !snapGivePending
-                      ? "pile-interactable-btn cursor-pointer active:opacity-80"
-                      : ""
-                  }`}
-                  aria-label={voice.draw}
-                >
-                  <p
-                    className={`table-pile-label ${
+            <div className="shrink-0 flex flex-col gap-2 sm:gap-3 lg:gap-4">
+              <div
+                className={`table-deck pixel-border bg-surface px-2 py-1.5 lg:p-4 ${
+                  view.canDraw && !snapGivePending
+                    ? "table-deck-drawable ring-2 ring-accent-alt"
+                    : ""
+                } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
+              >
+                <div className="flex items-end justify-center gap-3 sm:gap-6 lg:gap-10">
+                  <button
+                    type="button"
+                    disabled={!view.canDraw || snapGivePending}
+                    onClick={() => send({ type: "draw", source: "deck" })}
+                    className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
                       view.canDraw && !snapGivePending
-                        ? "pile-interactable-label"
-                        : "text-theme-muted"
-                    }`}
-                  >
-                    {voice.deck}
-                  </p>
-                  <div
-                    className={`table-pile-card pixel-border rounded-card ${PILE_CARD_SIZE} bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
-                      view.canDraw && !snapGivePending
-                        ? "pile-interactable-card ring-2 ring-accent-alt"
+                        ? "pile-interactable-btn cursor-pointer active:opacity-80"
                         : ""
                     }`}
+                    aria-label={voice.draw}
                   >
-                    {view.deckCount}
-                  </div>
-                </button>
+                    <p
+                      className={`table-pile-label ${
+                        view.canDraw && !snapGivePending
+                          ? "pile-interactable-label"
+                          : "text-theme-muted"
+                      }`}
+                    >
+                      {voice.deck}
+                    </p>
+                    <div
+                      className={`table-pile-card pixel-border rounded-card ${PILE_CARD_SIZE} bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
+                        view.canDraw && !snapGivePending
+                          ? "pile-interactable-card ring-2 ring-accent-alt"
+                          : ""
+                      }`}
+                    >
+                      {view.deckCount}
+                    </div>
+                  </button>
 
-                <button
-                  type="button"
-                  disabled={!canInteractWithDiscard}
-                  onClick={() => {
-                    if (view.canDiscardDrawn) {
-                      send({ type: "discard_drawn" });
-                      return;
-                    }
-                    if (canTakeFromDiscard) {
-                      send({ type: "draw", source: "discard" });
-                    }
-                  }}
-                  className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                    canInteractWithDiscard
-                      ? "pile-interactable-btn cursor-pointer active:opacity-80"
-                      : ""
-                  }`}
-                  aria-label={
-                    view.canDiscardDrawn ? discardActionLabel : voice.take
-                  }
-                >
-                  <p
-                    className={`table-pile-label ${
-                      showDiscardPileGlow
-                        ? "pile-interactable-label pile-interactable-label-discard"
-                        : "text-theme-muted"
-                    }`}
-                  >
-                    {drawnDiscardAbility ? discardActionLabel : voice.discard}
-                  </p>
-                  <div
-                    className={`${PILE_CARD_SIZE} shrink-0 ${
-                      showDiscardPileGlow
-                        ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
-                        : snapWindowActive
-                          ? "ring-4 ring-danger rounded-card snap-window-discard"
-                          : view.canSnap
-                            ? "ring-1 ring-danger/50 rounded-card"
-                            : ""
-                    }`}
-                  >
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={view.discardTop?.id ?? "empty-discard"}
-                        className="h-full w-full"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.18, ease: "easeOut" }}
-                      >
-                        <PixelCard
-                          card={view.discardTop}
-                          faceUp={!!view.discardTop}
-                          hidden={!view.discardTop}
-                          empty={!view.discardTop}
-                          sizeClass={PILE_CARD_SIZE}
-                        />
-                      </motion.div>
-                    </AnimatePresence>
-                  </div>
-                </button>
-
-                <div className="table-pile flex flex-col items-center gap-0.5 lg:gap-1">
-                  <p
-                    className={`table-pile-label ${
-                      isDrawnSlotMine ? "text-accent" : "text-theme-muted"
-                    }`}
-                  >
-                    {voice.drawn}
-                  </p>
-                  <div
-                    className={`${PILE_CARD_SIZE} shrink-0 ${
-                      view.canSwap && !snapGivePending
-                        ? "ring-2 ring-accent shadow-glow-accent rounded-card"
+                  <button
+                    type="button"
+                    disabled={!canInteractWithDiscard}
+                    onClick={() => {
+                      if (view.canDiscardDrawn) {
+                        send({ type: "discard_drawn" });
+                        return;
+                      }
+                      if (canTakeFromDiscard) {
+                        send({ type: "draw", source: "discard" });
+                      }
+                    }}
+                    className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
+                      canInteractWithDiscard
+                        ? "pile-interactable-btn cursor-pointer active:opacity-80"
                         : ""
                     }`}
+                    aria-label={
+                      view.canDiscardDrawn ? discardActionLabel : voice.take
+                    }
                   >
-                    <PixelCard
-                      card={view.drawnCard}
-                      faceUp={isDrawnSlotMine}
-                      hidden={showDrawnFaceDown}
-                      empty={!isDrawnSlotMine && !view.hasDrawnCard}
-                      sizeClass={PILE_CARD_SIZE}
-                    />
-                  </div>
+                    <p
+                      className={`table-pile-label ${
+                        showDiscardPileGlow
+                          ? "pile-interactable-label pile-interactable-label-discard"
+                          : "text-theme-muted"
+                      }`}
+                    >
+                      {drawnDiscardAbility ? discardActionLabel : voice.discard}
+                    </p>
+                    <div
+                      className={`${PILE_CARD_SIZE} shrink-0 ${
+                        showDiscardPileGlow
+                          ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
+                          : snapWindowActive
+                            ? "ring-4 ring-danger rounded-card snap-window-discard"
+                            : view.canSnap
+                              ? "ring-1 ring-danger/50 rounded-card"
+                              : ""
+                      }`}
+                    >
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={view.discardTop?.id ?? "empty-discard"}
+                          className="h-full w-full"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.18, ease: "easeOut" }}
+                        >
+                          <PixelCard
+                            card={view.discardTop}
+                            faceUp={!!view.discardTop}
+                            hidden={!view.discardTop}
+                            empty={!view.discardTop}
+                            sizeClass={PILE_CARD_SIZE}
+                          />
+                        </motion.div>
+                      </AnimatePresence>
+                    </div>
+                  </button>
                 </div>
+              </div>
+
+              <div
+                className={`drawn-card-slot flex flex-col items-center justify-center ${
+                  isDrawnSlotMine || view.hasDrawnCard
+                    ? "drawn-card-slot-active"
+                    : ""
+                } ${view.canSwap && !snapGivePending ? "drawn-card-slot-actionable" : ""}`}
+              >
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={
+                      isDrawnSlotMine
+                        ? "mine"
+                        : view.hasDrawnCard
+                          ? "other"
+                          : "empty"
+                    }
+                    className="flex flex-col items-center gap-1 lg:gap-1.5"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
+                    <p
+                      className={`drawn-card-label font-display text-[10px] sm:text-xs lg:text-sm ${
+                        isDrawnSlotMine
+                          ? "text-accent"
+                          : view.hasDrawnCard
+                            ? "text-accent-alt"
+                            : "text-theme-muted"
+                      }`}
+                    >
+                      {voice.drawn}
+                    </p>
+                    <div
+                      className={`drawn-card-container ${
+                        view.canSwap && !snapGivePending
+                          ? "ring-2 ring-accent shadow-glow-accent rounded-card drawn-card-glow"
+                          : isDrawnSlotMine
+                            ? "ring-2 ring-accent/50 rounded-card"
+                            : view.hasDrawnCard
+                              ? "ring-1 ring-accent-alt/40 rounded-card"
+                              : ""
+                      }`}
+                    >
+                      <PixelCard
+                        card={view.drawnCard}
+                        faceUp={isDrawnSlotMine}
+                        hidden={showDrawnFaceDown}
+                        empty={!isDrawnSlotMine && !view.hasDrawnCard}
+                        sizeClass="drawn-card-size"
+                      />
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
             </div>
           )}
