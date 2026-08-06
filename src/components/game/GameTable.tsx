@@ -149,15 +149,6 @@ function formatPenaltyFlashNotice(
   return `! ${player.name} drew a penalty card (#${penaltyFlash.slot + 1})`;
 }
 
-function formatDiscardDrawFlashNotice(
-  discardDrawFlash: DiscardDrawFlash,
-  players: PlayerView["players"],
-  template: (name: string) => string,
-): string {
-  const player = players.find((entry) => entry.id === discardDrawFlash.playerId);
-  if (!player) return "";
-  return template(player.name);
-}
 
 function penaltyGridColumns(count: number): number {
   if (count <= 0) return 0;
@@ -701,34 +692,12 @@ export function GameTable({
       });
     }
 
-    if (discardDrawFlash) {
-      items.push({
-        id: "discard-draw-flash",
-        message: formatDiscardDrawFlashNotice(
-          discardDrawFlash,
-          view.players,
-          voice.discardDrawNotice,
-        ),
-        tone: "info",
-        pulse: true,
-      });
-    }
-
     if (chatToast) {
       items.push(chatToast);
     }
 
     return items;
-  }, [
-    chatToast,
-    discardDrawFlash,
-    error,
-    peekFlash,
-    penaltyFlash,
-    swapFlash,
-    view.players,
-    voice,
-  ]);
+  }, [chatToast, error, peekFlash, penaltyFlash, swapFlash, view.players, voice]);
 
   const actionToast: GameToastItem | null =
     hintsEnabled && actionBanner
@@ -1306,13 +1275,15 @@ export function GameTable({
                   </p>
                   <div
                     className={`${PILE_CARD_SIZE} shrink-0 ${
-                      showDiscardPileGlow
-                        ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
-                        : snapWindowActive
-                          ? "ring-4 ring-danger rounded-card snap-window-discard"
-                          : view.canSnap
-                            ? "ring-1 ring-danger/50 rounded-card"
-                            : ""
+                      discardDrawFlash
+                        ? "ring-2 ring-accent-alt shadow-glow-accent-alt rounded-card animate-pulse"
+                        : showDiscardPileGlow
+                          ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
+                          : snapWindowActive
+                            ? "ring-4 ring-danger rounded-card snap-window-discard"
+                            : view.canSnap
+                              ? "ring-1 ring-danger/50 rounded-card"
+                              : ""
                     }`}
                   >
                     <AnimatePresence mode="wait">
@@ -1359,7 +1330,7 @@ export function GameTable({
                       sizeClass={PILE_CARD_SIZE}
                     />
                     {(view.drawnFromDiscard || discardDrawFlash) && view.hasDrawnCard && (
-                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-sm bg-accent-alt text-[7px] sm:text-[8px] font-display text-surface whitespace-nowrap animate-pulse shadow-md">
+                      <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-accent-alt text-[8px] sm:text-[9px] font-display text-surface whitespace-nowrap animate-pulse shadow-lg ring-1 ring-accent-alt/50">
                         {voice.fromDiscard}
                       </span>
                     )}
