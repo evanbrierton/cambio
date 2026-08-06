@@ -95,15 +95,8 @@ export type SoloOptions = {
   difficulty: BotDifficulty;
 };
 
-function resolvePlayerId(roomId: string, sessionMode: SessionMode): string {
+function resolvePlayerId(roomId: string): string {
   const key = storageKey(roomId);
-  const seenKey = freshSessionKey(roomId);
-  const seenBefore = sessionStorage.getItem(seenKey) === "1";
-
-  if (sessionMode === "new" && !seenBefore) {
-    localStorage.removeItem(key);
-  }
-
   const stored =
     localStorage.getItem(key) ?? sessionStorage.getItem(key) ?? undefined;
 
@@ -173,7 +166,7 @@ export function useGameConnection(
   useEffect(() => {
     const key = storageKey(roomId);
     const seenKey = freshSessionKey(roomId);
-    const playerId = resolvePlayerId(roomId, sessionMode);
+    const playerId = resolvePlayerId(roomId);
 
     const socket = new PartySocket({
       host: getPartyHost(),
