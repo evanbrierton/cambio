@@ -1264,9 +1264,7 @@ export function GameTable({
                         : "text-theme-muted"
                     }`}
                   >
-                    {drawnDiscardAbility
-                      ? discardActionLabel
-                      : voice.discard}
+                    {drawnDiscardAbility ? discardActionLabel : voice.discard}
                   </p>
                   <div
                     className={`${PILE_CARD_SIZE} shrink-0 ${
