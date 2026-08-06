@@ -436,7 +436,7 @@ function PlayerSeat({
 
   return (
     <section
-      className={`pixel-border ${seatPadding} w-full max-w-full shrink-0 flex flex-col items-center ${
+      className={`pixel-border ${seatPadding} w-full max-w-full shrink-0 flex flex-col items-center text-center ${
         hasSwapFlash
           ? "swap-seat-flash bg-swap-seat-flash ring-2 ring-accent shadow-glow-accent"
           : hasPeekFlash
@@ -472,8 +472,8 @@ function PlayerSeat({
         isOwn && !showDrawnSwapHint ? "lg:ring-1 lg:ring-accent" : ""
       } ${swapAbilityActive && isProtectedTarget && !isOwn ? "opacity-40" : ""}`}
     >
-      <div className={`${HAND_GRID_WIDTH} mb-1 sm:mb-1.5 space-y-1`}>
-        <h2 className="player-name text-[10px] sm:text-xs truncate text-center">
+      <div className="w-full min-h-[2.25rem] mb-1 sm:mb-1.5 flex flex-col items-center justify-center gap-1">
+        <h2 className="player-name text-[10px] sm:text-xs truncate max-w-full">
           {player.name}
           {isOwn ? " (you)" : ""}
         </h2>
@@ -519,13 +519,11 @@ function PlayerSeat({
         </div>
       </div>
       {player.isWaiting && phase !== "lobby" ? (
-        <p
-          className={`font-display text-[10px] sm:text-xs text-theme-muted text-center py-2 ${HAND_GRID_WIDTH}`}
-        >
+        <p className="w-full font-display text-[10px] sm:text-xs text-theme-muted py-2">
           {voice.waitingBadge}
         </p>
       ) : (
-        <div className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit max-w-full">
+        <div className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit max-w-full mx-auto">
           <div
             className={`grid grid-cols-2 gap-1 lg:gap-1.5 ${HAND_GRID_WIDTH} shrink-0`}
           >
