@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { createRoom, finalizeRound, handleMessage } from "./engine";
+import {
+  createRoom,
+  expireSnapWindow,
+  finalizeRound,
+  handleMessage,
+  SNAP_WINDOW_MS,
+} from "./engine";
 import type { Card, CardSlot, GameState } from "./types";
 
 function card(rank: Card["rank"], suit: Card["suit"] = "clubs"): Card {
@@ -128,5 +134,82 @@ describe("discard abilities (CAM-76)", () => {
       expect(state.discard.at(-1)).toEqual(abilityCard);
       expect(state.pendingAbility).toBeNull();
     }
+  });
+});
+
+describe("expireSnapWindow (CAM-14)", () => {
+  function snapWindowState(now: number): GameState {
+    const state = playingState();
+    state.phase = "snap_window";
+    state.discard = [card("5", "spades")];
+    state.snapWindowEndsAt = now + SNAP_WINDOW_MS;
+    state.players[0].hand = [
+      slot(card("2")),
+      slot(card("3")),
+      slot(card("4")),
+      slot(card("6")),
+    ];
+    state.players[1].hand = [
+      slot(card("5", "hearts")),
+      slot(card("7")),
+      slot(card("8")),
+      slot(card("9")),
+    ];
+    return state;
+  }
+
+  it("reveals cards when the snap window deadline passes", () => {
+    const now = 1_000_000;
+    const state = snapWindowState(now);
+    state.snapWindowEndsAt = now;
+
+    expect(expireSnapWindow(state, now)).toBe(true);
+    expect(state.phase).toBe("revealed");
+    expect(state.snapWindowEndsAt).toBeNull();
+  });
+
+  it("does not loop when a pending snap_give is unresolved at expiry", () => {
+    const now = 1_000_000;
+    const state = snapWindowState(now);
+    state.snapWindowEndsAt = now;
+    state.pendingAbility = {
+      playerId: "alice",
+      kind: "snap_give",
+      lookedCards: [],
+      maxLooks: 0,
+      snapTargetPlayerId: "bob",
+    };
+
+    expect(expireSnapWindow(state, now)).toBe(true);
+    expect(state.phase).toBe("revealed");
+    expect(state.pendingAbility).toBeNull();
+    expect(state.snapWindowEndsAt).toBeNull();
+
+    expect(expireSnapWindow(state, now + 10_000)).toBe(false);
+    expect(state.phase).toBe("revealed");
+  });
+
+  it("extends the deadline once when an opponent snap starts snap_give", () => {
+    const now = 1_000_000;
+    const state = snapWindowState(now);
+    state.snapWindowEndsAt = now + 500;
+
+    const before = Date.now();
+    const result = handleMessage(state, "alice", {
+      type: "snap",
+      targetPlayerId: "bob",
+      slot: 0,
+    });
+    const after = Date.now();
+
+    expect("error" in result).toBe(false);
+    expect(state.pendingAbility?.kind).toBe("snap_give");
+    expect(state.phase).toBe("snap_window");
+    expect(state.snapWindowEndsAt).toBeGreaterThanOrEqual(before + 3_000);
+    expect(state.snapWindowEndsAt).toBeLessThanOrEqual(after + 3_000);
+
+    expect(expireSnapWindow(state, state.snapWindowEndsAt ?? after)).toBe(true);
+    expect(state.phase).toBe("revealed");
+    expect(state.pendingAbility).toBeNull();
   });
 });
