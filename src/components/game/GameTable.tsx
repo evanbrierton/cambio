@@ -37,6 +37,7 @@ import { useChatNotifications } from "@/hooks/useChatNotifications";
 import { useDebugEnabled } from "@/hooks/useDebugEnabled";
 import type {
   CambioFlash,
+  DiscardDrawFlash,
   FleetingPeek,
   PeekFlash,
   PenaltyFlash,
@@ -61,6 +62,7 @@ type GameTableProps = {
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
+  discardDrawFlash: DiscardDrawFlash | null;
   send: (message: ClientMessage) => void;
 };
 
@@ -145,6 +147,16 @@ function formatPenaltyFlashNotice(
   const player = players.find((entry) => entry.id === penaltyFlash.playerId);
   if (!player) return fallback;
   return `! ${player.name} drew a penalty card (#${penaltyFlash.slot + 1})`;
+}
+
+function formatDiscardDrawFlashNotice(
+  discardDrawFlash: DiscardDrawFlash,
+  players: PlayerView["players"],
+  template: (name: string) => string,
+): string {
+  const player = players.find((entry) => entry.id === discardDrawFlash.playerId);
+  if (!player) return "";
+  return template(player.name);
 }
 
 function penaltyGridColumns(count: number): number {
@@ -564,6 +576,7 @@ export function GameTable({
   penaltyFlash,
   cambioFlash,
   reshuffleFlash,
+  discardDrawFlash,
   send,
 }: GameTableProps) {
   const voice = useThemeVoice();
@@ -688,6 +701,19 @@ export function GameTable({
       });
     }
 
+    if (discardDrawFlash) {
+      items.push({
+        id: "discard-draw-flash",
+        message: formatDiscardDrawFlashNotice(
+          discardDrawFlash,
+          view.players,
+          voice.discardDrawNotice,
+        ),
+        tone: "info",
+        pulse: true,
+      });
+    }
+
     if (chatToast) {
       items.push(chatToast);
     }
@@ -695,6 +721,7 @@ export function GameTable({
     return items;
   }, [
     chatToast,
+    discardDrawFlash,
     error,
     peekFlash,
     penaltyFlash,
@@ -1318,7 +1345,7 @@ export function GameTable({
                     {voice.drawn}
                   </p>
                   <div
-                    className={`${PILE_CARD_SIZE} shrink-0 ${
+                    className={`${PILE_CARD_SIZE} shrink-0 relative ${
                       view.canSwap && !snapGivePending
                         ? "ring-2 ring-accent shadow-glow-accent rounded-card"
                         : ""
@@ -1331,6 +1358,11 @@ export function GameTable({
                       empty={!isDrawnSlotMine && !view.hasDrawnCard}
                       sizeClass={PILE_CARD_SIZE}
                     />
+                    {(view.drawnFromDiscard || discardDrawFlash) && view.hasDrawnCard && (
+                      <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-sm bg-accent-alt text-[7px] sm:text-[8px] font-display text-surface whitespace-nowrap animate-pulse shadow-md">
+                        {voice.fromDiscard}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>

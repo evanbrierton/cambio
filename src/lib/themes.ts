@@ -54,6 +54,8 @@ export type ThemeVoice = {
   draw: string;
   take: string;
   discardDrawn: string;
+  fromDiscard: string;
+  discardDrawNotice: (name: string) => string;
   discardAbilityButton: Record<DiscardAbility, string>;
   discardAbilityHint: Record<DiscardAbility, string>;
   swapHintOptional: string;
@@ -218,6 +220,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "DRAW",
     take: "TAKE",
     discardDrawn: "DISCARD",
+    fromDiscard: "FROM DISCARD",
+    discardDrawNotice: (name) => `⤴ ${name.toUpperCase()} TOOK FROM DISCARD`,
     discardAbilityButton: {
       peek_own: "TOSS & PEEK YOURS",
       spy: "TOSS & SPY",
@@ -345,6 +349,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Draw card",
     take: "Take top",
     discardDrawn: "Fold card",
+    fromDiscard: "From muck",
+    discardDrawNotice: (name) => `⤴ ${name} took from the muck`,
     discardAbilityButton: {
       peek_own: "Fold & peek yours",
       spy: "Fold & spy",
@@ -471,6 +477,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Grab one!",
     take: "Snag it!",
     discardDrawn: "Toss it!",
+    fromDiscard: "From trash!",
+    discardDrawNotice: (name) => `⤴ ${name} grabbed from the trash pile!`,
     discardAbilityButton: {
       peek_own: "Toss & peek yours!",
       spy: "Toss & spy!",
@@ -594,6 +602,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Draw",
     take: "Take",
     discardDrawn: "Discard",
+    fromDiscard: "From discard",
+    discardDrawNotice: (name) => `⤴ ${name} took from discard`,
     discardAbilityButton: {
       peek_own: "Discard & peek",
       spy: "Discard & spy",
@@ -718,6 +728,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Draw",
     take: "Take",
     discardDrawn: "Discard",
+    fromDiscard: "From discard",
+    discardDrawNotice: (name) => `⤴ ${name} picked from the discard`,
     discardAbilityButton: {
       peek_own: "Discard & peek",
       spy: "Discard & spy",
@@ -844,6 +856,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Draw",
     take: "Take",
     discardDrawn: "Set aside",
+    fromDiscard: "From discard",
+    discardDrawNotice: (name) => `⤴ ${name} retrieved from the discard`,
     discardAbilityButton: {
       peek_own: "Set aside & peek",
       spy: "Set aside & spy",
@@ -970,6 +984,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Draw",
     take: "Take",
     discardDrawn: "Toss it",
+    fromDiscard: "From discard",
+    discardDrawNotice: (name) => `⤴ ${name} picked from the discard`,
     discardAbilityButton: {
       peek_own: "Toss & peek yours",
       spy: "Toss & spy",
@@ -1094,6 +1110,8 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     draw: "Draw",
     take: "Take",
     discardDrawn: "Discard",
+    fromDiscard: "From discard",
+    discardDrawNotice: (name) => `⤴ ${name} took from discard`,
     discardAbilityButton: {
       peek_own: "Discard & peek",
       spy: "Discard & spy",

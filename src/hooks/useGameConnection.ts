@@ -18,6 +18,7 @@ export const SWAP_FLASH_MS = 3000;
 export const PENALTY_FLASH_MS = 2500;
 export const CAMBIO_FLASH_MS = 3500;
 export const RESHUFFLE_FLASH_MS = 3500;
+export const DISCARD_DRAW_FLASH_MS = 3000;
 export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
 const PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH = new Set<ClientMessage["type"]>(
@@ -75,6 +76,10 @@ export type ReshuffleFlash = {
   id: number;
 };
 
+export type DiscardDrawFlash = {
+  playerId: string;
+};
+
 type ConnectionState = {
   connected: boolean;
   playerId: string | null;
@@ -86,6 +91,7 @@ type ConnectionState = {
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
+  discardDrawFlash: DiscardDrawFlash | null;
 };
 
 export type SessionMode = "new" | "reconnect";
@@ -123,6 +129,7 @@ export function useGameConnection(
     penaltyFlash: null,
     cambioFlash: null,
     reshuffleFlash: null,
+    discardDrawFlash: null,
   });
   const socketRef = useRef<PartySocket | null>(null);
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -131,6 +138,9 @@ export function useGameConnection(
   const penaltyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cambioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reshuffleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const discardDrawTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const cambioFlashRef = useRef<CambioFlash | null>(null);
   const viewRef = useRef<PlayerView | null>(null);
 
@@ -304,6 +314,18 @@ export function useGameConnection(
         }, RESHUFFLE_FLASH_MS);
       }
 
+      if (data.type === "discard_draw_flash") {
+        if (discardDrawTimerRef.current)
+          clearTimeout(discardDrawTimerRef.current);
+        setState((s) => ({
+          ...s,
+          discardDrawFlash: { playerId: data.playerId },
+        }));
+        discardDrawTimerRef.current = setTimeout(() => {
+          setState((s) => ({ ...s, discardDrawFlash: null }));
+        }, DISCARD_DRAW_FLASH_MS);
+      }
+
       if (data.type === "error") {
         setState((s) => ({ ...s, error: data.message }));
       }
@@ -316,6 +338,8 @@ export function useGameConnection(
       if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
       if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
       if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);
+      if (discardDrawTimerRef.current)
+        clearTimeout(discardDrawTimerRef.current);
       cambioFlashRef.current = null;
       viewRef.current = null;
       socket.close();

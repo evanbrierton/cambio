@@ -724,6 +724,7 @@ export function handleMessage(
   penaltyFlash?: { playerId: string; slot: number };
   cambioFlash?: { playerId: string };
   reshuffleFlash?: boolean;
+  discardDrawFlash?: { playerId: string };
 } {
   if (
     isSnapResolutionPending(state) &&
@@ -904,7 +905,7 @@ export function handleMessage(
       state.drawnCard = card;
       state.drawnFromDiscard = true;
       addLog(state, `${player.name} drew from the discard pile.`);
-      return {};
+      return { discardDrawFlash: { playerId } };
     }
 
     case "swap": {
