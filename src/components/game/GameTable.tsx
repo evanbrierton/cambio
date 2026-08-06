@@ -1164,7 +1164,7 @@ export function GameTable({
                   {voice.leaveGame}
                 </Link>
                 <div className="font-display text-[10px] text-theme-muted hidden sm:block">
-                  {connected ? voice.online : voice.reconnecting}
+                  {connected ? voice.online : error ? null : voice.reconnecting}
                 </div>
               </div>
             </div>
