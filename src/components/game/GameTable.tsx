@@ -272,6 +272,7 @@ function PlayerSeat({
   canSwap,
   canSnap,
   snapGiveActive,
+  snapGivePending,
   swapAbilityActive,
   lookAbilityActive,
   pendingLookKind,
@@ -291,6 +292,7 @@ function PlayerSeat({
   canSwap?: boolean;
   canSnap?: boolean;
   snapGiveActive?: boolean;
+  snapGivePending?: boolean;
   swapAbilityActive?: boolean;
   lookAbilityActive?: boolean;
   pendingLookKind?: PendingAbility["kind"] | null;
@@ -309,7 +311,7 @@ function PlayerSeat({
   const canPickForAbility = swapAbilityActive && (!isProtectedTarget || isOwn);
   const showAbilitySwapHint = swapAbilityActive && canPickForAbility;
   const showSnapTarget =
-    canSnap && !snapGiveActive && (!isProtectedTarget || isOwn);
+    canSnap && !snapGivePending && (!isProtectedTarget || isOwn);
   const hasSwapFirstSelected =
     swapAbilityActive && selectedSwapCard?.playerId === player.id;
 
@@ -360,11 +362,14 @@ function PlayerSeat({
       (!isOwn || !SETUP_PEEK_SLOTS.includes(index) || isEmpty);
     const abilityLocked = swapAbilityActive && !canPickForAbility;
     const lookLocked = lookAbilityActive && !canPickForLook(index);
+    const canPickForSnapGive = Boolean(snapGiveActive && isOwn && !isEmpty);
+    const snapGiveLocked = Boolean(snapGivePending) && !canPickForSnapGive;
     const isSelectedForSwap =
       selectedSwapCard?.playerId === player.id &&
       selectedSwapCard.slot === index;
     const canInteract =
-      !isEmpty ||
+      canPickForSnapGive ||
+      (!snapGivePending && !isEmpty) ||
       (showDrawnSwapHint && isOwn) ||
       (showAbilitySwapHint && !abilityLocked);
 
@@ -372,6 +377,12 @@ function PlayerSeat({
     const showPeekFlashOverlay = isPeekFlashOnSlot && !isFleetingPeek;
     const showPenalty =
       penaltyFlash?.playerId === player.id && penaltyFlash.slot === index;
+    const cardLocked =
+      setupLocked ||
+      abilityLocked ||
+      lookLocked ||
+      snapGiveLocked ||
+      !canInteract;
 
     return (
       <PixelCard
@@ -411,16 +422,14 @@ function PlayerSeat({
           !setupLocked &&
           !lookAbilityActive &&
           !swapAbilityActive &&
-          !snapGiveActive
+          !snapGivePending
         }
         penaltyFlashing={showPenalty}
         penaltyFlashSlotLabel={showPenalty ? `#${index + 1}` : undefined}
         onClick={
-          setupLocked || abilityLocked || lookLocked || !canInteract
-            ? undefined
-            : () => onCardClick(player.id, index, isOwn)
+          cardLocked ? undefined : () => onCardClick(player.id, index, isOwn)
         }
-        disabled={setupLocked || abilityLocked || lookLocked || !canInteract}
+        disabled={cardLocked}
       />
     );
   };
@@ -622,6 +631,7 @@ export function GameTable({
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
   const snapGiveActive = view.pendingAbility?.kind === "snap_give";
+  const snapGivePending = view.snapGivePending;
   const lookAbilityActive = isLookAbility(view.pendingAbility?.kind);
   const pendingLookKind = lookAbilityActive
     ? (view.pendingAbility?.kind ?? null)
@@ -834,9 +844,12 @@ export function GameTable({
 
   const isDrawnSlotMine = Boolean(view.drawnCard);
   const showDrawnFaceDown = !isDrawnSlotMine && view.hasDrawnCard;
-  const canTakeFromDiscard = view.canDraw && Boolean(view.discardTop);
-  const canInteractWithDiscard = canTakeFromDiscard || view.canDiscardDrawn;
-  const showDiscardPileGlow = canInteractWithDiscard || isDrawnSlotMine;
+  const canTakeFromDiscard =
+    view.canDraw && Boolean(view.discardTop) && !snapGivePending;
+  const canInteractWithDiscard =
+    (canTakeFromDiscard || view.canDiscardDrawn) && !snapGivePending;
+  const showDiscardPileGlow =
+    canInteractWithDiscard || (isDrawnSlotMine && !snapGivePending);
   const drawnDiscardAbility =
     view.canDiscardDrawn && view.drawnCard
       ? abilityForDiscard(view.drawnCard)
@@ -855,6 +868,15 @@ export function GameTable({
     }
 
     const pending = view.pendingAbility;
+    if (pending?.kind === "snap_give") {
+      if (isOwn) {
+        send({ type: "snap_give", slot });
+      }
+      return;
+    }
+    if (view.snapGivePending) {
+      return;
+    }
     if (pending?.kind === "peek_own" && isOwn) {
       send({ type: "ability_look", playerId, slot });
       return;
@@ -865,10 +887,6 @@ export function GameTable({
     }
     if (pending?.kind === "queen_look" || pending?.kind === "king_look") {
       send({ type: "ability_look", playerId, slot });
-      return;
-    }
-    if (pending?.kind === "snap_give" && isOwn) {
-      send({ type: "snap_give", slot });
       return;
     }
     if (isSwapAbility(pending?.kind)) {
@@ -937,6 +955,7 @@ export function GameTable({
         canSwap={isOwn ? view.canSwap : undefined}
         canSnap={view.canSnap}
         snapGiveActive={snapGiveActive}
+        snapGivePending={snapGivePending}
         swapAbilityActive={swapAbilityActive}
         lookAbilityActive={lookAbilityActive}
         pendingLookKind={pendingLookKind}
@@ -1193,16 +1212,18 @@ export function GameTable({
           {view.phase !== "lobby" && (
             <div
               className={`table-deck shrink-0 pixel-border bg-surface px-2 py-1.5 lg:p-4 ${
-                view.canDraw ? "table-deck-drawable ring-2 ring-accent-alt" : ""
+                view.canDraw && !snapGivePending
+                  ? "table-deck-drawable ring-2 ring-accent-alt"
+                  : ""
               } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
             >
               <div className="flex items-end justify-center gap-1.5 sm:gap-4 lg:gap-8">
                 <button
                   type="button"
-                  disabled={!view.canDraw}
+                  disabled={!view.canDraw || snapGivePending}
                   onClick={() => send({ type: "draw", source: "deck" })}
                   className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                    view.canDraw
+                    view.canDraw && !snapGivePending
                       ? "pile-interactable-btn cursor-pointer active:opacity-80"
                       : ""
                   }`}
@@ -1210,7 +1231,7 @@ export function GameTable({
                 >
                   <p
                     className={`table-pile-label ${
-                      view.canDraw
+                      view.canDraw && !snapGivePending
                         ? "pile-interactable-label"
                         : "text-theme-muted"
                     }`}
@@ -1219,7 +1240,7 @@ export function GameTable({
                   </p>
                   <div
                     className={`table-pile-card pixel-border rounded-card ${PILE_CARD_SIZE} bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
-                      view.canDraw
+                      view.canDraw && !snapGivePending
                         ? "pile-interactable-card ring-2 ring-accent-alt"
                         : ""
                     }`}
@@ -1300,7 +1321,7 @@ export function GameTable({
                   </p>
                   <div
                     className={`${PILE_CARD_SIZE} shrink-0 ${
-                      view.canSwap
+                      view.canSwap && !snapGivePending
                         ? "ring-2 ring-accent shadow-glow-accent rounded-card"
                         : ""
                     }`}

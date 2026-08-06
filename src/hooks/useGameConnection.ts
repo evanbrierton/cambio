@@ -34,6 +34,17 @@ const PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH = new Set<ClientMessage["type"]>(
   ],
 );
 
+const PLAY_ACTIONS_BLOCKED_DURING_SNAP_GIVE = new Set<ClientMessage["type"]>([
+  "setup_peek",
+  "draw",
+  "swap",
+  "discard_drawn",
+  "call_cambio",
+  "snap",
+  "ability_look",
+  "ability_swap",
+]);
+
 export type FleetingPeek = {
   playerId: string;
   slot: number;
@@ -128,6 +139,7 @@ export function useGameConnection(
   const cambioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reshuffleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cambioFlashRef = useRef<CambioFlash | null>(null);
+  const viewRef = useRef<PlayerView | null>(null);
 
   const send = useCallback((message: ClientMessage) => {
     const socket = socketRef.current;
@@ -137,6 +149,23 @@ export function useGameConnection(
       PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH.has(message.type)
     ) {
       return;
+    }
+    const view = viewRef.current;
+    if (view?.snapGivePending) {
+      const isSnapGiver = view.pendingAbility?.kind === "snap_give";
+      if (isSnapGiver) {
+        if (
+          message.type !== "snap_give" &&
+          PLAY_ACTIONS_BLOCKED_DURING_SNAP_GIVE.has(message.type)
+        ) {
+          return;
+        }
+      } else if (
+        PLAY_ACTIONS_BLOCKED_DURING_SNAP_GIVE.has(message.type) ||
+        message.type === "snap_give"
+      ) {
+        return;
+      }
     }
     socket.send(JSON.stringify(message));
   }, []);
@@ -196,6 +225,7 @@ export function useGameConnection(
       }
 
       if (data.type === "state") {
+        viewRef.current = data.view;
         setState((s) => ({ ...s, view: data.view, error: null }));
       }
 
@@ -294,6 +324,7 @@ export function useGameConnection(
       if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
       if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);
       cambioFlashRef.current = null;
+      viewRef.current = null;
       socket.close();
       socketRef.current = null;
     };

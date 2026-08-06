@@ -229,6 +229,7 @@ export type PlayerView = {
   canDiscardDrawn: boolean;
   canSnap: boolean;
   pendingAbility: PendingAbility | null;
+  snapGivePending: boolean;
   debugReveal: boolean;
   isWaiting: boolean;
   canStartGame: boolean;
