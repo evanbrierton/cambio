@@ -105,7 +105,15 @@ describe("discard abilities (CAM-76)", () => {
   });
 
   it("does not trigger ability for each ability rank when swapped out", () => {
-    const abilityRanks: Array<Card["rank"]> = ["7", "8", "9", "10", "J", "Q", "K"];
+    const abilityRanks: Array<Card["rank"]> = [
+      "7",
+      "8",
+      "9",
+      "10",
+      "J",
+      "Q",
+      "K",
+    ];
 
     for (const rank of abilityRanks) {
       const state = playingState();
