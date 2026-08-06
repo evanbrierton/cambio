@@ -29,6 +29,7 @@ export function PlayerScrollStage({
       const rail = railRef.current;
       const item = itemRefs.current[index];
       if (!rail || !item) return;
+      if (rail.classList.contains("players-3d-rail-packed")) return;
 
       const target =
         item.offsetLeft + item.offsetWidth / 2 - rail.clientWidth / 2;
@@ -44,9 +45,29 @@ export function PlayerScrollStage({
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
+    const items = itemRefs.current.filter(
+      (item): item is HTMLDivElement => item != null,
+    );
+    const styles = getComputedStyle(rail);
+    const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
+    const contentWidth = items.reduce(
+      (sum, item, index) =>
+        sum + item.offsetWidth + (index > 0 ? gap : 0),
+      0,
+    );
+    const paddingX =
+      (Number.parseFloat(styles.paddingLeft) || 0) +
+      (Number.parseFloat(styles.paddingRight) || 0);
+    const availableWidth = Math.max(0, rail.clientWidth - paddingX);
+    const fits = contentWidth <= availableWidth + 0.5;
+
+    rail.classList.toggle("players-3d-rail-packed", fits);
+
     const centerItem = itemRefs.current[centerIndex];
     const itemHalf = centerItem ? centerItem.offsetWidth / 2 : 58;
-    const spacerWidth = Math.max(16, rail.clientWidth / 2 - itemHalf);
+    const spacerWidth = fits
+      ? 0
+      : Math.max(16, rail.clientWidth / 2 - itemHalf);
 
     if (leadSpacerRef.current) {
       leadSpacerRef.current.style.width = `${spacerWidth}px`;
@@ -55,13 +76,17 @@ export function PlayerScrollStage({
       trailSpacerRef.current.style.width = `${spacerWidth}px`;
     }
 
+    if (fits) {
+      rail.scrollTo({ left: 0 });
+    }
+
     const railRect = rail.getBoundingClientRect();
     const center = railRect.left + railRect.width / 2;
 
     itemRefs.current.forEach((item) => {
       if (!item) return;
 
-      if (reducedMotion) {
+      if (reducedMotion || fits) {
         item.style.transform = "";
         item.style.opacity = "";
         return;
@@ -71,12 +96,12 @@ export function PlayerScrollStage({
       const itemCenter = rect.left + rect.width / 2;
       const offset = (itemCenter - center) / Math.max(railRect.width, 1);
       const clamped = Math.max(-1, Math.min(1, offset));
-      const rotateY = clamped * -28;
-      const scale = 1 - Math.abs(clamped) * 0.1;
-      const translateZ = (1 - Math.abs(clamped)) * 24;
+      const rotateY = clamped * -12;
+      const scale = 1 - Math.abs(clamped) * 0.06;
+      const translateZ = (1 - Math.abs(clamped)) * 14;
 
       item.style.transform = `rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
-      item.style.opacity = String(1 - Math.abs(clamped) * 0.28);
+      item.style.opacity = String(1 - Math.abs(clamped) * 0.15);
     });
   }, [centerIndex]);
 
@@ -108,7 +133,7 @@ export function PlayerScrollStage({
       window.removeEventListener("resize", updateLayout);
       observer.disconnect();
     };
-  }, [centerIndex, scrollToCenter, updateLayout]);
+  }, [centerIndex, childCount, scrollToCenter, updateLayout]);
 
   return (
     <div className="players-3d-stage">

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   HAND_GRID_WIDTH,
-  PILE_CARD_SIZE,
   PixelCard,
 } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
@@ -176,6 +175,48 @@ function isLookAbility(kind: string | undefined) {
     kind === "queen_look" ||
     kind === "king_look"
   );
+}
+
+const TABLE_CARD_RATIO = 5 / 7;
+const TABLE_DRAWN_TO_PILE = 1.38;
+
+function applyTableCardScale(el: HTMLElement) {
+  const styles = getComputedStyle(el);
+  const padY =
+    (Number.parseFloat(styles.paddingTop) || 0) +
+    (Number.parseFloat(styles.paddingBottom) || 0);
+  const padX =
+    (Number.parseFloat(styles.paddingLeft) || 0) +
+    (Number.parseFloat(styles.paddingRight) || 0);
+
+  const hint = el.querySelector<HTMLElement>("[data-table-hint]");
+  const chrome = el.querySelector<HTMLElement>("[data-table-chrome]");
+  const reserved =
+    (hint?.offsetHeight ?? 0) + (chrome?.offsetHeight ?? 0) + 28;
+
+  const availH = Math.max(72, el.clientHeight - padY - reserved);
+  const availW = Math.max(120, el.clientWidth - padX);
+  const labelBudget = 22;
+  const gapBudget = 56;
+
+  let drawnH = Math.min(availH - labelBudget, availH * 0.88);
+  let drawnW = drawnH * TABLE_CARD_RATIO;
+  const maxDrawnW = (availW - gapBudget) / (1 + 2 / TABLE_DRAWN_TO_PILE);
+  if (drawnW > maxDrawnW) {
+    drawnW = maxDrawnW;
+    drawnH = drawnW / TABLE_CARD_RATIO;
+  }
+
+  drawnH = Math.min(200, Math.max(88, drawnH));
+  drawnW = drawnH * TABLE_CARD_RATIO;
+  let pileH = drawnH / TABLE_DRAWN_TO_PILE;
+  pileH = Math.min(148, Math.max(64, pileH));
+  const pileW = pileH * TABLE_CARD_RATIO;
+
+  el.style.setProperty("--table-drawn-w", `${drawnW}px`);
+  el.style.setProperty("--table-drawn-h", `${drawnH}px`);
+  el.style.setProperty("--table-pile-w", `${pileW}px`);
+  el.style.setProperty("--table-pile-h", `${pileH}px`);
 }
 
 function getActionBanner(
@@ -615,6 +656,7 @@ export function GameTable({
   );
   const lobbyPlayersRef = useRef<Set<string>>(new Set());
   const lobbyJoinTimerRef = useRef<number | null>(null);
+  const tableDeckRef = useRef<HTMLDivElement>(null);
 
   useGameSounds(
     view,
@@ -722,6 +764,51 @@ export function GameTable({
             ) : undefined,
         }
       : null;
+
+  const showDrawnActionChrome =
+    Boolean(view.drawnCard) &&
+    !snapGivePending &&
+    (view.canSwap || view.canDiscardDrawn);
+
+  useEffect(() => {
+    if (view.phase === "lobby") return;
+    const el = tableDeckRef.current;
+    if (!el) return;
+
+    const clearScaleVars = () => {
+      el.style.removeProperty("--table-drawn-w");
+      el.style.removeProperty("--table-drawn-h");
+      el.style.removeProperty("--table-pile-w");
+      el.style.removeProperty("--table-pile-h");
+    };
+
+    // Grid view prioritizes seeing player cards — no panel-filling scale.
+    if (playerGridEnabled) {
+      clearScaleVars();
+      return;
+    }
+
+    const update = () => applyTableCardScale(el);
+    update();
+    const frame = requestAnimationFrame(update);
+    const observer = new ResizeObserver(update);
+    observer.observe(el);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      clearScaleVars();
+    };
+  }, [
+    view.phase,
+    playerGridEnabled,
+    hintsEnabled,
+    actionToast?.id,
+    actionBanner?.text,
+    showDrawnActionChrome,
+    view.canDiscardDrawn,
+    view.canSwap,
+  ]);
 
   useEffect(() => {
     if (view.phase !== "lobby") {
@@ -1122,14 +1209,14 @@ export function GameTable({
       )}
 
       <div
-        className={`lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-6 flex flex-col min-w-0 ${
+        className={`lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-3 flex flex-col min-w-0 ${
           isLobbyScrollLayout
             ? "lg:items-stretch"
             : "flex-1 min-h-0 overflow-hidden lg:grid-rows-[minmax(0,1fr)]"
         }`}
       >
         <div
-          className={`scroll-stable flex flex-col min-w-0 gap-3 sm:gap-4 lg:gap-5 ${
+          className={`scroll-stable flex flex-col min-w-0 gap-2 sm:gap-3 ${
             isLobbyScrollLayout ? "" : "flex-1 min-h-0 overflow-hidden"
           }`}
         >
@@ -1192,31 +1279,53 @@ export function GameTable({
                 </div>
               </div>
             </div>
-            <div className="shrink-0 min-h-24" aria-live="polite">
-              <AnimatePresence initial={false} mode="wait">
-                {hintsEnabled && actionToast ? (
-                  <GameToast key="action" toast={actionToast} inline />
-                ) : view.phase === "lobby" && lobbyJoinToast ? (
+            {view.phase === "lobby" && lobbyJoinToast ? (
+              <div className="shrink-0" aria-live="polite">
+                <AnimatePresence initial={false} mode="wait">
                   <GameToast
                     key={lobbyJoinToast.id}
                     toast={lobbyJoinToast}
                     inline
                   />
-                ) : null}
-              </AnimatePresence>
-            </div>
+                </AnimatePresence>
+              </div>
+            ) : null}
           </header>
 
           {view.phase !== "lobby" && (
-            <div className="shrink-0 flex flex-col gap-2 sm:gap-3 lg:gap-4">
+            <div
+              ref={tableDeckRef}
+              className={`table-deck pixel-border bg-surface px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 flex flex-col gap-2 sm:gap-2.5 min-h-0 ${
+                playerGridEnabled
+                  ? "table-deck-compact shrink-0"
+                  : "flex-1"
+              } ${
+                view.canDraw && !snapGivePending
+                  ? "table-deck-drawable ring-2 ring-accent-alt"
+                  : ""
+              } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
+            >
+              {actionToast ? (
+                <div data-table-hint className="table-hint shrink-0 mx-auto w-full">
+                  <AnimatePresence initial={false} mode="wait">
+                    <GameToast
+                      key={actionToast.id}
+                      toast={actionToast}
+                      inline
+                      className="!p-2 !text-[9px] sm:!text-[10px] shadow-none"
+                    />
+                  </AnimatePresence>
+                </div>
+              ) : null}
+
               <div
-                className={`table-deck pixel-border bg-surface px-2 py-1.5 lg:p-4 ${
-                  view.canDraw && !snapGivePending
-                    ? "table-deck-drawable ring-2 ring-accent-alt"
-                    : ""
-                } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
+                className={`flex flex-col items-center gap-2 ${
+                  playerGridEnabled
+                    ? "shrink-0"
+                    : "flex-1 min-h-0 justify-center"
+                }`}
               >
-                <div className="flex items-end justify-center gap-3 sm:gap-6 lg:gap-10">
+                <div className="grid w-full grid-cols-3 items-end justify-items-center gap-x-2 sm:gap-x-4 lg:gap-x-6 px-1 sm:px-2">
                   <button
                     type="button"
                     disabled={!view.canDraw || snapGivePending}
@@ -1238,7 +1347,7 @@ export function GameTable({
                       {voice.deck}
                     </p>
                     <div
-                      className={`table-pile-card pixel-border rounded-card ${PILE_CARD_SIZE} bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
+                      className={`table-pile-card pixel-border rounded-card scaled-pile-size bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
                         view.canDraw && !snapGivePending
                           ? "pile-interactable-card ring-2 ring-accent-alt"
                           : ""
@@ -1247,6 +1356,62 @@ export function GameTable({
                       {view.deckCount}
                     </div>
                   </button>
+
+                  <div
+                    className={`drawn-card-slot flex flex-col items-center ${
+                      isDrawnSlotMine || view.hasDrawnCard
+                        ? "drawn-card-slot-active"
+                        : ""
+                    } ${view.canSwap && !snapGivePending ? "drawn-card-slot-actionable" : ""}`}
+                  >
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={
+                          isDrawnSlotMine
+                            ? "mine"
+                            : view.hasDrawnCard
+                              ? "other"
+                              : "empty"
+                        }
+                        className="flex flex-col items-center gap-1"
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                      >
+                        <p
+                          className={`drawn-card-label font-display text-[10px] sm:text-xs lg:text-sm ${
+                            isDrawnSlotMine
+                              ? "text-accent"
+                              : view.hasDrawnCard
+                                ? "text-accent-alt"
+                                : "text-theme-muted"
+                          }`}
+                        >
+                          {voice.drawn}
+                        </p>
+                        <div
+                          className={`drawn-card-container ${
+                            view.canSwap && !snapGivePending
+                              ? "ring-2 ring-accent shadow-glow-accent rounded-card drawn-card-glow"
+                              : isDrawnSlotMine
+                                ? "ring-2 ring-accent/50 rounded-card"
+                                : view.hasDrawnCard
+                                  ? "ring-1 ring-accent-alt/40 rounded-card"
+                                  : ""
+                          }`}
+                        >
+                          <PixelCard
+                            card={view.drawnCard}
+                            faceUp={isDrawnSlotMine}
+                            hidden={showDrawnFaceDown}
+                            empty={!isDrawnSlotMine && !view.hasDrawnCard}
+                            sizeClass="drawn-card-size"
+                          />
+                        </div>
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
 
                   <button
                     type="button"
@@ -1279,7 +1444,7 @@ export function GameTable({
                       {drawnDiscardAbility ? discardActionLabel : voice.discard}
                     </p>
                     <div
-                      className={`${PILE_CARD_SIZE} shrink-0 ${
+                      className={`scaled-pile-size shrink-0 ${
                         showDiscardPileGlow
                           ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
                           : snapWindowActive
@@ -1303,69 +1468,42 @@ export function GameTable({
                             faceUp={!!view.discardTop}
                             hidden={!view.discardTop}
                             empty={!view.discardTop}
-                            sizeClass={PILE_CARD_SIZE}
+                            sizeClass="scaled-pile-size"
                           />
                         </motion.div>
                       </AnimatePresence>
                     </div>
                   </button>
                 </div>
-              </div>
 
-              <div
-                className={`drawn-card-slot flex flex-col items-center justify-center ${
-                  isDrawnSlotMine || view.hasDrawnCard
-                    ? "drawn-card-slot-active"
-                    : ""
-                } ${view.canSwap && !snapGivePending ? "drawn-card-slot-actionable" : ""}`}
-              >
-                <AnimatePresence mode="wait">
-                  <motion.div
-                    key={
-                      isDrawnSlotMine
-                        ? "mine"
-                        : view.hasDrawnCard
-                          ? "other"
-                          : "empty"
-                    }
-                    className="flex flex-col items-center gap-1 lg:gap-1.5"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.2, ease: "easeOut" }}
+                {showDrawnActionChrome ? (
+                  <div
+                    data-table-chrome
+                    className="table-action-chrome flex flex-col items-center gap-1.5 shrink-0"
                   >
-                    <p
-                      className={`drawn-card-label font-display text-[10px] sm:text-xs lg:text-sm ${
-                        isDrawnSlotMine
-                          ? "text-accent"
-                          : view.hasDrawnCard
-                            ? "text-accent-alt"
-                            : "text-theme-muted"
-                      }`}
-                    >
-                      {voice.drawn}
-                    </p>
-                    <div
-                      className={`drawn-card-container ${
-                        view.canSwap && !snapGivePending
-                          ? "ring-2 ring-accent shadow-glow-accent rounded-card drawn-card-glow"
-                          : isDrawnSlotMine
-                            ? "ring-2 ring-accent/50 rounded-card"
-                            : view.hasDrawnCard
-                              ? "ring-1 ring-accent-alt/40 rounded-card"
-                              : ""
-                      }`}
-                    >
-                      <PixelCard
-                        card={view.drawnCard}
-                        faceUp={isDrawnSlotMine}
-                        hidden={showDrawnFaceDown}
-                        empty={!isDrawnSlotMine && !view.hasDrawnCard}
-                        sizeClass="drawn-card-size"
-                      />
+                    {drawnDiscardAbility && !hintsEnabled ? (
+                      <p className="font-display text-[8px] sm:text-[9px] text-accent-alt text-center leading-snug px-2">
+                        {voice.discardAbilityHint[drawnDiscardAbility]}
+                      </p>
+                    ) : null}
+                    <div className="flex flex-wrap items-center justify-center gap-1.5">
+                      {view.canSwap ? (
+                        <span className="chip-btn text-[8px] px-2 py-1 border-accent text-accent animate-pulse pointer-events-none">
+                          {voice.tapToSwap}
+                        </span>
+                      ) : null}
+                      {view.canDiscardDrawn ? (
+                        <button
+                          type="button"
+                          onClick={() => send({ type: "discard_drawn" })}
+                          className="chip-btn text-[8px] px-2 py-1 border-accent-alt text-accent-alt hover:border-accent transition-colors"
+                        >
+                          {discardActionLabel}
+                        </button>
+                      ) : null}
                     </div>
-                  </motion.div>
-                </AnimatePresence>
+                  </div>
+                ) : null}
               </div>
             </div>
           )}
@@ -1373,7 +1511,13 @@ export function GameTable({
           {view.phase === "lobby" ? (
             <LobbyPlayers view={view} voice={voice} send={send} />
           ) : (
-            <div className="flex flex-1 flex-col gap-2 min-h-0 min-w-0 overflow-hidden">
+            <div
+              className={`flex flex-col gap-1.5 sm:gap-2 min-w-0 overflow-hidden ${
+                playerGridEnabled
+                  ? "flex-1 min-h-0"
+                  : "shrink-0"
+              }`}
+            >
               <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">
                 PLAYERS
               </p>
@@ -1397,14 +1541,12 @@ export function GameTable({
             </div>
           )}
 
-          <div className="shrink-0 lg:hidden min-h-[2.75rem]">
-            {actionButtons}
-          </div>
+          <div className="shrink-0 lg:hidden mt-auto">{actionButtons}</div>
         </div>
 
-        <aside className="hidden lg:flex flex-col gap-4 lg:sticky lg:top-4 lg:self-start lg:max-h-[calc(100dvh-2.5rem)] lg:min-h-0 min-w-0">
+        <aside className="hidden lg:flex flex-col gap-3 lg:sticky lg:top-3 lg:self-start lg:max-h-[calc(100dvh-2.5rem)] lg:min-h-0 min-w-0">
           <div className="shrink-0">{actionButtons}</div>
-          <div className="flex flex-col gap-4 flex-1 min-h-0 min-w-0">
+          <div className="flex flex-col gap-3 flex-1 min-h-0 min-w-0">
             {gameSidebar}
           </div>
         </aside>

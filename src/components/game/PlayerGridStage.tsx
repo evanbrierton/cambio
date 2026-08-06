@@ -47,11 +47,11 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
       const clampedY = Math.max(-1, Math.min(1, offsetY));
       const dist = Math.min(1, Math.hypot(clampedX, clampedY));
 
-      const rotateY = clampedX * -18;
-      const rotateX = clampedY * 12;
-      const scale = 1 - dist * 0.1;
-      const translateZ = (1 - dist) * 28;
-      const opacity = 1 - dist * 0.3;
+      const rotateY = clampedX * -8;
+      const rotateX = clampedY * 5;
+      const scale = 1 - dist * 0.05;
+      const translateZ = (1 - dist) * 12;
+      const opacity = 1 - dist * 0.15;
 
       item.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
       item.style.opacity = String(opacity);
