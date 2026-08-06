@@ -1378,7 +1378,8 @@ export function buildPlayerView(
     };
   });
 
-  const isMyTurn = current?.id === viewerId && gameInteractive;
+  const isTurnHolder = current?.id === viewerId;
+  const isMyTurn = isTurnHolder && gameInteractive;
   const tableInteractive = gameInteractive || snapInteractive;
   const snapGivePending = tableInteractive && isSnapResolutionPending(state);
   const canCallCambio =
@@ -1399,8 +1400,8 @@ export function buildPlayerView(
       state.phase === "lobby" ? deckSize(state.jokerCount) : state.deck.length,
     discardTop:
       state.discard.length > 0 ? state.discard[state.discard.length - 1] : null,
-    drawnCard: isMyTurn ? state.drawnCard : null,
-    drawnFromDiscard: isMyTurn ? state.drawnFromDiscard : false,
+    drawnCard: isTurnHolder ? state.drawnCard : null,
+    drawnFromDiscard: isTurnHolder ? state.drawnFromDiscard : false,
     hasDrawnCard: !!state.drawnCard,
     canCallCambio,
     canDraw:

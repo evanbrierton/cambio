@@ -294,3 +294,74 @@ describe("expireSnapWindow (CAM-14)", () => {
     expect(state.pendingAbility).toBeNull();
   });
 });
+
+describe("reconnect with drawn card (CAM-74)", () => {
+  it("restores drawn card and actions after disconnect + join", () => {
+    const state = playingState();
+    const drawn = card("9", "hearts");
+    state.drawnCard = drawn;
+    state.drawnFromDiscard = false;
+    state.turnStarted = true;
+    state.players[0].connected = false;
+
+    const join = handleMessage(state, "alice", {
+      type: "join",
+      playerId: "alice",
+      name: "Alice",
+    });
+    expect(join).toEqual({});
+    expect(state.players[0].connected).toBe(true);
+    expect(state.drawnCard).toEqual(drawn);
+
+    const view = buildPlayerView(state, "alice");
+    expect(view.drawnCard).toEqual(drawn);
+    expect(view.hasDrawnCard).toBe(true);
+    expect(view.canSwap).toBe(true);
+    expect(view.canDiscardDrawn).toBe(true);
+    expect(view.canDraw).toBe(false);
+  });
+
+  it("keeps drawn card face-up for the turn holder after reconnect", () => {
+    const state = playingState();
+    const drawn = card("K", "spades");
+    state.drawnCard = drawn;
+    state.drawnFromDiscard = true;
+    state.turnStarted = true;
+
+    handleMessage(state, "alice", {
+      type: "join",
+      playerId: "alice",
+      name: "Alice",
+    });
+
+    const aliceView = buildPlayerView(state, "alice");
+    const bobView = buildPlayerView(state, "bob");
+
+    expect(aliceView.drawnCard).toEqual(drawn);
+    expect(aliceView.drawnFromDiscard).toBe(true);
+    expect(aliceView.canSwap).toBe(true);
+    expect(aliceView.canDiscardDrawn).toBe(false);
+
+    expect(bobView.drawnCard).toBeNull();
+    expect(bobView.hasDrawnCard).toBe(true);
+    expect(bobView.canSwap).toBe(false);
+  });
+
+  it("still allows swap/discard after reconnect when a drawn card is pending", () => {
+    const state = playingState();
+    state.deck.push(card("6", "clubs"));
+    handleMessage(state, "alice", { type: "draw", source: "deck" });
+    expect(state.drawnCard?.rank).toBe("6");
+
+    state.players[0].connected = false;
+    handleMessage(state, "alice", {
+      type: "join",
+      playerId: "alice",
+      name: "Alice",
+    });
+
+    const discard = handleMessage(state, "alice", { type: "discard_drawn" });
+    expect(discard).toEqual({});
+    expect(state.drawnCard).toBeNull();
+  });
+});

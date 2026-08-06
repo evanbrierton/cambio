@@ -537,21 +537,10 @@ export class CambioParty extends Server<Env> {
           addBotPlayer(this.state, difficulty);
         }
       }
-    } else if (queryPlayerId) {
-      const existing = this.state.players.find((p) => p.id === queryPlayerId);
-      if (existing) {
-        playerId = queryPlayerId;
-        for (const conn of this.getConnections<PlayerConnectionState>()) {
-          if (
-            conn.id !== connection.id &&
-            this.getPlayerId(conn) === queryPlayerId
-          ) {
-            conn.close(1000, "reconnected");
-          }
-        }
-      } else {
-        playerId = crypto.randomUUID().slice(0, 10);
-      }
+    } else {
+      playerId = this.resolveReconnectPlayerId(queryPlayerId, name);
+      connection.setState({ playerId, debugEnabled });
+      this.closeStaleConnections(connection, playerId);
     }
 
     connection.setState({ playerId, debugEnabled });
@@ -586,27 +575,72 @@ export class CambioParty extends Server<Env> {
     this.scheduleBotChat();
   }
 
+  resolveReconnectPlayerId(queryPlayerId: string | null, name: string): string {
+    if (!this.state) return queryPlayerId ?? crypto.randomUUID().slice(0, 10);
+
+    if (queryPlayerId) {
+      const existing = this.state.players.find((p) => p.id === queryPlayerId);
+      if (existing) return queryPlayerId;
+    }
+
+    const normalizedName = name.trim().toLowerCase();
+    if (normalizedName) {
+      const reclaimable = this.state.players.find(
+        (p) =>
+          !p.isBot &&
+          !p.connected &&
+          !p.isWaiting &&
+          p.name.trim().toLowerCase() === normalizedName,
+      );
+      if (reclaimable) return reclaimable.id;
+    }
+
+    return crypto.randomUUID().slice(0, 10);
+  }
+
+  closeStaleConnections(
+    connection: Connection<PlayerConnectionState>,
+    playerId: string,
+  ) {
+    for (const conn of this.getConnections<PlayerConnectionState>()) {
+      if (conn.id !== connection.id && this.getPlayerId(conn) === playerId) {
+        conn.close(1000, "reconnected");
+      }
+    }
+  }
+
+  playerHasOtherConnection(
+    playerId: string,
+    exceptConnectionId: string,
+  ): boolean {
+    return [...this.getConnections<PlayerConnectionState>()].some(
+      (conn) =>
+        conn.id !== exceptConnectionId && this.getPlayerId(conn) === playerId,
+    );
+  }
+
   async onClose(connection: Connection<PlayerConnectionState>) {
     const playerId = this.getPlayerId(connection);
     if (!this.state || !playerId) return;
 
-    const stillConnected = [
-      ...this.getConnections<PlayerConnectionState>(),
-    ].some(
-      (conn) =>
-        conn.id !== connection.id && this.getPlayerId(conn) === playerId,
-    );
-    if (stillConnected) return;
+    if (this.playerHasOtherConnection(playerId, connection.id)) return;
 
     this.clearBotChatTimer();
     this.clearBotChatReplyTimer();
 
     const player = this.state.players.find((p) => p.id === playerId);
-    if (player) {
-      player.connected = false;
+    if (!player) return;
+
+    player.connected = false;
+    await this.persist();
+
+    if (this.playerHasOtherConnection(playerId, connection.id)) {
+      player.connected = true;
       await this.persist();
-      this.broadcastState();
+      return;
     }
+
+    this.broadcastState();
   }
 
   async onMessage(
