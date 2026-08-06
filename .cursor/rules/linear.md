@@ -45,3 +45,39 @@ Extended scale (only if enabled in team settings): XXL = 13, XXXL = 21.
 - No cycles or due dates — hobby backlog
 - Statuses: Backlog → Todo → In Progress → In Review → Done
 - Estimate epics and leaf issues; skip onboarding/meta issues
+
+## Untracked work — create before implementing
+
+When the user asks for **implementation work** (code changes, features, bug fixes, refactors) and no Linear issue is in scope, **do not start coding until the work is tracked**.
+
+### What counts as "tracked"
+
+- User cites `CAM-<n>` or a Linear issue URL
+- You already linked the task to an issue earlier in the same conversation
+
+### Gate workflow
+
+1. **Search** — `list_issues` on team **Cambio** with keywords from the request to avoid duplicates.
+2. **Reuse or create**
+   - **Match found** — use that issue; confirm with the user if ambiguous.
+   - **No match** — `save_issue` with:
+     - `team`: `"Cambio"`
+     - `title`: concise summary of the work
+     - `description`: user request, acceptance criteria, and relevant context
+     - `estimate`: T-shirt value from the table above
+     - `priority`: infer from urgency (default Medium)
+     - `state`: `"Todo"` (or `"In Progress"` if implementing immediately)
+     - `assignee`: `"me"` when you are doing the work
+3. **Announce** — tell the user the issue ID (`CAM-<n>`) before editing code.
+4. **Track through delivery** — update the issue as work progresses:
+   - **In Progress** — when implementation starts
+   - **In Review** — when a PR is ready
+   - **Done** — when merged or explicitly shipped
+
+Use branch pattern `evanbrierton/cam-<n>-<slug>` once the issue exists.
+
+### Skip the gate
+
+- Questions, explanations, or reviews with **no code changes**
+- User explicitly says to skip Linear for this task
+- Trivial one-line fixes the user clearly treats as drive-by (still prefer tracking if unsure)
