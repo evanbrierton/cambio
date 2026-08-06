@@ -145,7 +145,11 @@ export function useGameConnection(
     socketRef.current = socket;
 
     socket.addEventListener("open", () => {
-      setState((s) => ({ ...s, connected: true, error: null }));
+      // Do not clear `error` here. PartySocket may emit `open` during a
+      // reconnect attempt that still fails; clearing would flash connecting
+      // UI before the could-not-connect error returns. Clear only once the
+      // server acknowledges us (room_info / state).
+      setState((s) => ({ ...s, connected: true }));
     });
 
     socket.addEventListener("close", () => {
@@ -155,6 +159,7 @@ export function useGameConnection(
     socket.addEventListener("error", () => {
       setState((s) => ({
         ...s,
+        connected: false,
         error: s.error ?? "Could not connect to game server.",
       }));
     });
@@ -166,7 +171,7 @@ export function useGameConnection(
         localStorage.setItem(key, data.playerId);
         sessionStorage.setItem(key, data.playerId);
         sessionStorage.setItem(seenKey, "1");
-        setState((s) => ({ ...s, playerId: data.playerId }));
+        setState((s) => ({ ...s, playerId: data.playerId, error: null }));
       }
 
       if (data.type === "state") {
