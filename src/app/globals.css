@@ -177,7 +177,7 @@
   --btn-danger-border: #ff3366;
   --glow-accent: rgba(255, 79, 216, 0.6);
   --glow-accent-alt: rgba(110, 231, 255, 0.45);
-  --vignette: rgba(15, 5, 35, 0.4);
+  --vignette: rgba(15, 5, 35, 0.55);
   --scanline-opacity: 0;
   --font-display: var(--font-fredoka), system-ui, sans-serif;
   --title-glow: #ff4fd8;
@@ -189,19 +189,23 @@
   --panel-shadow:
     0 0 0 3px rgba(255, 245, 160, 0.15), 0 8px 0 0 rgba(255, 79, 216, 0.35),
     0 12px 28px rgba(255, 79, 216, 0.25);
-  --title-shadow: 0 0 16px var(--glow-accent);
+  /* Dark outline keeps titles legible as the gradient hue-shifts. */
+  --title-shadow:
+    0 1px 0 rgba(26, 10, 62, 0.95), 0 2px 8px rgba(26, 10, 62, 0.85),
+    0 0 16px var(--glow-accent);
   --btn-primary-shadow: 0 6px 0 rgba(255, 79, 216, 0.4);
   --btn-secondary-shadow: 0 4px 0 rgba(110, 231, 255, 0.25);
   --btn-danger-shadow: 0 6px 0 rgba(255, 51, 102, 0.35);
   --display-transform: none;
   --display-tracking: 0.02em;
   --btn-font-weight: 600;
+  /* Mix party hues with the deep purple base so pale text stays readable. */
   --bg-image: linear-gradient(
     135deg,
-    #ff4fd8 0%,
-    #6ee7ff 33%,
-    #ffe566 66%,
-    #ff4fd8 100%
+    color-mix(in srgb, #ff4fd8 48%, #1a0a3e) 0%,
+    color-mix(in srgb, #6ee7ff 42%, #1a0a3e) 33%,
+    color-mix(in srgb, #ffe566 38%, #1a0a3e) 66%,
+    color-mix(in srgb, #ff4fd8 48%, #1a0a3e) 100%
   );
   --overlay-mode: party;
   --text-on-card: #fff8c8;
@@ -666,7 +670,14 @@ body::after {
   background-position:
     0 0,
     14px 14px;
-  opacity: 0.35;
+  opacity: 0.28;
+}
+
+/* Soft dark halo behind theme text sitting on the animated gradient. */
+[data-theme="party"] .text-theme,
+[data-theme="party"] .text-theme-muted {
+  text-shadow:
+    0 1px 2px rgba(26, 10, 62, 0.9), 0 0 10px rgba(26, 10, 62, 0.55);
 }
 
 [data-theme="minimal"] body::before {
