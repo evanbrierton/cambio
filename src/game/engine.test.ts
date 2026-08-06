@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildPlayerView,
   createRoom,
   expireSnapWindow,
   finalizeRound,
@@ -134,6 +135,86 @@ describe("discard abilities (CAM-76)", () => {
       expect(state.discard.at(-1)).toEqual(abilityCard);
       expect(state.pendingAbility).toBeNull();
     }
+  });
+});
+
+describe("snap_give blocks play (CAM-13)", () => {
+  function withSnapGivePending(state: GameState): GameState {
+    state.discard = [card("5", "spades")];
+    state.snapEligibleTopCardId = state.discard[0].id;
+    state.pendingAbility = {
+      playerId: "alice",
+      kind: "snap_give",
+      lookedCards: [],
+      maxLooks: 0,
+      snapTargetPlayerId: "bob",
+    };
+    return state;
+  }
+
+  it("blocks draw, swap, discard, snap, and cambio until snap_give resolves", () => {
+    const state = withSnapGivePending(playingState());
+    state.drawnCard = card("2", "diamonds");
+    state.drawnFromDiscard = false;
+    state.turnStarted = true;
+
+    expect(
+      handleMessage(state, "bob", { type: "draw", source: "deck" }).error,
+    ).toBe("Wait for the snap card to be given.");
+    expect(handleMessage(state, "alice", { type: "swap", slot: 0 }).error).toBe(
+      "Wait for the snap card to be given.",
+    );
+    expect(handleMessage(state, "alice", { type: "discard_drawn" }).error).toBe(
+      "Wait for the snap card to be given.",
+    );
+    expect(
+      handleMessage(state, "bob", {
+        type: "snap",
+        targetPlayerId: "alice",
+        slot: 0,
+      }).error,
+    ).toBe("Wait for the snap card to be given.");
+
+    state.drawnCard = null;
+    state.turnStarted = false;
+    expect(handleMessage(state, "alice", { type: "call_cambio" }).error).toBe(
+      "Wait for the snap card to be given.",
+    );
+  });
+
+  it("allows the snap winner to give a card, then clears pending state", () => {
+    const state = withSnapGivePending(playingState());
+    const given = state.players[0].hand[1].card;
+
+    const result = handleMessage(state, "alice", {
+      type: "snap_give",
+      slot: 1,
+    });
+
+    expect("error" in result).toBe(false);
+    expect(state.pendingAbility).toBeNull();
+    expect(state.players[0].hand[1].card).toBeNull();
+    expect(state.players[1].hand.some((s) => s.card?.id === given?.id)).toBe(
+      true,
+    );
+  });
+
+  it("exposes snapGivePending to all players and pendingAbility only to the giver", () => {
+    const state = withSnapGivePending(playingState());
+
+    const aliceView = buildPlayerView(state, "alice");
+    const bobView = buildPlayerView(state, "bob");
+
+    expect(aliceView.snapGivePending).toBe(true);
+    expect(bobView.snapGivePending).toBe(true);
+    expect(aliceView.pendingAbility?.kind).toBe("snap_give");
+    expect(bobView.pendingAbility).toBeNull();
+    expect(aliceView.canCallCambio).toBe(false);
+    expect(bobView.canCallCambio).toBe(false);
+    expect(aliceView.canSnap).toBe(false);
+    expect(bobView.canSnap).toBe(false);
+    expect(aliceView.canDraw).toBe(false);
+    expect(bobView.canDraw).toBe(false);
   });
 });
 

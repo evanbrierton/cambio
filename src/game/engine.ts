@@ -362,6 +362,17 @@ function isSnapResolutionPending(state: GameState): boolean {
   return state.pendingAbility?.kind === "snap_give";
 }
 
+const PLAY_ACTIONS_BLOCKED_DURING_SNAP_GIVE = new Set<ClientMessage["type"]>([
+  "setup_peek",
+  "draw",
+  "swap",
+  "discard_drawn",
+  "call_cambio",
+  "snap",
+  "ability_look",
+  "ability_swap",
+]);
+
 /** Snapping is only allowed against an unsnapped card currently on top of discard. */
 function isSnapEligible(state: GameState): boolean {
   if (state.discard.length === 0 || !state.snapEligibleTopCardId) return false;
@@ -714,6 +725,13 @@ export function handleMessage(
   cambioFlash?: { playerId: string };
   reshuffleFlash?: boolean;
 } {
+  if (
+    isSnapResolutionPending(state) &&
+    PLAY_ACTIONS_BLOCKED_DURING_SNAP_GIVE.has(message.type)
+  ) {
+    return { error: "Wait for the snap card to be given." };
+  }
+
   switch (message.type) {
     case "join": {
       const trimmedName = normalizePlayerName(message.name);
@@ -1361,11 +1379,14 @@ export function buildPlayerView(
   });
 
   const isMyTurn = current?.id === viewerId && gameInteractive;
+  const tableInteractive = gameInteractive || snapInteractive;
+  const snapGivePending = tableInteractive && isSnapResolutionPending(state);
   const canCallCambio =
     isMyTurn &&
     state.phase === "playing" &&
     !state.turnStarted &&
     !state.drawnCard &&
+    !state.pendingAbility &&
     !viewer?.hasCalledCambio;
 
   return {
@@ -1398,17 +1419,17 @@ export function buildPlayerView(
       !state.drawnFromDiscard &&
       !state.pendingAbility,
     canSnap:
-      (gameInteractive || snapInteractive) &&
+      tableInteractive &&
       canPlayerSnap(state) &&
-      !isSnapResolutionPending(state) &&
+      !snapGivePending &&
       !(viewer?.hasCalledCambio && state.phase === "cambio_final") &&
       !(gameInteractive && isMyTurn && state.drawnCard) &&
       state.pendingAbility?.playerId !== viewerId,
     pendingAbility:
-      (gameInteractive || snapInteractive) &&
-      state.pendingAbility?.playerId === viewerId
+      tableInteractive && state.pendingAbility?.playerId === viewerId
         ? state.pendingAbility
         : null,
+    snapGivePending,
     debugReveal: state.debugReveal,
     isWaiting: viewerWaiting,
     canStartGame:
