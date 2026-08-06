@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { use, useEffect } from "react";
+import { use, useEffect, useState } from "react";
 import { GameTable } from "@/components/game/GameTable";
 import type { PlayerView } from "@/game/types";
 import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "@/game/types";
@@ -12,6 +12,9 @@ import {
 } from "@/hooks/useGameConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
+
+/** Delay before showing the connecting indicator so fast failures go straight to error. */
+const CONNECTING_UI_DELAY_MS = 300;
 
 function allowsPageScroll(view: PlayerView | null): boolean {
   if (!view) return true;
@@ -63,12 +66,25 @@ export default function PlayPage({
     send,
   } = useGameConnection(roomId, name, sessionMode, soloOptions, debugEnabled);
 
+  const [showConnecting, setShowConnecting] = useState(false);
+
   useEffect(() => {
     if (!view || !isNavFresh) return;
     const params = new URLSearchParams({ name });
     if (debugEnabled) appendDebugQueryParam(params);
     router.replace(`/play/${roomId}?${params.toString()}`);
   }, [debugEnabled, view, isNavFresh, name, roomId, router]);
+
+  useEffect(() => {
+    if (view || error) {
+      setShowConnecting(false);
+      return;
+    }
+    const timer = window.setTimeout(() => {
+      setShowConnecting(true);
+    }, CONNECTING_UI_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [view, error]);
 
   const pageScrollable = allowsPageScroll(view);
 
@@ -90,11 +106,11 @@ export default function PlayPage({
           <p className="font-display text-sm text-red-400 text-center">
             {error}
           </p>
-        ) : (
+        ) : showConnecting ? (
           <p className="font-display text-theme animate-pulse text-sm">
             {voice.loading}
           </p>
-        )}
+        ) : null}
       </div>
     );
   }
