@@ -20,17 +20,19 @@ export const CAMBIO_FLASH_MS = 3500;
 export const RESHUFFLE_FLASH_MS = 3500;
 export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
-const PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH = new Set<ClientMessage["type"]>([
-  "setup_peek",
-  "draw",
-  "swap",
-  "discard_drawn",
-  "call_cambio",
-  "snap",
-  "snap_give",
-  "ability_look",
-  "ability_swap",
-]);
+const PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH = new Set<ClientMessage["type"]>(
+  [
+    "setup_peek",
+    "draw",
+    "swap",
+    "discard_drawn",
+    "call_cambio",
+    "snap",
+    "snap_give",
+    "ability_look",
+    "ability_swap",
+  ],
+);
 
 export type FleetingPeek = {
   playerId: string;
