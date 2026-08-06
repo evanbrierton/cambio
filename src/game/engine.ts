@@ -353,6 +353,7 @@ function enterRevealedPhase(state: GameState): void {
   state.phase = "revealed";
   state.snapWindowEndsAt = null;
   state.snapChainPlayerId = null;
+  state.pendingAbility = null;
   addLog(state, "All cards revealed — waiting for host to show results.");
 }
 
@@ -400,13 +401,11 @@ export function finalizeRound(state: GameState): void {
 
   const entries: ScoreboardEntry[] = [];
   for (const player of state.players) {
-    if (player.hand.length > 0) {
-      entries.push({
-        id: player.id,
-        name: player.name,
-        score: state.scores[player.id] ?? 0,
-      });
-    }
+    entries.push({
+      id: player.id,
+      name: player.name,
+      score: state.scores[player.id] ?? 0,
+    });
   }
 
   state.roundHistory.push({
@@ -439,12 +438,19 @@ export function expireSnapWindow(state: GameState, now = Date.now()): boolean {
   if (state.phase !== "snap_window") return false;
   if (state.snapWindowEndsAt === null || now < state.snapWindowEndsAt)
     return false;
-  if (state.pendingAbility) {
-    state.snapWindowEndsAt = now + SNAP_WINDOW_GRACE_MS;
-    return false;
-  }
   enterRevealedPhase(state);
   return true;
+}
+
+function extendSnapWindowForPendingGive(
+  state: GameState,
+  now = Date.now(),
+): void {
+  if (state.phase !== "snap_window") return;
+  const graceEndsAt = now + SNAP_WINDOW_GRACE_MS;
+  if (state.snapWindowEndsAt === null || graceEndsAt > state.snapWindowEndsAt) {
+    state.snapWindowEndsAt = graceEndsAt;
+  }
 }
 
 function endRound(state: GameState): void {
@@ -1018,6 +1024,7 @@ export function handleMessage(
         maxLooks: 0,
         snapTargetPlayerId: message.targetPlayerId,
       };
+      extendSnapWindowForPendingGive(state);
       addLog(
         state,
         `${player.name} snapped ${target.name}'s card — give them one of yours.`,

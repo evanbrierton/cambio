@@ -20,6 +20,20 @@ export const CAMBIO_FLASH_MS = 3500;
 export const RESHUFFLE_FLASH_MS = 3500;
 export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
+const PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH = new Set<ClientMessage["type"]>(
+  [
+    "setup_peek",
+    "draw",
+    "swap",
+    "discard_drawn",
+    "call_cambio",
+    "snap",
+    "snap_give",
+    "ability_look",
+    "ability_swap",
+  ],
+);
+
 export type FleetingPeek = {
   playerId: string;
   slot: number;
@@ -113,10 +127,17 @@ export function useGameConnection(
   const penaltyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cambioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reshuffleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cambioFlashRef = useRef<CambioFlash | null>(null);
 
   const send = useCallback((message: ClientMessage) => {
     const socket = socketRef.current;
     if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    if (
+      cambioFlashRef.current &&
+      PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH.has(message.type)
+    ) {
+      return;
+    }
     socket.send(JSON.stringify(message));
   }, []);
 
@@ -237,11 +258,14 @@ export function useGameConnection(
 
       if (data.type === "cambio_flash") {
         if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
+        const flash = { playerId: data.playerId };
+        cambioFlashRef.current = flash;
         setState((s) => ({
           ...s,
-          cambioFlash: { playerId: data.playerId },
+          cambioFlash: flash,
         }));
         cambioTimerRef.current = setTimeout(() => {
+          cambioFlashRef.current = null;
           setState((s) => ({ ...s, cambioFlash: null }));
         }, CAMBIO_FLASH_MS);
       }
@@ -269,6 +293,7 @@ export function useGameConnection(
       if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
       if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
       if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);
+      cambioFlashRef.current = null;
       socket.close();
       socketRef.current = null;
     };
