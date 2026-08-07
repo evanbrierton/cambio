@@ -82,8 +82,7 @@ export function PlayerScrollStage({
     const styles = getComputedStyle(rail);
     const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
     const contentWidth = items.reduce(
-      (sum, item, index) =>
-        sum + item.offsetWidth + (index > 0 ? gap : 0),
+      (sum, item, index) => sum + item.offsetWidth + (index > 0 ? gap : 0),
       0,
     );
     const paddingX =
@@ -164,7 +163,7 @@ export function PlayerScrollStage({
       window.removeEventListener("resize", updateLayout);
       observer.disconnect();
     };
-  }, [centerIndex, childCount, scrollToCenter, updateLayout]);
+  }, [centerIndex, scrollToCenter, updateLayout]);
 
   return (
     <div ref={stageRef} className="players-3d-stage">

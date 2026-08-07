@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   getOwnSeatDisplay,
-  setOwnSeatDisplay,
   type OwnSeatDisplay,
+  setOwnSeatDisplay,
 } from "@/lib/player-layout";
 
 export function useOwnSeatDisplay() {

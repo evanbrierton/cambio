@@ -3,10 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  HAND_GRID_WIDTH,
-  PixelCard,
-} from "@/components/cards/PixelCard";
+import { HAND_GRID_WIDTH, PixelCard } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
@@ -827,17 +824,7 @@ export function GameTable({
       observer.disconnect();
       clearScaleVars();
     };
-  }, [
-    view.phase,
-    playerGridEnabled,
-    hintsEnabled,
-    actionToast?.id,
-    actionBanner?.text,
-    showDrawnActionChrome,
-    view.canDiscardDrawn,
-    view.canSwap,
-    view.log.length,
-  ]);
+  }, [view.phase, playerGridEnabled]);
 
   useEffect(() => {
     if (view.phase !== "lobby") {
@@ -1294,7 +1281,9 @@ export function GameTable({
               <div className="min-w-0 flex-1 flex items-center gap-1.5 overflow-hidden">
                 <p className="font-display text-[8px] sm:text-[9px] text-theme-muted truncate min-w-0">
                   {voice.roomPrefix}{" "}
-                  <span className="text-theme">{view.roomId.toUpperCase()}</span>
+                  <span className="text-theme">
+                    {view.roomId.toUpperCase()}
+                  </span>
                 </p>
                 <button
                   type="button"
@@ -1310,6 +1299,7 @@ export function GameTable({
                   {roomCopied ? voice.copied : voice.copy}
                 </button>
                 <span
+                  role="img"
                   className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
                     connected
                       ? "bg-[var(--accent-alt)] shadow-[0_0_6px_var(--glow-accent-alt)]"
