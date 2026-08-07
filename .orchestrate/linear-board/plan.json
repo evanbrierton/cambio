@@ -5,8 +5,10 @@
   "rootSlug": "linear-board",
   "baseBranch": "main",
   "repoUrl": "https://github.com/evanbrierton/cambio",
-  "selfAgentId": "bc-bf67f15f-b553-4d2c-99d0-689a46f271cd",
-  "dispatcher": { "firstName": "Evan" },
+  "selfAgentId": "bc-e63056bf-7064-45ea-bdb6-e7b25fd25d86",
+  "dispatcher": {
+    "firstName": "Evan"
+  },
   "acceptanceCriteria": [
     "Each independent Linear issue lands as its own draft PR against main",
     "Gameplay-logic changes (CAM-9, CAM-12) and the appearance feature (CAM-49) are verified against their acceptance criteria",
@@ -17,9 +19,13 @@
       "name": "cam-11-hint-draw-from-deck",
       "type": "worker",
       "openPR": true,
-      "scopedGoal": "Fix Linear issue CAM-11 (https://linear.app/ebrierton-cambio/issue/CAM-11) in the Cambio repo. The in-game hint tells the player to snap even when the expected primary action on their own turn is to draw from the deck. Root cause: in `src/components/game/GameTable.tsx` the `computeHint` helper returns `voice.snapHint` from the branch `if (view.canSnap && view.canDraw) { return { text: voice.snapHint, tone: \"snap\" }; }`, which fires on the player's own turn whenever a snappable card also happens to be on the discard. Change the hint priority so that when it is the player's turn and they can draw (`view.canDraw`), the primary hint instructs them to draw from the deck by reusing the EXISTING `voice.drawHint` string (already used by the `if (view.canDraw)` branch). Snapping stays available, but must not be the primary hint text when drawing is the expected next action. Keep the pure snap states unchanged: the snap-window state (`view.phase === 'snap_window'`) and the trailing snap-only branch (`if (view.canSnap)` with no draw) must still show the snap hint. Do NOT add new voice strings and do NOT edit `src/lib/themes.ts` — reuse the existing `voice.drawHint`. Make only the minimal change to the hint-priority logic in GameTable.tsx.",
-      "pathsAllowed": ["src/components/game/GameTable.tsx"],
-      "pathsForbidden": ["src/lib/themes.ts"],
+      "scopedGoal": "Fix Linear issue CAM-11 (https://linear.app/ebrierton-cambio/issue/CAM-11) in the Cambio repo. The in-game hint tells the player to snap even when the expected primary action on their own turn is to draw from the deck. Root cause: in `src/components/game/GameTable.tsx` the `computeHint` helper returns `voice.snapHint` from the branch `if (view.canSnap && view.canDraw) { return { text: voice.snapHint, tone: \"snap\" }; }`, which fires on the player's own turn whenever a snappable card also happens to be on the discard. Change the hint priority so that when it is the player's turn and they can draw (`view.canDraw`), the primary hint instructs them to draw from the deck by reusing the EXISTING `voice.drawHint` string (already used by the `if (view.canDraw)` branch). Snapping stays available, but must not be the primary hint text when drawing is the expected next action. Keep the pure snap states unchanged: the snap-window state (`view.phase === 'snap_window'`) and the trailing snap-only branch (`if (view.canSnap)` with no draw) must still show the snap hint. Do NOT add new voice strings and do NOT edit `src/lib/themes.ts` \u2014 reuse the existing `voice.drawHint`. Make only the minimal change to the hint-priority logic in GameTable.tsx.",
+      "pathsAllowed": [
+        "src/components/game/GameTable.tsx"
+      ],
+      "pathsForbidden": [
+        "src/lib/themes.ts"
+      ],
       "acceptance": [
         "On the player's own turn when they can draw, the hint reads as 'draw from the deck' (voice.drawHint), not the snap hint",
         "The snap-window overlay hint and snap-only (no draw available) hint are unchanged",
@@ -33,7 +39,10 @@
       "type": "worker",
       "openPR": true,
       "scopedGoal": "Implement Linear issue CAM-5 (https://linear.app/ebrierton-cambio/issue/CAM-5) in the Cambio repo. `src/components/game/PlayerScrollStage.tsx` always renders a horizontally scrollable rail (`.players-3d-rail`) with lead/trail spacers and a scroll-driven 3D transform, even when all player seats already fit on screen. When the seats fit within the rail's client width without overflow, lay them out statically and centered: no horizontal scroll, no lead/trail spacers consuming width, and no per-item 3D rotate/scale/opacity transform (render them flat and centered). Fall back to the existing scrollable 3D carousel only when the seats overflow the container. Detect the fit vs overflow condition from measured content width vs container width and keep it correct across resizes using the existing ResizeObserver/resize wiring (recompute on resize and when child count changes). Preserve all current behavior (scrolling, centering, 3D effect, reduced-motion handling) for the overflow case. You may add CSS in `src/app/globals.css` but ONLY under the existing `.players-3d-*` selectors (e.g. a `.players-3d-stage.is-static` / `.players-3d-rail.is-static` modifier); do not touch unrelated global styles or color tokens.",
-      "pathsAllowed": ["src/components/game/PlayerScrollStage.tsx", "src/app/globals.css"],
+      "pathsAllowed": [
+        "src/components/game/PlayerScrollStage.tsx",
+        "src/app/globals.css"
+      ],
       "acceptance": [
         "With a player count whose seats fit on screen, the seat row does not scroll and is statically centered (no spacers, no 3D tilt)",
         "With enough players to overflow, the existing scrollable 3D carousel behavior is unchanged",
@@ -46,8 +55,12 @@
       "name": "cam-9-auto-call-cambio",
       "type": "worker",
       "openPR": true,
-      "scopedGoal": "Implement Linear issue CAM-9 (https://linear.app/ebrierton-cambio/issue/CAM-9) in the Cambio repo. When a player's hand reaches zero cards, the engine should automatically call Cambio on that player's behalf, with exactly the same effects as the manual `call_cambio` action in `src/game/engine.ts`: set `state.phase = 'cambio_final'`, set `state.cambioCallerId` to that player, set the player's `hasCalledCambio = true`, and apply the same caller protections (caller cannot be targeted by spy/swap, caller cannot snap). Identify every code path in `src/game/engine.ts` where a player's hand length can drop to zero — e.g. a successful snap that discards a matched card, the snap-give flow, and any discard path — and trigger the auto-call at the correct moment without disrupting turn flow, snap windows, the reshuffle path, or the existing manual `call_cambio` case. Guard against double-calling: if Cambio has already been called (`state.cambioCallerId` set or `state.phase === 'cambio_final'`), do not call again. If two players could reach zero, only the first triggers the call. Add or extend unit tests in `src/game/engine.test.ts` (vitest) covering: (1) a player's hand reaching zero auto-calls Cambio and sets `cambioCallerId` + `hasCalledCambio`; (2) a player who still holds cards does not trigger it; (3) the auto-call applies the same caller protection as a manual call; (4) no double-call when Cambio was already called. Keep changes minimal and within the game engine; if you must add a type, put it in `src/game/types.ts`.",
-      "pathsAllowed": ["src/game/engine.ts", "src/game/engine.test.ts", "src/game/types.ts"],
+      "scopedGoal": "Implement Linear issue CAM-9 (https://linear.app/ebrierton-cambio/issue/CAM-9) in the Cambio repo. When a player's hand reaches zero cards, the engine should automatically call Cambio on that player's behalf, with exactly the same effects as the manual `call_cambio` action in `src/game/engine.ts`: set `state.phase = 'cambio_final'`, set `state.cambioCallerId` to that player, set the player's `hasCalledCambio = true`, and apply the same caller protections (caller cannot be targeted by spy/swap, caller cannot snap). Identify every code path in `src/game/engine.ts` where a player's hand length can drop to zero \u2014 e.g. a successful snap that discards a matched card, the snap-give flow, and any discard path \u2014 and trigger the auto-call at the correct moment without disrupting turn flow, snap windows, the reshuffle path, or the existing manual `call_cambio` case. Guard against double-calling: if Cambio has already been called (`state.cambioCallerId` set or `state.phase === 'cambio_final'`), do not call again. If two players could reach zero, only the first triggers the call. Add or extend unit tests in `src/game/engine.test.ts` (vitest) covering: (1) a player's hand reaching zero auto-calls Cambio and sets `cambioCallerId` + `hasCalledCambio`; (2) a player who still holds cards does not trigger it; (3) the auto-call applies the same caller protection as a manual call; (4) no double-call when Cambio was already called. Keep changes minimal and within the game engine; if you must add a type, put it in `src/game/types.ts`.",
+      "pathsAllowed": [
+        "src/game/engine.ts",
+        "src/game/engine.test.ts",
+        "src/game/types.ts"
+      ],
       "acceptance": [
         "A player's hand reaching 0 cards automatically enters cambio_final with that player as cambioCallerId and hasCalledCambio=true",
         "Auto-call applies identical caller protection to a manual call_cambio (no spy/swap targeting, caller cannot snap)",
@@ -61,9 +74,16 @@
       "name": "cam-12-bot-tuning",
       "type": "worker",
       "openPR": true,
-      "scopedGoal": "Implement Linear issue CAM-12 (https://linear.app/ebrierton-cambio/issue/CAM-12) in the Cambio repo. Bots currently play too optimally, too fast, may act on hidden card info they should not know, and call Cambio too early. All work is in `src/game/bot.ts` (with optional supporting tweaks in `src/game/bot-chat-events.ts`). Three concrete changes: (1) PACING — give bot actions human-like delays instead of near-instant responses; make delays configurable by difficulty and add mild randomization so bots feel human. (2) INFORMATION HYGIENE — audit the `BotKnowledge` class so bots only use legitimately acquired information (setup peeks, cards they have actually seen via abilities, discard pile, publicly revealed cards). Ensure decision logic reads from `BotKnowledge` and never from the ground-truth face-down hands of opponents (or the bot's own unseen cards). Fix any place that leaks hidden state into decisions. (3) CAMBIO THRESHOLD — make the `cambioThreshold` / call-Cambio decision consider aggregate score across the whole game (standings), not just whether the bot can win the current round; bots should not call Cambio aggressively when they are ahead overall and a low round score matters less than protecting their lead. Keep difficulty settings coherent (easier bots slower and more conservative with information; harder bots faster and sharper but still only using legitimate info). Do not change the public message protocol or other game files; keep the changes inside the bot module(s). If a lightweight unit test is natural, add it, but do not restructure the test harness.",
-      "pathsAllowed": ["src/game/bot.ts", "src/game/bot-chat-events.ts"],
-      "pathsForbidden": ["src/game/engine.ts", "src/game/types.ts", "src/game/scoring.ts"],
+      "scopedGoal": "Implement Linear issue CAM-12 (https://linear.app/ebrierton-cambio/issue/CAM-12) in the Cambio repo. Bots currently play too optimally, too fast, may act on hidden card info they should not know, and call Cambio too early. All work is in `src/game/bot.ts` (with optional supporting tweaks in `src/game/bot-chat-events.ts`). Three concrete changes: (1) PACING \u2014 give bot actions human-like delays instead of near-instant responses; make delays configurable by difficulty and add mild randomization so bots feel human. (2) INFORMATION HYGIENE \u2014 audit the `BotKnowledge` class so bots only use legitimately acquired information (setup peeks, cards they have actually seen via abilities, discard pile, publicly revealed cards). Ensure decision logic reads from `BotKnowledge` and never from the ground-truth face-down hands of opponents (or the bot's own unseen cards). Fix any place that leaks hidden state into decisions. (3) CAMBIO THRESHOLD \u2014 make the `cambioThreshold` / call-Cambio decision consider aggregate score across the whole game (standings), not just whether the bot can win the current round; bots should not call Cambio aggressively when they are ahead overall and a low round score matters less than protecting their lead. Keep difficulty settings coherent (easier bots slower and more conservative with information; harder bots faster and sharper but still only using legitimate info). Do not change the public message protocol or other game files; keep the changes inside the bot module(s). If a lightweight unit test is natural, add it, but do not restructure the test harness.",
+      "pathsAllowed": [
+        "src/game/bot.ts",
+        "src/game/bot-chat-events.ts"
+      ],
+      "pathsForbidden": [
+        "src/game/engine.ts",
+        "src/game/types.ts",
+        "src/game/scoring.ts"
+      ],
       "acceptance": [
         "Bots act with human-like, difficulty-scaled, slightly randomized delays rather than near-instant moves",
         "Bot decisions only use information exposed through BotKnowledge (setup peeks, seen cards, discard, public reveals); no reliance on hidden opponent/own unseen card values",
@@ -93,7 +113,10 @@
         "src/components/game/GameOverScreen.tsx",
         "src/components/game/GameTable.tsx"
       ],
-      "pathsForbidden": ["src/game/**", "party/**"],
+      "pathsForbidden": [
+        "src/game/**",
+        "party/**"
+      ],
       "acceptance": [
         "Appearance preference (light|dark|system) persists across reloads via the cambio-appearance cookie",
         "Default is System and tracks OS light/dark changes live; explicit Light/Dark overrides system",
