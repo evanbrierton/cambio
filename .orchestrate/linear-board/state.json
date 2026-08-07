@@ -103,13 +103,13 @@
       "handoffPath": "handoffs/cam-49-system-dark-mode.md",
       "startedAt": "2026-08-07T16:58:41.581Z",
       "finishedAt": "2026-08-07T17:36:24.919Z",
-      "lastUpdate": "2026-08-07T17:36:24.919Z",
+      "lastUpdate": "2026-08-07T17:36:25.908Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": 147,
       "failureMode": null,
-      "verification": null
+      "verification": "live-ui-verified"
     },
     {
       "name": "verify-cam-9-auto-call-cambio",
@@ -170,17 +170,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-07T17:36:29.917Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-07T17:36:29.917Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     }
   ],
   "attention": [
@@ -267,6 +268,10 @@
     {
       "at": "2026-08-07T17:32:55.607Z",
       "message": "cam-12-bot-tuning: verification self-reported (live-ui-verified)"
+    },
+    {
+      "at": "2026-08-07T17:36:25.908Z",
+      "message": "cam-49-system-dark-mode: verification self-reported (live-ui-verified)"
     }
   ]
 }
