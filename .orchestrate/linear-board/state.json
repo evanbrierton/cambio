@@ -59,13 +59,13 @@
       "handoffPath": "handoffs/cam-9-auto-call-cambio.md",
       "startedAt": "2026-08-07T16:58:35.995Z",
       "finishedAt": "2026-08-07T17:01:50.522Z",
-      "lastUpdate": "2026-08-07T17:01:50.523Z",
+      "lastUpdate": "2026-08-07T17:01:51.462Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": "unit-test-verified"
     },
     {
       "name": "cam-12-bot-tuning",
@@ -122,17 +122,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-07T17:01:54.180Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-07T17:01:54.180Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "verify-cam-12-bot-tuning",
@@ -221,6 +222,10 @@
     {
       "at": "2026-08-07T16:58:21.561Z",
       "message": "cam-49-system-dark-mode: respawned by self-planner (was error)"
+    },
+    {
+      "at": "2026-08-07T17:01:51.462Z",
+      "message": "cam-9-auto-call-cambio: verification self-reported (unit-test-verified)"
     }
   ]
 }
