@@ -105,7 +105,10 @@ describe("auto Cambio call on empty hand (CAM-9)", () => {
 
   it("does not auto-call Cambio when the snapped player still has cards", () => {
     const state = playingState();
-    state.players[0].hand = [slot(card("2", "hearts")), slot(card("3", "hearts"))];
+    state.players[0].hand = [
+      slot(card("2", "hearts")),
+      slot(card("3", "hearts")),
+    ];
     setSnapReadyState(state, card("2", "spades"));
 
     handleMessage(state, "bob", {
@@ -124,7 +127,7 @@ describe("auto Cambio call on empty hand (CAM-9)", () => {
     state.players[0].hand = [slot(card("2", "hearts"))];
     setSnapReadyState(state, card("2", "spades"));
 
-    handleMessage(state, "bob", {
+    handleMessage(state, "alice", {
       type: "snap",
       targetPlayerId: "alice",
       slot: 0,
@@ -206,7 +209,10 @@ describe("auto Cambio call on empty hand (CAM-9)", () => {
       snapTargetPlayerId: "bob",
     };
 
-    const result = handleMessage(state, "alice", { type: "snap_give", slot: 0 });
+    const result = handleMessage(state, "alice", {
+      type: "snap_give",
+      slot: 0,
+    });
 
     expect("error" in result).toBe(false);
     expect(state.pendingAbility).toBeNull();
