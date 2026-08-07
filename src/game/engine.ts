@@ -724,6 +724,8 @@ export function handleMessage(
   penaltyFlash?: { playerId: string; slot: number };
   cambioFlash?: { playerId: string };
   reshuffleFlash?: boolean;
+  discardDrawFlash?: { playerId: string };
+  deckDrawFlash?: { playerId: string };
 } {
   if (
     isSnapResolutionPending(state) &&
@@ -893,7 +895,10 @@ export function handleMessage(
         state.drawnCard = card;
         state.drawnFromDiscard = false;
         addLog(state, `${player.name} drew from the deck.`);
-        return reshuffled ? { reshuffleFlash: true } : {};
+        return {
+          deckDrawFlash: { playerId },
+          reshuffleFlash: reshuffled || undefined,
+        };
       }
 
       if (state.discard.length === 0)
@@ -904,7 +909,7 @@ export function handleMessage(
       state.drawnCard = card;
       state.drawnFromDiscard = true;
       addLog(state, `${player.name} drew from the discard pile.`);
-      return {};
+      return { discardDrawFlash: { playerId } };
     }
 
     case "swap": {

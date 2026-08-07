@@ -33,6 +33,8 @@ import { useChatNotifications } from "@/hooks/useChatNotifications";
 import { useDebugEnabled } from "@/hooks/useDebugEnabled";
 import type {
   CambioFlash,
+  DeckDrawFlash,
+  DiscardDrawFlash,
   FleetingPeek,
   PeekFlash,
   PenaltyFlash,
@@ -59,6 +61,8 @@ type GameTableProps = {
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
+  discardDrawFlash: DiscardDrawFlash | null;
+  deckDrawFlash: DeckDrawFlash | null;
   send: (message: ClientMessage) => void;
 };
 
@@ -613,6 +617,8 @@ export function GameTable({
   penaltyFlash,
   cambioFlash,
   reshuffleFlash,
+  discardDrawFlash,
+  deckDrawFlash,
   send,
 }: GameTableProps) {
   const voice = useThemeVoice();
@@ -750,6 +756,20 @@ export function GameTable({
           pulse: true,
         });
       }
+
+      if (discardDrawFlash) {
+        const player = view.players.find(
+          (p) => p.id === discardDrawFlash.playerId,
+        );
+        if (player) {
+          items.push({
+            id: "discard-draw-flash",
+            message: voice.discardDrawNotice(player.name),
+            tone: "info",
+            pulse: true,
+          });
+        }
+      }
     }
 
     if (chatToast) {
@@ -759,6 +779,7 @@ export function GameTable({
     return items;
   }, [
     chatToast,
+    discardDrawFlash,
     error,
     eventNotificationsEnabled,
     lobbyJoinToast,
@@ -1425,9 +1446,11 @@ export function GameTable({
                     </p>
                     <div
                       className={`table-pile-card pixel-border rounded-card scaled-pile-size bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
-                        view.canDraw && !snapGivePending
-                          ? "pile-interactable-card ring-2 ring-accent-alt"
-                          : ""
+                        deckDrawFlash
+                          ? "ring-2 ring-accent-alt shadow-glow-accent-alt animate-pulse"
+                          : view.canDraw && !snapGivePending
+                            ? "pile-interactable-card ring-2 ring-accent-alt"
+                            : ""
                       }`}
                     >
                       {view.deckCount}
@@ -1528,13 +1551,15 @@ export function GameTable({
                     </p>
                     <div
                       className={`scaled-pile-size shrink-0 ${
-                        showDiscardPileGlow
-                          ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
-                          : snapWindowActive
-                            ? "ring-4 ring-danger rounded-card snap-window-discard"
-                            : view.canSnap
-                              ? "ring-1 ring-danger/50 rounded-card"
-                              : ""
+                        discardDrawFlash
+                          ? "ring-2 ring-accent-alt shadow-glow-accent-alt rounded-card animate-pulse"
+                          : showDiscardPileGlow
+                            ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
+                            : snapWindowActive
+                              ? "ring-4 ring-danger rounded-card snap-window-discard"
+                              : view.canSnap
+                                ? "ring-1 ring-danger/50 rounded-card"
+                                : ""
                       }`}
                     >
                       <AnimatePresence mode="wait">

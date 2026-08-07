@@ -294,6 +294,12 @@ export class CambioParty extends Server<Env> {
     if (result.reshuffleFlash) {
       this.broadcastReshuffleFlash();
     }
+    if (result.discardDrawFlash) {
+      this.broadcastDiscardDrawFlash(result.discardDrawFlash.playerId);
+    }
+    if (result.deckDrawFlash) {
+      this.broadcastDeckDrawFlash(result.deckDrawFlash.playerId);
+    }
 
     if (message.type === "chat" && !result.error) {
       const player = findPlayer(this.state, playerId);
@@ -485,6 +491,22 @@ export class CambioParty extends Server<Env> {
 
   broadcastReshuffleFlash() {
     const message: ServerMessage = { type: "reshuffle_flash" };
+    const payload = JSON.stringify(message);
+    for (const conn of this.getConnections()) {
+      conn.send(payload);
+    }
+  }
+
+  broadcastDiscardDrawFlash(playerId: string) {
+    const message: ServerMessage = { type: "discard_draw_flash", playerId };
+    const payload = JSON.stringify(message);
+    for (const conn of this.getConnections()) {
+      conn.send(payload);
+    }
+  }
+
+  broadcastDeckDrawFlash(playerId: string) {
+    const message: ServerMessage = { type: "deck_draw_flash", playerId };
     const payload = JSON.stringify(message);
     for (const conn of this.getConnections()) {
       conn.send(payload);
