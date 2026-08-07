@@ -10,12 +10,12 @@ import {
 } from "react";
 import {
   APPEARANCE_MEDIA_QUERY,
+  type AppearancePreference,
   DEFAULT_APPEARANCE,
+  type ResolvedAppearance,
   resolveAppearance,
   setAppearanceCookie,
   setThemeCookie,
-  type AppearancePreference,
-  type ResolvedAppearance,
 } from "@/lib/theme-cookie";
 import { applyThemeFontClass } from "@/lib/theme-fonts";
 import { DEFAULT_THEME, type ThemeId } from "@/lib/themes";
@@ -42,15 +42,14 @@ export function ThemeProvider({
   const [theme, setThemeState] = useState<ThemeId>(initialTheme);
   const [appearancePreference, setAppearancePreferenceState] =
     useState<AppearancePreference>(initialAppearancePreference);
-  const [resolvedAppearance, setResolvedAppearance] = useState<ResolvedAppearance>(
-    () => {
+  const [resolvedAppearance, setResolvedAppearance] =
+    useState<ResolvedAppearance>(() => {
       if (typeof document !== "undefined") {
         const fromDom = document.documentElement.dataset.appearance;
         if (fromDom === "light" || fromDom === "dark") return fromDom;
       }
       return resolveAppearance(initialAppearancePreference, false);
-    },
-  );
+    });
 
   const setTheme = useCallback((next: ThemeId) => {
     setThemeState(next);

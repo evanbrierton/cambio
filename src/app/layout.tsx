@@ -124,10 +124,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
-        <script
-          id="cambio-appearance-init"
-          dangerouslySetInnerHTML={{ __html: APPEARANCE_INIT_SCRIPT }}
-        />
+        <script id="cambio-appearance-init">{APPEARANCE_INIT_SCRIPT}</script>
       </head>
       <body className="min-h-full flex flex-col relative z-0">
         <PwaRegistrar />
