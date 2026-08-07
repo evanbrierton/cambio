@@ -26,9 +26,7 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
       "(prefers-reduced-motion: reduce)",
     ).matches;
     const viewport = scrollEl.getBoundingClientRect();
-    const centerX = viewport.left + viewport.width / 2;
     const centerY = viewport.top + viewport.height / 2;
-    const halfW = Math.max(viewport.width / 2, 1);
     const halfH = Math.max(viewport.height / 2, 1);
 
     itemRefs.current.forEach((item) => {
@@ -41,19 +39,17 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
       }
 
       const rect = item.getBoundingClientRect();
-      const offsetX = (rect.left + rect.width / 2 - centerX) / halfW;
       const offsetY = (rect.top + rect.height / 2 - centerY) / halfH;
-      const clampedX = Math.max(-1, Math.min(1, offsetX));
       const clampedY = Math.max(-1, Math.min(1, offsetY));
-      const dist = Math.min(1, Math.hypot(clampedX, clampedY));
+      const dist = Math.abs(clampedY);
 
-      const rotateY = clampedX * -18;
-      const rotateX = clampedY * 12;
-      const scale = 1 - dist * 0.1;
-      const translateZ = (1 - dist) * 28;
-      const opacity = 1 - dist * 0.3;
+      // Vertical scroll only — skip rotateY so side columns stay upright.
+      const rotateX = clampedY * 2;
+      const scale = 1 - dist * 0.02;
+      const translateZ = (1 - dist) * 4;
+      const opacity = 1 - dist * 0.05;
 
-      item.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
+      item.style.transform = `rotateX(${rotateX}deg) scale(${scale}) translateZ(${translateZ}px)`;
       item.style.opacity = String(opacity);
     });
   }, []);
