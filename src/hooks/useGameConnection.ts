@@ -19,6 +19,7 @@ export const PENALTY_FLASH_MS = 2500;
 export const CAMBIO_FLASH_MS = 3500;
 export const RESHUFFLE_FLASH_MS = 3500;
 export const DISCARD_DRAW_FLASH_MS = 3000;
+export const DECK_DRAW_FLASH_MS = 1500;
 export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
 const PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH = new Set<ClientMessage["type"]>(
@@ -80,6 +81,10 @@ export type DiscardDrawFlash = {
   playerId: string;
 };
 
+export type DeckDrawFlash = {
+  playerId: string;
+};
+
 type ConnectionState = {
   connected: boolean;
   playerId: string | null;
@@ -92,6 +97,7 @@ type ConnectionState = {
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
   discardDrawFlash: DiscardDrawFlash | null;
+  deckDrawFlash: DeckDrawFlash | null;
 };
 
 export type SessionMode = "new" | "reconnect";
@@ -130,6 +136,7 @@ export function useGameConnection(
     cambioFlash: null,
     reshuffleFlash: null,
     discardDrawFlash: null,
+    deckDrawFlash: null,
   });
   const socketRef = useRef<PartySocket | null>(null);
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -141,6 +148,7 @@ export function useGameConnection(
   const discardDrawTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const deckDrawTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cambioFlashRef = useRef<CambioFlash | null>(null);
   const viewRef = useRef<PlayerView | null>(null);
 
@@ -326,6 +334,17 @@ export function useGameConnection(
         }, DISCARD_DRAW_FLASH_MS);
       }
 
+      if (data.type === "deck_draw_flash") {
+        if (deckDrawTimerRef.current) clearTimeout(deckDrawTimerRef.current);
+        setState((s) => ({
+          ...s,
+          deckDrawFlash: { playerId: data.playerId },
+        }));
+        deckDrawTimerRef.current = setTimeout(() => {
+          setState((s) => ({ ...s, deckDrawFlash: null }));
+        }, DECK_DRAW_FLASH_MS);
+      }
+
       if (data.type === "error") {
         setState((s) => ({ ...s, error: data.message }));
       }
@@ -340,6 +359,7 @@ export function useGameConnection(
       if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);
       if (discardDrawTimerRef.current)
         clearTimeout(discardDrawTimerRef.current);
+      if (deckDrawTimerRef.current) clearTimeout(deckDrawTimerRef.current);
       cambioFlashRef.current = null;
       viewRef.current = null;
       socket.close();

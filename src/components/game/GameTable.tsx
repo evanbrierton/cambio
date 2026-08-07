@@ -37,6 +37,7 @@ import { useChatNotifications } from "@/hooks/useChatNotifications";
 import { useDebugEnabled } from "@/hooks/useDebugEnabled";
 import type {
   CambioFlash,
+  DeckDrawFlash,
   DiscardDrawFlash,
   FleetingPeek,
   PeekFlash,
@@ -63,6 +64,7 @@ type GameTableProps = {
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
   discardDrawFlash: DiscardDrawFlash | null;
+  deckDrawFlash: DeckDrawFlash | null;
   send: (message: ClientMessage) => void;
 };
 
@@ -568,6 +570,7 @@ export function GameTable({
   cambioFlash,
   reshuffleFlash,
   discardDrawFlash,
+  deckDrawFlash,
   send,
 }: GameTableProps) {
   const voice = useThemeVoice();
@@ -692,12 +695,35 @@ export function GameTable({
       });
     }
 
+    if (discardDrawFlash) {
+      const player = view.players.find(
+        (p) => p.id === discardDrawFlash.playerId,
+      );
+      if (player) {
+        items.push({
+          id: "discard-draw-flash",
+          message: voice.discardDrawNotice(player.name),
+          tone: "info",
+          pulse: true,
+        });
+      }
+    }
+
     if (chatToast) {
       items.push(chatToast);
     }
 
     return items;
-  }, [chatToast, error, peekFlash, penaltyFlash, swapFlash, view.players, voice]);
+  }, [
+    chatToast,
+    discardDrawFlash,
+    error,
+    peekFlash,
+    penaltyFlash,
+    swapFlash,
+    view.players,
+    voice,
+  ]);
 
   const actionToast: GameToastItem | null =
     hintsEnabled && actionBanner
@@ -1234,9 +1260,11 @@ export function GameTable({
                   </p>
                   <div
                     className={`table-pile-card pixel-border rounded-card ${PILE_CARD_SIZE} bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
-                      view.canDraw && !snapGivePending
-                        ? "pile-interactable-card ring-2 ring-accent-alt"
-                        : ""
+                      deckDrawFlash
+                        ? "ring-2 ring-accent-alt shadow-glow-accent-alt animate-pulse"
+                        : view.canDraw && !snapGivePending
+                          ? "pile-interactable-card ring-2 ring-accent-alt"
+                          : ""
                     }`}
                   >
                     {view.deckCount}
@@ -1329,11 +1357,6 @@ export function GameTable({
                       empty={!isDrawnSlotMine && !view.hasDrawnCard}
                       sizeClass={PILE_CARD_SIZE}
                     />
-                    {(view.drawnFromDiscard || discardDrawFlash) && view.hasDrawnCard && (
-                      <span className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-accent-alt text-[8px] sm:text-[9px] font-display text-surface whitespace-nowrap animate-pulse shadow-lg ring-1 ring-accent-alt/50">
-                        {voice.fromDiscard}
-                      </span>
-                    )}
                   </div>
                 </div>
               </div>

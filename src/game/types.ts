@@ -253,6 +253,10 @@ export type DiscardDrawFlash = {
   playerId: string;
 };
 
+export type DeckDrawFlash = {
+  playerId: string;
+};
+
 export type ServerMessage =
   | { type: "state"; view: PlayerView }
   | { type: "secret_peek"; playerId: string; slot: number; card: Card }
@@ -268,5 +272,6 @@ export type ServerMessage =
   | { type: "cambio_flash"; playerId: string }
   | { type: "reshuffle_flash" }
   | { type: "discard_draw_flash"; playerId: string }
+  | { type: "deck_draw_flash"; playerId: string }
   | { type: "error"; message: string }
   | { type: "room_info"; roomId: string; playerId: string };
