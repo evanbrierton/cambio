@@ -129,11 +129,11 @@
       "finishedAt": "2026-08-07T17:04:52.011Z",
       "lastUpdate": "2026-08-07T17:04:52.012Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "verify-cam-12-bot-tuning",
@@ -153,16 +153,16 @@
       "finishedAt": "2026-08-07T17:57:53.414Z",
       "lastUpdate": "2026-08-07T17:57:53.415Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "verify-cam-49-system-dark-mode",
       "type": "verifier",
-      "branch": "orch/linear-board/verify-cam-49-system-dark-mode",
+      "branch": "`orch/linear-board/cam-49-system-dark-mode` (no commits made; verification-only, source untouched)",
       "startingRef": "orch/linear-board/cam-49-system-dark-mode",
       "dependsOn": [
         "cam-49-system-dark-mode"
@@ -170,18 +170,18 @@
       "agentId": "bc-a88e4cf1-8ccb-4aef-bf6a-76c3e78aa734",
       "runId": "run-8d4c64fe-f0cb-4b40-aa75-76010fc4b659",
       "parentAgentId": "bc-e63056bf-7064-45ea-bdb6-e7b25fd25d86",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-cam-49-system-dark-mode.md",
       "startedAt": "2026-08-07T17:36:29.917Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-07T17:36:32.875Z",
+      "finishedAt": "2026-08-07T18:15:09.368Z",
+      "lastUpdate": "2026-08-07T18:15:09.368Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     }
   ],
   "attention": [
@@ -296,6 +296,18 @@
     {
       "at": "2026-08-07T17:57:53.592Z",
       "message": "git-sync failed (verify-cam-12-bot-tuning running -> handed-off): Command failed: git -C /workspace/.orchestrate/linear-board push\nremote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for 'https…"
+    },
+    {
+      "at": "2026-08-07T17:58:29.489Z",
+      "message": "git-sync failed (planned checkpoint restart): Command failed: git -C /workspace/.orchestrate/linear-board push\nremote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for 'https…"
+    },
+    {
+      "at": "2026-08-07T18:10:33.727Z",
+      "message": "verify-cam-49-system-dark-mode: SSE idle 336766ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-07T18:10:33.728Z",
+      "message": "verify-cam-49-system-dark-mode: tool_call idle 336768ms; last=2026-08-07T18:04:56.960Z"
     }
   ]
 }
