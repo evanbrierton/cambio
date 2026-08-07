@@ -53,7 +53,7 @@ export function PlayerScrollStage({
       const rail = railRef.current;
       const item = itemRefs.current[index];
       if (!rail || !item) return;
-      if (rail.classList.contains("players-3d-rail-packed")) return;
+      if (rail.classList.contains("is-static")) return;
 
       const target =
         item.offsetLeft + item.offsetWidth / 2 - rail.clientWidth / 2;
@@ -92,6 +92,8 @@ export function PlayerScrollStage({
     const fits = contentWidth <= availableWidth + 0.5;
 
     rail.classList.toggle("players-3d-rail-packed", fits);
+    rail.classList.toggle("is-static", fits);
+    stage?.classList.toggle("is-static", fits);
 
     const centerItem = itemRefs.current[centerIndex];
     const itemHalf = centerItem ? centerItem.offsetWidth / 2 : 58;
@@ -138,6 +140,11 @@ export function PlayerScrollStage({
   useEffect(() => {
     itemRefs.current.length = childCount;
   }, [childCount]);
+
+  useEffect(() => {
+    updateLayout();
+    scrollToCenter(centerIndex);
+  }, [centerIndex, childCount, scrollToCenter, updateLayout]);
 
   useEffect(() => {
     const rail = railRef.current;

@@ -1454,6 +1454,28 @@ html.play-scroll-lock body {
   justify-content: center;
 }
 
+.players-3d-stage.is-static {
+  perspective: none;
+}
+
+.players-3d-rail.is-static {
+  justify-content: center;
+  overflow-x: hidden;
+  scroll-snap-type: none;
+  touch-action: auto;
+  transform-style: flat;
+}
+
+.players-3d-rail.is-static .players-3d-item {
+  transform: none !important;
+  opacity: 1 !important;
+  will-change: auto;
+}
+
+.players-3d-rail.is-static .players-3d-spacer {
+  display: none;
+}
+
 .seat-hand-card {
   width: var(--seat-card-w);
   height: var(--seat-card-h);
