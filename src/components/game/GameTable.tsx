@@ -1201,21 +1201,21 @@ export function GameTable({
             onClick={() => setSettingsOpen(false)}
             aria-label="Close menu"
           />
-          <div className="mobile-settings-sheet absolute inset-x-0 bottom-0 max-h-[85dvh] flex flex-col bg-surface pixel-border border-b-0 overflow-hidden">
-            <div className="shrink-0 flex items-center justify-between gap-3 p-4 pb-3">
-              <p className="font-display text-xs text-theme">
+          <div className="mobile-settings-sheet absolute inset-x-0 bottom-0 top-[max(0.75rem,env(safe-area-inset-top,0px))] flex flex-col bg-surface pixel-border border-b-0 overflow-hidden">
+            <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3.5 min-h-[3.75rem]">
+              <p className="font-display text-base sm:text-lg text-theme leading-tight">
                 {voice.gameMenuLabel}
               </p>
               <button
                 type="button"
                 onClick={() => setSettingsOpen(false)}
-                className="chip-btn chip-btn-sm border-theme-muted text-theme hover:border-accent transition-colors"
+                className="sheet-close-btn border-theme-muted text-theme hover:border-accent hover:text-accent transition-colors"
                 aria-label="Close menu"
               >
-                ✕
+                <span aria-hidden="true">×</span>
               </button>
             </div>
-            <div className="mobile-game-sheet overflow-y-auto flex-1 min-h-0 px-4 pt-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex flex-col gap-4">
+            <div className="mobile-game-sheet overflow-y-auto flex-1 min-h-0 px-4 pt-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex flex-col gap-3">
               {gameSidebar}
             </div>
           </div>
@@ -1234,37 +1234,52 @@ export function GameTable({
             isLobbyScrollLayout ? "" : "flex-1 min-h-0 overflow-hidden"
           }`}
         >
-          <header className="shrink-0 flex flex-col gap-2">
-            <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-display text-theme-muted text-[10px] sm:text-xs truncate">
-                    {voice.roomPrefix} {view.roomId.toUpperCase()}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={copyRoomCode}
-                    aria-live="polite"
-                    aria-label={roomCopied ? voice.copied : voice.copy}
-                    className={`chip-btn chip-btn-sm transition-colors ${
-                      roomCopied
-                        ? "border-accent text-accent"
-                        : "border-theme-muted text-theme hover:border-accent"
-                    }`}
-                  >
-                    {voice.copy}
-                  </button>
-                </div>
-                <h1 className="font-display text-sm sm:text-xl lg:text-2xl title-glow mt-0.5 sm:mt-1 truncate">
-                  {phaseLabel}
-                </h1>
-                {debugEnabled && view.debugReveal && (
-                  <p className="font-display text-[8px] text-accent-alt mt-1">
-                    DEBUG: ALL CARDS VISIBLE
-                  </p>
-                )}
+          <header className="shrink-0">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="min-w-0 flex-1 flex items-center gap-1.5 overflow-hidden">
+                <p className="font-display text-[8px] sm:text-[9px] text-theme-muted truncate min-w-0">
+                  {voice.roomPrefix}{" "}
+                  <span className="text-theme">{view.roomId.toUpperCase()}</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={copyRoomCode}
+                  aria-live="polite"
+                  aria-label={roomCopied ? voice.copied : voice.copy}
+                  className={`chip-btn chip-btn-sm shrink-0 transition-colors ${
+                    roomCopied
+                      ? "border-accent text-accent"
+                      : "border-theme-muted text-theme hover:border-accent"
+                  }`}
+                >
+                  {roomCopied ? voice.copied : voice.copy}
+                </button>
+                <span
+                  className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
+                    connected
+                      ? "bg-[var(--accent-alt)] shadow-[0_0_6px_var(--glow-accent-alt)]"
+                      : error
+                        ? "bg-[var(--danger)]"
+                        : "bg-[var(--accent)] opacity-75"
+                  }`}
+                  title={
+                    connected
+                      ? voice.online
+                      : error
+                        ? undefined
+                        : voice.reconnecting
+                  }
+                  aria-label={
+                    connected
+                      ? voice.online
+                      : error
+                        ? undefined
+                        : voice.reconnecting
+                  }
+                />
               </div>
-              <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+
+              <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
                   onClick={openSettings}
@@ -1272,8 +1287,9 @@ export function GameTable({
                   aria-label={
                     unreadCount > 0
                       ? `Game menu (${unreadCount} unread messages)`
-                      : "Game menu"
+                      : voice.gameMenuLabel
                   }
+                  title={voice.gameMenuLabel}
                 >
                   ···
                   {unreadCount > 0 ? (
@@ -1285,16 +1301,26 @@ export function GameTable({
                 <Link
                   href="/"
                   className="chip-btn chip-btn-sm border-theme-muted text-theme hover:border-accent transition-colors"
+                  aria-label={voice.leaveGame}
+                  title={voice.leaveGame}
                 >
-                  {voice.leaveGame}
+                  EXIT
                 </Link>
-                <div className="font-display text-[10px] text-theme-muted hidden sm:block">
-                  {connected ? voice.online : error ? null : voice.reconnecting}
-                </div>
               </div>
             </div>
+
+            <h1 className="font-display text-[11px] sm:text-sm title-glow truncate mt-1 tracking-[var(--display-tracking)] leading-snug">
+              {phaseLabel}
+            </h1>
+
+            {debugEnabled && view.debugReveal && (
+              <p className="font-display text-[8px] text-accent-alt mt-0.5">
+                DEBUG: ALL CARDS VISIBLE
+              </p>
+            )}
+
             {view.phase === "lobby" && lobbyJoinToast ? (
-              <div className="shrink-0" aria-live="polite">
+              <div className="shrink-0 mt-1.5" aria-live="polite">
                 <AnimatePresence initial={false} mode="wait">
                   <GameToast
                     key={lobbyJoinToast.id}
@@ -1319,13 +1345,10 @@ export function GameTable({
                   : ""
               } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
             >
-              {hintsEnabled &&
-              (!playerGridEnabled || actionToast) ? (
+              {hintsEnabled ? (
                 <div
                   data-table-hint
-                  className={`table-hint shrink-0 mx-auto w-full flex items-center justify-center ${
-                    playerGridEnabled ? "" : "table-hint-slot"
-                  }`}
+                  className="table-hint table-hint-slot shrink-0 mx-auto w-full flex items-center justify-center"
                 >
                   <AnimatePresence initial={false} mode="wait">
                     {actionToast ? (
@@ -1333,7 +1356,7 @@ export function GameTable({
                         key={actionToast.id}
                         toast={actionToast}
                         inline
-                        className="!p-2 !text-[9px] sm:!text-[10px] shadow-none"
+                        className="!p-2 !text-[9px] sm:!text-[10px] !leading-[1.45] shadow-none"
                       />
                     ) : null}
                   </AnimatePresence>
@@ -1475,7 +1498,9 @@ export function GameTable({
                           : "text-theme-muted"
                       }`}
                     >
-                      {drawnDiscardAbility ? discardActionLabel : voice.discard}
+                      {playerGridEnabled || !drawnDiscardAbility
+                        ? voice.discard
+                        : discardActionLabel}
                     </p>
                     <div
                       className={`scaled-pile-size shrink-0 ${
@@ -1510,12 +1535,37 @@ export function GameTable({
                   </button>
                 </div>
 
-                {showDrawnActionChrome || !playerGridEnabled ? (
+                {playerGridEnabled ? (
+                  <div className="table-grid-context shrink-0 w-full min-w-0">
+                    {showDrawnActionChrome ? (
+                      view.canDiscardDrawn ? (
+                        <button
+                          type="button"
+                          onClick={() => send({ type: "discard_drawn" })}
+                          className="table-grid-context-action w-full truncate"
+                        >
+                          {discardActionLabel}
+                        </button>
+                      ) : view.canSwap ? (
+                        <p className="table-grid-context-hint truncate">
+                          {voice.tapToSwap}
+                        </p>
+                      ) : null
+                    ) : (
+                      <p
+                        className="table-grid-context-hint truncate invisible"
+                        aria-hidden
+                      >
+                        —
+                      </p>
+                    )}
+                  </div>
+                ) : null}
+
+                {!playerGridEnabled ? (
                   <div
                     data-table-chrome
-                    className={`table-action-chrome flex flex-col items-center justify-center shrink-0 ${
-                      playerGridEnabled ? "gap-1" : "table-chrome-slot gap-1.5"
-                    }`}
+                    className="table-action-chrome table-chrome-slot flex flex-col items-center justify-center gap-1.5 shrink-0"
                   >
                     {showDrawnActionChrome ? (
                       <div className="flex flex-wrap items-center justify-center gap-1.5">
@@ -1575,7 +1625,7 @@ export function GameTable({
           {view.phase === "lobby" ? (
             <LobbyPlayers view={view} voice={voice} send={send} />
           ) : (
-            <div className="flex flex-1 flex-col gap-1.5 sm:gap-2 min-h-0 min-w-0 overflow-hidden">
+            <div className="players-with-action-overlay relative flex flex-1 flex-col gap-1.5 sm:gap-2 min-h-0 min-w-0 overflow-hidden">
               <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">
                 PLAYERS
               </p>
@@ -1596,10 +1646,16 @@ export function GameTable({
                   </PlayerScrollStage>
                 )
               ) : null}
+
+              <div className="action-buttons-overlay lg:hidden">
+                {actionButtons}
+              </div>
             </div>
           )}
 
-          <div className="shrink-0 lg:hidden mt-auto">{actionButtons}</div>
+          {view.phase === "lobby" ? (
+            <div className="shrink-0 lg:hidden mt-auto">{actionButtons}</div>
+          ) : null}
         </div>
 
         <aside className="hidden lg:flex flex-col gap-3 lg:sticky lg:top-3 lg:self-start lg:max-h-[calc(100dvh-2.5rem)] lg:min-h-0 min-w-0">
