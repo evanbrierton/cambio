@@ -15,13 +15,13 @@
       "handoffPath": "handoffs/cam-11-hint-draw-from-deck.md",
       "startedAt": "2026-08-07T16:58:29.504Z",
       "finishedAt": "2026-08-07T17:12:39.823Z",
-      "lastUpdate": "2026-08-07T17:12:39.823Z",
+      "lastUpdate": "2026-08-07T17:12:42.783Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": 144,
       "failureMode": null,
-      "verification": null
+      "verification": "live-ui-verified"
     },
     {
       "name": "cam-5-player-seats-no-scroll",
@@ -76,12 +76,12 @@
       "agentId": "bc-625648d4-f0b6-470d-b3e6-9465618f31df",
       "runId": "run-4eddc5ae-b383-48b6-9ba9-f6bea86e9371",
       "parentAgentId": "bc-e63056bf-7064-45ea-bdb6-e7b25fd25d86",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/cam-12-bot-tuning.md",
       "startedAt": "2026-08-07T16:58:38.948Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-07T16:58:41.529Z",
+      "finishedAt": "2026-08-07T17:32:54.622Z",
+      "lastUpdate": "2026-08-07T17:32:54.622Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
@@ -258,6 +258,10 @@
     {
       "at": "2026-08-07T17:09:45.366Z",
       "message": "cam-49-system-dark-mode: tool_call idle 343197ms; last=2026-08-07T17:04:02.169Z"
+    },
+    {
+      "at": "2026-08-07T17:12:42.784Z",
+      "message": "cam-11-hint-draw-from-deck: verification self-reported (live-ui-verified)"
     }
   ]
 }
