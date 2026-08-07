@@ -1466,16 +1466,6 @@ html.play-scroll-lock body {
   transform-style: flat;
 }
 
-.players-3d-rail.is-static .players-3d-item {
-  transform: none !important;
-  opacity: 1 !important;
-  will-change: auto;
-}
-
-.players-3d-rail.is-static .players-3d-spacer {
-  display: none;
-}
-
 .seat-hand-card {
   width: var(--seat-card-w);
   height: var(--seat-card-h);
@@ -1531,6 +1521,16 @@ html.play-scroll-lock body {
   flex: 0 0 auto;
   height: 1px;
   pointer-events: none;
+}
+
+.players-3d-rail.is-static .players-3d-item {
+  transform: none;
+  opacity: 1;
+  will-change: auto;
+}
+
+.players-3d-rail.is-static .players-3d-spacer {
+  display: none;
 }
 
 /* Bottom sheet: keep the frame border on a non-scrolling shell. */

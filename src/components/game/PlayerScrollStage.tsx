@@ -76,9 +76,9 @@ export function PlayerScrollStage({
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    const items = itemRefs.current.filter(
-      (item): item is HTMLDivElement => item != null,
-    );
+    const items = itemRefs.current
+      .slice(0, childCount)
+      .filter((item): item is HTMLDivElement => item != null);
     const styles = getComputedStyle(rail);
     const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
     const contentWidth = items.reduce(
@@ -135,16 +135,11 @@ export function PlayerScrollStage({
       item.style.transform = `rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
       item.style.opacity = String(1 - Math.abs(clamped) * 0.15);
     });
-  }, [centerIndex]);
+  }, [centerIndex, childCount]);
 
   useEffect(() => {
     itemRefs.current.length = childCount;
   }, [childCount]);
-
-  useEffect(() => {
-    updateLayout();
-    scrollToCenter(centerIndex);
-  }, [centerIndex, childCount, scrollToCenter, updateLayout]);
 
   useEffect(() => {
     const rail = railRef.current;
