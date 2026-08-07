@@ -1,0 +1,38 @@
+[2026-08-07T16:56:17.104Z] cam-11-hint-draw-from-deck: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.
+[2026-08-07T16:56:25.774Z] cam-5-player-seats-no-scroll: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.
+[2026-08-07T16:56:34.758Z] cam-9-auto-call-cambio: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.
+[2026-08-07T16:56:44.537Z] cam-12-bot-tuning: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.
+[2026-08-07T16:56:53.114Z] cam-49-system-dark-mode: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.
+[2026-08-07T16:58:14.602Z] cam-11-hint-draw-from-deck: respawned by self-planner (was error)
+[2026-08-07T16:58:16.074Z] cam-5-player-seats-no-scroll: respawned by self-planner (was error)
+[2026-08-07T16:58:17.559Z] cam-9-auto-call-cambio: respawned by self-planner (was error)
+[2026-08-07T16:58:18.984Z] cam-12-bot-tuning: respawned by self-planner (was error)
+[2026-08-07T16:58:21.561Z] cam-49-system-dark-mode: respawned by self-planner (was error)
+[2026-08-07T17:01:51.462Z] cam-9-auto-call-cambio: verification self-reported (unit-test-verified)
+[2026-08-07T17:05:33.214Z] cam-11-hint-draw-from-deck: SSE idle 309064ms, polled status=running; watchdog still waiting
+[2026-08-07T17:05:33.215Z] cam-11-hint-draw-from-deck: tool_call idle 309065ms; last=2026-08-07T17:00:24.150Z
+[2026-08-07T17:07:37.741Z] cam-5-player-seats-no-scroll: SSE idle 329239ms, polled status=running; watchdog still waiting
+[2026-08-07T17:07:37.742Z] cam-5-player-seats-no-scroll: tool_call idle 329240ms; last=2026-08-07T17:02:08.502Z
+[2026-08-07T17:09:43.356Z] cam-12-bot-tuning: SSE idle 345187ms, polled status=running; watchdog still waiting
+[2026-08-07T17:09:43.356Z] cam-12-bot-tuning: tool_call idle 345187ms; last=2026-08-07T17:03:58.169Z
+[2026-08-07T17:09:45.366Z] cam-49-system-dark-mode: SSE idle 343197ms, polled status=running; watchdog still waiting
+[2026-08-07T17:09:45.366Z] cam-49-system-dark-mode: tool_call idle 343197ms; last=2026-08-07T17:04:02.169Z
+[2026-08-07T17:12:42.784Z] cam-11-hint-draw-from-deck: verification self-reported (live-ui-verified)
+[2026-08-07T17:32:55.607Z] cam-12-bot-tuning: verification self-reported (live-ui-verified)
+[2026-08-07T17:36:25.908Z] cam-49-system-dark-mode: verification self-reported (live-ui-verified)
+[2026-08-07T17:41:00.641Z] verify-cam-12-bot-tuning: SSE idle 319286ms, polled status=running; watchdog still waiting
+[2026-08-07T17:41:00.642Z] verify-cam-12-bot-tuning: tool_call idle 319287ms; last=2026-08-07T17:35:41.355Z
+[2026-08-07T17:48:04.888Z] cam-5-player-seats-no-scroll: verification self-reported (live-ui-verified)
+[2026-08-07T17:50:34.379Z] verify-cam-49-system-dark-mode: SSE idle 337689ms, polled status=running; watchdog still waiting
+[2026-08-07T17:50:34.379Z] verify-cam-49-system-dark-mode: tool_call idle 337689ms; last=2026-08-07T17:44:56.690Z
+[2026-08-07T17:57:53.592Z] git-sync failed (verify-cam-12-bot-tuning running -> handed-off): Command failed: git -C /workspace/.orchestrate/linear-board push
+remote: Invalid username or token. Password authentication is not supported for Git operations.
+fatal: Authentication failed for 'https…
+[2026-08-07T17:58:29.489Z] git-sync failed (planned checkpoint restart): Command failed: git -C /workspace/.orchestrate/linear-board push
+remote: Invalid username or token. Password authentication is not supported for Git operations.
+fatal: Authentication failed for 'https…
+[2026-08-07T18:10:33.727Z] verify-cam-49-system-dark-mode: SSE idle 336766ms, polled status=running; watchdog still waiting
+[2026-08-07T18:10:33.728Z] verify-cam-49-system-dark-mode: tool_call idle 336768ms; last=2026-08-07T18:04:56.960Z
+[2026-08-07T18:15:09.546Z] git-sync failed (verify-cam-49-system-dark-mode running -> handed-off): Command failed: git -C /workspace/.orchestrate/linear-board push
+remote: Invalid username or token. Password authentication is not supported for Git operations.
+fatal: Authentication failed for 'https…

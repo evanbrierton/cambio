@@ -308,6 +308,10 @@
     {
       "at": "2026-08-07T18:10:33.728Z",
       "message": "verify-cam-49-system-dark-mode: tool_call idle 336768ms; last=2026-08-07T18:04:56.960Z"
+    },
+    {
+      "at": "2026-08-07T18:15:09.546Z",
+      "message": "git-sync failed (verify-cam-49-system-dark-mode running -> handed-off): Command failed: git -C /workspace/.orchestrate/linear-board push\nremote: Invalid username or token. Password authentication is not supported for Git operations.\nfatal: Authentication failed for 'https…"
     }
   ]
 }
