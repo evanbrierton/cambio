@@ -14,10 +14,34 @@ type PlayerScrollStageProps = {
   centerIndex?: number;
 };
 
+const SEAT_CARD_RATIO = 5 / 7;
+
+function applySeatCardScale(stage: HTMLElement, rail: HTMLElement) {
+  const styles = getComputedStyle(rail);
+  const padY =
+    (Number.parseFloat(styles.paddingTop) || 0) +
+    (Number.parseFloat(styles.paddingBottom) || 0);
+  const availH = Math.max(80, rail.clientHeight - padY);
+  const reserved = 56;
+  const rowGap = 6;
+  let cardH = (availH - reserved - rowGap) / 2;
+  cardH = Math.min(124, Math.max(72, cardH));
+  const cardW = cardH * SEAT_CARD_RATIO;
+  const gap = 6;
+  const handW = cardW * 2 + gap;
+  const fontSize = Math.max(10, cardH * 0.14);
+
+  stage.style.setProperty("--seat-card-w", `${cardW}px`);
+  stage.style.setProperty("--seat-card-h", `${cardH}px`);
+  stage.style.setProperty("--seat-hand-w", `${handW}px`);
+  stage.style.setProperty("--seat-card-fs", `${fontSize}px`);
+}
+
 export function PlayerScrollStage({
   children,
   centerIndex = 0,
 }: PlayerScrollStageProps) {
+  const stageRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const leadSpacerRef = useRef<HTMLDivElement>(null);
@@ -39,8 +63,15 @@ export function PlayerScrollStage({
   );
 
   const updateLayout = useCallback(() => {
+    const stage = stageRef.current;
     const rail = railRef.current;
     if (!rail) return;
+
+    if (stage) {
+      applySeatCardScale(stage, rail);
+      // Force layout so pack-when-fits measures scaled seat widths.
+      void stage.offsetWidth;
+    }
 
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -136,7 +167,7 @@ export function PlayerScrollStage({
   }, [centerIndex, childCount, scrollToCenter, updateLayout]);
 
   return (
-    <div className="players-3d-stage">
+    <div ref={stageRef} className="players-3d-stage">
       <div ref={railRef} className="players-3d-rail">
         <div
           key="spacer-lead"
