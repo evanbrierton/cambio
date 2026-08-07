@@ -32,7 +32,9 @@
         "No new voice strings added; src/lib/themes.ts untouched",
         "pnpm lint and pnpm typecheck pass"
       ],
-      "verify": "## Setup\n- Install deps with `pnpm install` (repo uses pnpm; see pnpm-lock.yaml).\n\n## Automated\n- Run `pnpm lint` and `pnpm typecheck`; both must pass.\n\n## Manual\n- Start `pnpm dev`, open a room, and take a turn where a card matching the discard top is in hand while it is your turn to draw. Confirm the hint bar tells you to draw from the deck rather than to snap.\n- Trigger a snap window (another player discards a matching card) and confirm the snap hint still shows.\n\n## Gotchas\n- `computeHint` is ordered; the `canSnap && canDraw` branch currently pre-empts the `canDraw` branch. Only the primary-turn hint should change; leave snap_window and the final snap-only branch intact."
+      "verify": "## Setup\n- Install deps with `pnpm install` (repo uses pnpm; see pnpm-lock.yaml).\n\n## Automated\n- Run `pnpm lint` and `pnpm typecheck`; both must pass.\n\n## Manual\n- Start `pnpm dev`, open a room, and take a turn where a card matching the discard top is in hand while it is your turn to draw. Confirm the hint bar tells you to draw from the deck rather than to snap.\n- Trigger a snap window (another player discards a matching card) and confirm the snap hint still shows.\n\n## Gotchas\n- `computeHint` is ordered; the `canSnap && canDraw` branch currently pre-empts the `canDraw` branch. Only the primary-turn hint should change; leave snap_window and the final snap-only branch intact.",
+      "model": "gpt-5.3-codex-high-fast",
+      "maxAttempts": 3
     },
     {
       "name": "cam-5-player-seats-no-scroll",
@@ -49,7 +51,9 @@
         "Fit/overflow is recomputed on window resize and on player-count change",
         "No console errors or layout thrash; pnpm lint and pnpm typecheck pass"
       ],
-      "verify": "## Setup\n- `pnpm install`, then `pnpm dev`.\n\n## Manual\n- Open a room with 2-3 players (fits on screen): confirm seats are centered and the row does not scroll horizontally.\n- Open/simulate a room with many players (overflow): confirm the scrollable 3D carousel still works and centers the active seat.\n- Resize the window across the fit/overflow boundary and confirm the layout switches correctly without errors.\n\n## Automated\n- `pnpm lint` and `pnpm typecheck` must pass.\n\n## Gotchas\n- Only modify `.players-3d-*` rules in globals.css to avoid colliding with other appearance work."
+      "verify": "## Setup\n- `pnpm install`, then `pnpm dev`.\n\n## Manual\n- Open a room with 2-3 players (fits on screen): confirm seats are centered and the row does not scroll horizontally.\n- Open/simulate a room with many players (overflow): confirm the scrollable 3D carousel still works and centers the active seat.\n- Resize the window across the fit/overflow boundary and confirm the layout switches correctly without errors.\n\n## Automated\n- `pnpm lint` and `pnpm typecheck` must pass.\n\n## Gotchas\n- Only modify `.players-3d-*` rules in globals.css to avoid colliding with other appearance work.",
+      "model": "gpt-5.3-codex-high-fast",
+      "maxAttempts": 3
     },
     {
       "name": "cam-9-auto-call-cambio",
@@ -68,7 +72,9 @@
         "New/updated vitest cases in src/game/engine.test.ts cover the above and pnpm test passes",
         "pnpm lint and pnpm typecheck pass"
       ],
-      "verify": "## Setup\n- `pnpm install`.\n\n## Automated\n- Run `pnpm test` (vitest) and confirm the new engine cases for auto-call Cambio pass along with the existing suite.\n- `pnpm lint` and `pnpm typecheck` must pass.\n\n## Manual (optional)\n- In `pnpm dev`, drive a game state where a player empties their hand (e.g. via snaps) and confirm Cambio is auto-called and the final round begins.\n\n## Gotchas\n- The manual path is the `case 'call_cambio'` block (guards: not after drawing, correct phase). Reuse the same state mutations for the auto path. Ensure the auto-call fires after the card removal that empties the hand, and only once."
+      "verify": "## Setup\n- `pnpm install`.\n\n## Automated\n- Run `pnpm test` (vitest) and confirm the new engine cases for auto-call Cambio pass along with the existing suite.\n- `pnpm lint` and `pnpm typecheck` must pass.\n\n## Manual (optional)\n- In `pnpm dev`, drive a game state where a player empties their hand (e.g. via snaps) and confirm Cambio is auto-called and the final round begins.\n\n## Gotchas\n- The manual path is the `case 'call_cambio'` block (guards: not after drawing, correct phase). Reuse the same state mutations for the auto path. Ensure the auto-call fires after the card removal that empties the hand, and only once.",
+      "model": "gpt-5.3-codex-high-fast",
+      "maxAttempts": 3
     },
     {
       "name": "cam-12-bot-tuning",
@@ -91,7 +97,9 @@
         "Difficulty settings remain coherent and the game still plays end-to-end vs bots",
         "pnpm lint and pnpm typecheck pass (and pnpm test if bot tests exist)"
       ],
-      "verify": "## Setup\n- `pnpm install`.\n\n## Automated\n- `pnpm lint`, `pnpm typecheck`, and `pnpm test` must pass.\n- Statically confirm bot decision functions consume `BotKnowledge` (or equivalent legitimately-known state) and do not index into opponents' hidden card values.\n\n## Manual\n- Run `pnpm dev`, start a solo-vs-bots game, and observe: bots pause a human-like amount before acting; bots do not instantly snap/target unknown cards; bots do not call Cambio on turn 1-2 when it is not warranted; across multiple rounds bots weigh their overall standing.\n\n## Gotchas\n- Relevant symbols per the issue: the `BotKnowledge` class, difficulty settings, and `cambioThreshold` in `src/game/bot.ts`. Keep the message protocol and other game files untouched."
+      "verify": "## Setup\n- `pnpm install`.\n\n## Automated\n- `pnpm lint`, `pnpm typecheck`, and `pnpm test` must pass.\n- Statically confirm bot decision functions consume `BotKnowledge` (or equivalent legitimately-known state) and do not index into opponents' hidden card values.\n\n## Manual\n- Run `pnpm dev`, start a solo-vs-bots game, and observe: bots pause a human-like amount before acting; bots do not instantly snap/target unknown cards; bots do not call Cambio on turn 1-2 when it is not warranted; across multiple rounds bots weigh their overall standing.\n\n## Gotchas\n- Relevant symbols per the issue: the `BotKnowledge` class, difficulty settings, and `cambioThreshold` in `src/game/bot.ts`. Keep the message protocol and other game files untouched.",
+      "model": "gpt-5.3-codex-high-fast",
+      "maxAttempts": 3
     },
     {
       "name": "cam-49-system-dark-mode",
@@ -126,7 +134,9 @@
         "Theme voice strings include appearance labels; next-themes is NOT added",
         "pnpm lint, pnpm typecheck, and pnpm build pass"
       ],
-      "verify": "## Setup\n- `pnpm install`.\n\n## Automated\n- `pnpm lint`, `pnpm typecheck`, and `pnpm build` must pass.\n\n## Manual\n- `pnpm dev`. With preference = System, toggle the OS light/dark and confirm the app follows live.\n- Set explicit Light and Dark and confirm they override the OS and persist across a hard reload (cookie) with no flash of the wrong appearance on first paint.\n- Cycle through all 8 style themes in both light and dark and confirm each palette looks correct.\n- Confirm the Light/Dark/System toggle is present next to ThemePicker on home, waiting room, in-game settings, and game over.\n\n## Gotchas\n- Match the existing `cambio-theme` cookie + ThemeProvider pattern; do not introduce next-themes. Structural tokens stay on [data-theme]; only color tokens move under [data-theme][data-appearance]."
+      "verify": "## Setup\n- `pnpm install`.\n\n## Automated\n- `pnpm lint`, `pnpm typecheck`, and `pnpm build` must pass.\n\n## Manual\n- `pnpm dev`. With preference = System, toggle the OS light/dark and confirm the app follows live.\n- Set explicit Light and Dark and confirm they override the OS and persist across a hard reload (cookie) with no flash of the wrong appearance on first paint.\n- Cycle through all 8 style themes in both light and dark and confirm each palette looks correct.\n- Confirm the Light/Dark/System toggle is present next to ThemePicker on home, waiting room, in-game settings, and game over.\n\n## Gotchas\n- Match the existing `cambio-theme` cookie + ThemeProvider pattern; do not introduce next-themes. Structural tokens stay on [data-theme]; only color tokens move under [data-theme][data-appearance].",
+      "model": "gpt-5.3-codex-high-fast",
+      "maxAttempts": 3
     },
     {
       "name": "verify-cam-9-auto-call-cambio",
@@ -135,7 +145,9 @@
       "scopedGoal": "Verify the CAM-9 auto-call-Cambio implementation against every acceptance criterion on the cam-9-auto-call-cambio branch. Run the vitest suite (`pnpm test`) and confirm the new engine cases pass; run `pnpm lint` and `pnpm typecheck`. Inspect `src/game/engine.ts` to confirm the auto-call fires on every hand-empties path (snap, snap-give, discard), applies the same state mutations and caller protection as the manual `call_cambio`, does not double-call, and does not disrupt turn/snap/reshuffle flow. Report a Verification verdict with concrete execution evidence.",
       "acceptance": [
         "Verification section includes execution evidence (test/lint/typecheck output) for all cam-9 acceptance criteria"
-      ]
+      ],
+      "model": "claude-opus-4-8",
+      "maxAttempts": 3
     },
     {
       "name": "verify-cam-12-bot-tuning",
@@ -144,7 +156,9 @@
       "scopedGoal": "Verify the CAM-12 bot-tuning changes against every acceptance criterion on the cam-12-bot-tuning branch. Run `pnpm lint`, `pnpm typecheck`, and `pnpm test`. Statically audit `src/game/bot.ts` to confirm: (a) bot actions use difficulty-scaled, randomized human-like delays; (b) decisions read only from BotKnowledge / legitimately-known state and never index opponents' hidden card values; (c) the Cambio-call decision incorporates aggregate game standings, not just the current round. Where feasible, run a solo-vs-bots game via `pnpm dev` and observe pacing and non-omniscient behavior. Report a Verification verdict with concrete execution evidence.",
       "acceptance": [
         "Verification section includes execution evidence for all cam-12 acceptance criteria, including an information-hygiene audit of BotKnowledge usage"
-      ]
+      ],
+      "model": "claude-opus-4-8",
+      "maxAttempts": 3
     },
     {
       "name": "verify-cam-49-system-dark-mode",
@@ -153,7 +167,9 @@
       "scopedGoal": "Verify the CAM-49 system-aware dark mode against every acceptance criterion on the cam-49-system-dark-mode branch. Run `pnpm lint`, `pnpm typecheck`, and `pnpm build`. Via `pnpm dev`: confirm the appearance preference persists across reloads (cookie), that default System tracks OS light/dark live, that explicit Light/Dark override system, that there is no flash of wrong appearance on first paint, that all 8 themes look correct in both light and dark, and that the Light/Dark/System toggle appears everywhere ThemePicker is shown. Confirm next-themes was NOT added. Report a Verification verdict (prefer live-ui-verified) with concrete execution evidence.",
       "acceptance": [
         "Verification section includes live UI execution evidence for all cam-49 acceptance criteria (persistence, system-follow, override, no-FOUC, all-8-themes, toggle placement)"
-      ]
+      ],
+      "model": "claude-opus-4-8",
+      "maxAttempts": 3
     }
   ]
 }
