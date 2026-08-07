@@ -1029,11 +1029,7 @@ export function handleMessage(
 
       clearHandSlot(target.hand, message.slot);
       state.discard.push(handCard);
-      if (state.phase === "snap_window") {
-        clearSnapEligibleDiscard(state);
-      } else {
-        markDiscardTopSnapEligible(state, handCard);
-      }
+      clearSnapEligibleDiscard(state);
 
       if (message.targetPlayerId === playerId) {
         addLog(state, `${player.name} snapped correctly!`);
