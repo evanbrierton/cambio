@@ -1965,16 +1965,23 @@ html.play-scroll-lock body {
   min-height: 1.75rem;
 }
 
+/* In-flow slots (lobby / desktop aside) keep reserved height to avoid shift */
 .action-buttons-slot {
   min-height: 2.75rem;
-  /* Explicit rgba — `transparent` can composite as opaque on Chrome iOS */
   background-color: rgba(0, 0, 0, 0);
   background-image: none;
 }
 
 .players-with-action-overlay {
-  /* Keep overlay above 3D/overflow scroll layers on iOS */
   isolation: isolate;
+}
+
+.players-with-action-overlay .players-3d-stage,
+.players-with-action-overlay .players-3d-rail,
+.players-with-action-overlay .players-grid-stage,
+.players-with-action-overlay .players-grid-scroll {
+  background-color: rgba(0, 0, 0, 0);
+  background-image: none;
 }
 
 .action-buttons-overlay {
@@ -1982,15 +1989,23 @@ html.play-scroll-lock body {
   inset-inline: 0;
   bottom: 0;
   z-index: 10;
+  display: flex;
+  justify-content: center;
   pointer-events: none;
   background-color: rgba(0, 0, 0, 0);
   background-image: none;
-  /* Promote to its own layer so it stays above perspective/overflow children */
+  /* Own compositor layer above perspective / overflow-scrolling children (Chrome iOS) */
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+  padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px));
 }
 
+/*
+ * Overlay is out of flow — size to the button only.
+ * A min-height empty band is what Chrome iOS often paints as an opaque slab.
+ */
 .action-buttons-overlay .action-buttons-slot {
+  min-height: 0;
   pointer-events: none;
   background-color: rgba(0, 0, 0, 0);
   background-image: none;
@@ -2001,9 +2016,8 @@ html.play-scroll-lock body {
 }
 
 /*
- * Mobile: overlay sits on top of seats in both grid and carousel.
- * Grid: bottom padding so the last row can scroll under the button.
- * Carousel: no reserved empty band — seats keep full height under the slot.
+ * Mobile: overlay on both grid and carousel.
+ * Grid keeps bottom padding so the last row can scroll under the button.
  */
 @media (max-width: 1023px) {
   .players-with-action-overlay .players-grid-scroll {
@@ -2023,6 +2037,10 @@ html.play-scroll-lock body {
 
   .action-buttons-slot {
     min-height: 3rem;
+  }
+
+  .action-buttons-overlay .action-buttons-slot {
+    min-height: 0;
   }
 }
 

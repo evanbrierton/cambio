@@ -44,6 +44,8 @@ import type {
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { useHintsEnabled } from "@/hooks/useHintsEnabled";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
+import { useOwnSeatDisplay } from "@/hooks/useOwnSeatDisplay";
 import { usePlayerGridEnabled } from "@/hooks/usePlayerGridEnabled";
 import { useSoundEnabled } from "@/hooks/useSoundEnabled";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
@@ -620,6 +622,13 @@ export function GameTable({
   const { soundEnabled, toggleSound } = useSoundEnabled();
   const { hintsEnabled, toggleHints } = useHintsEnabled();
   const { playerGridEnabled, togglePlayerGrid } = usePlayerGridEnabled();
+  const { ownSeatProminent, toggleOwnSeatDisplay } = useOwnSeatDisplay();
+  const {
+    chatNotificationsEnabled,
+    eventNotificationsEnabled,
+    toggleChatNotifications,
+    toggleEventNotifications,
+  } = useNotificationPrefs();
   const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
@@ -636,6 +645,7 @@ export function GameTable({
       playerId: view.playerId,
       settingsOpen,
       soundEnabled,
+      notificationsEnabled: chatNotificationsEnabled,
     });
   const chatToast = useMemo((): GameToastItem | null => {
     if (!notification) return null;
@@ -700,43 +710,49 @@ export function GameTable({
       items.push({ id: "error", message: error, tone: "error" });
     }
 
-    if (swapFlash) {
-      items.push({
-        id: "swap-flash",
-        message: formatSwapFlashNotice(
-          swapFlash,
-          view.players,
-          voice.swapFlashNotice,
-        ),
-        tone: "swap",
-        pulse: true,
-      });
-    }
+    if (eventNotificationsEnabled) {
+      if (view.phase === "lobby" && lobbyJoinToast) {
+        items.push(lobbyJoinToast);
+      }
 
-    if (peekFlash) {
-      items.push({
-        id: "peek-flash",
-        message: formatPeekFlashNotice(
-          peekFlash,
-          view.players,
-          voice.peekFlashNotice,
-        ),
-        tone: "peek",
-        pulse: true,
-      });
-    }
+      if (swapFlash) {
+        items.push({
+          id: "swap-flash",
+          message: formatSwapFlashNotice(
+            swapFlash,
+            view.players,
+            voice.swapFlashNotice,
+          ),
+          tone: "swap",
+          pulse: true,
+        });
+      }
 
-    if (penaltyFlash) {
-      items.push({
-        id: "penalty-flash",
-        message: formatPenaltyFlashNotice(
-          penaltyFlash,
-          view.players,
-          "! Penalty card drawn",
-        ),
-        tone: "error",
-        pulse: true,
-      });
+      if (peekFlash) {
+        items.push({
+          id: "peek-flash",
+          message: formatPeekFlashNotice(
+            peekFlash,
+            view.players,
+            voice.peekFlashNotice,
+          ),
+          tone: "peek",
+          pulse: true,
+        });
+      }
+
+      if (penaltyFlash) {
+        items.push({
+          id: "penalty-flash",
+          message: formatPenaltyFlashNotice(
+            penaltyFlash,
+            view.players,
+            "! Penalty card drawn",
+          ),
+          tone: "error",
+          pulse: true,
+        });
+      }
     }
 
     if (chatToast) {
@@ -747,9 +763,12 @@ export function GameTable({
   }, [
     chatToast,
     error,
+    eventNotificationsEnabled,
+    lobbyJoinToast,
     peekFlash,
     penaltyFlash,
     swapFlash,
+    view.phase,
     view.players,
     voice,
   ]);
@@ -885,40 +904,53 @@ export function GameTable({
     }
   }, [swapAbilityActive]);
 
-  const playersInGridOrder = useMemo(() => {
-    const activePlayers = view.players.filter((player) => !player.isWaiting);
-    const selfIndex = activePlayers.findIndex((p) => p.id === view.playerId);
-    if (selfIndex === -1) return activePlayers;
+  const playersInTurnOrder = useMemo(
+    () => view.players.filter((player) => !player.isWaiting),
+    [view.players],
+  );
 
-    const self = activePlayers[selfIndex];
+  const playersInGridOrder = useMemo(() => {
+    const selfIndex = playersInTurnOrder.findIndex(
+      (p) => p.id === view.playerId,
+    );
+    if (selfIndex === -1) return playersInTurnOrder;
+
+    const self = playersInTurnOrder[selfIndex];
     const opponents: PublicPlayer[] = [];
-    for (let i = 1; i < activePlayers.length; i++) {
-      opponents.push(activePlayers[(selfIndex + i) % activePlayers.length]);
+    for (let i = 1; i < playersInTurnOrder.length; i++) {
+      opponents.push(
+        playersInTurnOrder[(selfIndex + i) % playersInTurnOrder.length],
+      );
     }
     return [self, ...opponents];
-  }, [view.players, view.playerId]);
+  }, [playersInTurnOrder, view.playerId]);
 
   const playersInCarouselOrder = useMemo(() => {
-    const activePlayers = view.players.filter((player) => !player.isWaiting);
-    const selfIndex = activePlayers.findIndex((p) => p.id === view.playerId);
-    if (selfIndex === -1) return activePlayers;
+    const selfIndex = playersInTurnOrder.findIndex(
+      (p) => p.id === view.playerId,
+    );
+    if (selfIndex === -1) return playersInTurnOrder;
 
     const opponents: PublicPlayer[] = [];
-    for (let i = 1; i < activePlayers.length; i++) {
-      opponents.push(activePlayers[(selfIndex + i) % activePlayers.length]);
+    for (let i = 1; i < playersInTurnOrder.length; i++) {
+      opponents.push(
+        playersInTurnOrder[(selfIndex + i) % playersInTurnOrder.length],
+      );
     }
-    const self = activePlayers[selfIndex];
+    const self = playersInTurnOrder[selfIndex];
     const leftCount = Math.floor(opponents.length / 2);
     return [
       ...opponents.slice(0, leftCount),
       self,
       ...opponents.slice(leftCount),
     ];
-  }, [view.players, view.playerId]);
+  }, [playersInTurnOrder, view.playerId]);
 
-  const orderedPlayers = playerGridEnabled
-    ? playersInGridOrder
-    : playersInCarouselOrder;
+  const orderedPlayers = !ownSeatProminent
+    ? playersInTurnOrder
+    : playerGridEnabled
+      ? playersInGridOrder
+      : playersInCarouselOrder;
 
   if (view.isWaiting) {
     return <WaitingScreen view={view} connected={connected} />;
@@ -1120,6 +1152,29 @@ export function GameTable({
         >
           {playerGridEnabled ? voice.playerGridOn : voice.playerGridOff}
         </button>
+        <button
+          type="button"
+          onClick={toggleOwnSeatDisplay}
+          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+        >
+          {ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder}
+        </button>
+        <button
+          type="button"
+          onClick={toggleChatNotifications}
+          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+        >
+          {chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff}
+        </button>
+        <button
+          type="button"
+          onClick={toggleEventNotifications}
+          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+        >
+          {eventNotificationsEnabled
+            ? voice.eventNotifsOn
+            : voice.eventNotifsOff}
+        </button>
       </div>
 
       {canDebugRestart && (
@@ -1318,18 +1373,6 @@ export function GameTable({
                 DEBUG: ALL CARDS VISIBLE
               </p>
             )}
-
-            {view.phase === "lobby" && lobbyJoinToast ? (
-              <div className="shrink-0 mt-1.5" aria-live="polite">
-                <AnimatePresence initial={false} mode="wait">
-                  <GameToast
-                    key={lobbyJoinToast.id}
-                    toast={lobbyJoinToast}
-                    inline
-                  />
-                </AnimatePresence>
-              </div>
-            ) : null}
           </header>
 
           {view.phase !== "lobby" && (
@@ -1498,9 +1541,7 @@ export function GameTable({
                           : "text-theme-muted"
                       }`}
                     >
-                      {playerGridEnabled || !drawnDiscardAbility
-                        ? voice.discard
-                        : discardActionLabel}
+                      {voice.discard}
                     </p>
                     <div
                       className={`scaled-pile-size shrink-0 ${
@@ -1637,7 +1678,7 @@ export function GameTable({
                   <PlayerScrollStage
                     centerIndex={Math.max(
                       0,
-                      playersInCarouselOrder.findIndex(
+                      orderedPlayers.findIndex(
                         (player) => player.id === view.playerId,
                       ),
                     )}
@@ -1654,7 +1695,9 @@ export function GameTable({
           )}
 
           {view.phase === "lobby" ? (
-            <div className="shrink-0 lg:hidden mt-auto">{actionButtons}</div>
+            <div className="shrink-0 lg:hidden mt-auto pt-4 sm:pt-5">
+              {actionButtons}
+            </div>
           ) : null}
         </div>
 
