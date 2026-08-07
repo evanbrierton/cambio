@@ -32,16 +32,16 @@
       "agentId": "bc-062035a8-88ce-4aa5-a2e9-bda8aa4542d7",
       "runId": "run-9efa07ff-3158-4de5-8c33-90751726281f",
       "parentAgentId": "bc-e63056bf-7064-45ea-bdb6-e7b25fd25d86",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/cam-5-player-seats-no-scroll.md",
       "startedAt": "2026-08-07T16:58:32.310Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-07T16:58:35.934Z",
+      "finishedAt": "2026-08-07T17:48:01.854Z",
+      "lastUpdate": "2026-08-07T17:48:01.854Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
-      "prNumber": null,
+      "prNumber": 145,
       "failureMode": null,
       "verification": null
     },
@@ -167,15 +167,15 @@
       "dependsOn": [
         "cam-49-system-dark-mode"
       ],
-      "agentId": null,
-      "runId": null,
-      "parentAgentId": null,
+      "agentId": "bc-a88e4cf1-8ccb-4aef-bf6a-76c3e78aa734",
+      "runId": "run-8d4c64fe-f0cb-4b40-aa75-76010fc4b659",
+      "parentAgentId": "bc-e63056bf-7064-45ea-bdb6-e7b25fd25d86",
       "status": "running",
       "resultStatus": null,
       "handoffPath": null,
       "startedAt": "2026-08-07T17:36:29.917Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-07T17:36:29.917Z",
+      "lastUpdate": "2026-08-07T17:36:32.875Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
@@ -272,6 +272,14 @@
     {
       "at": "2026-08-07T17:36:25.908Z",
       "message": "cam-49-system-dark-mode: verification self-reported (live-ui-verified)"
+    },
+    {
+      "at": "2026-08-07T17:41:00.641Z",
+      "message": "verify-cam-12-bot-tuning: SSE idle 319286ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-07T17:41:00.642Z",
+      "message": "verify-cam-12-bot-tuning: tool_call idle 319287ms; last=2026-08-07T17:35:41.355Z"
     }
   ]
 }
