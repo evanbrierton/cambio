@@ -1,0 +1,136 @@
+{
+  "$schema": "/home/ubuntu/.cursor/plugins/cache/cursor-public/9333/6bdcce1f19870d482966e170658b96262b15747d/skills/orchestrate/schemas/plan.schema.json",
+  "goal": "linear-board: Look at the linear board, determine parallisable workstreams and delegate to subagents to complete",
+  "summary": "smoke test: fan out 5 independent Cambio Linear-board polish issues (CAM-5/9/11/12/49) to parallel workers + verifiers",
+  "rootSlug": "linear-board",
+  "baseBranch": "main",
+  "repoUrl": "https://github.com/evanbrierton/cambio",
+  "selfAgentId": "bc-bf67f15f-b553-4d2c-99d0-689a46f271cd",
+  "dispatcher": { "firstName": "Evan" },
+  "acceptanceCriteria": [
+    "Each independent Linear issue lands as its own draft PR against main",
+    "Gameplay-logic changes (CAM-9, CAM-12) and the appearance feature (CAM-49) are verified against their acceptance criteria",
+    "Each PR passes pnpm lint and pnpm typecheck (and pnpm test where tests exist)"
+  ],
+  "tasks": [
+    {
+      "name": "cam-11-hint-draw-from-deck",
+      "type": "worker",
+      "openPR": true,
+      "scopedGoal": "Fix Linear issue CAM-11 (https://linear.app/ebrierton-cambio/issue/CAM-11) in the Cambio repo. The in-game hint tells the player to snap even when the expected primary action on their own turn is to draw from the deck. Root cause: in `src/components/game/GameTable.tsx` the `computeHint` helper returns `voice.snapHint` from the branch `if (view.canSnap && view.canDraw) { return { text: voice.snapHint, tone: \"snap\" }; }`, which fires on the player's own turn whenever a snappable card also happens to be on the discard. Change the hint priority so that when it is the player's turn and they can draw (`view.canDraw`), the primary hint instructs them to draw from the deck by reusing the EXISTING `voice.drawHint` string (already used by the `if (view.canDraw)` branch). Snapping stays available, but must not be the primary hint text when drawing is the expected next action. Keep the pure snap states unchanged: the snap-window state (`view.phase === 'snap_window'`) and the trailing snap-only branch (`if (view.canSnap)` with no draw) must still show the snap hint. Do NOT add new voice strings and do NOT edit `src/lib/themes.ts` — reuse the existing `voice.drawHint`. Make only the minimal change to the hint-priority logic in GameTable.tsx.",
+      "pathsAllowed": ["src/components/game/GameTable.tsx"],
+      "pathsForbidden": ["src/lib/themes.ts"],
+      "acceptance": [
+        "On the player's own turn when they can draw, the hint reads as 'draw from the deck' (voice.drawHint), not the snap hint",
+        "The snap-window overlay hint and snap-only (no draw available) hint are unchanged",
+        "No new voice strings added; src/lib/themes.ts untouched",
+        "pnpm lint and pnpm typecheck pass"
+      ],
+      "verify": "## Setup\n- Install deps with `pnpm install` (repo uses pnpm; see pnpm-lock.yaml).\n\n## Automated\n- Run `pnpm lint` and `pnpm typecheck`; both must pass.\n\n## Manual\n- Start `pnpm dev`, open a room, and take a turn where a card matching the discard top is in hand while it is your turn to draw. Confirm the hint bar tells you to draw from the deck rather than to snap.\n- Trigger a snap window (another player discards a matching card) and confirm the snap hint still shows.\n\n## Gotchas\n- `computeHint` is ordered; the `canSnap && canDraw` branch currently pre-empts the `canDraw` branch. Only the primary-turn hint should change; leave snap_window and the final snap-only branch intact."
+    },
+    {
+      "name": "cam-5-player-seats-no-scroll",
+      "type": "worker",
+      "openPR": true,
+      "scopedGoal": "Implement Linear issue CAM-5 (https://linear.app/ebrierton-cambio/issue/CAM-5) in the Cambio repo. `src/components/game/PlayerScrollStage.tsx` always renders a horizontally scrollable rail (`.players-3d-rail`) with lead/trail spacers and a scroll-driven 3D transform, even when all player seats already fit on screen. When the seats fit within the rail's client width without overflow, lay them out statically and centered: no horizontal scroll, no lead/trail spacers consuming width, and no per-item 3D rotate/scale/opacity transform (render them flat and centered). Fall back to the existing scrollable 3D carousel only when the seats overflow the container. Detect the fit vs overflow condition from measured content width vs container width and keep it correct across resizes using the existing ResizeObserver/resize wiring (recompute on resize and when child count changes). Preserve all current behavior (scrolling, centering, 3D effect, reduced-motion handling) for the overflow case. You may add CSS in `src/app/globals.css` but ONLY under the existing `.players-3d-*` selectors (e.g. a `.players-3d-stage.is-static` / `.players-3d-rail.is-static` modifier); do not touch unrelated global styles or color tokens.",
+      "pathsAllowed": ["src/components/game/PlayerScrollStage.tsx", "src/app/globals.css"],
+      "acceptance": [
+        "With a player count whose seats fit on screen, the seat row does not scroll and is statically centered (no spacers, no 3D tilt)",
+        "With enough players to overflow, the existing scrollable 3D carousel behavior is unchanged",
+        "Fit/overflow is recomputed on window resize and on player-count change",
+        "No console errors or layout thrash; pnpm lint and pnpm typecheck pass"
+      ],
+      "verify": "## Setup\n- `pnpm install`, then `pnpm dev`.\n\n## Manual\n- Open a room with 2-3 players (fits on screen): confirm seats are centered and the row does not scroll horizontally.\n- Open/simulate a room with many players (overflow): confirm the scrollable 3D carousel still works and centers the active seat.\n- Resize the window across the fit/overflow boundary and confirm the layout switches correctly without errors.\n\n## Automated\n- `pnpm lint` and `pnpm typecheck` must pass.\n\n## Gotchas\n- Only modify `.players-3d-*` rules in globals.css to avoid colliding with other appearance work."
+    },
+    {
+      "name": "cam-9-auto-call-cambio",
+      "type": "worker",
+      "openPR": true,
+      "scopedGoal": "Implement Linear issue CAM-9 (https://linear.app/ebrierton-cambio/issue/CAM-9) in the Cambio repo. When a player's hand reaches zero cards, the engine should automatically call Cambio on that player's behalf, with exactly the same effects as the manual `call_cambio` action in `src/game/engine.ts`: set `state.phase = 'cambio_final'`, set `state.cambioCallerId` to that player, set the player's `hasCalledCambio = true`, and apply the same caller protections (caller cannot be targeted by spy/swap, caller cannot snap). Identify every code path in `src/game/engine.ts` where a player's hand length can drop to zero — e.g. a successful snap that discards a matched card, the snap-give flow, and any discard path — and trigger the auto-call at the correct moment without disrupting turn flow, snap windows, the reshuffle path, or the existing manual `call_cambio` case. Guard against double-calling: if Cambio has already been called (`state.cambioCallerId` set or `state.phase === 'cambio_final'`), do not call again. If two players could reach zero, only the first triggers the call. Add or extend unit tests in `src/game/engine.test.ts` (vitest) covering: (1) a player's hand reaching zero auto-calls Cambio and sets `cambioCallerId` + `hasCalledCambio`; (2) a player who still holds cards does not trigger it; (3) the auto-call applies the same caller protection as a manual call; (4) no double-call when Cambio was already called. Keep changes minimal and within the game engine; if you must add a type, put it in `src/game/types.ts`.",
+      "pathsAllowed": ["src/game/engine.ts", "src/game/engine.test.ts", "src/game/types.ts"],
+      "acceptance": [
+        "A player's hand reaching 0 cards automatically enters cambio_final with that player as cambioCallerId and hasCalledCambio=true",
+        "Auto-call applies identical caller protection to a manual call_cambio (no spy/swap targeting, caller cannot snap)",
+        "No Cambio auto-call when a player still has cards; no double-call if Cambio was already called",
+        "New/updated vitest cases in src/game/engine.test.ts cover the above and pnpm test passes",
+        "pnpm lint and pnpm typecheck pass"
+      ],
+      "verify": "## Setup\n- `pnpm install`.\n\n## Automated\n- Run `pnpm test` (vitest) and confirm the new engine cases for auto-call Cambio pass along with the existing suite.\n- `pnpm lint` and `pnpm typecheck` must pass.\n\n## Manual (optional)\n- In `pnpm dev`, drive a game state where a player empties their hand (e.g. via snaps) and confirm Cambio is auto-called and the final round begins.\n\n## Gotchas\n- The manual path is the `case 'call_cambio'` block (guards: not after drawing, correct phase). Reuse the same state mutations for the auto path. Ensure the auto-call fires after the card removal that empties the hand, and only once."
+    },
+    {
+      "name": "cam-12-bot-tuning",
+      "type": "worker",
+      "openPR": true,
+      "scopedGoal": "Implement Linear issue CAM-12 (https://linear.app/ebrierton-cambio/issue/CAM-12) in the Cambio repo. Bots currently play too optimally, too fast, may act on hidden card info they should not know, and call Cambio too early. All work is in `src/game/bot.ts` (with optional supporting tweaks in `src/game/bot-chat-events.ts`). Three concrete changes: (1) PACING — give bot actions human-like delays instead of near-instant responses; make delays configurable by difficulty and add mild randomization so bots feel human. (2) INFORMATION HYGIENE — audit the `BotKnowledge` class so bots only use legitimately acquired information (setup peeks, cards they have actually seen via abilities, discard pile, publicly revealed cards). Ensure decision logic reads from `BotKnowledge` and never from the ground-truth face-down hands of opponents (or the bot's own unseen cards). Fix any place that leaks hidden state into decisions. (3) CAMBIO THRESHOLD — make the `cambioThreshold` / call-Cambio decision consider aggregate score across the whole game (standings), not just whether the bot can win the current round; bots should not call Cambio aggressively when they are ahead overall and a low round score matters less than protecting their lead. Keep difficulty settings coherent (easier bots slower and more conservative with information; harder bots faster and sharper but still only using legitimate info). Do not change the public message protocol or other game files; keep the changes inside the bot module(s). If a lightweight unit test is natural, add it, but do not restructure the test harness.",
+      "pathsAllowed": ["src/game/bot.ts", "src/game/bot-chat-events.ts"],
+      "pathsForbidden": ["src/game/engine.ts", "src/game/types.ts", "src/game/scoring.ts"],
+      "acceptance": [
+        "Bots act with human-like, difficulty-scaled, slightly randomized delays rather than near-instant moves",
+        "Bot decisions only use information exposed through BotKnowledge (setup peeks, seen cards, discard, public reveals); no reliance on hidden opponent/own unseen card values",
+        "Bot Cambio decision weighs aggregate game standings, not only the current round; leading bots do not over-aggressively call Cambio",
+        "Difficulty settings remain coherent and the game still plays end-to-end vs bots",
+        "pnpm lint and pnpm typecheck pass (and pnpm test if bot tests exist)"
+      ],
+      "verify": "## Setup\n- `pnpm install`.\n\n## Automated\n- `pnpm lint`, `pnpm typecheck`, and `pnpm test` must pass.\n- Statically confirm bot decision functions consume `BotKnowledge` (or equivalent legitimately-known state) and do not index into opponents' hidden card values.\n\n## Manual\n- Run `pnpm dev`, start a solo-vs-bots game, and observe: bots pause a human-like amount before acting; bots do not instantly snap/target unknown cards; bots do not call Cambio on turn 1-2 when it is not warranted; across multiple rounds bots weigh their overall standing.\n\n## Gotchas\n- Relevant symbols per the issue: the `BotKnowledge` class, difficulty settings, and `cambioThreshold` in `src/game/bot.ts`. Keep the message protocol and other game files untouched."
+    },
+    {
+      "name": "cam-49-system-dark-mode",
+      "type": "worker",
+      "openPR": true,
+      "scopedGoal": "Implement Linear issue CAM-49 (https://linear.app/ebrierton-cambio/issue/CAM-49) in the Cambio repo: add a system-aware appearance preference (light | dark | system, default system) ORTHOGONAL to the existing 8 style themes (`data-theme`). Follow the issue's proposed approach exactly and match the EXISTING cookie+provider pattern (do NOT add next-themes). Specifics: (1) Add a `cambio-appearance` cookie (values light|dark|system) mirroring the existing `cambio-theme` pattern in `src/lib/theme-cookie.ts`. (2) Resolve to `data-appearance=\"light\"|\"dark\"` on `<html>`; when preference is `system`, follow `prefers-color-scheme` via matchMedia and react to OS changes. (3) SSR/FOUC: read the cookie in the root layout (`src/app/layout.tsx`) and add a blocking inline script that resolves `system` before first paint so there is no flash of the wrong appearance. (4) CSS: keep structural tokens on `[data-theme]`; move/duplicate color tokens under `[data-theme][data-appearance]` in `src/app/globals.css` so every one of the 8 themes has explicit light and dark palettes that look correct. (5) Provider: extend `src/context/ThemeProvider.tsx` (and add a hook if needed) to expose and persist the appearance preference alongside the existing theme. (6) UI: add a Light / Dark / System toggle next to the existing `ThemePicker` (`src/components/ui/ThemePicker.tsx`) wherever ThemePicker is shown (home, waiting, in-game settings, game over). (7) Add appearance labels to the theme voice strings in `src/lib/themes.ts`. Do NOT change how style themes are selected or named, and do not build a dedicated settings page or server-synced prefs (out of scope). Ensure preference persists across reloads, default System tracks OS changes, explicit Light/Dark overrides system, and there is no FOUC.",
+      "pathsAllowed": [
+        "src/lib/theme-cookie.ts",
+        "src/lib/themes.ts",
+        "src/lib/theme-fonts.ts",
+        "src/context/ThemeProvider.tsx",
+        "src/hooks/useThemeVoice.ts",
+        "src/hooks/*.ts",
+        "src/components/ui/ThemePicker.tsx",
+        "src/app/layout.tsx",
+        "src/app/globals.css",
+        "src/app/page.tsx",
+        "src/components/game/WaitingScreen.tsx",
+        "src/components/game/GameOverScreen.tsx",
+        "src/components/game/GameTable.tsx"
+      ],
+      "pathsForbidden": ["src/game/**", "party/**"],
+      "acceptance": [
+        "Appearance preference (light|dark|system) persists across reloads via the cambio-appearance cookie",
+        "Default is System and tracks OS light/dark changes live; explicit Light/Dark overrides system",
+        "No flash of wrong appearance on first paint (SSR cookie + blocking inline resolve)",
+        "All 8 style themes have correct light and dark palettes under [data-theme][data-appearance]",
+        "Light/Dark/System toggle appears next to ThemePicker everywhere ThemePicker is shown",
+        "Theme voice strings include appearance labels; next-themes is NOT added",
+        "pnpm lint, pnpm typecheck, and pnpm build pass"
+      ],
+      "verify": "## Setup\n- `pnpm install`.\n\n## Automated\n- `pnpm lint`, `pnpm typecheck`, and `pnpm build` must pass.\n\n## Manual\n- `pnpm dev`. With preference = System, toggle the OS light/dark and confirm the app follows live.\n- Set explicit Light and Dark and confirm they override the OS and persist across a hard reload (cookie) with no flash of the wrong appearance on first paint.\n- Cycle through all 8 style themes in both light and dark and confirm each palette looks correct.\n- Confirm the Light/Dark/System toggle is present next to ThemePicker on home, waiting room, in-game settings, and game over.\n\n## Gotchas\n- Match the existing `cambio-theme` cookie + ThemeProvider pattern; do not introduce next-themes. Structural tokens stay on [data-theme]; only color tokens move under [data-theme][data-appearance]."
+    },
+    {
+      "name": "verify-cam-9-auto-call-cambio",
+      "type": "verifier",
+      "verifies": "cam-9-auto-call-cambio",
+      "scopedGoal": "Verify the CAM-9 auto-call-Cambio implementation against every acceptance criterion on the cam-9-auto-call-cambio branch. Run the vitest suite (`pnpm test`) and confirm the new engine cases pass; run `pnpm lint` and `pnpm typecheck`. Inspect `src/game/engine.ts` to confirm the auto-call fires on every hand-empties path (snap, snap-give, discard), applies the same state mutations and caller protection as the manual `call_cambio`, does not double-call, and does not disrupt turn/snap/reshuffle flow. Report a Verification verdict with concrete execution evidence.",
+      "acceptance": [
+        "Verification section includes execution evidence (test/lint/typecheck output) for all cam-9 acceptance criteria"
+      ]
+    },
+    {
+      "name": "verify-cam-12-bot-tuning",
+      "type": "verifier",
+      "verifies": "cam-12-bot-tuning",
+      "scopedGoal": "Verify the CAM-12 bot-tuning changes against every acceptance criterion on the cam-12-bot-tuning branch. Run `pnpm lint`, `pnpm typecheck`, and `pnpm test`. Statically audit `src/game/bot.ts` to confirm: (a) bot actions use difficulty-scaled, randomized human-like delays; (b) decisions read only from BotKnowledge / legitimately-known state and never index opponents' hidden card values; (c) the Cambio-call decision incorporates aggregate game standings, not just the current round. Where feasible, run a solo-vs-bots game via `pnpm dev` and observe pacing and non-omniscient behavior. Report a Verification verdict with concrete execution evidence.",
+      "acceptance": [
+        "Verification section includes execution evidence for all cam-12 acceptance criteria, including an information-hygiene audit of BotKnowledge usage"
+      ]
+    },
+    {
+      "name": "verify-cam-49-system-dark-mode",
+      "type": "verifier",
+      "verifies": "cam-49-system-dark-mode",
+      "scopedGoal": "Verify the CAM-49 system-aware dark mode against every acceptance criterion on the cam-49-system-dark-mode branch. Run `pnpm lint`, `pnpm typecheck`, and `pnpm build`. Via `pnpm dev`: confirm the appearance preference persists across reloads (cookie), that default System tracks OS light/dark live, that explicit Light/Dark override system, that there is no flash of wrong appearance on first paint, that all 8 themes look correct in both light and dark, and that the Light/Dark/System toggle appears everywhere ThemePicker is shown. Confirm next-themes was NOT added. Report a Verification verdict (prefer live-ui-verified) with concrete execution evidence.",
+      "acceptance": [
+        "Verification section includes live UI execution evidence for all cam-49 acceptance criteria (persistence, system-follow, override, no-FOUC, all-8-themes, toggle placement)"
+      ]
+    }
+  ]
+}
