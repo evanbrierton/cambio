@@ -23,16 +23,68 @@ function renderThemePickerName(name: string, isRetro: boolean) {
 }
 
 export function ThemePicker({ compact = false }: { compact?: boolean }) {
-  const { theme, setTheme } = useTheme();
+  const {
+    theme,
+    setTheme,
+    appearancePreference,
+    resolvedAppearance,
+    setAppearancePreference,
+  } = useTheme();
   const voice = useThemeVoice();
 
   return (
     <div
       className={`pixel-border bg-surface-elevated p-3 ${compact ? "" : "w-full max-w-md"}`}
     >
-      <p className="font-display text-[8px] sm:text-[10px] text-theme-muted mb-2">
-        {voice.styleLabel}
-      </p>
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <p className="font-display text-[8px] sm:text-[10px] text-theme-muted">
+          {voice.styleLabel}
+        </p>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="font-display text-[8px] text-theme-muted whitespace-nowrap">
+            {voice.appearanceLabel}
+          </span>
+          <div className="chip-btn border-theme-muted bg-surface px-1 py-1 inline-flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setAppearancePreference("light")}
+              aria-pressed={appearancePreference === "light"}
+              className={`border px-2 py-1 text-[8px] transition-colors ${
+                appearancePreference === "light"
+                  ? "border-accent bg-surface-elevated text-accent"
+                  : "border-transparent text-theme-muted hover:text-theme"
+              }`}
+            >
+              {voice.appearanceLight}
+            </button>
+            <button
+              type="button"
+              onClick={() => setAppearancePreference("dark")}
+              aria-pressed={appearancePreference === "dark"}
+              className={`border px-2 py-1 text-[8px] transition-colors ${
+                appearancePreference === "dark"
+                  ? "border-accent bg-surface-elevated text-accent"
+                  : "border-transparent text-theme-muted hover:text-theme"
+              }`}
+            >
+              {voice.appearanceDark}
+            </button>
+            <button
+              type="button"
+              onClick={() => setAppearancePreference("system")}
+              aria-pressed={appearancePreference === "system"}
+              className={`border px-2 py-1 text-[8px] transition-colors ${
+                appearancePreference === "system"
+                  ? "border-accent bg-surface-elevated text-accent"
+                  : "border-transparent text-theme-muted hover:text-theme"
+              }`}
+              title={`${voice.appearanceSystem}: ${resolvedAppearance === "dark" ? voice.appearanceDark : voice.appearanceLight}`}
+            >
+              {voice.appearanceSystem}
+            </button>
+          </div>
+        </div>
+      </div>
       <div
         className={`grid gap-2 ${
           compact
