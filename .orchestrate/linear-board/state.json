@@ -81,13 +81,13 @@
       "handoffPath": "handoffs/cam-12-bot-tuning.md",
       "startedAt": "2026-08-07T16:58:38.948Z",
       "finishedAt": "2026-08-07T17:32:54.622Z",
-      "lastUpdate": "2026-08-07T17:32:54.622Z",
+      "lastUpdate": "2026-08-07T17:32:55.607Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": "live-ui-verified"
     },
     {
       "name": "cam-49-system-dark-mode",
@@ -146,17 +146,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-07T17:32:57.130Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-07T17:32:57.130Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "verify-cam-49-system-dark-mode",
@@ -262,6 +263,10 @@
     {
       "at": "2026-08-07T17:12:42.784Z",
       "message": "cam-11-hint-draw-from-deck: verification self-reported (live-ui-verified)"
+    },
+    {
+      "at": "2026-08-07T17:32:55.607Z",
+      "message": "cam-12-bot-tuning: verification self-reported (live-ui-verified)"
     }
   ]
 }
