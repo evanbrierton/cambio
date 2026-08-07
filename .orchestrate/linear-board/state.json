@@ -98,17 +98,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-07T16:56:44.732Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-07T16:56:44.732Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "verify-cam-9-auto-call-cambio",
@@ -192,6 +193,10 @@
     {
       "at": "2026-08-07T16:56:34.758Z",
       "message": "cam-9-auto-call-cambio: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents."
+    },
+    {
+      "at": "2026-08-07T16:56:44.537Z",
+      "message": "cam-12-bot-tuning: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents."
     }
   ]
 }
