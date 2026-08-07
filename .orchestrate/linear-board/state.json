@@ -10,16 +10,16 @@
       "agentId": "bc-5a35f635-53d5-4217-8553-278dedf4733a",
       "runId": "run-10fdf6b3-2cc6-4707-97c9-f9f0a9da1045",
       "parentAgentId": "bc-e63056bf-7064-45ea-bdb6-e7b25fd25d86",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/cam-11-hint-draw-from-deck.md",
       "startedAt": "2026-08-07T16:58:29.504Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-07T16:58:32.242Z",
+      "finishedAt": "2026-08-07T17:12:39.823Z",
+      "lastUpdate": "2026-08-07T17:12:39.823Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
-      "prNumber": null,
+      "prNumber": 144,
       "failureMode": null,
       "verification": null
     },
@@ -226,6 +226,38 @@
     {
       "at": "2026-08-07T17:01:51.462Z",
       "message": "cam-9-auto-call-cambio: verification self-reported (unit-test-verified)"
+    },
+    {
+      "at": "2026-08-07T17:05:33.214Z",
+      "message": "cam-11-hint-draw-from-deck: SSE idle 309064ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-07T17:05:33.215Z",
+      "message": "cam-11-hint-draw-from-deck: tool_call idle 309065ms; last=2026-08-07T17:00:24.150Z"
+    },
+    {
+      "at": "2026-08-07T17:07:37.741Z",
+      "message": "cam-5-player-seats-no-scroll: SSE idle 329239ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-07T17:07:37.742Z",
+      "message": "cam-5-player-seats-no-scroll: tool_call idle 329240ms; last=2026-08-07T17:02:08.502Z"
+    },
+    {
+      "at": "2026-08-07T17:09:43.356Z",
+      "message": "cam-12-bot-tuning: SSE idle 345187ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-07T17:09:43.356Z",
+      "message": "cam-12-bot-tuning: tool_call idle 345187ms; last=2026-08-07T17:03:58.169Z"
+    },
+    {
+      "at": "2026-08-07T17:09:45.366Z",
+      "message": "cam-49-system-dark-mode: SSE idle 343197ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-07T17:09:45.366Z",
+      "message": "cam-49-system-dark-mode: tool_call idle 343197ms; last=2026-08-07T17:04:02.169Z"
     }
   ]
 }
