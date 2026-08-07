@@ -98,17 +98,17 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "error",
+      "status": "pending",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-07T16:56:52.011Z",
+      "startedAt": null,
       "finishedAt": null,
-      "lastUpdate": "2026-08-07T16:56:52.086Z",
-      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "lastUpdate": "2026-08-07T16:58:19.258Z",
+      "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 1,
       "slackTs": null,
       "prNumber": null,
-      "failureMode": "unknown",
+      "failureMode": null,
       "verification": null
     },
     {
@@ -213,6 +213,10 @@
     {
       "at": "2026-08-07T16:58:17.559Z",
       "message": "cam-9-auto-call-cambio: respawned by self-planner (was error)"
+    },
+    {
+      "at": "2026-08-07T16:58:18.984Z",
+      "message": "cam-12-bot-tuning: respawned by self-planner (was error)"
     }
   ]
 }
