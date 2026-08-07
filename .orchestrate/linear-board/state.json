@@ -10,18 +10,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "error",
+      "status": "pending",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-07T16:56:15.836Z",
+      "startedAt": null,
       "finishedAt": null,
-      "lastUpdate": "2026-08-07T16:56:15.914Z",
-      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "lastUpdate": "2026-08-07T16:58:13.569Z",
+      "note": "respawned by self-planner (was error; attempts=1)",
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
-      "failureMode": "unknown",
-      "verification": null,
-      "attempts": 1
+      "failureMode": null,
+      "verification": null
     },
     {
       "name": "cam-5-player-seats-no-scroll",
@@ -39,11 +39,11 @@
       "finishedAt": null,
       "lastUpdate": "2026-08-07T16:56:24.461Z",
       "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": "unknown",
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "cam-9-auto-call-cambio",
@@ -61,11 +61,11 @@
       "finishedAt": null,
       "lastUpdate": "2026-08-07T16:56:33.645Z",
       "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": "unknown",
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "cam-12-bot-tuning",
@@ -83,11 +83,11 @@
       "finishedAt": null,
       "lastUpdate": "2026-08-07T16:56:43.524Z",
       "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": "unknown",
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "cam-49-system-dark-mode",
@@ -105,11 +105,11 @@
       "finishedAt": null,
       "lastUpdate": "2026-08-07T16:56:52.086Z",
       "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": "unknown",
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "verify-cam-9-auto-call-cambio",
