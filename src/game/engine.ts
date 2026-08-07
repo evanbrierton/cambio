@@ -522,6 +522,70 @@ function canTargetPlayer(playerId: string, state: GameState): boolean {
   return !isProtected(playerId, state);
 }
 
+function hasLegalLookTarget(
+  state: GameState,
+  playerId: string,
+  ability: "peek_own" | "spy" | "queen_look" | "king_look",
+): boolean {
+  for (const player of state.players) {
+    if (ability === "peek_own" && player.id !== playerId) continue;
+    if (ability === "spy" && player.id === playerId) continue;
+    if (player.id !== playerId && !canTargetPlayer(player.id, state)) continue;
+    for (let slot = 0; slot < player.hand.length; slot += 1) {
+      if (slotHasCard(player, slot)) return true;
+    }
+  }
+  return false;
+}
+
+function hasLegalSwapTargets(state: GameState): boolean {
+  let swappableSlotCount = 0;
+  for (const player of state.players) {
+    if (!canTargetPlayer(player.id, state)) continue;
+    swappableSlotCount += player.hand.length;
+    if (swappableSlotCount >= 2) return true;
+  }
+  return false;
+}
+
+function canResolveDiscardAbility(
+  state: GameState,
+  playerId: string,
+  ability: DiscardAbility,
+): boolean {
+  if (ability === "peek_own") {
+    return hasLegalLookTarget(state, playerId, "peek_own");
+  }
+  if (ability === "spy") {
+    return hasLegalLookTarget(state, playerId, "spy");
+  }
+  if (ability === "blind_switch") {
+    return hasLegalSwapTargets(state);
+  }
+  if (ability === "queen_look") {
+    return (
+      hasLegalLookTarget(state, playerId, "queen_look") &&
+      hasLegalSwapTargets(state)
+    );
+  }
+  if (ability === "king_look") {
+    return (
+      hasLegalLookTarget(state, playerId, "king_look") &&
+      hasLegalSwapTargets(state)
+    );
+  }
+
+  return false;
+}
+
+function abilityLabel(ability: DiscardAbility): string {
+  if (ability === "peek_own") return "Peek";
+  if (ability === "spy") return "Spy";
+  if (ability === "blind_switch") return "Blind switch";
+  if (ability === "queen_look") return "Queen";
+  return "King";
+}
+
 function addPenalty(
   state: GameState,
   playerId: string,
@@ -545,6 +609,11 @@ function triggerAbility(
   playerId: string,
   ability: DiscardAbility,
 ): void {
+  if (!canResolveDiscardAbility(state, playerId, ability)) {
+    addLog(state, `${abilityLabel(ability)} ability skipped — no legal targets.`);
+    return;
+  }
+
   if (ability === "peek_own") {
     state.pendingAbility = {
       playerId,

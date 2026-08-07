@@ -97,6 +97,55 @@ describe("discard abilities (CAM-76)", () => {
     });
   });
 
+  it("skips spy in cambio_final when the only opponent is protected", () => {
+    const state = playingState();
+    state.deck = [card("9", "spades")];
+
+    const cambio = handleMessage(state, "alice", { type: "call_cambio" });
+    expect("error" in cambio).toBe(false);
+    expect(state.phase).toBe("cambio_final");
+    expect(state.currentPlayerIndex).toBe(1);
+
+    const draw = handleMessage(state, "bob", { type: "draw", source: "deck" });
+    expect("error" in draw).toBe(false);
+    expect(state.drawnCard?.rank).toBe("9");
+
+    const discard = handleMessage(state, "bob", { type: "discard_drawn" });
+
+    expect(discard).toEqual({});
+    expect(state.pendingAbility).toBeNull();
+    expect(state.drawnCard).toBeNull();
+    expect(state.phase).toBe("snap_window");
+    expect(state.players[1].finalTurnDone).toBe(true);
+    expect(
+      state.log.some((entry) =>
+        entry.includes("Spy ability skipped — no legal targets."),
+      ),
+    ).toBe(true);
+  });
+
+  it("skips spy when all opponents have no cards", () => {
+    const state = playingState();
+    state.players[1].hand = [];
+    state.drawnCard = card("10", "diamonds");
+    state.drawnFromDiscard = false;
+
+    const result = handleMessage(state, "alice", { type: "discard_drawn" });
+
+    expect(result).toEqual({});
+    expect(state.pendingAbility).toBeNull();
+    expect(state.drawnCard).toBeNull();
+    expect(state.phase).toBe("playing");
+    expect(state.log.some((entry) => entry.includes("Alice ended their turn."))).toBe(
+      true,
+    );
+    expect(
+      state.log.some((entry) =>
+        entry.includes("Spy ability skipped — no legal targets."),
+      ),
+    ).toBe(true);
+  });
+
   it("does not trigger ability when an ability card is swapped out of hand", () => {
     const state = playingState();
     const queen = card("Q");
