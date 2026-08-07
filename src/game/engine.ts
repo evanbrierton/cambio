@@ -331,6 +331,46 @@ function tryPassTurnAfterAction(
   passTurn(state, actingPlayerId);
 }
 
+function enterCambioFinal(state: GameState, playerId: string): boolean {
+  const player = findPlayer(state, playerId);
+  if (!player) return false;
+
+  player.hasCalledCambio = true;
+  state.cambioCallerId = playerId;
+  state.phase = "cambio_final";
+  addLog(state, `${player.name} called CAMBIO!`);
+  return true;
+}
+
+function resolveCambioCallTurnTransition(
+  state: GameState,
+  cambioCallerId: string,
+): void {
+  const othersNeedTurn = state.players.some(
+    (p) => p.id !== cambioCallerId && !p.finalTurnDone && isPlayingPlayer(p),
+  );
+  if (!othersNeedTurn) {
+    endRound(state);
+  } else {
+    advanceTurn(state);
+  }
+}
+
+function tryAutoCallCambioForEmptyHand(
+  state: GameState,
+  playerId: string,
+): void {
+  if (state.cambioCallerId || state.phase === "cambio_final") return;
+  if (state.phase !== "playing") return;
+  const player = findPlayer(state, playerId);
+  if (!player || player.hand.length > 0) return;
+  if (!enterCambioFinal(state, playerId)) return;
+
+  if (currentPlayer(state)?.id === playerId) {
+    resolveCambioCallTurnTransition(state, playerId);
+  }
+}
+
 function canAttemptSnap(state: GameState): boolean {
   if (state.discard.length === 0) return false;
   return isSnapEligible(state) || state.phase === "snap_window";
@@ -858,19 +898,8 @@ export function handleMessage(
       if (state.turnStarted) return { error: "Call Cambio before drawing." };
       if (state.drawnCard) return { error: "Already drew a card." };
 
-      player.hasCalledCambio = true;
-      state.cambioCallerId = playerId;
-      state.phase = "cambio_final";
-      addLog(state, `${player.name} called CAMBIO!`);
-
-      const othersNeedTurn = state.players.some(
-        (p) => p.id !== playerId && !p.finalTurnDone && isPlayingPlayer(p),
-      );
-      if (!othersNeedTurn) {
-        endRound(state);
-      } else {
-        advanceTurn(state);
-      }
+      enterCambioFinal(state, playerId);
+      resolveCambioCallTurnTransition(state, playerId);
       return { cambioFlash: { playerId } };
     }
 
@@ -1023,6 +1052,7 @@ export function handleMessage(
       }
 
       clearHandSlot(target.hand, message.slot);
+      tryAutoCallCambioForEmptyHand(state, message.targetPlayerId);
       state.discard.push(handCard);
       if (state.phase === "snap_window") {
         clearSnapEligibleDiscard(state);
@@ -1074,6 +1104,7 @@ export function handleMessage(
         state,
         `${snapper.name} gave a card to ${recipient.name} after snapping.`,
       );
+      tryAutoCallCambioForEmptyHand(state, playerId);
       return {};
     }
 
