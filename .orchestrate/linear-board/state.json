@@ -10,14 +10,14 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-07T16:58:29.504Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-07T16:58:13.569Z",
+      "lastUpdate": "2026-08-07T16:58:29.504Z",
       "note": "respawned by self-planner (was error; attempts=1)",
-      "attempts": 1,
+      "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
@@ -217,6 +217,10 @@
     {
       "at": "2026-08-07T16:58:18.984Z",
       "message": "cam-12-bot-tuning: respawned by self-planner (was error)"
+    },
+    {
+      "at": "2026-08-07T16:58:21.561Z",
+      "message": "cam-49-system-dark-mode: respawned by self-planner (was error)"
     }
   ]
 }
