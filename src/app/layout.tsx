@@ -3,6 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
+import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import { PwaRegistrar } from "@/components/PwaRegistrar";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import { getSiteUrl, siteConfig } from "@/lib/site";
@@ -92,7 +93,10 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col relative z-0">
         <PwaRegistrar />
-        <ThemeProvider initialTheme={theme}>{children}</ThemeProvider>
+        <ThemeProvider initialTheme={theme}>
+          {children}
+          <PwaInstallPrompt />
+        </ThemeProvider>
         <Analytics />
         <SpeedInsights />
       </body>
