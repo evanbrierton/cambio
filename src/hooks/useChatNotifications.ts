@@ -23,11 +23,13 @@ export function useChatNotifications({
   playerId,
   settingsOpen,
   soundEnabled,
+  notificationsEnabled = true,
 }: {
   messages: ChatMessage[];
   playerId: string;
   settingsOpen: boolean;
   soundEnabled: boolean;
+  notificationsEnabled?: boolean;
 }) {
   const [lastSeenId, setLastSeenId] = useState<string | null>(null);
   const [notification, setNotification] = useState<ChatNotification | null>(
@@ -68,6 +70,11 @@ export function useChatNotifications({
     dismissNotification();
   }, [settingsOpen, messages, dismissNotification]);
 
+  useEffect(() => {
+    if (notificationsEnabled) return;
+    dismissNotification();
+  }, [notificationsEnabled, dismissNotification]);
+
   const unreadCount = useMemo(() => {
     if (lastSeenId === null) return 0;
     const lastSeenIndex = messages.findIndex(
@@ -79,7 +86,14 @@ export function useChatNotifications({
   }, [messages, lastSeenId, playerId]);
 
   useEffect(() => {
-    if (lastSeenId === null || settingsOpen || !isMobileRef.current) return;
+    if (
+      lastSeenId === null ||
+      settingsOpen ||
+      !isMobileRef.current ||
+      !notificationsEnabled
+    ) {
+      return;
+    }
 
     const lastSeenIndex = messages.findIndex(
       (message) => message.id === lastSeenId,
@@ -106,7 +120,14 @@ export function useChatNotifications({
       setNotification(null);
       notificationTimerRef.current = null;
     }, CHAT_TOAST_MS);
-  }, [messages, lastSeenId, settingsOpen, playerId, soundEnabled]);
+  }, [
+    messages,
+    lastSeenId,
+    settingsOpen,
+    playerId,
+    soundEnabled,
+    notificationsEnabled,
+  ]);
 
   useEffect(() => {
     return () => {

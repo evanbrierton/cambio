@@ -1426,6 +1426,10 @@ html.play-scroll-lock body {
   display: flex;
   flex-direction: column;
   perspective: 1000px;
+  --seat-card-w: 3.5rem;
+  --seat-card-h: 5rem;
+  --seat-hand-w: 7.25rem;
+  --seat-card-fs: 10px;
 }
 
 .players-3d-rail {
@@ -1434,7 +1438,7 @@ html.play-scroll-lock body {
   min-width: 0;
   width: 100%;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.75rem;
   overflow-x: auto;
   overflow-y: hidden;
@@ -1442,21 +1446,45 @@ html.play-scroll-lock body {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   touch-action: pan-x pinch-zoom;
-  padding: 0.5rem 1rem;
+  padding: 0.25rem 1rem 0.5rem;
   transform-style: preserve-3d;
+}
+
+.players-3d-rail-packed {
+  justify-content: center;
+}
+
+.seat-hand-card {
+  width: var(--seat-card-w);
+  height: var(--seat-card-h);
+  font-size: var(--seat-card-fs);
+}
+
+.seat-hand-grid {
+  width: var(--seat-hand-w);
+}
+
+.table-event-strip {
+  border-top: 1px solid
+    color-mix(in srgb, var(--foreground-muted) 22%, transparent);
+  padding-top: 0.375rem;
+}
+
+.table-event-slot {
+  min-height: 1.375rem;
 }
 
 @media (min-width: 640px) {
   .players-3d-rail {
     gap: 1rem;
-    padding: 0.625rem 1.25rem;
+    padding: 0.375rem 1.25rem 0.625rem;
   }
 }
 
 @media (min-width: 1024px) {
   .players-3d-rail {
     gap: 1.25rem;
-    padding: 0.75rem 1.5rem;
+    padding: 0.5rem 1.5rem 0.75rem;
   }
 }
 
@@ -1491,6 +1519,48 @@ html.play-scroll-lock body {
   border-top-left-radius: var(--radius-panel);
   border-top-right-radius: var(--radius-panel);
   box-shadow: none;
+}
+
+.sheet-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex-shrink: 0;
+  border-width: var(--border-weight);
+  border-style: solid;
+  border-radius: var(--radius-chip);
+  background: var(--surface-elevated);
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: var(--btn-font-weight);
+  line-height: 1;
+  padding: 0;
+}
+
+.sheet-close-btn span {
+  display: block;
+  margin-top: -0.1em;
+}
+
+[data-theme="retro"] .sheet-close-btn {
+  font-size: 1.125rem;
+  letter-spacing: 0;
+}
+
+.chat-input::placeholder {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: var(--display-tracking);
+  text-transform: var(--display-transform);
+  color: color-mix(in srgb, var(--foreground-muted) 70%, transparent);
+  opacity: 1;
+}
+
+[data-theme="retro"] .chat-input::placeholder {
+  font-size: 8px;
+  letter-spacing: 0.04em;
 }
 
 /* Panel shadows extend outside the box and get clipped inside overflow scroll areas. */
@@ -1766,4 +1836,269 @@ html.play-scroll-lock body {
     transform: scale(1.04);
     filter: brightness(1.12);
   }
+}
+
+/* ── Drawn Card Slot (front & center) ── */
+.drawn-card-slot {
+  flex-shrink: 0;
+  max-width: 100%;
+}
+
+.table-deck {
+  --table-drawn-w: 4.5rem;
+  --table-drawn-h: 6.25rem;
+  --table-pile-w: 3.5rem;
+  --table-pile-h: 5rem;
+}
+
+/* Grid view: keep the table compact so player seats keep the vertical space */
+.table-deck-compact {
+  --table-drawn-w: 3rem;
+  --table-drawn-h: 4.25rem;
+  --table-pile-w: 2.5rem;
+  --table-pile-h: 3.5rem;
+  /* Extra block padding so labels/rings don't clip the border */
+  padding: 0.5rem 0.5rem 0.625rem;
+  gap: 0.375rem;
+}
+
+@media (min-width: 640px) {
+  .table-deck-compact {
+    --table-drawn-w: 3.25rem;
+    --table-drawn-h: 4.5rem;
+    --table-pile-w: 2.75rem;
+    --table-pile-h: 3.75rem;
+    padding: 0.5rem 0.625rem 0.75rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .table-deck-compact {
+    --table-drawn-w: 3.5rem;
+    --table-drawn-h: 4.75rem;
+    --table-pile-w: 3rem;
+    --table-pile-h: 4rem;
+    padding: 0.625rem 0.75rem 0.75rem;
+  }
+}
+
+/* Scale with panel via --table-* vars set by ResizeObserver */
+.drawn-card-size {
+  width: var(--table-drawn-w);
+  height: var(--table-drawn-h);
+  font-size: max(10px, calc(var(--table-drawn-h) * 0.145));
+}
+
+.scaled-pile-size {
+  width: var(--table-pile-w);
+  height: var(--table-pile-h);
+  font-size: max(9px, calc(var(--table-pile-h) * 0.145));
+}
+
+.table-deck .table-pile {
+  width: auto;
+  min-width: var(--table-pile-w);
+  max-width: none;
+}
+
+.table-deck .table-pile-label {
+  display: block;
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.table-hint {
+  max-width: min(100%, 28rem);
+}
+
+.table-hint-slot {
+  /* Compact inline toast: p-2 + 2 lines @ 9px / ~1.45 lh + border */
+  min-height: calc(1rem + 2 * 1.45 * 9px + 2 * var(--border-weight, 2px));
+}
+
+.table-action-chrome {
+  max-width: min(100%, 16rem);
+}
+
+.table-grid-context {
+  border-top: 1px solid
+    color-mix(in srgb, var(--foreground-muted) 22%, transparent);
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  min-height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-grid-context-action,
+.table-grid-context-hint {
+  font-family: var(--font-display);
+  font-size: 8px;
+  line-height: 1.25;
+  text-align: center;
+  text-transform: var(--display-transform);
+  letter-spacing: var(--display-tracking);
+}
+
+.table-grid-context-action {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: var(--accent-alt);
+  cursor: pointer;
+}
+
+.table-grid-context-action:hover {
+  color: var(--accent);
+}
+
+.table-grid-context-hint {
+  margin: 0;
+  color: var(--accent);
+  opacity: 0.9;
+}
+
+.table-chrome-slot {
+  min-height: 1.75rem;
+}
+
+/* In-flow slots (lobby / desktop aside) keep reserved height to avoid shift */
+.action-buttons-slot {
+  min-height: 2.75rem;
+  background-color: rgba(0, 0, 0, 0);
+  background-image: none;
+}
+
+.players-with-action-overlay {
+  isolation: isolate;
+}
+
+.players-with-action-overlay .players-3d-stage,
+.players-with-action-overlay .players-3d-rail,
+.players-with-action-overlay .players-grid-stage,
+.players-with-action-overlay .players-grid-scroll {
+  background-color: rgba(0, 0, 0, 0);
+  background-image: none;
+}
+
+.action-buttons-overlay {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  background-color: rgba(0, 0, 0, 0);
+  background-image: none;
+  /* Own compositor layer above perspective / overflow-scrolling children (Chrome iOS) */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px));
+}
+
+/*
+ * Overlay is out of flow — size to the button only.
+ * A min-height empty band is what Chrome iOS often paints as an opaque slab.
+ */
+.action-buttons-overlay .action-buttons-slot {
+  min-height: 0;
+  pointer-events: none;
+  background-color: rgba(0, 0, 0, 0);
+  background-image: none;
+}
+
+.action-buttons-overlay .action-buttons-slot > * {
+  pointer-events: auto;
+}
+
+/*
+ * Mobile: overlay on both grid and carousel.
+ * Grid keeps bottom padding so the last row can scroll under the button.
+ */
+@media (max-width: 1023px) {
+  .players-with-action-overlay .players-grid-scroll {
+    padding-bottom: 3.25rem;
+  }
+}
+
+@media (min-width: 640px) {
+  .table-hint-slot {
+    /* Compact inline toast: p-2 + 2 lines @ 10px / ~1.45 lh + border */
+    min-height: calc(1rem + 2 * 1.45 * 10px + 2 * var(--border-weight, 2px));
+  }
+
+  .table-chrome-slot {
+    min-height: 2rem;
+  }
+
+  .action-buttons-slot {
+    min-height: 3rem;
+  }
+
+  .action-buttons-overlay .action-buttons-slot {
+    min-height: 0;
+  }
+}
+
+.drawn-card-label {
+  text-transform: var(--display-transform);
+  letter-spacing: var(--display-tracking);
+  transition: color 0.2s ease-out;
+}
+
+.drawn-card-slot-active .drawn-card-label {
+  text-shadow: 0 0 8px var(--glow-accent);
+}
+
+.drawn-card-slot-actionable .drawn-card-label {
+  animation: drawn-label-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes drawn-label-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.drawn-card-container {
+  transition:
+    transform 0.2s ease-out,
+    box-shadow 0.2s ease-out;
+}
+
+.drawn-card-glow {
+  animation: drawn-card-glow-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes drawn-card-glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 8px var(--glow-accent);
+  }
+  50% {
+    box-shadow:
+      0 0 18px var(--glow-accent),
+      0 0 32px color-mix(in srgb, var(--glow-accent) 50%, transparent);
+  }
+}
+
+[data-theme="minimal"] .drawn-card-glow,
+[data-theme="calm"] .drawn-card-glow,
+[data-theme="ink"] .drawn-card-glow {
+  animation: none;
+  box-shadow: none;
+}
+
+[data-theme="minimal"] .drawn-card-slot-active .drawn-card-label,
+[data-theme="calm"] .drawn-card-slot-active .drawn-card-label,
+[data-theme="ink"] .drawn-card-slot-active .drawn-card-label {
+  text-shadow: none;
 }
