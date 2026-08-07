@@ -136,9 +136,9 @@ describe("discard abilities (CAM-76)", () => {
     expect(state.pendingAbility).toBeNull();
     expect(state.drawnCard).toBeNull();
     expect(state.phase).toBe("playing");
-    expect(state.log.some((entry) => entry.includes("Alice ended their turn."))).toBe(
-      true,
-    );
+    expect(
+      state.log.some((entry) => entry.includes("Alice ended their turn.")),
+    ).toBe(true);
     expect(
       state.log.some((entry) =>
         entry.includes("Spy ability skipped — no legal targets."),

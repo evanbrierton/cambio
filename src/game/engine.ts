@@ -610,7 +610,10 @@ function triggerAbility(
   ability: DiscardAbility,
 ): void {
   if (!canResolveDiscardAbility(state, playerId, ability)) {
-    addLog(state, `${abilityLabel(ability)} ability skipped — no legal targets.`);
+    addLog(
+      state,
+      `${abilityLabel(ability)} ability skipped — no legal targets.`,
+    );
     return;
   }
 
