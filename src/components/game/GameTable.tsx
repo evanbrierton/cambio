@@ -1299,7 +1299,7 @@ export function GameTable({
                   {roomCopied ? voice.copied : voice.copy}
                 </button>
                 <span
-                  role="img"
+                  role="status"
                   className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
                     connected
                       ? "bg-[var(--accent-alt)] shadow-[0_0_6px_var(--glow-accent-alt)]"
@@ -1308,13 +1308,6 @@ export function GameTable({
                         : "bg-[var(--accent)] opacity-75"
                   }`}
                   title={
-                    connected
-                      ? voice.online
-                      : error
-                        ? undefined
-                        : voice.reconnecting
-                  }
-                  aria-label={
                     connected
                       ? voice.online
                       : error
