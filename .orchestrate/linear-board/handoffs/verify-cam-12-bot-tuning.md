@@ -1,0 +1,49 @@
+<!-- orchestrate handoff
+task: verify-cam-12-bot-tuning
+branch: `orch/linear-board/cam-12-bot-tuning` (pushed commit `b78777e` adding `verifier/` harness; no target source files modified)
+agentId: bc-55122721-2ca5-4929-87fb-3edb78867451
+runId: run-13d57dae-9162-4f55-abee-b4238de45ea7
+resultStatus: finished
+finishedAt: 2026-08-07T17:57:53.414Z
+-->
+
+## Verification
+live-ui-verified
+
+## Target
+`cam-12-bot-tuning` on branch `orch/linear-board/cam-12-bot-tuning`
+
+## Branch
+`orch/linear-board/cam-12-bot-tuning` (pushed commit `b78777e` adding `verifier/` harness; no target source files modified)
+
+## Execution
+- `pnpm lint` (`biome check`) → **pass**, 69 files, no fixes.
+- `pnpm typecheck` (`tsc --noEmit`) → **pass**, no errors.
+- `pnpm test` (`vitest run`) → **pass, 13/13** (harness unchanged; no dedicated bot tests exist).
+- Verifier delay-distribution test (`pnpm exec vitest run --config verifier/vitest.verify.config.mts`) → **pass, 4/4**. Measured `botThinkDelay`: easy min=1501 max=3585 mean≈2373ms (1181 distinct), medium min=1100 max=2732 mean≈1745ms (1020 distinct), hard min=850 max=2140 mean≈1321ms (851 distinct). Difficulty scaling easy>medium>hard confirmed.
+- Static dispatch proof: `dispatchMessage` has exactly two callers — human `onMessage` (party/cambio.ts:678) and the bot `setTimeout(..., botThinkDelay(difficulty))` (party/cambio.ts:363–369). No path dispatches a bot action without the delay; `botThinkingId` is set/broadcast then cleared only after the timer fires.
+- Ran the real app: started party server (wrangler :8787) + Next.js (:3000), both healthy (3000→200). Played two full solo-vs-bots games end-to-end in a browser (3 bots).
+- Live passive observation (easy) → visible "BOT THINKING…" indicator ~2–3s per bot turn; game reached reveal/scores without crashes. Recording saved: `/opt/cursor/artifacts/cam12_bot_thinking_delay_easy.mp4`.
+- Static info-hygiene audit of `src/game/bot.ts` (grep of every `.card`/`.hand[`/`faceUp`/`cardPoints` read + tracing decision functions).
+
+## Findings
+Per acceptance criterion:
+- [x] **Human-like, difficulty-scaled, randomized delays**: met. `botThinkDelay` returns randomized values with 850–3656ms range across difficulties (800+ distinct values), applied via `setTimeout` before every bot dispatch. Live indicator observed ~2–3s on easy.
+- [x] **Decisions only use BotKnowledge / legit state**: met. All scoring flows through `estimateSlotPoints` → `knowledge.points()` with difficulty placeholder for unknowns; snaps only fire on `knowledge.get()` matches. The only ground-truth `.card` reads are occupancy checks (`slotHasCard`), public `faceUp` cards (`prepareForState`), the bot's own drawn/top-discard card, and `getHandCard` used solely in `updateBotKnowledge` to record the bot's OWN cards after setup-peek/swap. No decision path indexes opponents' or own unseen hidden card values. `prepareForState` clears stale cross-round memory.
+- [x] **Standings-aware Cambio, leaders not over-aggressive**: met. `standingsAwareCambioThreshold` adjusts the base threshold using `state.cumulativeScores` (leader = negative gap → lower/more-conservative threshold; trailer → higher/more-aggressive). `shouldCallCambio` also requires projected top-2 standing and refuses to call when projected to lose to the leader by >4. No turn-1/2 Cambio observed live.
+- [x] **Difficulty coherent + plays end-to-end**: met. Delays scale easy>medium>hard; snap/ability selection sharpens with difficulty (easy random own-only snaps, hard sorts by value). Two full games completed without crashes.
+- [x] **lint + typecheck + test pass**: met (all green, 13/13).
+
+Verifier-specific:
+- [x] Verification includes execution evidence for all CAM-12 criteria plus the BotKnowledge information-hygiene audit above.
+
+Other findings (severity-ordered):
+- (low) videoReview estimated the on-screen "thinking" pause at ~0.5s, conflicting with the objective ~1.5–3.6s (easy) delay and two live passive observers (~2–3s). This is a known imprecision of video-duration estimation under screen-capture compression, not a code defect — the `setTimeout(delay)` dispatch path makes an instant bot action impossible. Delay magnitude is proven by the distribution test + static wiring.
+- (low) A first (rapidly-interacting) computerUse pass misperceived bots as "instant"; a second passive-observation pass correctly reported 2–3s. Confirms pacing is real; the earlier report was a screenshot-cadence artifact.
+- (low) No dedicated unit tests were added by the implementer (matches "if natural"); the upstream's suggested `shouldCallCambio`/hidden-info regression tests would be a good hardening follow-up.
+
+## Notes & suggestions
+- Commit signing (`commit.gpgsign=true`, ssh) failed in this env ("Couldn't find key in agent"); I committed the verifier-only artifact with signing disabled for that single commit. No target files touched. The implementer's commit was already present.
+- `AGENTS.md`/`CLAUDE.md` appeared untracked — these are auto-generated by `next dev` on boot, not implementer changes; I left them uncommitted.
+- Reproduce the delay measurement with: `pnpm exec vitest run --config verifier/vitest.verify.config.mts --reporter=verbose`.
+- Walkthrough artifact:
