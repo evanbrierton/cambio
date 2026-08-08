@@ -6,9 +6,16 @@ import { cookies } from "next/headers";
 import { PwaRegistrar } from "@/components/PwaRegistrar";
 import { ThemeProvider } from "@/context/ThemeProvider";
 import { getSiteUrl, siteConfig } from "@/lib/site";
-import { parseThemeCookie, THEME_COOKIE_KEY } from "@/lib/theme-cookie";
+import {
+  APPEARANCE_COOKIE_KEY,
+  APPEARANCE_MEDIA_QUERY,
+  DEFAULT_APPEARANCE,
+  parseAppearanceCookie,
+  parseThemeCookie,
+  resolveAppearance,
+  THEME_COOKIE_KEY,
+} from "@/lib/theme-cookie";
 import { getThemeFontClassName } from "@/lib/theme-fonts";
-import { THEME_BACKGROUNDS } from "@/lib/themes";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -74,6 +81,26 @@ export const viewport: Viewport = {
   themeColor: siteConfig.themeColor,
 };
 
+const APPEARANCE_INIT_SCRIPT = `
+(() => {
+  const root = document.documentElement;
+  const key = ${JSON.stringify(APPEARANCE_COOKIE_KEY)};
+  const fallback = ${JSON.stringify(DEFAULT_APPEARANCE)};
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith(key + "="))
+    ?.slice(key.length + 1);
+  const preference = cookieValue === "light" || cookieValue === "dark" || cookieValue === "system"
+    ? cookieValue
+    : fallback;
+  const resolved = preference === "system"
+    ? (window.matchMedia(${JSON.stringify(APPEARANCE_MEDIA_QUERY)}).matches ? "dark" : "light")
+    : preference;
+  root.dataset.appearance = resolved;
+  root.style.colorScheme = resolved;
+})();
+`;
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -81,6 +108,10 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const theme = parseThemeCookie(cookieStore.get(THEME_COOKIE_KEY)?.value);
+  const appearancePreference = parseAppearanceCookie(
+    cookieStore.get(APPEARANCE_COOKIE_KEY)?.value,
+  );
+  const appearance = resolveAppearance(appearancePreference, false);
   const themeFontClass = getThemeFontClassName(theme);
 
   return (
@@ -88,11 +119,21 @@ export default async function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${themeFontClass} h-full`}
       data-theme={theme}
-      style={{ backgroundColor: THEME_BACKGROUNDS[theme] }}
+      data-appearance={appearance}
+      style={{ backgroundColor: "var(--background)", colorScheme: appearance }}
+      suppressHydrationWarning
     >
+      <head>
+        <script id="cambio-appearance-init">{APPEARANCE_INIT_SCRIPT}</script>
+      </head>
       <body className="min-h-full flex flex-col relative z-0">
         <PwaRegistrar />
-        <ThemeProvider initialTheme={theme}>{children}</ThemeProvider>
+        <ThemeProvider
+          initialTheme={theme}
+          initialAppearancePreference={appearancePreference}
+        >
+          {children}
+        </ThemeProvider>
         <Analytics />
         <SpeedInsights />
       </body>
