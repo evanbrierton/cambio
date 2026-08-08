@@ -65,6 +65,7 @@ export type ThemeVoice = {
   host: string;
   turn: string;
   cambio: string;
+  cambioSelf: string;
   cambioFinalRound: string;
   reshuffle: string;
   reshuffleDetail: string;
@@ -249,6 +250,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "HOST",
     turn: "TURN",
     cambio: "CAMBIO",
+    cambioSelf: "YOU CALLED IT!",
     cambioFinalRound: "CALLED CAMBIO — FINAL ROUND!",
     reshuffle: "RESHUFFLE!",
     reshuffleDetail: "DISCARD PILE SHUFFLED INTO THE DECK",
@@ -384,6 +386,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Dealer",
     turn: "Your action",
     cambio: "Cambio",
+    cambioSelf: "You called Cambio!",
     cambioFinalRound: "called Cambio — final round",
     reshuffle: "Reshuffle",
     reshuffleDetail: "Discard pile shuffled into the deck",
@@ -518,6 +521,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Host",
     turn: "Go go go!",
     cambio: "Cambio!",
+    cambioSelf: "You called it!",
     cambioFinalRound: "called Cambio — last dance!",
     reshuffle: "Reshuffle!",
     reshuffleDetail: "Discard pile shuffled back into the deck!",
@@ -649,6 +653,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Host",
     turn: "Turn",
     cambio: "Cambio",
+    cambioSelf: "You called Cambio",
     cambioFinalRound: "called Cambio — final round",
     reshuffle: "Reshuffle",
     reshuffleDetail: "Discard pile shuffled into the deck",
@@ -781,6 +786,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Host",
     turn: "Your turn",
     cambio: "Cambio",
+    cambioSelf: "You called Cambio",
     cambioFinalRound: "called Cambio — final round",
     reshuffle: "Reshuffle",
     reshuffleDetail: "Discard pile shuffled into the deck",
@@ -915,6 +921,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Librarian",
     turn: "Your turn",
     cambio: "Cambio",
+    cambioSelf: "You closed the book",
     cambioFinalRound: "closed the book — final round",
     reshuffle: "Reshuffle",
     reshuffleDetail: "Discard pile shuffled into the deck",
@@ -1049,6 +1056,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Host",
     turn: "Your turn",
     cambio: "Cambio",
+    cambioSelf: "You called Cambio",
     cambioFinalRound: "called Cambio — last logs on the fire",
     reshuffle: "Reshuffle",
     reshuffleDetail: "Discard pile shuffled back into the deck",
@@ -1181,6 +1189,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     host: "Host",
     turn: "Turn",
     cambio: "Cambio",
+    cambioSelf: "You called Cambio",
     cambioFinalRound: "called Cambio — final round",
     reshuffle: "Reshuffle",
     reshuffleDetail: "Discard pile shuffled into the deck",
