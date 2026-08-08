@@ -2721,6 +2721,43 @@ html.play-scroll-lock body {
   max-width: min(100%, 16rem);
 }
 
+.table-cambio-chip {
+  font-size: 8px;
+  line-height: 1.25;
+  padding: 0.35rem 0.65rem;
+  border-color: var(--btn-danger-border);
+  color: var(--btn-danger-text);
+  background: var(--btn-danger-bg);
+  box-shadow: var(--btn-danger-shadow);
+  animation: table-cambio-pulse 1.8s ease-in-out infinite;
+  cursor: pointer;
+}
+
+.table-cambio-chip:hover {
+  filter: brightness(1.08);
+}
+
+.table-cambio-chip:active {
+  opacity: 0.85;
+}
+
+@keyframes table-cambio-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.82;
+  }
+}
+
+@media (min-width: 640px) {
+  .table-cambio-chip {
+    font-size: 9px;
+    padding: 0.4rem 0.75rem;
+  }
+}
+
 .table-grid-context {
   border-top: 1px solid
     color-mix(in srgb, var(--foreground-muted) 22%, transparent);

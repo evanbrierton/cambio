@@ -95,6 +95,7 @@ export type ThemeVoice = {
   debugHide: string;
   debugRestart: string;
   drawHint: string;
+  drawOrCambioHint: string;
   discardHint: string;
   newGame: string;
   showResults: string;
@@ -288,6 +289,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "HIDE CARDS",
     debugRestart: "RESTART GAME",
     drawHint: "↓ TAP DECK OR DISCARD TO DRAW",
+    drawOrCambioHint: "↓ DRAW — OR CALL CAMBIO TO END THE ROUND",
     discardHint: "↓ TAP DISCARD TO PLAY YOUR CARD, OR YOUR HAND TO SWAP",
     newGame: "NEW GAME",
     showResults: "SHOW SCORES",
@@ -426,6 +428,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap the deck or discard pile to draw",
+    drawOrCambioHint: "Draw a card — or call Cambio to end the round",
     discardHint:
       "Tap the discard pile to play your card, or tap your hand to swap",
     newGame: "Deal again",
@@ -564,6 +567,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap deck or discard to grab a card!",
+    drawOrCambioHint: "Draw a card — or shout Cambio to end the round!",
     discardHint: "Tap the discard pile to toss it, or swap with your hand!",
     newGame: "Play again!",
     showResults: "Show scores!",
@@ -700,6 +704,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide all",
     debugRestart: "Restart game",
     drawHint: "Tap deck or discard to draw",
+    drawOrCambioHint: "Draw — or call Cambio to end the round",
     discardHint: "Tap discard pile to play your card, or tap hand to swap",
     newGame: "New round",
     showResults: "Show scores",
@@ -838,6 +843,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap the deck or discard when you're ready",
+    drawOrCambioHint: "Draw when ready — or call Cambio to end the round",
     discardHint:
       "Tap the discard pile to set aside your card, or swap with your hand",
     newGame: "Play another round",
@@ -977,6 +983,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap the deck or discard when you're ready",
+    drawOrCambioHint: "Draw a card — or close the book to end the round",
     discardHint:
       "Tap the discard pile to set aside your card, or swap with your hand",
     newGame: "Another chapter",
@@ -1115,6 +1122,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap the deck or discard to draw",
+    drawOrCambioHint: "Draw a card — or call Cambio to end the round",
     discardHint: "Tap discard to toss your card, or swap with your hand",
     newGame: "Another round",
     showResults: "Show scores",
@@ -1252,6 +1260,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide all",
     debugRestart: "Restart game",
     drawHint: "Tap deck or discard to draw",
+    drawOrCambioHint: "Draw — or call Cambio to end the round",
     discardHint: "Tap discard pile to play your card, or tap hand to swap",
     newGame: "New round",
     showResults: "Show scores",
