@@ -121,7 +121,7 @@ export function PwaInstallPrompt() {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[90] pointer-events-none flex flex-col items-stretch sm:items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-90 pointer-events-none flex flex-col items-stretch sm:items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       aria-live="polite"
     >
       <AnimatePresence initial={false}>
@@ -141,7 +141,7 @@ export function PwaInstallPrompt() {
               action: (
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <RetroButton
-                    className="!py-2 !px-3"
+                    className="py-2! px-3!"
                     disabled={installing}
                     onClick={() => {
                       void onInstall();
@@ -151,7 +151,7 @@ export function PwaInstallPrompt() {
                   </RetroButton>
                   <RetroButton
                     variant="secondary"
-                    className="!py-2 !px-3"
+                    className="py-2! px-3!"
                     onClick={onDismiss}
                   >
                     Not now
@@ -177,7 +177,7 @@ export function PwaInstallPrompt() {
               action: (
                 <RetroButton
                   variant="secondary"
-                  className="!py-2 !px-3"
+                  className="py-2! px-3!"
                   onClick={onDismiss}
                 >
                   Got it
