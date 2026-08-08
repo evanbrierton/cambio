@@ -1401,10 +1401,6 @@ html.play-scroll-lock body {
 
 .players-grid-stage {
   perspective: 1000px;
-  --seat-card-w: 3.5rem;
-  --seat-card-h: 5rem;
-  --seat-hand-w: 7.25rem;
-  --seat-card-fs: 10px;
 }
 
 .players-grid-scroll {
@@ -1475,13 +1471,13 @@ html.play-scroll-lock body {
 }
 
 .seat-hand-card {
-  width: var(--seat-card-w);
-  height: var(--seat-card-h);
-  font-size: var(--seat-card-fs);
+  width: var(--seat-card-w, 3.5rem);
+  height: var(--seat-card-h, 5rem);
+  font-size: var(--seat-card-fs, 10px);
 }
 
 .seat-hand-grid {
-  width: var(--seat-hand-w);
+  width: var(--seat-hand-w, 7.25rem);
 }
 
 .table-event-strip {

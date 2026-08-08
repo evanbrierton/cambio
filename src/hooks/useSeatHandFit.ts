@@ -10,15 +10,15 @@ import {
  * Fit a seat's hand (2×2 base + penalty columns) inside the seat width by
  * setting `--seat-card-*` CSS variables on the seat element.
  *
- * When an ancestor already defines `--seat-card-w` (carousel height scale),
- * that value is treated as a maximum so we only shrink further when needed.
+ * Intended for grid view. Carousel seats should inherit height-based sizing
+ * from `.players-3d-stage` instead of overriding it here.
  */
-export function useSeatHandFit(columnCount: number) {
+export function useSeatHandFit(columnCount: number, enabled: boolean) {
   const seatRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const seat = seatRef.current;
-    if (!seat) return;
+    if (!seat || !enabled) return;
 
     const update = () => {
       const styles = getComputedStyle(seat);
@@ -26,22 +26,7 @@ export function useSeatHandFit(columnCount: number) {
         (Number.parseFloat(styles.paddingLeft) || 0) +
         (Number.parseFloat(styles.paddingRight) || 0);
       const available = Math.max(0, seat.clientWidth - padX);
-
-      const parent = seat.parentElement;
-      let maxFromParent = Number.POSITIVE_INFINITY;
-      if (parent) {
-        const parentW = Number.parseFloat(
-          getComputedStyle(parent).getPropertyValue("--seat-card-w"),
-        );
-        if (!Number.isNaN(parentW) && parentW > 0) {
-          maxFromParent = parentW;
-        }
-      }
-
-      const maxCardW = Math.min(
-        maxFromParent,
-        maxSeatCardWidthForViewport(window.innerWidth),
-      );
+      const maxCardW = maxSeatCardWidthForViewport(window.innerWidth);
       const { cardW, cardH, handW, fontSize } = computeSeatHandSize(
         available,
         columnCount,
@@ -69,7 +54,7 @@ export function useSeatHandFit(columnCount: number) {
       seat.style.removeProperty("--seat-hand-w");
       seat.style.removeProperty("--seat-card-fs");
     };
-  }, [columnCount]);
+  }, [columnCount, enabled]);
 
   return seatRef;
 }

@@ -323,6 +323,7 @@ function PlayerSeat({
   lookAbilityActive,
   pendingLookKind,
   compact = false,
+  fitHandToWidth = false,
   voice,
   onCardClick,
 }: {
@@ -343,6 +344,7 @@ function PlayerSeat({
   lookAbilityActive?: boolean;
   pendingLookKind?: PendingAbility["kind"] | null;
   compact?: boolean;
+  fitHandToWidth?: boolean;
   voice: ThemeVoice;
   onCardClick: (playerId: string, slot: number, isOwn: boolean) => void;
 }) {
@@ -400,7 +402,7 @@ function PlayerSeat({
     .filter(({ slot, index }) => !slot.empty && isPenaltyColumnSlot(index));
 
   const handColumnCount = 2 + penaltyGridColumns(penaltySlots.length);
-  const seatRef = useSeatHandFit(handColumnCount);
+  const seatRef = useSeatHandFit(handColumnCount, fitHandToWidth);
 
   const renderHandSlot = (slot: PublicCardSlot, index: number) => {
     const isEmpty = !!slot.empty;
@@ -1091,6 +1093,7 @@ export function GameTable({
         lookAbilityActive={lookAbilityActive}
         pendingLookKind={pendingLookKind}
         compact
+        fitHandToWidth={playerGridEnabled}
         voice={voice}
         onCardClick={handleCardClick}
       />
