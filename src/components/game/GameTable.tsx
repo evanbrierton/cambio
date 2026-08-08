@@ -523,7 +523,7 @@ function PlayerSeat({
         isOwn && !showDrawnSwapHint ? "lg:ring-1 lg:ring-accent" : ""
       } ${swapAbilityActive && isProtectedTarget && !isOwn ? "opacity-40" : ""}`}
     >
-      <div className="w-full min-h-[2.25rem] mb-1 sm:mb-1.5 flex flex-col items-center justify-center gap-1">
+      <div className="w-full min-h-9 mb-1 sm:mb-1.5 flex flex-col items-center justify-center gap-1">
         <h2 className="player-name text-[10px] sm:text-xs truncate max-w-full">
           {player.name}
           {isOwn ? " (you)" : ""}
@@ -1216,13 +1216,13 @@ export function GameTable({
         <p className="font-display text-[8px] text-theme-muted mb-2 shrink-0">
           {voice.gameLog}
         </p>
-        <div className="min-h-[72px] max-h-[140px] lg:max-h-none lg:flex-1 lg:min-h-0 overflow-y-auto overflow-x-hidden">
+        <div className="min-h-18 max-h-35 lg:max-h-none lg:flex-1 lg:min-h-0 overflow-y-auto overflow-x-hidden">
           {view.log.slice(-12).map((line, index) => {
             const logIndex = Math.max(0, view.log.length - 12) + index;
             return (
               <p
                 key={`log-${logIndex}`}
-                className="font-mono text-[10px] text-theme-muted leading-relaxed break-words"
+                className="font-mono text-[10px] text-theme-muted leading-relaxed wrap-break-word"
               >
                 {line}
               </p>
@@ -1257,7 +1257,7 @@ export function GameTable({
       />
 
       {settingsOpen && (
-        <div className="lg:hidden fixed inset-0 z-[90]">
+        <div className="lg:hidden fixed inset-0 z-90">
           <button
             type="button"
             className="absolute inset-0 bg-black/50"
@@ -1265,7 +1265,7 @@ export function GameTable({
             aria-label="Close menu"
           />
           <div className="mobile-settings-sheet absolute inset-x-0 bottom-0 top-[max(0.75rem,env(safe-area-inset-top,0px))] flex flex-col bg-surface pixel-border border-b-0 overflow-hidden">
-            <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3.5 min-h-[3.75rem]">
+            <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-3.5 min-h-15">
               <p className="font-display text-base sm:text-lg text-theme leading-tight">
                 {voice.gameMenuLabel}
               </p>
@@ -1323,10 +1323,10 @@ export function GameTable({
                   role="status"
                   className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
                     connected
-                      ? "bg-[var(--accent-alt)] shadow-[0_0_6px_var(--glow-accent-alt)]"
+                      ? "bg-(--accent-alt) shadow-[0_0_6px_var(--glow-accent-alt)]"
                       : error
-                        ? "bg-[var(--danger)]"
-                        : "bg-[var(--accent)] opacity-75"
+                        ? "bg-(--danger)"
+                        : "bg-(--accent) opacity-75"
                   }`}
                   title={
                     connected
@@ -1352,7 +1352,7 @@ export function GameTable({
                 >
                   ···
                   {unreadCount > 0 ? (
-                    <span className="absolute -top-1 -right-1 min-w-[14px] h-[14px] px-0.5 flex items-center justify-center rounded-full bg-accent text-[8px] font-display text-surface leading-none">
+                    <span className="absolute -top-1 -right-1 min-w-3.5 h-3.5 px-0.5 flex items-center justify-center rounded-full bg-accent text-[8px] font-display text-surface leading-none">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   ) : null}
@@ -1368,7 +1368,7 @@ export function GameTable({
               </div>
             </div>
 
-            <h1 className="font-display text-[11px] sm:text-sm title-glow truncate mt-1 tracking-[var(--display-tracking)] leading-snug">
+            <h1 className="font-display text-[11px] sm:text-sm title-glow truncate mt-1 tracking-(--display-tracking) leading-snug">
               {phaseLabel}
             </h1>
 
@@ -1403,7 +1403,7 @@ export function GameTable({
                         key={actionToast.id}
                         toast={actionToast}
                         inline
-                        className="!p-2 !text-[9px] sm:!text-[10px] !leading-[1.45] shadow-none"
+                        className="p-2! text-[9px]! sm:text-[10px]! leading-[1.45]! shadow-none"
                       />
                     ) : null}
                   </AnimatePresence>

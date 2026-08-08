@@ -7,10 +7,10 @@ import type { Card, PeekFlashKind } from "@/game/types";
 
 export const TABLE_CARD_SIZE = "w-20 h-28";
 export const HAND_CARD_SIZE =
-  "w-14 h-20 text-[10px] sm:w-16 sm:h-[4.5rem] lg:w-20 lg:h-28 lg:text-xs";
+  "w-14 h-20 text-[10px] sm:w-16 sm:h-18 lg:w-20 lg:h-28 lg:text-xs";
 export const HAND_GRID_WIDTH = "w-[7.25rem] sm:w-[8.25rem] lg:w-[10.375rem]";
 export const PILE_CARD_SIZE =
-  "w-14 h-20 text-[10px] sm:w-16 sm:h-[4.5rem] lg:w-20 lg:h-28 lg:text-xs";
+  "w-14 h-20 text-[10px] sm:w-16 sm:h-18 lg:w-20 lg:h-28 lg:text-xs";
 
 type PixelCardProps = {
   card: Card | null;
@@ -60,7 +60,7 @@ function SwapFlashOverlay({
   return (
     <div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-card pointer-events-none overflow-hidden">
       <div className="absolute inset-0 bg-accent/65" />
-      <div className="absolute inset-0 bg-gradient-to-br from-accent-alt/70 via-white/25 to-accent/70 swap-flash-shimmer" />
+      <div className="absolute inset-0 bg-linear-to-br from-accent-alt/70 via-white/25 to-accent/70 swap-flash-shimmer" />
       <div className="absolute inset-0 border-4 border-accent swap-flash-ring" />
       {slotLabel && (
         <span className="relative mb-1 font-display font-bold text-[8px] sm:text-[9px] text-white/90 tracking-wider">
@@ -95,7 +95,7 @@ function PeekFlashOverlay({
   return (
     <div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-card pointer-events-none overflow-hidden">
       <div className="absolute inset-0 bg-accent-alt/65" />
-      <div className="absolute inset-0 bg-gradient-to-br from-accent-alt/70 via-white/25 to-accent/50 peek-flash-shimmer" />
+      <div className="absolute inset-0 bg-linear-to-br from-accent-alt/70 via-white/25 to-accent/50 peek-flash-shimmer" />
       <div className="absolute inset-0 border-4 border-accent-alt peek-flash-ring" />
       {slotLabel && (
         <span className="relative mb-1 font-display font-bold text-[8px] sm:text-[9px] text-white/90 tracking-wider">
@@ -126,7 +126,7 @@ function PenaltyFlashOverlay({
   return (
     <div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-card pointer-events-none overflow-hidden">
       <div className="absolute inset-0 bg-danger-surface/70" />
-      <div className="absolute inset-0 bg-gradient-to-br from-accent/70 via-white/20 to-danger-surface/70 penalty-flash-shimmer" />
+      <div className="absolute inset-0 bg-linear-to-br from-accent/70 via-white/20 to-danger-surface/70 penalty-flash-shimmer" />
       <div className="absolute inset-0 border-4 border-accent penalty-flash-ring" />
       {slotLabel && (
         <span className="relative mb-1 font-display font-bold text-[8px] sm:text-[9px] text-white/90 tracking-wider">

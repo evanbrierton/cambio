@@ -1227,6 +1227,10 @@ body::after {
   font-family: var(--font-display);
 }
 
+.btn-theme:disabled {
+  opacity: 0.4;
+}
+
 .btn-primary {
   background: var(--btn-primary-bg);
   color: var(--btn-primary-text);

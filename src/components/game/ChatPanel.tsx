@@ -47,7 +47,7 @@ export function ChatPanel({
 
       <div
         ref={listRef}
-        className="min-h-[72px] max-h-[160px] lg:max-h-[200px] overflow-y-auto overflow-x-hidden space-y-1.5"
+        className="min-h-18 max-h-40 lg:max-h-50 overflow-y-auto overflow-x-hidden space-y-1.5"
         aria-live="polite"
         aria-relevant="additions"
       >
@@ -61,7 +61,7 @@ export function ChatPanel({
             return (
               <p
                 key={message.id}
-                className={`font-mono text-[10px] leading-relaxed break-words ${
+                className={`font-mono text-[10px] leading-relaxed wrap-break-word ${
                   isOwn ? "text-accent" : "text-theme-muted"
                 }`}
               >
