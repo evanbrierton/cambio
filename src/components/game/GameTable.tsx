@@ -1247,6 +1247,7 @@ export function GameTable({
       <CambioCallOverlay
         cambioFlash={cambioFlash}
         callerName={cambioCallerName}
+        isSelfCall={cambioFlash?.playerId === view.playerId}
         voice={voice}
       />
       <ReshuffleOverlay reshuffleFlash={reshuffleFlash} voice={voice} />
