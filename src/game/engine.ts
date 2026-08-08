@@ -376,8 +376,13 @@ function canAttemptSnap(state: GameState): boolean {
   return isSnapEligible(state) || state.phase === "snap_window";
 }
 
-function canPlayerSnap(state: GameState): boolean {
-  return canAttemptSnap(state);
+function canPlayerSnap(state: GameState, playerId: string): boolean {
+  if (!canAttemptSnap(state)) return false;
+  // First successful snapper owns the pile until a non-snap discard resets it.
+  if (state.snapChainPlayerId && state.snapChainPlayerId !== playerId) {
+    return false;
+  }
+  return true;
 }
 
 function revealAllHands(state: GameState): void {
@@ -420,9 +425,16 @@ function isSnapEligible(state: GameState): boolean {
   return top.id === state.snapEligibleTopCardId;
 }
 
+/** Non-snap discard: open the pile to everyone. */
 function markDiscardTopSnapEligible(state: GameState, card: Card): void {
   state.snapEligibleTopCardId = card.id;
   state.snapChainPlayerId = null;
+}
+
+/** Successful snap: keep the pile open, but only for this player. */
+function claimSnapChain(state: GameState, playerId: string, card: Card): void {
+  state.snapEligibleTopCardId = card.id;
+  state.snapChainPlayerId = playerId;
 }
 
 function clearSnapEligibleDiscard(state: GameState): void {
@@ -1063,7 +1075,7 @@ export function handleMessage(
       if (isSnapResolutionPending(state)) {
         return { error: "Another player is resolving a snap." };
       }
-      if (!canPlayerSnap(state)) {
+      if (!canPlayerSnap(state, playerId)) {
         return { error: "No snap available right now." };
       }
       if (
@@ -1131,11 +1143,7 @@ export function handleMessage(
       clearHandSlot(target.hand, message.slot);
       tryAutoCallCambioForEmptyHand(state, message.targetPlayerId);
       state.discard.push(handCard);
-      if (state.phase === "snap_window") {
-        clearSnapEligibleDiscard(state);
-      } else {
-        markDiscardTopSnapEligible(state, handCard);
-      }
+      claimSnapChain(state, playerId, handCard);
 
       if (message.targetPlayerId === playerId) {
         addLog(state, `${player.name} snapped correctly!`);
@@ -1529,7 +1537,7 @@ export function buildPlayerView(
       !state.pendingAbility,
     canSnap:
       tableInteractive &&
-      canPlayerSnap(state) &&
+      canPlayerSnap(state, viewerId) &&
       !snapGivePending &&
       !(viewer?.hasCalledCambio && state.phase === "cambio_final") &&
       !(gameInteractive && isMyTurn && state.drawnCard) &&
