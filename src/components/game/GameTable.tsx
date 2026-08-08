@@ -288,7 +288,10 @@ function getActionBanner(
     };
   }
   if (view.canDraw) {
-    return { text: voice.drawHint, tone: "turn" };
+    return {
+      text: view.canCallCambio ? voice.drawOrCambioHint : voice.drawHint,
+      tone: "turn",
+    };
   }
   if (view.canDiscardDrawn) {
     const ability = view.drawnCard ? abilityForDiscard(view.drawnCard) : null;
@@ -1115,17 +1118,20 @@ export function GameTable({
           {voice.showResults}
         </RetroButton>
       )}
-
-      {view.canCallCambio && (
-        <RetroButton
-          variant="danger"
-          onClick={() => send({ type: "call_cambio" })}
-        >
-          {voice.callCambio}
-        </RetroButton>
-      )}
     </div>
   );
+
+  const hasActionButtons = view.canStartGame || view.canShowResults;
+
+  const callCambioChip = view.canCallCambio ? (
+    <button
+      type="button"
+      onClick={() => send({ type: "call_cambio" })}
+      className="table-cambio-chip chip-btn"
+    >
+      {voice.callCambio}
+    </button>
+  ) : null;
 
   const canDebugRestart =
     debugEnabled &&
@@ -1598,6 +1604,8 @@ export function GameTable({
                           {voice.tapToSwap}
                         </p>
                       ) : null
+                    ) : callCambioChip ? (
+                      callCambioChip
                     ) : (
                       <p
                         className="table-grid-context-hint truncate invisible"
@@ -1631,7 +1639,9 @@ export function GameTable({
                           </button>
                         ) : null}
                       </div>
-                    ) : null}
+                    ) : (
+                      callCambioChip
+                    )}
                   </div>
                 ) : null}
               </div>
@@ -1694,9 +1704,11 @@ export function GameTable({
                 )
               ) : null}
 
-              <div className="action-buttons-overlay lg:hidden">
-                {actionButtons}
-              </div>
+              {hasActionButtons ? (
+                <div className="action-buttons-overlay lg:hidden">
+                  {actionButtons}
+                </div>
+              ) : null}
             </div>
           )}
 
@@ -1708,7 +1720,9 @@ export function GameTable({
         </div>
 
         <aside className="hidden lg:flex flex-col gap-3 lg:sticky lg:top-3 lg:self-start lg:max-h-[calc(100dvh-2.5rem)] lg:min-h-0 min-w-0">
-          <div className="shrink-0">{actionButtons}</div>
+          {hasActionButtons ? (
+            <div className="shrink-0">{actionButtons}</div>
+          ) : null}
           <div className="flex flex-col gap-3 flex-1 min-h-0 min-w-0">
             {gameSidebar}
           </div>
