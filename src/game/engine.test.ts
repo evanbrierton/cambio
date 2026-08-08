@@ -218,6 +218,37 @@ describe("snap_give blocks play (CAM-13)", () => {
   });
 });
 
+describe("snap race prevention", () => {
+  it("allows only one player to claim a snap-eligible discard after a self snap", () => {
+    const state = playingState();
+    const discarded = card("5", "spades");
+    state.discard = [discarded];
+    state.snapEligibleTopCardId = discarded.id;
+    state.players[0].hand[0] = slot(card("5", "hearts"));
+    state.players[1].hand[0] = slot(card("5", "diamonds"));
+
+    const firstSnap = handleMessage(state, "alice", {
+      type: "snap",
+      targetPlayerId: "alice",
+      slot: 0,
+    });
+    const discardAfterFirstSnap = state.discard.length;
+
+    const secondSnap = handleMessage(state, "bob", {
+      type: "snap",
+      targetPlayerId: "bob",
+      slot: 0,
+    });
+
+    expect("error" in firstSnap).toBe(false);
+    expect(secondSnap.error).toBe("No snap available right now.");
+    expect(state.discard).toHaveLength(discardAfterFirstSnap);
+    expect(state.players[1].hand[0].card?.rank).toBe("5");
+    expect(state.players[1].penaltyCount).toBe(0);
+    expect(state.snapEligibleTopCardId).toBeNull();
+  });
+});
+
 describe("expireSnapWindow (CAM-14)", () => {
   function snapWindowState(now: number): GameState {
     const state = playingState();
