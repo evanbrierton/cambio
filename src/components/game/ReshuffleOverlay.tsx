@@ -16,7 +16,7 @@ export function ReshuffleOverlay({
       {reshuffleFlash ? (
         <motion.div
           key={`reshuffle-${reshuffleFlash.id}`}
-          className="fixed inset-0 z-[120] flex items-center justify-center px-4 pointer-events-none"
+          className="fixed inset-0 z-120 flex items-center justify-center px-4 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

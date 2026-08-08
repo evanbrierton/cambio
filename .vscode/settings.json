@@ -1,0 +1,8 @@
+{
+  "tailwindCSS.lint": {
+    "cssConflict": "error",
+    "recommendedVariantOrder": "error",
+    "usedBlocklistedClass": "error",
+    "suggestCanonicalClasses": "error"
+  }
+}
