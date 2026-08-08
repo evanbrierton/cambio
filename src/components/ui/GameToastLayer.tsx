@@ -73,7 +73,7 @@ export function GameToastLayer({ toasts }: { toasts: GameToastItem[] }) {
 
   return (
     <div
-      className="fixed inset-x-0 bottom-0 z-[100] pointer-events-none flex flex-col-reverse items-stretch sm:items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+      className="fixed inset-x-0 bottom-0 z-100 pointer-events-none flex flex-col-reverse items-stretch sm:items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       aria-live="polite"
     >
       <AnimatePresence initial={false} mode="popLayout">

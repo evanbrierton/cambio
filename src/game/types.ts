@@ -133,9 +133,9 @@ export type GameState = {
   winnerIds: string[];
   scores: Record<string, number> | null;
   snapWindowEndsAt: number | null;
-  /** ID of the discard-top card placed by draw/swap discard; cleared after a snap. */
+  /** ID of the discard-top card that may currently be snapped. */
   snapEligibleTopCardId: string | null;
-  /** During play, only this player may snap again after a correct snap. */
+  /** When set, only this player may continue snapping until a non-snap discard. */
   snapChainPlayerId: string | null;
   botThinkingId: string | null;
   log: string[];
@@ -249,6 +249,14 @@ export type PlayerView = {
   chatMessages: ChatMessage[];
 };
 
+export type DiscardDrawFlash = {
+  playerId: string;
+};
+
+export type DeckDrawFlash = {
+  playerId: string;
+};
+
 export type ServerMessage =
   | { type: "state"; view: PlayerView }
   | { type: "secret_peek"; playerId: string; slot: number; card: Card }
@@ -263,5 +271,7 @@ export type ServerMessage =
   | { type: "penalty_flash"; playerId: string; slot: number }
   | { type: "cambio_flash"; playerId: string }
   | { type: "reshuffle_flash" }
+  | { type: "discard_draw_flash"; playerId: string }
+  | { type: "deck_draw_flash"; playerId: string }
   | { type: "error"; message: string }
   | { type: "room_info"; roomId: string; playerId: string };

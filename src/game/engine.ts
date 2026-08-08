@@ -331,13 +331,58 @@ function tryPassTurnAfterAction(
   passTurn(state, actingPlayerId);
 }
 
+function enterCambioFinal(state: GameState, playerId: string): boolean {
+  const player = findPlayer(state, playerId);
+  if (!player) return false;
+
+  player.hasCalledCambio = true;
+  state.cambioCallerId = playerId;
+  state.phase = "cambio_final";
+  addLog(state, `${player.name} called CAMBIO!`);
+  return true;
+}
+
+function resolveCambioCallTurnTransition(
+  state: GameState,
+  cambioCallerId: string,
+): void {
+  const othersNeedTurn = state.players.some(
+    (p) => p.id !== cambioCallerId && !p.finalTurnDone && isPlayingPlayer(p),
+  );
+  if (!othersNeedTurn) {
+    endRound(state);
+  } else {
+    advanceTurn(state);
+  }
+}
+
+function tryAutoCallCambioForEmptyHand(
+  state: GameState,
+  playerId: string,
+): void {
+  if (state.cambioCallerId || state.phase === "cambio_final") return;
+  if (state.phase !== "playing") return;
+  const player = findPlayer(state, playerId);
+  if (!player || player.hand.length > 0) return;
+  if (!enterCambioFinal(state, playerId)) return;
+
+  if (currentPlayer(state)?.id === playerId) {
+    resolveCambioCallTurnTransition(state, playerId);
+  }
+}
+
 function canAttemptSnap(state: GameState): boolean {
   if (state.discard.length === 0) return false;
   return isSnapEligible(state) || state.phase === "snap_window";
 }
 
-function canPlayerSnap(state: GameState): boolean {
-  return canAttemptSnap(state);
+function canPlayerSnap(state: GameState, playerId: string): boolean {
+  if (!canAttemptSnap(state)) return false;
+  // First successful snapper owns the pile until a non-snap discard resets it.
+  if (state.snapChainPlayerId && state.snapChainPlayerId !== playerId) {
+    return false;
+  }
+  return true;
 }
 
 function revealAllHands(state: GameState): void {
@@ -380,9 +425,16 @@ function isSnapEligible(state: GameState): boolean {
   return top.id === state.snapEligibleTopCardId;
 }
 
+/** Non-snap discard: open the pile to everyone. */
 function markDiscardTopSnapEligible(state: GameState, card: Card): void {
   state.snapEligibleTopCardId = card.id;
   state.snapChainPlayerId = null;
+}
+
+/** Successful snap: keep the pile open, but only for this player. */
+function claimSnapChain(state: GameState, playerId: string, card: Card): void {
+  state.snapEligibleTopCardId = card.id;
+  state.snapChainPlayerId = playerId;
 }
 
 function clearSnapEligibleDiscard(state: GameState): void {
@@ -522,6 +574,70 @@ function canTargetPlayer(playerId: string, state: GameState): boolean {
   return !isProtected(playerId, state);
 }
 
+function hasLegalLookTarget(
+  state: GameState,
+  playerId: string,
+  ability: "peek_own" | "spy" | "queen_look" | "king_look",
+): boolean {
+  for (const player of state.players) {
+    if (ability === "peek_own" && player.id !== playerId) continue;
+    if (ability === "spy" && player.id === playerId) continue;
+    if (player.id !== playerId && !canTargetPlayer(player.id, state)) continue;
+    for (let slot = 0; slot < player.hand.length; slot += 1) {
+      if (slotHasCard(player, slot)) return true;
+    }
+  }
+  return false;
+}
+
+function hasLegalSwapTargets(state: GameState): boolean {
+  let swappableSlotCount = 0;
+  for (const player of state.players) {
+    if (!canTargetPlayer(player.id, state)) continue;
+    swappableSlotCount += player.hand.length;
+    if (swappableSlotCount >= 2) return true;
+  }
+  return false;
+}
+
+function canResolveDiscardAbility(
+  state: GameState,
+  playerId: string,
+  ability: DiscardAbility,
+): boolean {
+  if (ability === "peek_own") {
+    return hasLegalLookTarget(state, playerId, "peek_own");
+  }
+  if (ability === "spy") {
+    return hasLegalLookTarget(state, playerId, "spy");
+  }
+  if (ability === "blind_switch") {
+    return hasLegalSwapTargets(state);
+  }
+  if (ability === "queen_look") {
+    return (
+      hasLegalLookTarget(state, playerId, "queen_look") &&
+      hasLegalSwapTargets(state)
+    );
+  }
+  if (ability === "king_look") {
+    return (
+      hasLegalLookTarget(state, playerId, "king_look") &&
+      hasLegalSwapTargets(state)
+    );
+  }
+
+  return false;
+}
+
+function abilityLabel(ability: DiscardAbility): string {
+  if (ability === "peek_own") return "Peek";
+  if (ability === "spy") return "Spy";
+  if (ability === "blind_switch") return "Blind switch";
+  if (ability === "queen_look") return "Queen";
+  return "King";
+}
+
 function addPenalty(
   state: GameState,
   playerId: string,
@@ -545,6 +661,14 @@ function triggerAbility(
   playerId: string,
   ability: DiscardAbility,
 ): void {
+  if (!canResolveDiscardAbility(state, playerId, ability)) {
+    addLog(
+      state,
+      `${abilityLabel(ability)} ability skipped — no legal targets.`,
+    );
+    return;
+  }
+
   if (ability === "peek_own") {
     state.pendingAbility = {
       playerId,
@@ -724,6 +848,8 @@ export function handleMessage(
   penaltyFlash?: { playerId: string; slot: number };
   cambioFlash?: { playerId: string };
   reshuffleFlash?: boolean;
+  discardDrawFlash?: { playerId: string };
+  deckDrawFlash?: { playerId: string };
 } {
   if (
     isSnapResolutionPending(state) &&
@@ -858,19 +984,8 @@ export function handleMessage(
       if (state.turnStarted) return { error: "Call Cambio before drawing." };
       if (state.drawnCard) return { error: "Already drew a card." };
 
-      player.hasCalledCambio = true;
-      state.cambioCallerId = playerId;
-      state.phase = "cambio_final";
-      addLog(state, `${player.name} called CAMBIO!`);
-
-      const othersNeedTurn = state.players.some(
-        (p) => p.id !== playerId && !p.finalTurnDone && isPlayingPlayer(p),
-      );
-      if (!othersNeedTurn) {
-        endRound(state);
-      } else {
-        advanceTurn(state);
-      }
+      enterCambioFinal(state, playerId);
+      resolveCambioCallTurnTransition(state, playerId);
       return { cambioFlash: { playerId } };
     }
 
@@ -893,7 +1008,10 @@ export function handleMessage(
         state.drawnCard = card;
         state.drawnFromDiscard = false;
         addLog(state, `${player.name} drew from the deck.`);
-        return reshuffled ? { reshuffleFlash: true } : {};
+        return {
+          deckDrawFlash: { playerId },
+          reshuffleFlash: reshuffled || undefined,
+        };
       }
 
       if (state.discard.length === 0)
@@ -904,7 +1022,7 @@ export function handleMessage(
       state.drawnCard = card;
       state.drawnFromDiscard = true;
       addLog(state, `${player.name} drew from the discard pile.`);
-      return {};
+      return { discardDrawFlash: { playerId } };
     }
 
     case "swap": {
@@ -957,7 +1075,7 @@ export function handleMessage(
       if (isSnapResolutionPending(state)) {
         return { error: "Another player is resolving a snap." };
       }
-      if (!canPlayerSnap(state)) {
+      if (!canPlayerSnap(state, playerId)) {
         return { error: "No snap available right now." };
       }
       if (
@@ -1023,12 +1141,9 @@ export function handleMessage(
       }
 
       clearHandSlot(target.hand, message.slot);
+      tryAutoCallCambioForEmptyHand(state, message.targetPlayerId);
       state.discard.push(handCard);
-      if (state.phase === "snap_window") {
-        clearSnapEligibleDiscard(state);
-      } else {
-        markDiscardTopSnapEligible(state, handCard);
-      }
+      claimSnapChain(state, playerId, handCard);
 
       if (message.targetPlayerId === playerId) {
         addLog(state, `${player.name} snapped correctly!`);
@@ -1074,6 +1189,7 @@ export function handleMessage(
         state,
         `${snapper.name} gave a card to ${recipient.name} after snapping.`,
       );
+      tryAutoCallCambioForEmptyHand(state, playerId);
       return {};
     }
 
@@ -1421,7 +1537,7 @@ export function buildPlayerView(
       !state.pendingAbility,
     canSnap:
       tableInteractive &&
-      canPlayerSnap(state) &&
+      canPlayerSnap(state, viewerId) &&
       !snapGivePending &&
       !(viewer?.hasCalledCambio && state.phase === "cambio_final") &&
       !(gameInteractive && isMyTurn && state.drawnCard) &&

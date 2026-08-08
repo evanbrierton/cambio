@@ -7,10 +7,12 @@ import type { ThemeVoice } from "@/lib/themes";
 export function CambioCallOverlay({
   cambioFlash,
   callerName,
+  isSelfCall,
   voice,
 }: {
   cambioFlash: CambioFlash | null;
   callerName: string;
+  isSelfCall: boolean;
   voice: ThemeVoice;
 }) {
   return (
@@ -18,7 +20,7 @@ export function CambioCallOverlay({
       {cambioFlash ? (
         <motion.div
           key={`cambio-${cambioFlash.playerId}`}
-          className="fixed inset-0 z-[120] flex items-center justify-center px-4"
+          className="fixed inset-0 z-120 flex items-center justify-center px-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -50,8 +52,12 @@ export function CambioCallOverlay({
             <p className="font-display text-3xl sm:text-5xl title-glow text-danger-text animate-pulse leading-tight">
               {voice.cambio}
             </p>
-            <p className="mt-4 sm:mt-6 font-display text-xs sm:text-sm text-accent-soft">
-              {callerName}
+            <p
+              className={`mt-4 sm:mt-6 font-display text-xs sm:text-sm ${
+                isSelfCall ? "text-danger-text" : "text-accent-soft"
+              }`}
+            >
+              {isSelfCall ? voice.cambioSelf : callerName}
             </p>
             <p className="mt-2 font-display text-[10px] sm:text-xs text-theme-muted">
               {voice.cambioFinalRound}

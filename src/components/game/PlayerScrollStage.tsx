@@ -53,7 +53,7 @@ export function PlayerScrollStage({
       const rail = railRef.current;
       const item = itemRefs.current[index];
       if (!rail || !item) return;
-      if (rail.classList.contains("players-3d-rail-packed")) return;
+      if (rail.classList.contains("is-static")) return;
 
       const target =
         item.offsetLeft + item.offsetWidth / 2 - rail.clientWidth / 2;
@@ -76,9 +76,9 @@ export function PlayerScrollStage({
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
-    const items = itemRefs.current.filter(
-      (item): item is HTMLDivElement => item != null,
-    );
+    const items = itemRefs.current
+      .slice(0, childCount)
+      .filter((item): item is HTMLDivElement => item != null);
     const styles = getComputedStyle(rail);
     const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
     const contentWidth = items.reduce(
@@ -92,6 +92,8 @@ export function PlayerScrollStage({
     const fits = contentWidth <= availableWidth + 0.5;
 
     rail.classList.toggle("players-3d-rail-packed", fits);
+    rail.classList.toggle("is-static", fits);
+    stage?.classList.toggle("is-static", fits);
 
     const centerItem = itemRefs.current[centerIndex];
     const itemHalf = centerItem ? centerItem.offsetWidth / 2 : 58;
@@ -133,7 +135,7 @@ export function PlayerScrollStage({
       item.style.transform = `rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
       item.style.opacity = String(1 - Math.abs(clamped) * 0.15);
     });
-  }, [centerIndex]);
+  }, [centerIndex, childCount]);
 
   useEffect(() => {
     itemRefs.current.length = childCount;

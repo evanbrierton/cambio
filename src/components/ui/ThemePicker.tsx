@@ -160,8 +160,8 @@ export function ThemePicker({ compact = false }: { compact?: boolean }) {
       <div
         className={`grid gap-2 ${
           compact
-            ? "grid-cols-[repeat(2,minmax(0,1fr))]"
-            : "grid-cols-[minmax(0,1fr)] sm:grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-[repeat(4,minmax(0,1fr))]"
+            ? "grid-cols-2"
+            : "grid-cols-[minmax(0,1fr)] sm:grid-cols-2 lg:grid-cols-4"
         }`}
       >
         {THEME_OPTIONS.map((option) => {

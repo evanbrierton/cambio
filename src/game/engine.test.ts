@@ -80,6 +80,148 @@ describe("finalizeRound", () => {
   });
 });
 
+describe("auto Cambio call on empty hand (CAM-9)", () => {
+  function setSnapReadyState(state: GameState, top: Card): void {
+    state.discard = [top];
+    state.snapEligibleTopCardId = top.id;
+  }
+
+  it("auto-calls Cambio when a successful snap empties a hand", () => {
+    const state = playingState();
+    state.players[0].hand = [slot(card("2", "hearts"))];
+    setSnapReadyState(state, card("2", "spades"));
+
+    const result = handleMessage(state, "bob", {
+      type: "snap",
+      targetPlayerId: "alice",
+      slot: 0,
+    });
+
+    expect("error" in result).toBe(false);
+    expect(state.phase).toBe("cambio_final");
+    expect(state.cambioCallerId).toBe("alice");
+    expect(state.players[0].hasCalledCambio).toBe(true);
+  });
+
+  it("does not auto-call Cambio when the snapped player still has cards", () => {
+    const state = playingState();
+    state.players[0].hand = [
+      slot(card("2", "hearts")),
+      slot(card("3", "hearts")),
+    ];
+    setSnapReadyState(state, card("2", "spades"));
+
+    handleMessage(state, "bob", {
+      type: "snap",
+      targetPlayerId: "alice",
+      slot: 0,
+    });
+
+    expect(state.phase).toBe("playing");
+    expect(state.cambioCallerId).toBeNull();
+    expect(state.players[0].hasCalledCambio).toBe(false);
+  });
+
+  it("applies the same caller protections as manual Cambio", () => {
+    const state = playingState();
+    state.players[0].hand = [slot(card("2", "hearts"))];
+    setSnapReadyState(state, card("2", "spades"));
+
+    handleMessage(state, "alice", {
+      type: "snap",
+      targetPlayerId: "alice",
+      slot: 0,
+    });
+
+    state.players[0].hand = [slot(card("A", "clubs"))];
+
+    expect(
+      handleMessage(state, "alice", {
+        type: "snap",
+        targetPlayerId: "bob",
+        slot: 0,
+      }).error,
+    ).toBe("Cambio caller cannot snap.");
+
+    state.pendingAbility = {
+      playerId: "bob",
+      kind: "spy",
+      lookedCards: [],
+      maxLooks: 1,
+    };
+    expect(
+      handleMessage(state, "bob", {
+        type: "ability_look",
+        playerId: "alice",
+        slot: 0,
+      }).error,
+    ).toBe("That player is protected.");
+
+    state.pendingAbility = {
+      playerId: "bob",
+      kind: "blind_switch",
+      lookedCards: [],
+      maxLooks: 0,
+    };
+    expect(
+      handleMessage(state, "bob", {
+        type: "ability_swap",
+        fromPlayerId: "alice",
+        fromSlot: 0,
+        toPlayerId: "bob",
+        toSlot: 0,
+      }).error,
+    ).toBe("That player's cards are protected.");
+  });
+
+  it("does not auto-call again when Cambio is already active", () => {
+    const state = playingState();
+    state.phase = "cambio_final";
+    state.cambioCallerId = "alice";
+    state.players[0].hasCalledCambio = true;
+    state.players[1].hasCalledCambio = false;
+    state.currentPlayerIndex = 1;
+    state.players[1].hand = [slot(card("2", "hearts"))];
+    setSnapReadyState(state, card("2", "spades"));
+
+    handleMessage(state, "bob", {
+      type: "snap",
+      targetPlayerId: "bob",
+      slot: 0,
+    });
+
+    expect(state.phase).toBe("cambio_final");
+    expect(state.cambioCallerId).toBe("alice");
+    expect(state.players[0].hasCalledCambio).toBe(true);
+    expect(state.players[1].hasCalledCambio).toBe(false);
+  });
+
+  it("auto-calls Cambio when snap_give empties the giver's hand", () => {
+    const state = playingState();
+    state.currentPlayerIndex = 0;
+    state.players[0].hand = [slot(card("K", "hearts"))];
+    state.players[1].hand = [slot(card("2", "clubs"))];
+    state.pendingAbility = {
+      playerId: "alice",
+      kind: "snap_give",
+      lookedCards: [],
+      maxLooks: 0,
+      snapTargetPlayerId: "bob",
+    };
+
+    const result = handleMessage(state, "alice", {
+      type: "snap_give",
+      slot: 0,
+    });
+
+    expect("error" in result).toBe(false);
+    expect(state.pendingAbility).toBeNull();
+    expect(state.phase).toBe("cambio_final");
+    expect(state.cambioCallerId).toBe("alice");
+    expect(state.players[0].hasCalledCambio).toBe(true);
+  });
+});
+
 describe("discard abilities (CAM-76)", () => {
   it("triggers ability when a deck-drawn ability card is discarded", () => {
     const state = playingState();
@@ -95,6 +237,55 @@ describe("discard abilities (CAM-76)", () => {
       lookedCards: [],
       maxLooks: 1,
     });
+  });
+
+  it("skips spy in cambio_final when the only opponent is protected", () => {
+    const state = playingState();
+    state.deck = [card("9", "spades")];
+
+    const cambio = handleMessage(state, "alice", { type: "call_cambio" });
+    expect("error" in cambio).toBe(false);
+    expect(state.phase).toBe("cambio_final");
+    expect(state.currentPlayerIndex).toBe(1);
+
+    const draw = handleMessage(state, "bob", { type: "draw", source: "deck" });
+    expect("error" in draw).toBe(false);
+    expect(state.drawnCard?.rank).toBe("9");
+
+    const discard = handleMessage(state, "bob", { type: "discard_drawn" });
+
+    expect(discard).toEqual({});
+    expect(state.pendingAbility).toBeNull();
+    expect(state.drawnCard).toBeNull();
+    expect(state.phase).toBe("snap_window");
+    expect(state.players[1].finalTurnDone).toBe(true);
+    expect(
+      state.log.some((entry) =>
+        entry.includes("Spy ability skipped — no legal targets."),
+      ),
+    ).toBe(true);
+  });
+
+  it("skips spy when all opponents have no cards", () => {
+    const state = playingState();
+    state.players[1].hand = [];
+    state.drawnCard = card("10", "diamonds");
+    state.drawnFromDiscard = false;
+
+    const result = handleMessage(state, "alice", { type: "discard_drawn" });
+
+    expect(result).toEqual({});
+    expect(state.pendingAbility).toBeNull();
+    expect(state.drawnCard).toBeNull();
+    expect(state.phase).toBe("playing");
+    expect(
+      state.log.some((entry) => entry.includes("Alice ended their turn.")),
+    ).toBe(true);
+    expect(
+      state.log.some((entry) =>
+        entry.includes("Spy ability skipped — no legal targets."),
+      ),
+    ).toBe(true);
   });
 
   it("does not trigger ability when an ability card is swapped out of hand", () => {
@@ -215,6 +406,82 @@ describe("snap_give blocks play (CAM-13)", () => {
     expect(bobView.canSnap).toBe(false);
     expect(aliceView.canDraw).toBe(false);
     expect(bobView.canDraw).toBe(false);
+  });
+});
+
+describe("snap chain ownership", () => {
+  it("lets the first snapper keep chaining while blocking other players", () => {
+    const state = playingState();
+    const discarded = card("5", "spades");
+    state.discard = [discarded];
+    state.snapEligibleTopCardId = discarded.id;
+    state.players[0].hand[0] = slot(card("5", "hearts"));
+    state.players[0].hand[1] = slot(card("5", "clubs"));
+    state.players[1].hand[0] = slot(card("5", "diamonds"));
+
+    const firstSnap = handleMessage(state, "alice", {
+      type: "snap",
+      targetPlayerId: "alice",
+      slot: 0,
+    });
+    expect("error" in firstSnap).toBe(false);
+    expect(state.snapChainPlayerId).toBe("alice");
+    expect(state.snapEligibleTopCardId).toBe(state.discard.at(-1)?.id);
+
+    const blockedSnap = handleMessage(state, "bob", {
+      type: "snap",
+      targetPlayerId: "bob",
+      slot: 0,
+    });
+    expect(blockedSnap.error).toBe("No snap available right now.");
+    expect(state.players[1].hand[0].card?.rank).toBe("5");
+    expect(state.players[1].penaltyCount).toBe(0);
+
+    const chainSnap = handleMessage(state, "alice", {
+      type: "snap",
+      targetPlayerId: "alice",
+      slot: 1,
+    });
+    expect("error" in chainSnap).toBe(false);
+    expect(state.players[0].hand[1].card).toBeNull();
+    expect(state.snapChainPlayerId).toBe("alice");
+    expect(state.discard.at(-1)?.id).toBe("5-clubs");
+  });
+
+  it("clears the snap lock after a non-snap discard so any player can snap again", () => {
+    const state = playingState();
+    const discarded = card("5", "spades");
+    state.discard = [discarded];
+    state.snapEligibleTopCardId = discarded.id;
+    state.players[0].hand[0] = slot(card("5", "hearts"));
+    state.players[1].hand[0] = slot(card("6", "diamonds"));
+    state.players[1].hand[1] = slot(card("6", "clubs"));
+
+    expect(
+      "error" in
+        handleMessage(state, "alice", {
+          type: "snap",
+          targetPlayerId: "alice",
+          slot: 0,
+        }),
+    ).toBe(false);
+    expect(state.snapChainPlayerId).toBe("alice");
+
+    state.currentPlayerIndex = 1;
+    state.drawnCard = card("6", "hearts");
+    state.drawnFromDiscard = false;
+    expect(handleMessage(state, "bob", { type: "discard_drawn" })).toEqual({});
+    expect(state.snapChainPlayerId).toBeNull();
+    expect(state.snapEligibleTopCardId).toBe("6-hearts");
+
+    const bobSnap = handleMessage(state, "bob", {
+      type: "snap",
+      targetPlayerId: "bob",
+      slot: 0,
+    });
+    expect("error" in bobSnap).toBe(false);
+    expect(state.snapChainPlayerId).toBe("bob");
+    expect(state.players[1].hand[0].card).toBeNull();
   });
 });
 

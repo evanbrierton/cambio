@@ -20,7 +20,7 @@ export function SnapWindowOverlay({
       {show ? (
         <motion.div
           key="snap-window"
-          className="fixed inset-0 z-[115] pointer-events-none"
+          className="fixed inset-0 z-115 pointer-events-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
