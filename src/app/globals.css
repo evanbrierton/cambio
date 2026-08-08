@@ -1401,6 +1401,10 @@ html.play-scroll-lock body {
 
 .players-grid-stage {
   perspective: 1000px;
+  --seat-card-w: 3.5rem;
+  --seat-card-h: 5rem;
+  --seat-hand-w: 7.25rem;
+  --seat-card-fs: 10px;
 }
 
 .players-grid-scroll {

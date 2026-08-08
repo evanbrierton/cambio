@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { HAND_GRID_WIDTH, PixelCard } from "@/components/cards/PixelCard";
+import { PixelCard } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
@@ -46,6 +46,7 @@ import { useHintsEnabled } from "@/hooks/useHintsEnabled";
 import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
 import { useOwnSeatDisplay } from "@/hooks/useOwnSeatDisplay";
 import { usePlayerGridEnabled } from "@/hooks/usePlayerGridEnabled";
+import { useSeatHandFit } from "@/hooks/useSeatHandFit";
 import { useSoundEnabled } from "@/hooks/useSoundEnabled";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { copyToClipboard } from "@/lib/clipboard";
@@ -322,7 +323,6 @@ function PlayerSeat({
   lookAbilityActive,
   pendingLookKind,
   compact = false,
-  scaleHands = false,
   voice,
   onCardClick,
 }: {
@@ -343,7 +343,6 @@ function PlayerSeat({
   lookAbilityActive?: boolean;
   pendingLookKind?: PendingAbility["kind"] | null;
   compact?: boolean;
-  scaleHands?: boolean;
   voice: ThemeVoice;
   onCardClick: (playerId: string, slot: number, isOwn: boolean) => void;
 }) {
@@ -400,6 +399,9 @@ function PlayerSeat({
     .map((slot, index) => ({ slot, index }))
     .filter(({ slot, index }) => !slot.empty && isPenaltyColumnSlot(index));
 
+  const handColumnCount = 2 + penaltyGridColumns(penaltySlots.length);
+  const seatRef = useSeatHandFit(handColumnCount);
+
   const renderHandSlot = (slot: PublicCardSlot, index: number) => {
     const isEmpty = !!slot.empty;
     const isFleetingPeek =
@@ -440,7 +442,7 @@ function PlayerSeat({
         faceUp={isFleetingPeek || slot.faceUp}
         revealing={isFleetingPeek}
         small={compact}
-        sizeClass={scaleHands ? "seat-hand-card" : undefined}
+        sizeClass="seat-hand-card"
         swapFirstSelected={isSelectedForSwap && swapAbilityActive}
         swapFlashing={isSwapFlashing(swapFlash, player.id, index)}
         swapFlashSlotLabel={
@@ -484,7 +486,8 @@ function PlayerSeat({
 
   return (
     <section
-      className={`pixel-border ${seatPadding} w-full max-w-full shrink-0 flex flex-col items-center text-center ${
+      ref={seatRef}
+      className={`pixel-border ${seatPadding} w-full max-w-full min-w-0 shrink-0 flex flex-col items-center text-center ${
         hasSwapFlash
           ? "swap-seat-flash bg-swap-seat-flash ring-2 ring-accent shadow-glow-accent"
           : hasPeekFlash
@@ -571,19 +574,15 @@ function PlayerSeat({
           {voice.waitingBadge}
         </p>
       ) : (
-        <div className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit max-w-full mx-auto">
-          <div
-            className={`grid grid-cols-2 gap-1 lg:gap-1.5 shrink-0 ${
-              scaleHands ? "seat-hand-grid" : HAND_GRID_WIDTH
-            }`}
-          >
+        <div className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit max-w-full min-w-0 mx-auto">
+          <div className="grid grid-cols-2 gap-1 lg:gap-1.5 shrink-0 seat-hand-grid">
             {baseGridSlots.map(({ slot, index }) =>
               renderHandSlot(slot, index),
             )}
           </div>
           {penaltySlots.length > 0 && (
             <div
-              className="grid grid-rows-2 grid-flow-col gap-1 lg:gap-1.5 shrink-0"
+              className="grid grid-rows-2 grid-flow-col gap-1 lg:gap-1.5 shrink-0 min-w-0"
               style={{
                 gridTemplateColumns: `repeat(${penaltyGridColumns(penaltySlots.length)}, auto)`,
               }}
@@ -1092,7 +1091,6 @@ export function GameTable({
         lookAbilityActive={lookAbilityActive}
         pendingLookKind={pendingLookKind}
         compact
-        scaleHands={!playerGridEnabled}
         voice={voice}
         onCardClick={handleCardClick}
       />
