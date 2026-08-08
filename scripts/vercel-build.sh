@@ -3,6 +3,12 @@ set -euo pipefail
 
 # Vercel runs this instead of `build` when present.
 # Deploy the game server Worker on production only (not preview branches).
+# Preview + production clients share cambio.brierton.workers.dev via
+# NEXT_PUBLIC_PARTYKIT_HOST (see src/lib/party.ts).
+
+DEFAULT_PARTY_HOST="cambio.brierton.workers.dev"
+export NEXT_PUBLIC_PARTYKIT_HOST="${NEXT_PUBLIC_PARTYKIT_HOST:-$DEFAULT_PARTY_HOST}"
+echo "NEXT_PUBLIC_PARTYKIT_HOST=${NEXT_PUBLIC_PARTYKIT_HOST}"
 
 if [ "${VERCEL_ENV:-}" = "production" ]; then
   if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ] || [ -z "${CLOUDFLARE_API_TOKEN:-}" ]; then
@@ -13,7 +19,7 @@ if [ "${VERCEL_ENV:-}" = "production" ]; then
     pnpm party:deploy
   fi
 else
-  echo "Skipping Worker deploy (VERCEL_ENV=${VERCEL_ENV:-unknown})."
+  echo "Skipping Worker deploy (VERCEL_ENV=${VERCEL_ENV:-unknown}); using shared production Worker."
 fi
 
 pnpm build
