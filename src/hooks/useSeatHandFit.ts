@@ -1,60 +1,87 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import {
-  computeSeatHandSize,
-  maxSeatCardWidthForViewport,
-} from "@/lib/seat-hand-scale";
+import { useLayoutEffect, useRef } from "react";
 
 /**
- * Fit a seat's hand (2×2 base + penalty columns) inside the seat width by
- * setting `--seat-card-*` CSS variables on the seat element.
+ * Fit a seat's hand inside the seat width by measuring the rendered hand and
+ * applying `transform: scale(...)` when it would overflow.
  *
- * Intended for grid view. Carousel seats should inherit height-based sizing
- * from `.players-3d-stage` instead of overriding it here.
+ * More reliable than precomputing card sizes from column counts: real gaps,
+ * borders, and many penalty columns are all accounted for.
+ *
+ * Intended for grid view. Carousel seats inherit height-based sizing from
+ * `.players-3d-stage` instead.
  */
-export function useSeatHandFit(columnCount: number, enabled: boolean) {
+export function useSeatHandFit(enabled: boolean, layoutKey: number | string) {
   const seatRef = useRef<HTMLElement>(null);
+  const clipRef = useRef<HTMLDivElement>(null);
+  const handRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    // Remeasure when hand composition changes (penalty count / hand length).
+    void layoutKey;
+
     const seat = seatRef.current;
-    if (!seat || !enabled) return;
+    const clip = clipRef.current;
+    const hand = handRef.current;
+
+    if (!enabled || !seat || !clip || !hand) {
+      if (hand) {
+        hand.style.transform = "";
+        hand.style.transformOrigin = "";
+      }
+      if (clip) {
+        clip.style.height = "";
+      }
+      return;
+    }
 
     const update = () => {
-      const styles = getComputedStyle(seat);
-      const padX =
-        (Number.parseFloat(styles.paddingLeft) || 0) +
-        (Number.parseFloat(styles.paddingRight) || 0);
-      const available = Math.max(0, seat.clientWidth - padX);
-      const maxCardW = maxSeatCardWidthForViewport(window.innerWidth);
-      const { cardW, cardH, handW, fontSize } = computeSeatHandSize(
-        available,
-        columnCount,
-        maxCardW,
-      );
+      hand.style.transform = "none";
+      clip.style.height = "auto";
 
-      seat.style.setProperty("--seat-card-w", `${cardW}px`);
-      seat.style.setProperty("--seat-card-h", `${cardH}px`);
-      seat.style.setProperty("--seat-hand-w", `${handW}px`);
-      seat.style.setProperty("--seat-card-fs", `${fontSize}px`);
+      const seatStyles = getComputedStyle(seat);
+      const padX =
+        (Number.parseFloat(seatStyles.paddingLeft) || 0) +
+        (Number.parseFloat(seatStyles.paddingRight) || 0);
+      const available = Math.max(0, seat.clientWidth - padX);
+      const naturalW = hand.scrollWidth;
+      const naturalH = hand.scrollHeight;
+
+      if (naturalW <= 0 || naturalH <= 0) {
+        hand.style.transform = "";
+        clip.style.height = "";
+        return;
+      }
+
+      const scale = naturalW > available ? available / naturalW : 1;
+      if (scale < 1) {
+        hand.style.transform = `scale(${scale})`;
+        hand.style.transformOrigin = "top center";
+        clip.style.height = `${naturalH * scale}px`;
+      } else {
+        hand.style.transform = "";
+        hand.style.transformOrigin = "";
+        clip.style.height = "";
+      }
     };
 
     update();
     const frame = requestAnimationFrame(update);
     const observer = new ResizeObserver(update);
     observer.observe(seat);
+    observer.observe(hand);
     window.addEventListener("resize", update);
 
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
       window.removeEventListener("resize", update);
-      seat.style.removeProperty("--seat-card-w");
-      seat.style.removeProperty("--seat-card-h");
-      seat.style.removeProperty("--seat-hand-w");
-      seat.style.removeProperty("--seat-card-fs");
+      hand.style.transform = "";
+      hand.style.transformOrigin = "";
+      clip.style.height = "";
     };
-  }, [columnCount, enabled]);
+  }, [enabled, layoutKey]);
 
-  return seatRef;
+  return { seatRef, clipRef, handRef };
 }

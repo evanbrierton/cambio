@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { PixelCard } from "@/components/cards/PixelCard";
+import { HAND_GRID_WIDTH, PixelCard } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
@@ -401,8 +401,10 @@ function PlayerSeat({
     .map((slot, index) => ({ slot, index }))
     .filter(({ slot, index }) => !slot.empty && isPenaltyColumnSlot(index));
 
-  const handColumnCount = 2 + penaltyGridColumns(penaltySlots.length);
-  const seatRef = useSeatHandFit(handColumnCount, fitHandToWidth);
+  const { seatRef, clipRef, handRef } = useSeatHandFit(
+    fitHandToWidth,
+    `${penaltySlots.length}:${player.hand.length}`,
+  );
 
   const renderHandSlot = (slot: PublicCardSlot, index: number) => {
     const isEmpty = !!slot.empty;
@@ -444,7 +446,7 @@ function PlayerSeat({
         faceUp={isFleetingPeek || slot.faceUp}
         revealing={isFleetingPeek}
         small={compact}
-        sizeClass="seat-hand-card"
+        sizeClass={fitHandToWidth ? undefined : "seat-hand-card"}
         swapFirstSelected={isSelectedForSwap && swapAbilityActive}
         swapFlashing={isSwapFlashing(swapFlash, player.id, index)}
         swapFlashSlotLabel={
@@ -576,29 +578,41 @@ function PlayerSeat({
           {voice.waitingBadge}
         </p>
       ) : (
-        <div className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit max-w-full min-w-0 mx-auto">
-          <div className="grid grid-cols-2 gap-1 lg:gap-1.5 shrink-0 seat-hand-grid">
-            {baseGridSlots.map(({ slot, index }) =>
-              renderHandSlot(slot, index),
+        <div
+          ref={clipRef}
+          className="w-full min-w-0 overflow-hidden flex justify-center"
+        >
+          <div
+            ref={handRef}
+            className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit"
+          >
+            <div
+              className={`grid grid-cols-2 gap-1 lg:gap-1.5 shrink-0 ${
+                fitHandToWidth ? HAND_GRID_WIDTH : "seat-hand-grid"
+              }`}
+            >
+              {baseGridSlots.map(({ slot, index }) =>
+                renderHandSlot(slot, index),
+              )}
+            </div>
+            {penaltySlots.length > 0 && (
+              <div
+                className="grid grid-rows-2 grid-flow-col gap-1 lg:gap-1.5 shrink-0"
+                style={{
+                  gridTemplateColumns: `repeat(${penaltyGridColumns(penaltySlots.length)}, auto)`,
+                }}
+              >
+                {penaltySlots.map(({ slot, index }, penaltyIndex) => (
+                  <div
+                    key={`penalty-wrap-${index}`}
+                    style={penaltyGridPosition(penaltyIndex)}
+                  >
+                    {renderHandSlot(slot, index)}
+                  </div>
+                ))}
+              </div>
             )}
           </div>
-          {penaltySlots.length > 0 && (
-            <div
-              className="grid grid-rows-2 grid-flow-col gap-1 lg:gap-1.5 shrink-0 min-w-0"
-              style={{
-                gridTemplateColumns: `repeat(${penaltyGridColumns(penaltySlots.length)}, auto)`,
-              }}
-            >
-              {penaltySlots.map(({ slot, index }, penaltyIndex) => (
-                <div
-                  key={`penalty-wrap-${index}`}
-                  style={penaltyGridPosition(penaltyIndex)}
-                >
-                  {renderHandSlot(slot, index)}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       )}
     </section>
