@@ -218,13 +218,14 @@ describe("snap_give blocks play (CAM-13)", () => {
   });
 });
 
-describe("snap race prevention", () => {
-  it("allows only one player to claim a snap-eligible discard after a self snap", () => {
+describe("snap chain ownership", () => {
+  it("lets the first snapper keep chaining while blocking other players", () => {
     const state = playingState();
     const discarded = card("5", "spades");
     state.discard = [discarded];
     state.snapEligibleTopCardId = discarded.id;
     state.players[0].hand[0] = slot(card("5", "hearts"));
+    state.players[0].hand[1] = slot(card("5", "clubs"));
     state.players[1].hand[0] = slot(card("5", "diamonds"));
 
     const firstSnap = handleMessage(state, "alice", {
@@ -232,20 +233,64 @@ describe("snap race prevention", () => {
       targetPlayerId: "alice",
       slot: 0,
     });
-    const discardAfterFirstSnap = state.discard.length;
+    expect("error" in firstSnap).toBe(false);
+    expect(state.snapChainPlayerId).toBe("alice");
+    expect(state.snapEligibleTopCardId).toBe(state.discard.at(-1)?.id);
 
-    const secondSnap = handleMessage(state, "bob", {
+    const blockedSnap = handleMessage(state, "bob", {
       type: "snap",
       targetPlayerId: "bob",
       slot: 0,
     });
-
-    expect("error" in firstSnap).toBe(false);
-    expect(secondSnap.error).toBe("No snap available right now.");
-    expect(state.discard).toHaveLength(discardAfterFirstSnap);
+    expect(blockedSnap.error).toBe("No snap available right now.");
     expect(state.players[1].hand[0].card?.rank).toBe("5");
     expect(state.players[1].penaltyCount).toBe(0);
-    expect(state.snapEligibleTopCardId).toBeNull();
+
+    const chainSnap = handleMessage(state, "alice", {
+      type: "snap",
+      targetPlayerId: "alice",
+      slot: 1,
+    });
+    expect("error" in chainSnap).toBe(false);
+    expect(state.players[0].hand[1].card).toBeNull();
+    expect(state.snapChainPlayerId).toBe("alice");
+    expect(state.discard.at(-1)?.id).toBe("5-clubs");
+  });
+
+  it("clears the snap lock after a non-snap discard so any player can snap again", () => {
+    const state = playingState();
+    const discarded = card("5", "spades");
+    state.discard = [discarded];
+    state.snapEligibleTopCardId = discarded.id;
+    state.players[0].hand[0] = slot(card("5", "hearts"));
+    state.players[1].hand[0] = slot(card("6", "diamonds"));
+    state.players[1].hand[1] = slot(card("6", "clubs"));
+
+    expect(
+      "error" in
+        handleMessage(state, "alice", {
+          type: "snap",
+          targetPlayerId: "alice",
+          slot: 0,
+        }),
+    ).toBe(false);
+    expect(state.snapChainPlayerId).toBe("alice");
+
+    state.currentPlayerIndex = 1;
+    state.drawnCard = card("6", "hearts");
+    state.drawnFromDiscard = false;
+    expect(handleMessage(state, "bob", { type: "discard_drawn" })).toEqual({});
+    expect(state.snapChainPlayerId).toBeNull();
+    expect(state.snapEligibleTopCardId).toBe("6-hearts");
+
+    const bobSnap = handleMessage(state, "bob", {
+      type: "snap",
+      targetPlayerId: "bob",
+      slot: 0,
+    });
+    expect("error" in bobSnap).toBe(false);
+    expect(state.snapChainPlayerId).toBe("bob");
+    expect(state.players[1].hand[0].card).toBeNull();
   });
 });
 

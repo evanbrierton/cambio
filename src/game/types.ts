@@ -133,9 +133,9 @@ export type GameState = {
   winnerIds: string[];
   scores: Record<string, number> | null;
   snapWindowEndsAt: number | null;
-  /** ID of the discard-top card placed by draw/swap discard; cleared after a snap. */
+  /** ID of the discard-top card that may currently be snapped. */
   snapEligibleTopCardId: string | null;
-  /** During play, only this player may snap again after a correct snap. */
+  /** When set, only this player may continue snapping until a non-snap discard. */
   snapChainPlayerId: string | null;
   botThinkingId: string | null;
   log: string[];

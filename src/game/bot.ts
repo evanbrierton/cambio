@@ -98,6 +98,9 @@ function isSnapResolutionPending(state: GameState): boolean {
 function canBotSnap(state: GameState, bot: PlayerState): boolean {
   if (!bot.isBot || bot.isWaiting) return false;
   if (!canAttemptSnap(state)) return false;
+  if (state.snapChainPlayerId && state.snapChainPlayerId !== bot.id) {
+    return false;
+  }
   if (isSnapResolutionPending(state)) return false;
   if (bot.hasCalledCambio && state.phase === "cambio_final") return false;
   if (state.pendingAbility?.playerId === bot.id) return false;
