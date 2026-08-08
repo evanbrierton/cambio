@@ -37,6 +37,10 @@ export type ThemeVoice = {
   createGame: string;
   join: string;
   styleLabel: string;
+  appearanceLabel: string;
+  appearanceLight: string;
+  appearanceDark: string;
+  appearanceSystem: string;
   gameMenuLabel: string;
   loading: string;
   roomPrefix: string;
@@ -202,6 +206,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "CREATE GAME",
     join: "JOIN",
     styleLabel: "PIXEL STYLE",
+    appearanceLabel: "DISPLAY",
+    appearanceLight: "LIGHT",
+    appearanceDark: "DARK",
+    appearanceSystem: "SYSTEM",
     gameMenuLabel: "GAME MENU",
     loading: "LOADING CARTRIDGE...",
     roomPrefix: "ROOM",
@@ -338,6 +346,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Open a table",
     join: "Sit down",
     styleLabel: "Ambiance",
+    appearanceLabel: "Lighting",
+    appearanceLight: "Light",
+    appearanceDark: "Dark",
+    appearanceSystem: "System",
     gameMenuLabel: "Game menu",
     loading: "Shuffling the deck...",
     roomPrefix: "Table",
@@ -473,6 +485,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Start the party!",
     join: "Jump in!",
     styleLabel: "Party vibe",
+    appearanceLabel: "Lighting",
+    appearanceLight: "Light",
+    appearanceDark: "Dark",
+    appearanceSystem: "System",
     gameMenuLabel: "Party menu",
     loading: "Getting the party ready...",
     roomPrefix: "Party",
@@ -605,6 +621,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Create",
     join: "Join",
     styleLabel: "Theme",
+    appearanceLabel: "Appearance",
+    appearanceLight: "Light",
+    appearanceDark: "Dark",
+    appearanceSystem: "System",
     gameMenuLabel: "Menu",
     loading: "Loading",
     roomPrefix: "Room",
@@ -738,6 +758,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Begin a round",
     join: "Join quietly",
     styleLabel: "Mood",
+    appearanceLabel: "Light",
+    appearanceLight: "Day",
+    appearanceDark: "Night",
+    appearanceSystem: "System",
     gameMenuLabel: "Menu",
     loading: "Setting the table...",
     roomPrefix: "Room",
@@ -873,6 +897,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Set out the cards",
     join: "Take a seat",
     styleLabel: "Ambiance",
+    appearanceLabel: "Lamp",
+    appearanceLight: "Day",
+    appearanceDark: "Night",
+    appearanceSystem: "System",
     gameMenuLabel: "Menu",
     loading: "Turning pages...",
     roomPrefix: "Room",
@@ -1008,6 +1036,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Gather round",
     join: "Pull up a chair",
     styleLabel: "Lodge mood",
+    appearanceLabel: "Light",
+    appearanceLight: "Day",
+    appearanceDark: "Night",
+    appearanceSystem: "System",
     gameMenuLabel: "Menu",
     loading: "Warming the hearth...",
     roomPrefix: "Lodge",
@@ -1141,6 +1173,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Begin",
     join: "Enter",
     styleLabel: "Style",
+    appearanceLabel: "Appearance",
+    appearanceLight: "Light",
+    appearanceDark: "Dark",
+    appearanceSystem: "System",
     gameMenuLabel: "Menu",
     loading: "Loading",
     roomPrefix: "Room",
