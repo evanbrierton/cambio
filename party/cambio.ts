@@ -46,6 +46,7 @@ import {
   MIN_BOT_COUNT,
   parseBotDifficulty,
 } from "../src/game/types";
+import { parseClientMessageJson } from "../src/game/wire-schema";
 
 type PlayerConnectionState = { playerId?: string; debugEnabled?: boolean };
 
@@ -677,10 +678,8 @@ export class CambioParty extends Server<Env> {
 
     this.clearBotTimer();
 
-    let message: ClientMessage;
-    try {
-      message = JSON.parse(messageText(raw)) as ClientMessage;
-    } catch {
+    const message = parseClientMessageJson(messageText(raw));
+    if (!message) {
       connection.send(
         JSON.stringify({ type: "error", message: "Invalid message." }),
       );

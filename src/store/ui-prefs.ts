@@ -3,13 +3,14 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { type BotDifficulty, parseBotDifficulty } from "@/game/types";
 import {
-  type BotDifficulty,
-  DEFAULT_BOT_COUNT,
-  parseBotDifficulty,
-} from "@/game/types";
-import { clampBotCount, DEFAULT_BOT_SETTINGS } from "@/lib/bot-settings";
+  clampBotCount,
+  DEFAULT_BOT_SETTINGS,
+  parseLegacyBotSettingsJson,
+} from "@/lib/bot-settings";
 import { PLAYER_NAME_KEY } from "@/lib/party";
+import { parseUiPrefsPersistJson } from "@/store/ui-prefs-schema";
 
 export type OwnSeatDisplay = "prominent" | "turn-order";
 
@@ -103,13 +104,10 @@ function readLegacyBotSettings(): Pick<
       };
     }
 
-    const parsed = JSON.parse(raw) as Partial<{
-      botCount: number;
-      difficulty: BotDifficulty;
-    }>;
+    const settings = parseLegacyBotSettingsJson(raw);
     return {
-      botCount: clampBotCount(parsed.botCount ?? DEFAULT_BOT_COUNT),
-      botDifficulty: parseBotDifficulty(parsed.difficulty ?? null),
+      botCount: settings.botCount,
+      botDifficulty: settings.difficulty,
     };
   } catch {
     return {
@@ -152,13 +150,13 @@ function readPersistedPrefs(): UiPrefsData | null {
   if (!raw) return null;
 
   try {
-    const parsed = JSON.parse(raw) as { state?: Partial<UiPrefsData> };
-    if (!parsed.state) return null;
+    const state = parseUiPrefsPersistJson(raw);
+    if (!state) return null;
     return {
       ...defaultPrefs,
-      ...parsed.state,
-      botCount: clampBotCount(parsed.state.botCount ?? defaultPrefs.botCount),
-      botDifficulty: parseBotDifficulty(parsed.state.botDifficulty ?? null),
+      ...state,
+      botCount: clampBotCount(state.botCount ?? defaultPrefs.botCount),
+      botDifficulty: parseBotDifficulty(state.botDifficulty ?? null),
     };
   } catch {
     return null;
