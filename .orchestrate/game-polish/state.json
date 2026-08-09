@@ -154,14 +154,14 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-09T10:50:56.371Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-09T10:50:54.802Z",
+      "lastUpdate": "2026-08-09T10:50:56.371Z",
       "note": "respawned by self-planner (was error; attempts=1)",
-      "attempts": 1,
+      "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
@@ -461,6 +461,14 @@
     {
       "at": "2026-08-09T10:50:36.841Z",
       "message": "verify-cam-85: unreachable — blocked on cam-85-zod (error). Fix the upstream and rerun, or `kill verify-cam-85` to abandon."
+    },
+    {
+      "at": "2026-08-09T10:50:55.828Z",
+      "message": "verify-cam-64: respawned by self-planner (was error)"
+    },
+    {
+      "at": "2026-08-09T10:50:56.099Z",
+      "message": "verify-cam-64: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
