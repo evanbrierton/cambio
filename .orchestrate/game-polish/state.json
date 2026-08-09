@@ -351,6 +351,10 @@
     {
       "at": "2026-08-09T10:20:25.176Z",
       "message": "cam-81-83-themes: respawned by self-planner (was error)"
+    },
+    {
+      "at": "2026-08-09T10:20:26.474Z",
+      "message": "cam-64-card-points: respawned by self-planner (was error)"
     }
   ]
 }

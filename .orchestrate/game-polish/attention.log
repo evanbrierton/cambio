@@ -1,0 +1,12 @@
+[2026-08-09T10:17:38.340Z] bootstrap-discovery: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-09T10:19:05.424Z] bootstrap-discovery: verification self-reported (type-check-only)
+[2026-08-09T10:19:11.647Z] cam-82-zustand: model "gpt-5.4" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-09T10:19:20.690Z] cam-82-zustand: spawn failed after 3 transient sub-attempts: ConfigurationError: [usage_limit_exceeded] Usage-based pricing required. Background Agent requires at least $2 remaining until your hard limit. Enable usage-based pricing and set a Spend Limit at http…
+[2026-08-09T10:19:20.691Z] cam-81-83-themes: model "gpt-5.4" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-09T10:19:29.499Z] cam-81-83-themes: spawn failed after 3 transient sub-attempts: ConfigurationError: [usage_limit_exceeded] Usage-based pricing required. Background Agent requires at least $2 remaining until your hard limit. Enable usage-based pricing and set a Spend Limit at http…
+[2026-08-09T10:19:29.499Z] cam-64-card-points: model "gpt-5.4" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-09T10:19:38.128Z] cam-64-card-points: spawn failed after 3 transient sub-attempts: ConfigurationError: [usage_limit_exceeded] Usage-based pricing required. Background Agent requires at least $2 remaining until your hard limit. Enable usage-based pricing and set a Spend Limit at http…
+[2026-08-09T10:19:38.128Z] cam-75-swap-vfx: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-09T10:20:23.857Z] cam-82-zustand: respawned by self-planner (was error)
+[2026-08-09T10:20:25.176Z] cam-81-83-themes: respawned by self-planner (was error)
+[2026-08-09T10:20:26.474Z] cam-64-card-points: respawned by self-planner (was error)
