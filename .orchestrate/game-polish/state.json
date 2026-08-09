@@ -34,14 +34,14 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-09T10:20:39.493Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-09T10:20:22.744Z",
+      "lastUpdate": "2026-08-09T10:20:39.493Z",
       "note": "respawned by self-planner (was error; attempts=1)",
-      "attempts": 1,
+      "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
@@ -355,6 +355,10 @@
     {
       "at": "2026-08-09T10:20:26.474Z",
       "message": "cam-64-card-points: respawned by self-planner (was error)"
+    },
+    {
+      "at": "2026-08-09T10:20:39.367Z",
+      "message": "cam-82-zustand: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
