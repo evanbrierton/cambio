@@ -232,13 +232,13 @@
       "handoffPath": "handoffs/cam-84-lucide.md",
       "startedAt": "2026-08-09T11:02:29.446Z",
       "finishedAt": "2026-08-09T11:04:08.314Z",
-      "lastUpdate": "2026-08-09T11:04:08.314Z",
+      "lastUpdate": "2026-08-09T11:04:09.342Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": 169,
       "failureMode": null,
-      "verification": null
+      "verification": "type-check-only"
     },
     {
       "name": "verify-cam-84",
@@ -251,17 +251,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-09T11:04:12.207Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-09T11:04:12.207Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "cam-85-zod",
@@ -513,6 +514,14 @@
     {
       "at": "2026-08-09T11:02:29.194Z",
       "message": "cam-84-lucide: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-09T11:04:09.342Z",
+      "message": "cam-84-lucide: verification self-reported (type-check-only)"
+    },
+    {
+      "at": "2026-08-09T11:04:12.101Z",
+      "message": "verify-cam-84: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
