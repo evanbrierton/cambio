@@ -106,17 +106,17 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "error",
+      "status": "pending",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-09T10:28:51.991Z",
+      "startedAt": null,
       "finishedAt": null,
-      "lastUpdate": "2026-08-09T10:28:52.426Z",
-      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Upgrade to Ultra for more Cloud Agents: You've reached the limit for your current plan. Upgrade to Ultra to run more Cloud Agents simultaneously.",
+      "lastUpdate": "2026-08-09T10:59:17.288Z",
+      "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 1,
       "slackTs": null,
       "prNumber": null,
-      "failureMode": "unknown",
+      "failureMode": null,
       "verification": null
     },
     {
@@ -135,13 +135,13 @@
       "handoffPath": "handoffs/cam-64-card-points.md",
       "startedAt": "2026-08-09T10:20:44.614Z",
       "finishedAt": "2026-08-09T10:22:55.232Z",
-      "lastUpdate": "2026-08-09T10:22:56.285Z",
+      "lastUpdate": "2026-08-09T10:59:00.134Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": "unit-test-verified"
+      "verification": "live-ui-verified"
     },
     {
       "name": "verify-cam-64",
@@ -477,6 +477,18 @@
     {
       "at": "2026-08-09T10:57:59.825Z",
       "message": "verify-cam-64: tool_call idle 324797ms; last=2026-08-09T10:52:35.028Z"
+    },
+    {
+      "at": "2026-08-09T10:59:00.135Z",
+      "message": "cam-64-card-points: verification recorded (live-ui-verified) by verifier verify-cam-64"
+    },
+    {
+      "at": "2026-08-09T10:59:00.135Z",
+      "message": "verify-cam-84: unreachable — blocked on cam-84-lucide (error). Fix the upstream and rerun, or `kill verify-cam-84` to abandon."
+    },
+    {
+      "at": "2026-08-09T10:59:00.135Z",
+      "message": "verify-cam-85: unreachable — blocked on cam-85-zod (error). Fix the upstream and rerun, or `kill verify-cam-85` to abandon."
     }
   ]
 }
