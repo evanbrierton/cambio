@@ -14,7 +14,7 @@ export type SoundId =
   | "click"
   | "chat";
 
-const STORAGE_KEY = "cambio-sound-enabled";
+import { useUiPrefsStore } from "@/store/ui-prefs";
 
 let audioCtx: AudioContext | null = null;
 
@@ -56,17 +56,8 @@ function tone(
   osc.stop(start + duration + 0.02);
 }
 
-export function isSoundEnabled(): boolean {
-  if (typeof window === "undefined") return true;
-  return localStorage.getItem(STORAGE_KEY) !== "0";
-}
-
-export function setSoundEnabled(enabled: boolean): void {
-  localStorage.setItem(STORAGE_KEY, enabled ? "1" : "0");
-}
-
 export async function playSound(id: SoundId): Promise<void> {
-  if (!isSoundEnabled()) return;
+  if (!useUiPrefsStore.getState().soundEnabled) return;
   const ctx = await resumeCtx();
   if (!ctx) return;
 
