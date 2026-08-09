@@ -55,15 +55,15 @@
       "dependsOn": [
         "cam-82-zustand"
       ],
-      "agentId": null,
-      "runId": null,
-      "parentAgentId": null,
+      "agentId": "bc-82b278cc-62a4-4c30-acf1-2c17efdcc2f5",
+      "runId": "run-4e610344-0def-4b2f-8fda-cb0b04bc48c8",
+      "parentAgentId": "bc-8a975f94-2884-43ee-adbc-719f3ebcdbda",
       "status": "running",
       "resultStatus": null,
       "handoffPath": null,
       "startedAt": "2026-08-09T10:22:47.294Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-09T10:22:47.295Z",
+      "lastUpdate": "2026-08-09T10:22:50.008Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
@@ -224,17 +224,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-09T10:22:50.090Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-09T10:22:50.090Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "verify-cam-84",
@@ -376,6 +377,10 @@
     {
       "at": "2026-08-09T10:22:47.227Z",
       "message": "verify-cam-82: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-09T10:22:50.009Z",
+      "message": "cam-84-lucide: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
