@@ -81,17 +81,17 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "error",
+      "status": "pending",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-09T10:19:28.340Z",
+      "startedAt": null,
       "finishedAt": null,
-      "lastUpdate": "2026-08-09T10:19:28.464Z",
-      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [usage_limit_exceeded] Usage-based pricing required. Background Agent requires at least $2 remaining until your hard limit. Enable usage-based pricing and set a Spend Limit at http…",
+      "lastUpdate": "2026-08-09T10:20:24.138Z",
+      "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 1,
       "slackTs": null,
       "prNumber": null,
-      "failureMode": "unknown",
+      "failureMode": null,
       "verification": null
     },
     {
@@ -343,6 +343,10 @@
     {
       "at": "2026-08-09T10:19:38.128Z",
       "message": "cam-75-swap-vfx: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-09T10:20:23.857Z",
+      "message": "cam-82-zustand: respawned by self-planner (was error)"
     }
   ]
 }
