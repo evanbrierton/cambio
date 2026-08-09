@@ -308,11 +308,11 @@
       "finishedAt": "2026-08-09T11:32:23.738Z",
       "lastUpdate": "2026-08-09T11:32:23.738Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     }
   ],
   "attention": [
