@@ -75,6 +75,25 @@ export const DEFAULT_JOKER_COUNT = 2;
 export const MIN_JOKER_COUNT = 2;
 export const MAX_JOKER_COUNT = 4;
 
+export type CardPointValues = {
+  ace: number;
+  face: number;
+  joker: number;
+  blackKing: number;
+  redKing: number;
+};
+
+export const DEFAULT_CARD_POINTS: CardPointValues = {
+  ace: 1,
+  face: 10,
+  joker: 0,
+  blackKing: -2,
+  redKing: 25,
+};
+
+export const MIN_CARD_POINT_VALUE = -5;
+export const MAX_CARD_POINT_VALUE = 25;
+
 export type ChatMessage = {
   id: string;
   playerId: string;
@@ -116,6 +135,7 @@ export type GameState = {
   isSoloMode: boolean;
   soloDifficulty: BotDifficulty | null;
   jokerCount: number;
+  cardPoints: CardPointValues;
   hostId: string;
   players: PlayerState[];
   currentPlayerIndex: number;
@@ -179,6 +199,10 @@ export type ClientMessage =
   | { type: "add_bot"; difficulty?: BotDifficulty }
   | { type: "remove_bot"; playerId: string }
   | { type: "set_joker_count"; count: number }
+  | {
+      type: "set_card_points";
+      values: Partial<CardPointValues>;
+    }
   | { type: "chat"; text: string }
   | { type: "ability_look"; playerId: string; slot: number }
   | {
@@ -245,6 +269,8 @@ export type PlayerView = {
   canAddBot: boolean;
   jokerCount: number;
   canSetJokerCount: boolean;
+  cardPoints: CardPointValues;
+  canSetCardPoints: boolean;
   log: string[];
   chatMessages: ChatMessage[];
 };
