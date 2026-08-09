@@ -401,7 +401,7 @@ function PlayerSeat({
     .map((slot, index) => ({ slot, index }))
     .filter(({ slot, index }) => !slot.empty && isPenaltyColumnSlot(index));
 
-  const { seatRef, clipRef, handRef } = useSeatHandFit(
+  const { seatRef, clipRef, shellRef, handRef } = useSeatHandFit(
     fitHandToWidth,
     `${penaltySlots.length}:${player.hand.length}`,
   );
@@ -491,7 +491,7 @@ function PlayerSeat({
   return (
     <section
       ref={seatRef}
-      className={`pixel-border ${seatPadding} w-full max-w-full min-w-0 shrink-0 flex flex-col items-center text-center ${
+      className={`pixel-border ${seatPadding} w-full h-full max-w-full min-w-0 min-h-0 shrink-0 flex flex-col items-center text-center ${
         hasSwapFlash
           ? "swap-seat-flash bg-swap-seat-flash ring-2 ring-accent shadow-glow-accent"
           : hasPeekFlash
@@ -527,7 +527,10 @@ function PlayerSeat({
         isOwn && !showDrawnSwapHint ? "lg:ring-1 lg:ring-accent" : ""
       } ${swapAbilityActive && isProtectedTarget && !isOwn ? "opacity-40" : ""}`}
     >
-      <div className="w-full min-h-9 mb-1 sm:mb-1.5 flex flex-col items-center justify-center gap-1">
+      <div
+        data-seat-header
+        className="w-full min-h-9 mb-1 sm:mb-1.5 flex flex-col items-center justify-center gap-1 shrink-0"
+      >
         <h2 className="player-name text-[10px] sm:text-xs truncate max-w-full">
           {player.name}
           {isOwn ? " (you)" : ""}
@@ -580,38 +583,40 @@ function PlayerSeat({
       ) : (
         <div
           ref={clipRef}
-          className="w-full min-w-0 overflow-hidden flex justify-center"
+          className="w-full flex-1 min-h-0 min-w-0 overflow-hidden flex items-center justify-center"
         >
-          <div
-            ref={handRef}
-            className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit"
-          >
+          <div ref={shellRef} className="relative max-w-full shrink-0">
             <div
-              className={`grid grid-cols-2 gap-1 lg:gap-1.5 shrink-0 ${
-                fitHandToWidth ? HAND_GRID_WIDTH : "seat-hand-grid"
-              }`}
+              ref={handRef}
+              className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit"
             >
-              {baseGridSlots.map(({ slot, index }) =>
-                renderHandSlot(slot, index),
+              <div
+                className={`grid grid-cols-2 gap-1 lg:gap-1.5 shrink-0 ${
+                  fitHandToWidth ? HAND_GRID_WIDTH : "seat-hand-grid"
+                }`}
+              >
+                {baseGridSlots.map(({ slot, index }) =>
+                  renderHandSlot(slot, index),
+                )}
+              </div>
+              {penaltySlots.length > 0 && (
+                <div
+                  className="grid grid-rows-2 grid-flow-col gap-1 lg:gap-1.5 shrink-0"
+                  style={{
+                    gridTemplateColumns: `repeat(${penaltyGridColumns(penaltySlots.length)}, auto)`,
+                  }}
+                >
+                  {penaltySlots.map(({ slot, index }, penaltyIndex) => (
+                    <div
+                      key={`penalty-wrap-${index}`}
+                      style={penaltyGridPosition(penaltyIndex)}
+                    >
+                      {renderHandSlot(slot, index)}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
-            {penaltySlots.length > 0 && (
-              <div
-                className="grid grid-rows-2 grid-flow-col gap-1 lg:gap-1.5 shrink-0"
-                style={{
-                  gridTemplateColumns: `repeat(${penaltyGridColumns(penaltySlots.length)}, auto)`,
-                }}
-              >
-                {penaltySlots.map(({ slot, index }, penaltyIndex) => (
-                  <div
-                    key={`penalty-wrap-${index}`}
-                    style={penaltyGridPosition(penaltyIndex)}
-                  >
-                    {renderHandSlot(slot, index)}
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}
