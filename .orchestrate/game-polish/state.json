@@ -232,13 +232,13 @@
       "handoffPath": "handoffs/cam-84-lucide.md",
       "startedAt": "2026-08-09T11:02:29.446Z",
       "finishedAt": "2026-08-09T11:04:08.314Z",
-      "lastUpdate": "2026-08-09T11:04:09.342Z",
+      "lastUpdate": "2026-08-09T11:28:17.912Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": 169,
       "failureMode": null,
-      "verification": "type-check-only"
+      "verification": "live-ui-verified"
     },
     {
       "name": "verify-cam-84",
@@ -258,11 +258,11 @@
       "finishedAt": "2026-08-09T11:28:16.829Z",
       "lastUpdate": "2026-08-09T11:28:16.830Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": 169,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "cam-85-zod",
@@ -277,17 +277,17 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "error",
+      "status": "pending",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-09T10:23:08.035Z",
+      "startedAt": null,
       "finishedAt": null,
-      "lastUpdate": "2026-08-09T10:23:08.530Z",
-      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Upgrade to Ultra for more Cloud Agents: You've reached the limit for your current plan. Upgrade to Ultra to run more Cloud Agents simultaneously.",
+      "lastUpdate": "2026-08-09T11:28:43.624Z",
+      "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 1,
       "slackTs": null,
       "prNumber": null,
-      "failureMode": "unknown",
+      "failureMode": null,
       "verification": null
     },
     {
@@ -530,6 +530,14 @@
     {
       "at": "2026-08-09T11:10:15.541Z",
       "message": "verify-cam-84: tool_call idle 305030ms; last=2026-08-09T11:05:10.511Z"
+    },
+    {
+      "at": "2026-08-09T11:28:17.912Z",
+      "message": "cam-84-lucide: verification recorded (live-ui-verified) by verifier verify-cam-84"
+    },
+    {
+      "at": "2026-08-09T11:28:24.966Z",
+      "message": "verify-cam-85: unreachable — blocked on cam-85-zod (error). Fix the upstream and rerun, or `kill verify-cam-85` to abandon."
     }
   ]
 }
