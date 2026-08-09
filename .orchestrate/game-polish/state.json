@@ -243,23 +243,23 @@
     {
       "name": "verify-cam-84",
       "type": "verifier",
-      "branch": "orch/game-polish/verify-cam-84",
+      "branch": "`orch/game-polish/cam-84-lucide` (verifier commit `df07ca0` pushed on top of worker `fce92e3`)",
       "startingRef": "orch/game-polish/cam-84-lucide",
       "dependsOn": [
         "cam-84-lucide"
       ],
-      "agentId": null,
-      "runId": null,
-      "parentAgentId": null,
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "agentId": "bc-185b87eb-6a6a-4bb0-b239-ca8d690652b9",
+      "runId": "run-643c80d8-9cf0-42a7-bae3-755f2d2386ef",
+      "parentAgentId": "bc-8a975f94-2884-43ee-adbc-719f3ebcdbda",
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-cam-84.md",
       "startedAt": "2026-08-09T11:04:12.207Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-09T11:04:12.207Z",
+      "finishedAt": "2026-08-09T11:28:16.829Z",
+      "lastUpdate": "2026-08-09T11:28:16.830Z",
       "note": null,
       "slackTs": null,
-      "prNumber": null,
+      "prNumber": 169,
       "failureMode": null,
       "verification": null,
       "attempts": 1
@@ -522,6 +522,14 @@
     {
       "at": "2026-08-09T11:04:12.101Z",
       "message": "verify-cam-84: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-09T11:10:15.540Z",
+      "message": "verify-cam-84: SSE idle 305029ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-09T11:10:15.541Z",
+      "message": "verify-cam-84: tool_call idle 305030ms; last=2026-08-09T11:05:10.511Z"
     }
   ]
 }
