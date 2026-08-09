@@ -134,13 +134,13 @@
       "handoffPath": "handoffs/cam-64-card-points.md",
       "startedAt": "2026-08-09T10:20:44.614Z",
       "finishedAt": "2026-08-09T10:22:55.232Z",
-      "lastUpdate": "2026-08-09T10:22:55.233Z",
+      "lastUpdate": "2026-08-09T10:22:56.285Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": "unit-test-verified"
     },
     {
       "name": "verify-cam-64",
@@ -224,16 +224,16 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "running",
+      "status": "error",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-09T10:22:53.607Z",
+      "startedAt": "2026-08-09T10:22:58.193Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-09T10:22:53.607Z",
-      "note": null,
+      "lastUpdate": "2026-08-09T10:22:58.576Z",
+      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Upgrade to Ultra for more Cloud Agents: You've reached the limit for your current plan. Upgrade to Ultra to run more Cloud Agents simultaneously.",
       "slackTs": null,
       "prNumber": null,
-      "failureMode": null,
+      "failureMode": "unknown",
       "verification": null,
       "attempts": 1
     },
@@ -381,6 +381,10 @@
     {
       "at": "2026-08-09T10:22:50.009Z",
       "message": "cam-84-lucide: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-09T10:22:56.286Z",
+      "message": "cam-64-card-points: verification self-reported (unit-test-verified)"
     }
   ]
 }
