@@ -282,13 +282,13 @@
       "handoffPath": "handoffs/cam-85-zod.md",
       "startedAt": "2026-08-09T11:28:45.220Z",
       "finishedAt": "2026-08-09T11:30:55.324Z",
-      "lastUpdate": "2026-08-09T11:30:55.324Z",
+      "lastUpdate": "2026-08-09T11:30:56.403Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": 170,
       "failureMode": null,
-      "verification": null
+      "verification": "unit-test-verified"
     },
     {
       "name": "verify-cam-85",
@@ -301,17 +301,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-09T11:30:58.137Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-09T11:30:58.137Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     }
   ],
   "attention": [
@@ -546,6 +547,14 @@
     {
       "at": "2026-08-09T11:28:44.934Z",
       "message": "cam-85-zod: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-09T11:30:56.404Z",
+      "message": "cam-85-zod: verification self-reported (unit-test-verified)"
+    },
+    {
+      "at": "2026-08-09T11:30:58.056Z",
+      "message": "verify-cam-85: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
