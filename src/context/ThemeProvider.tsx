@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  ThemeProvider as NextThemesProvider,
+  useTheme as useNextTheme,
+} from "next-themes";
+import {
   createContext,
   type ReactNode,
   useCallback,
@@ -16,9 +20,15 @@ import {
   resolveAppearance,
   setAppearanceCookie,
   setThemeCookie,
+  THEME_COOKIE_KEY,
 } from "@/lib/theme-cookie";
 import { applyThemeFontClass } from "@/lib/theme-fonts";
-import { DEFAULT_THEME, type ThemeId } from "@/lib/themes";
+import {
+  DEFAULT_THEME,
+  isThemeId,
+  THEME_IDS,
+  type ThemeId,
+} from "@/lib/themes";
 
 type ThemeContextValue = {
   theme: ThemeId;
@@ -30,16 +40,14 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({
+function ThemeContextProvider({
   children,
-  initialTheme = DEFAULT_THEME,
   initialAppearancePreference = DEFAULT_APPEARANCE,
 }: {
   children: ReactNode;
-  initialTheme?: ThemeId;
   initialAppearancePreference?: AppearancePreference;
 }) {
-  const [theme, setThemeState] = useState<ThemeId>(initialTheme);
+  const { theme: nextTheme, setTheme: setNextTheme } = useNextTheme();
   const [appearancePreference, setAppearancePreferenceState] =
     useState<AppearancePreference>(initialAppearancePreference);
   const [resolvedAppearance, setResolvedAppearance] =
@@ -51,12 +59,16 @@ export function ThemeProvider({
       return resolveAppearance(initialAppearancePreference, false);
     });
 
-  const setTheme = useCallback((next: ThemeId) => {
-    setThemeState(next);
-    setThemeCookie(next);
-    document.documentElement.dataset.theme = next;
-    applyThemeFontClass(next);
-  }, []);
+  const theme = nextTheme && isThemeId(nextTheme) ? nextTheme : DEFAULT_THEME;
+
+  const setTheme = useCallback(
+    (next: ThemeId) => {
+      setNextTheme(next);
+      setThemeCookie(next);
+      applyThemeFontClass(next);
+    },
+    [setNextTheme],
+  );
 
   const applyResolvedAppearance = useCallback((next: ResolvedAppearance) => {
     setResolvedAppearance(next);
@@ -76,6 +88,10 @@ export function ThemeProvider({
     },
     [applyResolvedAppearance],
   );
+
+  useEffect(() => {
+    applyThemeFontClass(theme);
+  }, [theme]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(APPEARANCE_MEDIA_QUERY);
@@ -107,6 +123,33 @@ export function ThemeProvider({
     >
       {children}
     </ThemeContext.Provider>
+  );
+}
+
+export function ThemeProvider({
+  children,
+  initialTheme = DEFAULT_THEME,
+  initialAppearancePreference = DEFAULT_APPEARANCE,
+}: {
+  children: ReactNode;
+  initialTheme?: ThemeId;
+  initialAppearancePreference?: AppearancePreference;
+}) {
+  return (
+    <NextThemesProvider
+      attribute="data-theme"
+      defaultTheme={initialTheme}
+      themes={[...THEME_IDS]}
+      enableSystem={false}
+      enableColorScheme={false}
+      storageKey={THEME_COOKIE_KEY}
+    >
+      <ThemeContextProvider
+        initialAppearancePreference={initialAppearancePreference}
+      >
+        {children}
+      </ThemeContextProvider>
+    </NextThemesProvider>
   );
 }
 

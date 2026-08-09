@@ -82,6 +82,20 @@ export const viewport: Viewport = {
   themeColor: siteConfig.themeColor,
 };
 
+const THEME_INIT_SCRIPT = `
+(() => {
+  const key = ${JSON.stringify(THEME_COOKIE_KEY)};
+  const cookieValue = document.cookie
+    .split("; ")
+    .find((entry) => entry.startsWith(key + "="))
+    ?.slice(key.length + 1);
+  if (!cookieValue) return;
+  try {
+    localStorage.setItem(key, cookieValue);
+  } catch {}
+})();
+`;
+
 const APPEARANCE_INIT_SCRIPT = `
 (() => {
   const root = document.documentElement;
@@ -125,6 +139,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <head>
+        <script id="cambio-theme-init">{THEME_INIT_SCRIPT}</script>
         <script id="cambio-appearance-init">{APPEARANCE_INIT_SCRIPT}</script>
       </head>
       <body className="min-h-full flex flex-col relative z-0">
