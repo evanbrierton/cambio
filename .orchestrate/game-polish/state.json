@@ -39,13 +39,13 @@
       "handoffPath": "handoffs/cam-82-zustand.md",
       "startedAt": "2026-08-09T10:20:39.493Z",
       "finishedAt": "2026-08-09T10:22:44.910Z",
-      "lastUpdate": "2026-08-09T10:22:44.910Z",
+      "lastUpdate": "2026-08-09T10:22:46.036Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": 167,
       "failureMode": null,
-      "verification": null
+      "verification": "type-check-only"
     },
     {
       "name": "verify-cam-82",
@@ -58,17 +58,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-09T10:22:47.294Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-09T10:22:47.295Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "cam-81-83-themes",
@@ -367,6 +368,14 @@
     {
       "at": "2026-08-09T10:20:44.554Z",
       "message": "cam-64-card-points: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-09T10:22:46.036Z",
+      "message": "cam-82-zustand: verification self-reported (type-check-only)"
+    },
+    {
+      "at": "2026-08-09T10:22:47.227Z",
+      "message": "verify-cam-82: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
