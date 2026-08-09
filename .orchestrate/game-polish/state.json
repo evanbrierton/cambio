@@ -273,17 +273,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-09T10:22:59.745Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-09T10:22:59.745Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "verify-cam-85",
@@ -385,6 +386,14 @@
     {
       "at": "2026-08-09T10:22:56.286Z",
       "message": "cam-64-card-points: verification self-reported (unit-test-verified)"
+    },
+    {
+      "at": "2026-08-09T10:22:59.682Z",
+      "message": "cam-84-lucide: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Upgrade to Ultra for more Cloud Agents: You've reached the limit for your current plan. Upgrade to Ultra to run more Cloud Agents simultaneously."
+    },
+    {
+      "at": "2026-08-09T10:22:59.682Z",
+      "message": "cam-85-zod: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
