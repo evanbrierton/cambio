@@ -12,6 +12,7 @@ import type {
   ServerMessage,
 } from "@/game/types";
 import { freshSessionKey, getPartyHost, storageKey } from "@/lib/party";
+import { playSound } from "@/lib/sounds";
 
 const PEEK_FLASH_MS = 3500;
 export const SWAP_FLASH_MS = 3000;
@@ -274,6 +275,7 @@ export function useGameConnection(
 
       if (data.type === "swap_flash") {
         if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+        playSound("swap");
         setState((s) => ({
           ...s,
           swapFlash: { slots: data.slots },
@@ -313,6 +315,7 @@ export function useGameConnection(
 
       if (data.type === "reshuffle_flash") {
         if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);
+        playSound("reshuffle");
         setState((s) => ({
           ...s,
           reshuffleFlash: { id: (s.reshuffleFlash?.id ?? 0) + 1 },
@@ -325,6 +328,7 @@ export function useGameConnection(
       if (data.type === "discard_draw_flash") {
         if (discardDrawTimerRef.current)
           clearTimeout(discardDrawTimerRef.current);
+        playSound("discardDraw");
         setState((s) => ({
           ...s,
           discardDrawFlash: { playerId: data.playerId },
@@ -336,6 +340,7 @@ export function useGameConnection(
 
       if (data.type === "deck_draw_flash") {
         if (deckDrawTimerRef.current) clearTimeout(deckDrawTimerRef.current);
+        playSound("deckDraw");
         setState((s) => ({
           ...s,
           deckDrawFlash: { playerId: data.playerId },

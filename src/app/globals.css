@@ -1624,75 +1624,154 @@ body::after {
   animation: swap-selected-pulse 1.2s ease-in-out infinite;
 }
 
+:root,
+[data-theme] {
+  --swap-flash-a: #ffb020;
+  --swap-flash-b: #a855f7;
+  --glow-swap-a: rgba(255, 176, 32, 0.65);
+  --glow-swap-b: rgba(168, 85, 247, 0.55);
+}
+
+.border-swap-flash-a {
+  border-color: var(--swap-flash-a);
+}
+
+.bg-swap-flash-base {
+  background: color-mix(
+    in srgb,
+    var(--swap-flash-a) 52%,
+    var(--swap-flash-b) 48%
+  );
+}
+
 @keyframes swap-flash-pulse {
   0% {
     box-shadow:
-      0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent),
-      0 0 0 0 color-mix(in srgb, var(--accent-alt) 0%, transparent);
-    background-color: color-mix(in srgb, var(--accent) 0%, transparent);
+      0 0 0 0 color-mix(in srgb, var(--swap-flash-a) 0%, transparent),
+      0 0 0 0 color-mix(in srgb, var(--swap-flash-b) 0%, transparent);
+    background-color: color-mix(in srgb, var(--swap-flash-a) 0%, transparent);
     filter: brightness(1);
   }
   18% {
     box-shadow:
-      0 0 0 5px var(--accent),
-      0 0 36px 10px var(--glow-accent);
-    background-color: color-mix(in srgb, var(--accent) 55%, transparent);
-    filter: brightness(1.25);
+      0 0 0 5px var(--swap-flash-a),
+      0 0 36px 10px var(--glow-swap-a);
+    background-color: color-mix(in srgb, var(--swap-flash-a) 50%, transparent);
+    filter: brightness(1.28);
   }
   42% {
     box-shadow:
-      0 0 0 4px var(--accent-alt),
-      0 0 44px 12px var(--glow-accent-alt);
-    background-color: color-mix(in srgb, var(--accent-alt) 45%, transparent);
-    filter: brightness(1.2);
+      0 0 0 4px var(--swap-flash-b),
+      0 0 44px 12px var(--glow-swap-b);
+    background-color: color-mix(in srgb, var(--swap-flash-b) 42%, transparent);
+    filter: brightness(1.22);
   }
   68% {
     box-shadow:
-      0 0 0 5px var(--accent),
-      0 0 32px 10px var(--glow-accent);
-    background-color: color-mix(in srgb, var(--accent) 50%, transparent);
-    filter: brightness(1.22);
+      0 0 0 5px var(--swap-flash-a),
+      0 0 32px 10px var(--glow-swap-a);
+    background-color: color-mix(in srgb, var(--swap-flash-a) 46%, transparent);
+    filter: brightness(1.24);
   }
   100% {
     box-shadow:
-      0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent),
-      0 0 0 0 color-mix(in srgb, var(--accent-alt) 0%, transparent);
-    background-color: color-mix(in srgb, var(--accent) 0%, transparent);
+      0 0 0 0 color-mix(in srgb, var(--swap-flash-a) 0%, transparent),
+      0 0 0 0 color-mix(in srgb, var(--swap-flash-b) 0%, transparent);
+    background-color: color-mix(in srgb, var(--swap-flash-a) 0%, transparent);
     filter: brightness(1);
+  }
+}
+
+@keyframes swap-flash-crossfade {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  25%,
+  65% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
+@keyframes swap-flash-orbit {
+  0% {
+    transform: rotate(0deg) scale(0.92);
+    opacity: 0.55;
+  }
+  50% {
+    transform: rotate(180deg) scale(1.02);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg) scale(0.92);
+    opacity: 0.35;
+  }
+}
+
+@keyframes swap-flash-arc-draw {
+  0% {
+    stroke-dashoffset: 120;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.15;
   }
 }
 
 @keyframes swap-flash-icon {
   0% {
-    transform: scale(0.4) rotate(-18deg);
+    transform: scale(0.35) rotate(-24deg);
     opacity: 0;
   }
-  20% {
-    transform: scale(1.5) rotate(0deg);
+  18% {
+    transform: scale(1.55) rotate(0deg);
     opacity: 1;
   }
-  50% {
-    transform: scale(1.25) rotate(10deg);
+  45% {
+    transform: scale(1.3) rotate(180deg);
     opacity: 1;
+  }
+  72% {
+    transform: scale(1.4) rotate(360deg);
+    opacity: 0.95;
   }
   100% {
-    transform: scale(1) rotate(0deg);
-    opacity: 0.15;
+    transform: scale(1) rotate(360deg);
+    opacity: 0.12;
   }
 }
 
 @keyframes swap-flash-ring {
   0% {
-    transform: scale(0.85);
-    opacity: 0.9;
+    transform: scale(0.82);
+    opacity: 0.95;
   }
   35% {
-    transform: scale(1.08);
+    transform: scale(1.1);
     opacity: 1;
   }
   100% {
-    transform: scale(1.15);
+    transform: scale(1.18);
     opacity: 0;
+  }
+}
+
+@keyframes swap-flash-label {
+  0%,
+  100% {
+    opacity: 0;
+    letter-spacing: 0.05em;
+  }
+  25%,
+  70% {
+    opacity: 1;
+    letter-spacing: 0.28em;
   }
 }
 
@@ -1710,29 +1789,27 @@ body::after {
   }
 }
 
-@keyframes swap-flash-label {
-  0%,
-  100% {
-    opacity: 0;
-    letter-spacing: 0.05em;
-  }
-  25%,
-  70% {
-    opacity: 1;
-    letter-spacing: 0.2em;
-  }
-}
-
 @keyframes swap-seat-flash {
   0%,
   100% {
-    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
-  }
-  25%,
-  65% {
     box-shadow:
-      0 0 0 4px var(--accent),
-      0 0 28px 8px var(--glow-accent);
+      0 0 0 0 color-mix(in srgb, var(--swap-flash-a) 0%, transparent),
+      0 0 0 0 color-mix(in srgb, var(--swap-flash-b) 0%, transparent);
+  }
+  20% {
+    box-shadow:
+      0 0 0 4px var(--swap-flash-a),
+      0 0 28px 8px var(--glow-swap-a);
+  }
+  55% {
+    box-shadow:
+      0 0 0 4px var(--swap-flash-b),
+      0 0 32px 10px var(--glow-swap-b);
+  }
+  80% {
+    box-shadow:
+      0 0 0 4px var(--swap-flash-a),
+      0 0 24px 8px var(--glow-swap-a);
   }
 }
 
@@ -1740,6 +1817,34 @@ body::after {
   z-index: 30;
   border-radius: var(--radius-card);
   animation: swap-flash-pulse 2.8s ease-in-out 1;
+}
+
+.swap-flash-crossfade {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--swap-flash-a) 75%, white 25%) 0%,
+    color-mix(in srgb, var(--swap-flash-b) 70%, white 30%) 50%,
+    color-mix(in srgb, var(--swap-flash-a) 75%, white 25%) 100%
+  );
+  animation: swap-flash-crossfade 2.8s ease-in-out 1;
+}
+
+.swap-flash-orbit {
+  animation: swap-flash-orbit 2.8s linear 1;
+}
+
+.swap-flash-arc-path {
+  stroke-dasharray: 120;
+  animation: swap-flash-arc-draw 2.8s ease-out 1;
+}
+
+.swap-flash-arc-path-a {
+  stroke: var(--swap-flash-a);
+}
+
+.swap-flash-arc-path-b {
+  stroke: var(--swap-flash-b);
+  animation-delay: 0.12s;
 }
 
 .swap-flash-icon {
@@ -1754,7 +1859,8 @@ body::after {
   animation: swap-flash-shimmer 1.4s ease-in-out 2;
 }
 
-.swap-flash-label {
+.swap-flash-label,
+.swap-flash-slot-label {
   animation: swap-flash-label 2.8s ease-in-out 1;
 }
 
@@ -1763,7 +1869,22 @@ body::after {
 }
 
 .bg-swap-seat-flash {
-  background: color-mix(in srgb, var(--accent) 30%, var(--surface-elevated));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--swap-flash-a) 28%, var(--surface-elevated)) 0%,
+    color-mix(in srgb, var(--swap-flash-b) 24%, var(--surface-elevated)) 100%
+  );
+}
+
+.swap-seat-flash.ring-accent {
+  --tw-ring-color: var(--swap-flash-a);
+}
+
+.swap-seat-flash.shadow-glow-accent {
+  box-shadow:
+    0 0 0 2px var(--swap-flash-a),
+    0 0 24px 6px var(--glow-swap-a),
+    0 0 36px 10px var(--glow-swap-b);
 }
 
 @keyframes peek-flash-pulse {

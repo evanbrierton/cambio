@@ -16,19 +16,16 @@ export function useGameSounds(
   error: string | null,
   fleetingPeek: FleetingPeek | null,
   peekFlash: PeekFlash | null,
-  swapFlash: SwapFlash | null,
+  _swapFlash: SwapFlash | null,
   cambioFlash: CambioFlash | null,
-  reshuffleFlash: ReshuffleFlash | null,
+  _reshuffleFlash: ReshuffleFlash | null,
   snapWindowSeconds: number | null,
 ) {
   const prevPhase = useRef<PlayerView["phase"] | null>(null);
-  const prevLogLen = useRef(0);
   const prevMyTurn = useRef(false);
   const peekKey = useRef<string | null>(null);
   const peekFlashKey = useRef<string | null>(null);
-  const swapFlashKey = useRef<string | null>(null);
   const cambioFlashKey = useRef<string | null>(null);
-  const reshuffleFlashKey = useRef<number | null>(null);
   const prevSnapSeconds = useRef<number | null>(null);
 
   useEffect(() => {
@@ -54,20 +51,6 @@ export function useGameSounds(
   }, [peekFlash]);
 
   useEffect(() => {
-    if (!swapFlash) {
-      swapFlashKey.current = null;
-      return;
-    }
-    const key = swapFlash.slots
-      .map((slot) => `${slot.playerId}-${slot.slot}`)
-      .sort()
-      .join("|");
-    if (swapFlashKey.current === key) return;
-    swapFlashKey.current = key;
-    playSound("swap");
-  }, [swapFlash]);
-
-  useEffect(() => {
     if (!cambioFlash) {
       cambioFlashKey.current = null;
       return;
@@ -76,16 +59,6 @@ export function useGameSounds(
     cambioFlashKey.current = cambioFlash.playerId;
     playSound("cambio");
   }, [cambioFlash]);
-
-  useEffect(() => {
-    if (!reshuffleFlash) {
-      reshuffleFlashKey.current = null;
-      return;
-    }
-    if (reshuffleFlashKey.current === reshuffleFlash.id) return;
-    reshuffleFlashKey.current = reshuffleFlash.id;
-    playSound("draw");
-  }, [reshuffleFlash]);
 
   useEffect(() => {
     if (!error?.includes("Wrong snap")) return;
@@ -115,14 +88,10 @@ export function useGameSounds(
     }
     prevMyTurn.current = isMyTurn;
 
-    if (view.log.length > prevLogLen.current) {
+    if (view.log.length > 0) {
       const lastLog = view.log[view.log.length - 1] ?? "";
       if (lastLog.includes("snapped correctly")) playSound("snap");
-      else if (lastLog.includes("drew from") || lastLog.includes("discarded")) {
-        playSound("draw");
-      }
     }
-    prevLogLen.current = view.log.length;
   }, [view]);
 
   useEffect(() => {

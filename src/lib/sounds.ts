@@ -6,7 +6,9 @@ export type SoundId =
   | "snapWrong"
   | "snapWindowStart"
   | "snapCountdown"
-  | "draw"
+  | "deckDraw"
+  | "discardDraw"
+  | "reshuffle"
   | "swap"
   | "cambio"
   | "gameOver"
@@ -103,14 +105,27 @@ export async function playSound(id: SoundId): Promise<void> {
       tone(ctx, 740, t, 0.05, "square", 0.06);
       tone(ctx, 980, t + 0.05, 0.07, "square", 0.05);
       break;
-    case "draw":
-      tone(ctx, 520, t, 0.04, "triangle", 0.05);
-      tone(ctx, 390, t + 0.05, 0.06, "triangle", 0.04);
+    case "deckDraw":
+      tone(ctx, 620, t, 0.05, "triangle", 0.05);
+      tone(ctx, 740, t + 0.06, 0.08, "triangle", 0.045);
+      break;
+    case "discardDraw":
+      tone(ctx, 480, t, 0.04, "sine", 0.045);
+      tone(ctx, 360, t + 0.05, 0.07, "sine", 0.04);
+      tone(ctx, 520, t + 0.1, 0.05, "sine", 0.035);
+      break;
+    case "reshuffle":
+      tone(ctx, 420, t, 0.05, "triangle", 0.045);
+      tone(ctx, 560, t + 0.07, 0.06, "triangle", 0.04);
+      tone(ctx, 700, t + 0.14, 0.08, "triangle", 0.04);
       break;
     case "swap":
-      tone(ctx, 330, t, 0.05, "triangle", 0.05);
-      tone(ctx, 494, t + 0.07, 0.08, "triangle", 0.05);
-      tone(ctx, 392, t + 0.14, 0.06, "triangle", 0.04);
+      tone(ctx, 880, t, 0.05, "square", 0.055);
+      tone(ctx, 220, t, 0.05, "square", 0.05);
+      tone(ctx, 660, t + 0.09, 0.07, "square", 0.05);
+      tone(ctx, 330, t + 0.09, 0.07, "square", 0.05);
+      tone(ctx, 523, t + 0.2, 0.14, "sine", 0.06);
+      tone(ctx, 784, t + 0.28, 0.18, "sine", 0.05);
       break;
     case "cambio":
       tone(ctx, 523, t, 0.1, "square", 0.09);
