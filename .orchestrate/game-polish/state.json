@@ -416,6 +416,10 @@
     {
       "at": "2026-08-09T10:28:42.430Z",
       "message": "verify-cam-81-83: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-09T10:28:53.595Z",
+      "message": "verify-cam-81-83: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Upgrade to Ultra for more Cloud Agents: You've reached the limit for your current plan. Upgrade to Ultra to run more Cloud Agents simultaneously."
     }
   ]
 }
