@@ -31,15 +31,15 @@
       "dependsOn": [
         "bootstrap-discovery"
       ],
-      "agentId": null,
-      "runId": null,
-      "parentAgentId": null,
+      "agentId": "bc-6d1e24be-5c43-4736-82a9-25aedef2504e",
+      "runId": "run-a723aa5e-f77d-400a-b302-1acf6b74f1fb",
+      "parentAgentId": "bc-8a975f94-2884-43ee-adbc-719f3ebcdbda",
       "status": "running",
       "resultStatus": null,
       "handoffPath": null,
       "startedAt": "2026-08-09T10:20:39.493Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-09T10:20:39.493Z",
+      "lastUpdate": "2026-08-09T10:20:42.021Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
@@ -81,14 +81,14 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-09T10:20:42.140Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-09T10:20:24.138Z",
+      "lastUpdate": "2026-08-09T10:20:42.140Z",
       "note": "respawned by self-planner (was error; attempts=1)",
-      "attempts": 1,
+      "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
@@ -359,6 +359,10 @@
     {
       "at": "2026-08-09T10:20:39.367Z",
       "message": "cam-82-zustand: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-09T10:20:42.021Z",
+      "message": "cam-81-83-themes: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
