@@ -1,5 +1,6 @@
 "use client";
 
+import { Monitor, Moon, Sun } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTheme } from "@/context/ThemeProvider";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
@@ -24,64 +25,12 @@ function renderThemePickerName(name: string, isRetro: boolean) {
   );
 }
 
-function SunIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 16 16"
-      className="h-3.5 w-3.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    >
-      <circle cx="8" cy="8" r="2.75" />
-      <path
-        strokeLinecap="round"
-        d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M12.6 3.4l-1.1 1.1M4.5 11.5l-1.1 1.1"
-      />
-    </svg>
-  );
-}
-
-function MoonIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 16 16"
-      className="h-3.5 w-3.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12.5 9.2A5.1 5.1 0 0 1 6.8 3.5 5.25 5.25 0 1 0 12.5 9.2Z"
-      />
-    </svg>
-  );
-}
-
-function SystemIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 16 16"
-      className="h-3.5 w-3.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-    >
-      <rect x="2.25" y="3" width="11.5" height="8" rx="1.25" />
-      <path strokeLinecap="round" d="M5.5 13h5M8 11v2" />
-    </svg>
-  );
-}
+const APPEARANCE_ICON_CLASS = "size-3.5 shrink-0";
 
 const APPEARANCE_ICONS: Record<AppearancePreference, ReactNode> = {
-  light: <SunIcon />,
-  dark: <MoonIcon />,
-  system: <SystemIcon />,
+  light: <Sun aria-hidden className={APPEARANCE_ICON_CLASS} />,
+  dark: <Moon aria-hidden className={APPEARANCE_ICON_CLASS} />,
+  system: <Monitor aria-hidden className={APPEARANCE_ICON_CLASS} />,
 };
 
 export function ThemePicker({ compact = false }: { compact?: boolean }) {
