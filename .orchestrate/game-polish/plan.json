@@ -39,7 +39,7 @@
     {
       "name": "cam-82-zustand",
       "type": "worker",
-      "model": "gpt-5.4",
+      "model": "composer-2.5",
       "dependsOn": ["bootstrap-discovery"],
       "scopedGoal": "Implement Linear CAM-82 (https://linear.app/ebrierton-cambio/issue/CAM-82): use already-declared zustand with persist for all browser UI preferences; delete near-identical lib/hook pairs.\n\nPersist in one store: sound enabled, hints enabled, chat/event notifications, player grid + own-seat display, bot count/difficulty, player nickname (cambio-player-name).\n\nDelete/replace: src/lib/hints.ts + useHintsEnabled; src/lib/notifications.ts + useNotificationPrefs; src/lib/player-layout.ts + usePlayerGridEnabled/useOwnSeatDisplay; sound pref accessors in src/lib/sounds.ts + useSoundEnabled (KEEP Web Audio synthesis); src/lib/bot-settings.ts load/save + home hydrate effects (store owns persistence; keep types/helpers as needed).\n\nKeep out of zustand: useGameConnection, ephemeral GameTable UI, theme identity (next-themes/cookie).\n\nUse skipHydration: true + client rehydrate to avoid Next.js SSR mismatch. Do not add usehooks-ts.\n\nMark CAM-82 In Progress → In Review. Open a draft PR titled with CAM-82. Follow discovery brief from upstream handoff.",
       "pathsAllowed": [
@@ -83,7 +83,7 @@
     {
       "name": "cam-81-83-themes",
       "type": "worker",
-      "model": "gpt-5.4",
+      "model": "composer-2.5",
       "dependsOn": ["bootstrap-discovery"],
       "scopedGoal": "Implement CAM-81 then CAM-83 in one branch (explicit sequence).\n\n## CAM-81 (https://linear.app/ebrierton-cambio/issue/CAM-81)\nAdd cookies-next (or equivalent). Replace Cookie-Store-only writes in src/lib/theme-cookie.ts so theme/appearance cookies never silently no-op. Keep SSR read in layout.tsx. Preserve keys cambio-theme and cambio-appearance, path /, long max-age, SameSite=Lax.\n\n## CAM-83 (https://linear.app/ebrierton-cambio/issue/CAM-83)\nAdopt next-themes for the 8 named style themes (retro|casino|party|minimal|calm|library|lodge|ink):\n- themes={[...ThemeIds]}, enableSystem={false}, attribute=\"data-theme\"\n- Keep custom: THEME_VOICES/useThemeVoice, globals.css tokens, theme-fonts.ts font class apply, ThemePicker UI calling setTheme\n- Replace custom ThemeProvider style-theme plumbing; wire cookies-next as persistence backend\n- CRITICAL: do NOT regress CAM-49 appearance (light|dark|system) — keep appearance as a separate axis with existing cookie + data-appearance + FOUC script. next-themes is for STYLE only.\n\nMark CAM-81 and CAM-83 In Progress → In Review. Draft PR mentioning both. Avoid large THEME_VOICES rewrites (CAM-64 owns new labels).",
       "pathsAllowed": [
@@ -131,7 +131,7 @@
     {
       "name": "cam-64-card-points",
       "type": "worker",
-      "model": "gpt-5.4",
+      "model": "composer-2.5",
       "dependsOn": ["bootstrap-discovery"],
       "scopedGoal": "Implement CAM-64 (https://linear.app/ebrierton-cambio/issue/CAM-64): host-configurable point values for aces, face cards (J/Q), jokers, black kings, red kings.\n\nMirror the existing joker-count room-rule pattern:\n1. CardPointValues on GameState with DEFAULT_CARD_POINTS {ace:1, face:10, joker:0, blackKing:-2, redKing:25}, clamp MIN=-5 MAX=25\n2. Host-only set_card_points ClientMessage (lobby/ended only)\n3. PlayerView exposes cardPoints + canSetCardPoints\n4. cardPoints(card, values) config-aware in src/game/cards.ts; thread through scoring.ts, bot.ts, bot-chat-events.ts\n5. Init in createRoom; handle in party/cambio.ts; migrate older rooms with { ...DEFAULT_CARD_POINTS, ...state.cardPoints }\n6. Five lobby selects in LobbyPlayers.tsx (host editable)\n7. ThemeVoice labels for all 8 themes in themes.ts + README scoring docs\n\nValues frozen once play starts. Numbers 2–10 stay face value.\n\nMark CAM-64 In Progress → In Review. Draft PR. Avoid GameTable settings chrome edits.",
       "pathsAllowed": [
@@ -255,7 +255,7 @@
     {
       "name": "cam-85-zod",
       "type": "worker",
-      "model": "gpt-5.4",
+      "model": "composer-2.5",
       "dependsOn": ["bootstrap-discovery", "cam-82-zustand", "cam-64-card-points"],
       "startingRef": "main",
       "scopedGoal": "Implement CAM-85 (https://linear.app/ebrierton-cambio/issue/CAM-85): use already-declared zod to validate WS messages and bot settings instead of JSON.parse as T.\n\nWork:\n- Zod schemas for ClientMessage/ServerMessage (include any set_card_points / cardPoints fields from CAM-64 — see upstream handoff)\n- Parse on server in party/cambio.ts (reject/ignore invalid client messages safely)\n- Parse on client in useGameConnection.ts\n- Validate bot-settings JSON against the CAM-82 store persistence shape (see cam-82 handoff); replace Partial<BotSettings> cast\n- Prefer schema-derived types where it doesn't fight existing game types\n\nMerge CAM-82 and CAM-64 branches from upstream handoffs into your orch branch before implementing so types and prefs store match.\n\nOut of scope: OpenAPI/RPC frameworks; replacing non-wire domain unions.\n\nMark CAM-85 In Progress → In Review. Draft PR.",
