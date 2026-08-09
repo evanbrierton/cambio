@@ -146,20 +146,20 @@
     {
       "name": "verify-cam-64",
       "type": "verifier",
-      "branch": "orch/game-polish/verify-cam-64",
+      "branch": "orch/game-polish/cam-64-card-points",
       "startingRef": "orch/game-polish/cam-64-card-points",
       "dependsOn": [
         "cam-64-card-points"
       ],
-      "agentId": null,
-      "runId": null,
-      "parentAgentId": null,
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "agentId": "bc-220a13c7-fca2-425c-b2dc-956a45de919a",
+      "runId": "run-6c6c0f18-a86a-4eeb-b25a-c48c0d029f79",
+      "parentAgentId": "bc-8a975f94-2884-43ee-adbc-719f3ebcdbda",
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-cam-64.md",
       "startedAt": "2026-08-09T10:50:56.371Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-09T10:50:56.371Z",
+      "finishedAt": "2026-08-09T10:58:57.156Z",
+      "lastUpdate": "2026-08-09T10:58:57.157Z",
       "note": "respawned by self-planner (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
@@ -469,6 +469,14 @@
     {
       "at": "2026-08-09T10:50:56.099Z",
       "message": "verify-cam-64: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-09T10:57:59.825Z",
+      "message": "verify-cam-64: SSE idle 324796ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-09T10:57:59.825Z",
+      "message": "verify-cam-64: tool_call idle 324797ms; last=2026-08-09T10:52:35.028Z"
     }
   ]
 }
