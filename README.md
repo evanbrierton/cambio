@@ -32,7 +32,9 @@ Each player is given one chance before the first player picks a card from the de
 
 ## Point Values
 
-| Card | Points |
+Number cards (2–10) are always face value. The host can configure point values for aces, jacks/queens, jokers, and black/red kings from the lobby before play starts (defaults below). Values are locked once a round begins and can be changed again after a round ends.
+
+| Card | Default points |
 | --- | --- |
 | 2 – 10 | Face value |
 | Jack | 10 |
@@ -133,7 +135,7 @@ The round enters its final phase. The caller cannot draw or play a card. Every o
 
 ### What are the point values in Cambio?
 
-Number cards (2–10) are face value. Aces are 1. Jacks and Queens are 10. Black Kings are −2. Red Kings are +25. Jokers are 0. The goal is the lowest total, so Black Kings, Jokers, and Aces are the most valuable to keep.
+Number cards (2–10) are face value. By default, aces are 1, jacks and queens are 10, black kings are −2, red kings are +25, and jokers are 0. The host can customize these five categories in the lobby before play starts; values are locked during an active round. The goal is the lowest total, so black kings, jokers, and aces are the most valuable to keep.
 
 ### What are the penalties in Cambio?
 

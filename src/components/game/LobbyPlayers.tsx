@@ -1,12 +1,39 @@
 "use client";
 
 import { motion } from "framer-motion";
-import type { ClientMessage, PlayerView } from "@/game/types";
-import { MAX_JOKER_COUNT, MIN_JOKER_COUNT } from "@/game/types";
+import type { CardPointValues, ClientMessage, PlayerView } from "@/game/types";
+import {
+  MAX_CARD_POINT_VALUE,
+  MAX_JOKER_COUNT,
+  MIN_CARD_POINT_VALUE,
+  MIN_JOKER_COUNT,
+} from "@/game/types";
 import type { ThemeVoice } from "@/lib/themes";
 
 const MAX_PLAYERS = 6;
 const LOBBY_SLOTS = [0, 1, 2, 3, 4, 5] as const;
+const CARD_POINT_OPTIONS = Array.from(
+  { length: MAX_CARD_POINT_VALUE - MIN_CARD_POINT_VALUE + 1 },
+  (_, index) => MIN_CARD_POINT_VALUE + index,
+);
+
+type CardPointField = keyof CardPointValues;
+
+const CARD_POINT_FIELDS: Array<{
+  key: CardPointField;
+  labelKey:
+    | "acePointsLabel"
+    | "facePointsLabel"
+    | "jokerPointsLabel"
+    | "blackKingPointsLabel"
+    | "redKingPointsLabel";
+}> = [
+  { key: "ace", labelKey: "acePointsLabel" },
+  { key: "face", labelKey: "facePointsLabel" },
+  { key: "joker", labelKey: "jokerPointsLabel" },
+  { key: "blackKing", labelKey: "blackKingPointsLabel" },
+  { key: "redKing", labelKey: "redKingPointsLabel" },
+];
 
 type LobbyPlayersProps = {
   view: PlayerView;
@@ -145,6 +172,39 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
             </span>
           )}
         </div>
+
+        {CARD_POINT_FIELDS.map(({ key, labelKey }) => (
+          <div
+            key={key}
+            className="mt-2 flex items-center justify-between gap-3 px-1"
+          >
+            <span className="font-display text-[10px] text-theme-muted">
+              {voice[labelKey]}
+            </span>
+            {view.canSetCardPoints ? (
+              <select
+                value={view.cardPoints[key]}
+                onChange={(e) =>
+                  send({
+                    type: "set_card_points",
+                    values: { [key]: Number(e.target.value) },
+                  })
+                }
+                className="input-theme px-2 py-1 font-mono text-[10px] normal-case"
+              >
+                {CARD_POINT_OPTIONS.map((value) => (
+                  <option key={value} value={value}>
+                    {value}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="font-display text-[10px] text-theme tabular-nums">
+                {view.cardPoints[key]}
+              </span>
+            )}
+          </div>
+        ))}
 
         {!view.canStartGame && !me?.isHost ? (
           <p className="font-display text-[10px] text-theme-muted text-center mt-4 animate-pulse">
