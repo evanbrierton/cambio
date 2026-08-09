@@ -50,6 +50,7 @@ import { useSeatHandFit } from "@/hooks/useSeatHandFit";
 import { useSoundEnabled } from "@/hooks/useSoundEnabled";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { copyToClipboard } from "@/lib/clipboard";
+import { penaltyGridPosition, penaltyGridShape } from "@/lib/penalty-grid";
 import type { ThemeVoice } from "@/lib/themes";
 
 type GameTableProps = {
@@ -148,22 +149,6 @@ function formatPenaltyFlashNotice(
   const player = players.find((entry) => entry.id === penaltyFlash.playerId);
   if (!player) return fallback;
   return `! ${player.name} drew a penalty card (#${penaltyFlash.slot + 1})`;
-}
-
-function penaltyGridColumns(count: number): number {
-  if (count <= 0) return 0;
-  if (count <= 2) return 1;
-  return Math.ceil(count / 2);
-}
-
-function penaltyGridPosition(penaltyIndex: number): {
-  gridRow: number;
-  gridColumn: number;
-} {
-  return {
-    gridRow: (penaltyIndex % 2) + 1,
-    gridColumn: Math.floor(penaltyIndex / 2) + 1,
-  };
 }
 
 function isSwapAbility(kind: string | undefined) {
@@ -400,10 +385,11 @@ function PlayerSeat({
   const penaltySlots = player.hand
     .map((slot, index) => ({ slot, index }))
     .filter(({ slot, index }) => !slot.empty && isPenaltyColumnSlot(index));
+  const penaltyShape = penaltyGridShape(penaltySlots.length);
 
   const { seatRef, clipRef, shellRef, handRef } = useSeatHandFit(
     fitHandToWidth,
-    `${penaltySlots.length}:${player.hand.length}`,
+    `${penaltySlots.length}:${penaltyShape.rows}:${player.hand.length}`,
   );
 
   const renderHandSlot = (slot: PublicCardSlot, index: number) => {
@@ -588,7 +574,7 @@ function PlayerSeat({
           <div ref={shellRef} className="relative max-w-full shrink-0">
             <div
               ref={handRef}
-              className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit"
+              className="flex flex-row items-center justify-center gap-1 lg:gap-1.5 w-fit"
             >
               <div
                 className={`grid grid-cols-2 gap-1 lg:gap-1.5 shrink-0 ${
@@ -601,15 +587,19 @@ function PlayerSeat({
               </div>
               {penaltySlots.length > 0 && (
                 <div
-                  className="grid grid-rows-2 grid-flow-col gap-1 lg:gap-1.5 shrink-0"
+                  className="grid gap-1 lg:gap-1.5 shrink-0"
                   style={{
-                    gridTemplateColumns: `repeat(${penaltyGridColumns(penaltySlots.length)}, auto)`,
+                    gridTemplateRows: `repeat(${penaltyShape.rows}, auto)`,
+                    gridTemplateColumns: `repeat(${penaltyShape.cols}, auto)`,
                   }}
                 >
                   {penaltySlots.map(({ slot, index }, penaltyIndex) => (
                     <div
                       key={`penalty-wrap-${index}`}
-                      style={penaltyGridPosition(penaltyIndex)}
+                      style={penaltyGridPosition(
+                        penaltyIndex,
+                        penaltyShape.rows,
+                      )}
                     >
                       {renderHandSlot(slot, index)}
                     </div>
