@@ -183,13 +183,13 @@
       "handoffPath": "handoffs/cam-75-swap-vfx.md",
       "startedAt": "2026-08-09T10:19:38.194Z",
       "finishedAt": "2026-08-09T10:32:15.214Z",
-      "lastUpdate": "2026-08-09T10:32:15.215Z",
+      "lastUpdate": "2026-08-09T10:32:16.282Z",
       "note": null,
       "attempts": 1,
       "slackTs": null,
       "prNumber": 165,
       "failureMode": null,
-      "verification": null
+      "verification": "type-check-only"
     },
     {
       "name": "verify-cam-75",
@@ -202,17 +202,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-09T10:32:24.032Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-09T10:32:24.032Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "cam-84-lucide",
@@ -420,6 +421,14 @@
     {
       "at": "2026-08-09T10:28:53.595Z",
       "message": "verify-cam-81-83: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Upgrade to Ultra for more Cloud Agents: You've reached the limit for your current plan. Upgrade to Ultra to run more Cloud Agents simultaneously."
+    },
+    {
+      "at": "2026-08-09T10:32:16.282Z",
+      "message": "cam-75-swap-vfx: verification self-reported (type-check-only)"
+    },
+    {
+      "at": "2026-08-09T10:32:23.848Z",
+      "message": "verify-cam-75: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
