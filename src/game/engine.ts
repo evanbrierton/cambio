@@ -1483,8 +1483,6 @@ export function buildPlayerView(
         };
       }),
       penaltyCount: p.penaltyCount,
-      setupPeekedSlots:
-        p.id === viewerId ? [...(p.setupPeekedSlots ?? [])] : [],
       hasCalledCambio: p.hasCalledCambio,
       finalTurnDone: p.finalTurnDone,
       isWaiting: p.isWaiting,
@@ -1512,6 +1510,7 @@ export function buildPlayerView(
     roomId: state.roomId,
     playerId: viewerId,
     phase: state.phase,
+    ownSetupPeekedSlots: viewer ? [...viewer.setupPeekedSlots] : [],
     players,
     currentPlayerIndex: state.currentPlayerIndex,
     deckCount:

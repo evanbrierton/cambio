@@ -634,18 +634,7 @@ describe("reconnect with drawn card (CAM-74)", () => {
 });
 
 describe("setup peek", () => {
-  it("defaults setupPeekedSlots when missing from persisted player state", () => {
-    const state = createRoom("room-1", "Alice", "alice");
-    delete (state.players[0] as { setupPeekedSlots?: number[] })
-      .setupPeekedSlots;
-
-    const view = buildPlayerView(state, "alice");
-    expect(
-      view.players.find((p) => p.id === "alice")?.setupPeekedSlots,
-    ).toEqual([]);
-  });
-
-  it("exposes peeked slots only on the viewer's own public player", () => {
+  it("exposes ownSetupPeekedSlots on the player view", () => {
     const state = createRoom("room-1", "Alice", "alice");
     state.players.push({
       id: "bob",
@@ -670,14 +659,7 @@ describe("setup peek", () => {
     const aliceView = buildPlayerView(state, "alice");
     const bobView = buildPlayerView(state, "bob");
 
-    expect(
-      aliceView.players.find((p) => p.id === "alice")?.setupPeekedSlots,
-    ).toEqual([2]);
-    expect(
-      bobView.players.find((p) => p.id === "alice")?.setupPeekedSlots,
-    ).toEqual([]);
-    expect(
-      bobView.players.find((p) => p.id === "bob")?.setupPeekedSlots,
-    ).toEqual([]);
+    expect(aliceView.ownSetupPeekedSlots).toEqual([2]);
+    expect(bobView.ownSetupPeekedSlots).toEqual([]);
   });
 });
