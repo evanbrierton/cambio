@@ -26,6 +26,8 @@ export type GameMoveReaction = {
 export type PreMoveSnapshot = {
   drawnCard: Card | null;
   swappedOutCard: Card | null;
+  /** True when the draw came from the discard pile (public). */
+  drawnFromDiscard: boolean;
 };
 
 type MessageResult = {
@@ -57,9 +59,17 @@ export function capturePreMoveSnapshot(
   return {
     drawnCard: state.drawnCard,
     swappedOutCard,
+    drawnFromDiscard: state.drawnFromDiscard,
   };
 }
 
+/**
+ * Build a move reaction that only names publicly visible cards.
+ *
+ * Public: discard pile (including a just-discarded / swapped-out card),
+ * and a card taken from the discard pile (everyone already saw it).
+ * Private: a card drawn from the deck and kept/swapped into a face-down hand.
+ */
 export function detectMoveReaction(
   state: GameState,
   player: PlayerState,
@@ -114,6 +124,7 @@ export function detectMoveReaction(
     snapshot?.drawnCard &&
     !result.error
   ) {
+    // Discarded draw is now on the discard pile — public.
     const card = snapshot.drawnCard;
     const points = cardPoints(card, state.cardPoints);
     const label = formatCard(card);
@@ -152,18 +163,47 @@ export function detectMoveReaction(
     const outPoints = cardPoints(outgoing, state.cardPoints);
     const inLabel = formatCard(incoming);
     const outLabel = formatCard(outgoing);
-    if (outPoints <= 1 && inPoints >= outPoints + 4) {
+
+    // Discard-pile draws are public; both sides of the swap can be named.
+    if (snapshot.drawnFromDiscard) {
+      if (outPoints <= 1 && inPoints >= outPoints + 4) {
+        return {
+          kind: "bad_swap",
+          playerName,
+          detail: `${playerName} swapped away a ${outLabel} (${outPoints} pts) for a ${inLabel} (${inPoints} pts).`,
+        };
+      }
+      if (outPoints >= 10 && inPoints <= 3) {
+        return {
+          kind: "smart_discard",
+          playerName,
+          detail: `${playerName} swapped out a ${outLabel} for a ${inLabel}. Nice upgrade.`,
+        };
+      }
+      return null;
+    }
+
+    // Deck draws kept into the hand stay private. Only name the card that
+    // went face-up onto the discard pile.
+    if (outPoints <= 1) {
       return {
         kind: "bad_swap",
         playerName,
-        detail: `${playerName} swapped away a ${outLabel} (${outPoints} pts) for a ${inLabel} (${inPoints} pts).`,
+        detail: `${playerName} swapped away a ${outLabel} (${outPoints} pts) from their hand.`,
       };
     }
-    if (outPoints >= 10 && inPoints <= 3) {
+    if (outPoints >= 20) {
       return {
         kind: "smart_discard",
         playerName,
-        detail: `${playerName} swapped out a ${outLabel} for a ${inLabel}. Nice upgrade.`,
+        detail: `${playerName} swapped out a ${outLabel} (${outPoints} pts) onto the discard pile.`,
+      };
+    }
+    if (outPoints >= 10) {
+      return {
+        kind: "smart_discard",
+        playerName,
+        detail: `${playerName} swapped out a ${outLabel} (${outPoints} pts).`,
       };
     }
   }
