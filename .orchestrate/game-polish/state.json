@@ -330,11 +330,11 @@
       "finishedAt": "2026-08-10T10:06:22.148Z",
       "lastUpdate": "2026-08-10T10:06:23.276Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": "not-verified",
-      "attempts": 1
+      "verification": "not-verified"
     },
     {
       "name": "merge-cam-81-83-themes",
@@ -354,11 +354,11 @@
       "finishedAt": "2026-08-10T10:06:54.484Z",
       "lastUpdate": "2026-08-10T10:06:55.822Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": "not-verified",
-      "attempts": 1
+      "verification": "not-verified"
     },
     {
       "name": "merge-cam-64-card-points",
@@ -378,11 +378,11 @@
       "finishedAt": "2026-08-10T10:07:28.016Z",
       "lastUpdate": "2026-08-10T10:07:29.506Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": "not-verified",
-      "attempts": 1
+      "verification": "not-verified"
     },
     {
       "name": "merge-cam-75-swap-vfx",
@@ -395,18 +395,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "error",
+      "status": "pending",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-10T10:07:42.956Z",
+      "startedAt": null,
       "finishedAt": null,
-      "lastUpdate": "2026-08-10T10:07:43.425Z",
-      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Upgrade to Ultra for more Cloud Agents: You've reached the limit for your current plan. Upgrade to Ultra to run more Cloud Agents simultaneously.",
+      "lastUpdate": "2026-08-10T10:08:14.359Z",
+      "note": "respawned by self-planner (was error; attempts=1)",
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
-      "failureMode": "unknown",
-      "verification": null,
-      "attempts": 1
+      "failureMode": null,
+      "verification": null
     },
     {
       "name": "merge-cam-84-lucide",
