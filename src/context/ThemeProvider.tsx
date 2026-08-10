@@ -20,7 +20,6 @@ import {
   resolveAppearance,
   setAppearanceCookie,
   setThemeCookie,
-  THEME_COOKIE_KEY,
 } from "@/lib/theme-cookie";
 import { applyThemeFontClass } from "@/lib/theme-fonts";
 import {
@@ -142,7 +141,6 @@ export function ThemeProvider({
       themes={[...THEME_IDS]}
       enableSystem={false}
       enableColorScheme={false}
-      storageKey={THEME_COOKIE_KEY}
     >
       <ThemeContextProvider
         initialAppearancePreference={initialAppearancePreference}
