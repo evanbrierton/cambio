@@ -1,8 +1,8 @@
 /**
- * Choose a penalty-card grid shape that stays closer to square as the
- * count grows, so fitted hands don't shrink into a wide 2-row strip.
+ * Near-square grid shape for packing a full hand (base slots + penalties)
+ * in grid view, so cards stay larger as the count grows.
  */
-export function penaltyGridShape(count: number): {
+export function nearSquareGridShape(count: number): {
   rows: number;
   cols: number;
 } {
@@ -12,8 +12,8 @@ export function penaltyGridShape(count: number): {
   return { rows, cols };
 }
 
-export function penaltyGridPosition(
-  penaltyIndex: number,
+export function nearSquareGridPosition(
+  index: number,
   rows: number,
 ): {
   gridRow: number;
@@ -21,7 +21,24 @@ export function penaltyGridPosition(
 } {
   const safeRows = Math.max(1, rows);
   return {
-    gridRow: (penaltyIndex % safeRows) + 1,
-    gridColumn: Math.floor(penaltyIndex / safeRows) + 1,
+    gridRow: (index % safeRows) + 1,
+    gridColumn: Math.floor(index / safeRows) + 1,
+  };
+}
+
+/** Classic carousel penalty strip: always 2 rows, growing by columns. */
+export function carouselPenaltyColumns(count: number): number {
+  if (count <= 0) return 0;
+  if (count <= 2) return 1;
+  return Math.ceil(count / 2);
+}
+
+export function carouselPenaltyPosition(penaltyIndex: number): {
+  gridRow: number;
+  gridColumn: number;
+} {
+  return {
+    gridRow: (penaltyIndex % 2) + 1,
+    gridColumn: Math.floor(penaltyIndex / 2) + 1,
   };
 }

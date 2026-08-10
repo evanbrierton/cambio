@@ -1,38 +1,73 @@
 import { describe, expect, it } from "vitest";
-import { penaltyGridPosition, penaltyGridShape } from "./penalty-grid";
+import {
+  carouselPenaltyColumns,
+  carouselPenaltyPosition,
+  nearSquareGridPosition,
+  nearSquareGridShape,
+} from "./penalty-grid";
 
-describe("penaltyGridShape", () => {
+describe("nearSquareGridShape", () => {
   it("returns empty shape for no cards", () => {
-    expect(penaltyGridShape(0)).toEqual({ rows: 0, cols: 0 });
+    expect(nearSquareGridShape(0)).toEqual({ rows: 0, cols: 0 });
   });
 
-  it("keeps small counts on 2 rows", () => {
-    expect(penaltyGridShape(1)).toEqual({ rows: 2, cols: 1 });
-    expect(penaltyGridShape(2)).toEqual({ rows: 2, cols: 1 });
-    expect(penaltyGridShape(4)).toEqual({ rows: 2, cols: 2 });
+  it("packs the base 4-card hand as 2×2", () => {
+    expect(nearSquareGridShape(4)).toEqual({ rows: 2, cols: 2 });
   });
 
-  it("adds rows as the count grows instead of only adding columns", () => {
-    expect(penaltyGridShape(6)).toEqual({ rows: 3, cols: 2 });
-    expect(penaltyGridShape(9)).toEqual({ rows: 3, cols: 3 });
-    expect(penaltyGridShape(10)).toEqual({ rows: 4, cols: 3 });
-    expect(penaltyGridShape(16)).toEqual({ rows: 4, cols: 4 });
+  it("includes base cards when growing with penalties", () => {
+    // 4 base + 2 penalties
+    expect(nearSquareGridShape(6)).toEqual({ rows: 3, cols: 2 });
+    // 4 base + 5 penalties
+    expect(nearSquareGridShape(9)).toEqual({ rows: 3, cols: 3 });
+    // 4 base + 10 penalties
+    expect(nearSquareGridShape(14)).toEqual({ rows: 4, cols: 4 });
   });
 
   it("never uses more cells than needed", () => {
-    for (const count of [1, 2, 3, 5, 7, 11, 15, 20]) {
-      const { rows, cols } = penaltyGridShape(count);
+    for (const count of [4, 5, 7, 11, 15, 20]) {
+      const { rows, cols } = nearSquareGridShape(count);
       expect(rows * cols).toBeGreaterThanOrEqual(count);
       expect((cols - 1) * rows).toBeLessThan(count);
     }
   });
 });
 
-describe("penaltyGridPosition", () => {
+describe("nearSquareGridPosition", () => {
   it("fills column-major order for the chosen row count", () => {
-    expect(penaltyGridPosition(0, 3)).toEqual({ gridRow: 1, gridColumn: 1 });
-    expect(penaltyGridPosition(1, 3)).toEqual({ gridRow: 2, gridColumn: 1 });
-    expect(penaltyGridPosition(2, 3)).toEqual({ gridRow: 3, gridColumn: 1 });
-    expect(penaltyGridPosition(3, 3)).toEqual({ gridRow: 1, gridColumn: 2 });
+    expect(nearSquareGridPosition(0, 3)).toEqual({
+      gridRow: 1,
+      gridColumn: 1,
+    });
+    expect(nearSquareGridPosition(1, 3)).toEqual({
+      gridRow: 2,
+      gridColumn: 1,
+    });
+    expect(nearSquareGridPosition(2, 3)).toEqual({
+      gridRow: 3,
+      gridColumn: 1,
+    });
+    expect(nearSquareGridPosition(3, 3)).toEqual({
+      gridRow: 1,
+      gridColumn: 2,
+    });
+  });
+});
+
+describe("carouselPenaltyColumns", () => {
+  it("keeps the classic 2-row strip", () => {
+    expect(carouselPenaltyColumns(0)).toBe(0);
+    expect(carouselPenaltyColumns(1)).toBe(1);
+    expect(carouselPenaltyColumns(2)).toBe(1);
+    expect(carouselPenaltyColumns(3)).toBe(2);
+    expect(carouselPenaltyColumns(10)).toBe(5);
+  });
+});
+
+describe("carouselPenaltyPosition", () => {
+  it("fills a fixed 2-row column-major strip", () => {
+    expect(carouselPenaltyPosition(0)).toEqual({ gridRow: 1, gridColumn: 1 });
+    expect(carouselPenaltyPosition(1)).toEqual({ gridRow: 2, gridColumn: 1 });
+    expect(carouselPenaltyPosition(2)).toEqual({ gridRow: 1, gridColumn: 2 });
   });
 });
