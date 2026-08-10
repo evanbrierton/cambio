@@ -58,3 +58,14 @@
 [2026-08-09T11:28:44.934Z] cam-85-zod: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
 [2026-08-09T11:30:56.404Z] cam-85-zod: verification self-reported (unit-test-verified)
 [2026-08-09T11:30:58.056Z] verify-cam-85: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-10T10:05:55.187Z] merge-cam-82-zustand: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-10T10:06:23.276Z] merge-cam-82-zustand: verification self-reported (not-verified)
+[2026-08-10T10:06:28.570Z] merge-cam-81-83-themes: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-10T10:06:55.822Z] merge-cam-81-83-themes: verification self-reported (not-verified)
+[2026-08-10T10:07:01.259Z] merge-cam-64-card-points: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-10T10:07:29.506Z] merge-cam-64-card-points: verification self-reported (not-verified)
+[2026-08-10T10:07:34.501Z] merge-cam-75-swap-vfx: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-10T10:07:44.523Z] merge-cam-75-swap-vfx: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Upgrade to Ultra for more Cloud Agents: You've reached the limit for your current plan. Upgrade to Ultra to run more Cloud Agents simultaneously.
+[2026-08-10T10:08:15.485Z] merge-cam-75-swap-vfx: respawned by self-planner (was error)
+[2026-08-10T10:08:15.774Z] merge-cam-75-swap-vfx: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-10T10:08:25.827Z] merge-cam-75-swap-vfx: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Upgrade to Ultra for more Cloud Agents: You've reached the limit for your current plan. Upgrade to Ultra to run more Cloud Agents simultaneously.
