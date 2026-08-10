@@ -22,7 +22,7 @@ export const PENALTY_FLASH_MS = 2500;
 export const CAMBIO_FLASH_MS = 3500;
 export const RESHUFFLE_FLASH_MS = 3500;
 export const DISCARD_DRAW_FLASH_MS = 3000;
-export const DECK_DRAW_FLASH_MS = 1500;
+export const DECK_DRAW_FLASH_MS = 3000;
 export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
 const PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH = new Set<ClientMessage["type"]>(

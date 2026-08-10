@@ -836,6 +836,20 @@ export function GameTable({
         });
       }
 
+      if (deckDrawFlash) {
+        const player = view.players.find(
+          (p) => p.id === deckDrawFlash.playerId,
+        );
+        if (player) {
+          items.push({
+            id: "deck-draw-flash",
+            message: `⤴ ${player.name} drew from the deck`,
+            tone: "info",
+            pulse: true,
+          });
+        }
+      }
+
       if (discardDrawFlash) {
         const player = view.players.find(
           (p) => p.id === discardDrawFlash.playerId,
@@ -858,6 +872,7 @@ export function GameTable({
     return items;
   }, [
     chatToast,
+    deckDrawFlash,
     discardDrawFlash,
     error,
     eventNotificationsEnabled,
@@ -1523,9 +1538,11 @@ export function GameTable({
                   >
                     <p
                       className={`table-pile-label ${
-                        view.canDraw && !snapGivePending
-                          ? "pile-interactable-label"
-                          : "text-theme-muted"
+                        deckDrawFlash
+                          ? "pile-draw-flash-label"
+                          : view.canDraw && !snapGivePending
+                            ? "pile-interactable-label"
+                            : "text-theme-muted"
                       }`}
                     >
                       {voice.deck}
@@ -1533,12 +1550,17 @@ export function GameTable({
                     <div
                       className={`table-pile-card pixel-border rounded-card scaled-pile-size bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
                         deckDrawFlash
-                          ? "ring-2 ring-accent-alt shadow-glow-accent-alt animate-pulse"
+                          ? "pile-draw-flash pile-draw-flash-deck"
                           : view.canDraw && !snapGivePending
                             ? "pile-interactable-card ring-2 ring-accent-alt"
                             : ""
                       }`}
                     >
+                      {deckDrawFlash && (
+                        <span className="pile-draw-flash-badge pile-draw-flash-badge-deck">
+                          DRAWN
+                        </span>
+                      )}
                       {view.deckCount}
                     </div>
                   </button>
@@ -1628,17 +1650,19 @@ export function GameTable({
                   >
                     <p
                       className={`table-pile-label ${
-                        showDiscardPileGlow
-                          ? "pile-interactable-label pile-interactable-label-discard"
-                          : "text-theme-muted"
+                        discardDrawFlash
+                          ? "pile-draw-flash-label pile-draw-flash-label-discard"
+                          : showDiscardPileGlow
+                            ? "pile-interactable-label pile-interactable-label-discard"
+                            : "text-theme-muted"
                       }`}
                     >
                       {voice.discard}
                     </p>
                     <div
-                      className={`scaled-pile-size shrink-0 ${
+                      className={`scaled-pile-size shrink-0 relative ${
                         discardDrawFlash
-                          ? "ring-2 ring-accent-alt shadow-glow-accent-alt rounded-card animate-pulse"
+                          ? "pile-draw-flash pile-draw-flash-discard rounded-card"
                           : showDiscardPileGlow
                             ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
                             : snapWindowActive
@@ -1648,6 +1672,11 @@ export function GameTable({
                                 : ""
                       }`}
                     >
+                      {discardDrawFlash && (
+                        <span className="pile-draw-flash-badge pile-draw-flash-badge-discard">
+                          TOOK
+                        </span>
+                      )}
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={view.discardTop?.id ?? "empty-discard"}

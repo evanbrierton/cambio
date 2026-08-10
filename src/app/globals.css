@@ -2886,6 +2886,143 @@ html.play-scroll-lock body {
   background: color-mix(in srgb, var(--accent-alt) 10%, var(--surface));
 }
 
+@keyframes pile-draw-flash-deck {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-alt) 0%, transparent);
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  18% {
+    box-shadow:
+      0 0 0 5px var(--accent-alt),
+      0 0 36px 12px var(--glow-accent-alt);
+    transform: scale(1.1);
+    filter: brightness(1.28);
+  }
+  45% {
+    box-shadow:
+      0 0 0 4px var(--accent-alt),
+      0 0 28px 10px var(--glow-accent-alt);
+    transform: scale(1.05);
+    filter: brightness(1.18);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-alt) 0%, transparent);
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes pile-draw-flash-discard {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  18% {
+    box-shadow:
+      0 0 0 5px var(--accent),
+      0 0 36px 12px var(--glow-accent);
+    transform: scale(1.1);
+    filter: brightness(1.28);
+  }
+  45% {
+    box-shadow:
+      0 0 0 4px var(--accent),
+      0 0 28px 10px var(--glow-accent);
+    transform: scale(1.05);
+    filter: brightness(1.18);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes pile-draw-badge {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.85);
+  }
+  18%,
+  70% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.95);
+  }
+}
+
+.pile-draw-flash {
+  position: relative;
+  z-index: 20;
+  border-radius: var(--radius-card);
+}
+
+.pile-draw-flash-deck {
+  animation: pile-draw-flash-deck 3s ease-out 1;
+  background: color-mix(in srgb, var(--accent-alt) 28%, var(--surface-card));
+  outline: 3px solid var(--accent-alt);
+  outline-offset: 2px;
+}
+
+.pile-draw-flash-discard {
+  animation: pile-draw-flash-discard 3s ease-out 1;
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.pile-draw-flash-discard .pixel-border,
+.pile-draw-flash-discard .rounded-card {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.pile-draw-flash-badge {
+  position: absolute;
+  left: 50%;
+  top: -0.55rem;
+  z-index: 25;
+  transform: translateX(-50%);
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--font-display);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-chip);
+  border: 2px solid currentColor;
+  animation: pile-draw-badge 3s ease-out 1;
+}
+
+.pile-draw-flash-badge-deck {
+  color: var(--btn-secondary-text, var(--accent-alt));
+  background: var(--accent-alt);
+  border-color: color-mix(in srgb, var(--accent-alt) 70%, white);
+  text-shadow: none;
+}
+
+.pile-draw-flash-badge-discard {
+  color: var(--btn-primary-text, var(--background));
+  background: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 70%, white);
+  text-shadow: none;
+}
+
+.table-pile-label.pile-draw-flash-label {
+  color: var(--accent-alt);
+  text-shadow: 0 0 10px var(--glow-accent-alt);
+  animation: pile-label-pulse 0.7s ease-in-out 4;
+}
+
+.table-pile-label.pile-draw-flash-label-discard {
+  color: var(--accent);
+  text-shadow: 0 0 10px var(--glow-accent);
+}
+
 [data-theme="minimal"] .pile-interactable-card,
 [data-theme="minimal"] .pile-interactable-discard,
 [data-theme="calm"] .pile-interactable-card,
