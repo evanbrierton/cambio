@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import { useShallow } from "zustand/react/shallow";
 import { type BotDifficulty, parseBotDifficulty } from "@/game/types";
 import { clampBotCount, DEFAULT_BOT_SETTINGS } from "@/lib/bot-settings";
 
@@ -110,4 +111,30 @@ export function useRehydrateUiPrefs(): void {
   useEffect(() => {
     void useUiPrefsStore.persist.rehydrate();
   }, []);
+}
+
+export function useUiPrefs() {
+  return useUiPrefsStore(
+    useShallow((state) => ({
+      soundEnabled: state.soundEnabled,
+      toggleSound: state.toggleSound,
+      hintsEnabled: state.hintsEnabled,
+      toggleHints: state.toggleHints,
+      chatNotificationsEnabled: state.chatNotificationsEnabled,
+      eventNotificationsEnabled: state.eventNotificationsEnabled,
+      toggleChatNotifications: state.toggleChatNotifications,
+      toggleEventNotifications: state.toggleEventNotifications,
+      playerGridEnabled: state.playerGridEnabled,
+      togglePlayerGrid: state.togglePlayerGrid,
+      ownSeatDisplay: state.ownSeatDisplay,
+      ownSeatProminent: state.ownSeatDisplay === "prominent",
+      toggleOwnSeatDisplay: state.toggleOwnSeatDisplay,
+      playerName: state.playerName,
+      setPlayerName: state.setPlayerName,
+      botCount: state.botCount,
+      setBotCount: state.setBotCount,
+      botDifficulty: state.botDifficulty,
+      setBotDifficulty: state.setBotDifficulty,
+    })),
+  );
 }

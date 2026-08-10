@@ -45,7 +45,7 @@ import { useGameSounds } from "@/hooks/useGameSounds";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { copyToClipboard } from "@/lib/clipboard";
 import type { ThemeVoice } from "@/lib/themes";
-import { useRehydrateUiPrefs, useUiPrefsStore } from "@/store/ui-prefs";
+import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 type GameTableProps = {
   view: PlayerView;
@@ -619,29 +619,20 @@ export function GameTable({
 }: GameTableProps) {
   useRehydrateUiPrefs();
   const voice = useThemeVoice();
-  const soundEnabled = useUiPrefsStore((state) => state.soundEnabled);
-  const toggleSound = useUiPrefsStore((state) => state.toggleSound);
-  const hintsEnabled = useUiPrefsStore((state) => state.hintsEnabled);
-  const toggleHints = useUiPrefsStore((state) => state.toggleHints);
-  const playerGridEnabled = useUiPrefsStore((state) => state.playerGridEnabled);
-  const togglePlayerGrid = useUiPrefsStore((state) => state.togglePlayerGrid);
-  const ownSeatDisplay = useUiPrefsStore((state) => state.ownSeatDisplay);
-  const toggleOwnSeatDisplay = useUiPrefsStore(
-    (state) => state.toggleOwnSeatDisplay,
-  );
-  const ownSeatProminent = ownSeatDisplay === "prominent";
-  const chatNotificationsEnabled = useUiPrefsStore(
-    (state) => state.chatNotificationsEnabled,
-  );
-  const eventNotificationsEnabled = useUiPrefsStore(
-    (state) => state.eventNotificationsEnabled,
-  );
-  const toggleChatNotifications = useUiPrefsStore(
-    (state) => state.toggleChatNotifications,
-  );
-  const toggleEventNotifications = useUiPrefsStore(
-    (state) => state.toggleEventNotifications,
-  );
+  const {
+    soundEnabled,
+    toggleSound,
+    hintsEnabled,
+    toggleHints,
+    playerGridEnabled,
+    togglePlayerGrid,
+    ownSeatProminent,
+    toggleOwnSeatDisplay,
+    chatNotificationsEnabled,
+    eventNotificationsEnabled,
+    toggleChatNotifications,
+    toggleEventNotifications,
+  } = useUiPrefs();
   const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
