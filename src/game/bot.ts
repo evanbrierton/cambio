@@ -153,7 +153,7 @@ function isSnapEligible(state: GameState): boolean {
   if (state.discard.length === 0 || !state.snapEligibleTopCardId) {
     return false;
   }
-  const top = state.discard.at(-1);
+  const top = state.discard[state.discard.length - 1];
   return top.id === state.snapEligibleTopCardId;
 }
 
@@ -442,13 +442,13 @@ function bestUnknownOpponentSlot(
     ) {
       for (let slot = 0; slot < opponent.hand.length; slot += 1) {
         if (slotHasCard(opponent, slot)) {
-          const pts = estimateSlotPoints(
-            botId,
-            opponent.id,
-            slot,
-            knowledge,
-            difficulty,
-          );
+          const pts = estimateSlotPoints({
+            botId: botId,
+            playerId: opponent.id,
+            slot: slot,
+            knowledge: knowledge,
+            difficulty: difficulty,
+          });
           if (!best || pts > best.points) {
             best = { playerId: opponent.id, slot, points: pts };
           }
@@ -490,13 +490,13 @@ function bestLookTarget({
     if (canTargetPlayer(player.id, state) || player.id === botId) {
       for (let slot = 0; slot < player.hand.length; slot += 1) {
         if (slotHasCard(player, slot) && !knowledge.get(player.id, slot)) {
-          const pts = estimateSlotPoints(
-            botId,
-            player.id,
-            slot,
-            knowledge,
-            difficulty,
-          );
+          const pts = estimateSlotPoints({
+            botId: botId,
+            playerId: player.id,
+            slot: slot,
+            knowledge: knowledge,
+            difficulty: difficulty,
+          });
           if (!best || pts > best.points) {
             best = { playerId: player.id, slot, points: pts };
           }
@@ -554,7 +554,7 @@ function findSnapTarget(
   if (state.discard.length === 0) {
     return null;
   }
-  const top = state.discard.at(-1);
+  const top = state.discard[state.discard.length - 1];
 
   const matches: Array<{ targetPlayerId: string; slot: number }> = [];
 
@@ -798,15 +798,15 @@ function decideTurn(
     }
 
     if (isSmart(difficulty) && state.discard.length > 0) {
-      const top = state.discard.at(-1);
+      const top = state.discard[state.discard.length - 1];
       const worst = worstKnownSlot(state, botId, knowledge, difficulty);
-      const worstPts = estimateSlotPoints(
-        botId,
-        botId,
-        worst,
-        knowledge,
-        difficulty,
-      );
+      const worstPts = estimateSlotPoints({
+        botId: botId,
+        playerId: botId,
+        slot: worst,
+        knowledge: knowledge,
+        difficulty: difficulty,
+      });
       const topPts = cardPoints(top, state.cardPoints);
       const takeDiscard = isExpert(difficulty)
         ? topPts <= worstPts
@@ -822,13 +822,13 @@ function decideTurn(
   if (state.drawnCard && !state.drawnFromDiscard) {
     const drawnPts = cardPoints(state.drawnCard, state.cardPoints);
     const worst = worstKnownSlot(state, botId, knowledge, difficulty);
-    const worstPts = estimateSlotPoints(
-      botId,
-      botId,
-      worst,
-      knowledge,
-      difficulty,
-    );
+    const worstPts = estimateSlotPoints({
+      botId: botId,
+      playerId: botId,
+      slot: worst,
+      knowledge: knowledge,
+      difficulty: difficulty,
+    });
 
     if (drawnPts < worstPts) {
       return { type: "swap", slot: worst };

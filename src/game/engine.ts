@@ -462,7 +462,7 @@ function isSnapEligible(state: GameState): boolean {
   if (state.discard.length === 0 || !state.snapEligibleTopCardId) {
     return false;
   }
-  const top = state.discard.at(-1);
+  const top = state.discard[state.discard.length - 1];
   return top.id === state.snapEligibleTopCardId;
 }
 
@@ -492,7 +492,7 @@ function reshuffleDiscardIntoDeck(state: GameState): boolean {
     return false;
   }
 
-  const top = state.discard.at(-1);
+  const top = state.discard[state.discard.length - 1];
   const toShuffle = [...state.deck, ...state.discard.slice(0, -1)];
   state.deck = shuffle(toShuffle);
   state.discard = [top];
@@ -858,7 +858,7 @@ function placeCardInHand(
 }
 
 function trimTrailingEmptySlots(hand: CardSlot[]): void {
-  while (hand.length > 0 && hand.at(-1).card === null) {
+  while (hand.length > 0 && hand[hand.length - 1].card === null) {
     hand.pop();
   }
 }
@@ -1243,7 +1243,7 @@ export function handleMessage(
         return { error: "That player's cards are protected." };
       }
 
-      const top = state.discard.at(-1);
+      const top = state.discard[state.discard.length - 1];
       const handCard = getHandCard(target, message.slot);
       if (!handCard) {
         return { error: "No card in that slot." };
@@ -1685,7 +1685,8 @@ export function buildPlayerView(
     currentPlayerIndex: state.currentPlayerIndex,
     deckCount:
       state.phase === "lobby" ? deckSize(state.jokerCount) : state.deck.length,
-    discardTop: state.discard.length > 0 ? state.discard.at(-1) : null,
+    discardTop:
+      state.discard.length > 0 ? state.discard[state.discard.length - 1] : null,
     drawnCard: isTurnHolder ? state.drawnCard : null,
     drawnFromDiscard: isTurnHolder ? state.drawnFromDiscard : false,
     hasDrawnCard: Boolean(state.drawnCard),

@@ -71,7 +71,10 @@ type StoredGameState = Omit<
   cumulativeScores?: Record<string, number>;
   chatMessages?: GameState["chatMessages"];
   players: Array<
-    Omit<GameState["players"][number], "isWaiting" | "isBot" | "botDifficulty"> & {
+    Omit<
+      GameState["players"][number],
+      "isWaiting" | "isBot" | "botDifficulty"
+    > & {
       isWaiting?: boolean;
       isBot?: boolean;
       botDifficulty?: GameState["players"][number]["botDifficulty"];

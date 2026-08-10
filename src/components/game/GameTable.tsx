@@ -404,9 +404,9 @@ const PlayerSeat = ({
   const showLookSeatHint =
     lookAbilityActive && player.hand.some((_, index) => canPickForLook(index));
 
-  const hasSwapFlash = swapFlash?.slots.some(
-    (entry) => entry.playerId === player.id,
-  );
+  const hasSwapFlash =
+    swapFlash !== null &&
+    swapFlash.slots.some((entry) => entry.playerId === player.id);
   const hasPeekFlash =
     peekFlash?.playerId === player.id || peekFlash?.actorId === player.id;
   const hasPenaltyFlash = penaltyFlash?.playerId === player.id;
