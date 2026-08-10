@@ -591,7 +591,7 @@ function PlayerSeat({
               {packedSlots.map(({ slot, index }, packIndex) => (
                 <div
                   key={`packed-${index}`}
-                  style={nearSquareGridPosition(packIndex, packedShape.rows)}
+                  style={nearSquareGridPosition(packIndex, packedShape.cols)}
                 >
                   {renderHandSlot(slot, index)}
                 </div>

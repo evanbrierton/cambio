@@ -34,22 +34,33 @@ describe("nearSquareGridShape", () => {
 });
 
 describe("nearSquareGridPosition", () => {
-  it("fills column-major order for the chosen row count", () => {
-    expect(nearSquareGridPosition(0, 3)).toEqual({
+  it("fills row-major order so a 2×2 hand keeps peeks on the bottom", () => {
+    expect(nearSquareGridPosition(0, 2)).toEqual({
       gridRow: 1,
       gridColumn: 1,
     });
-    expect(nearSquareGridPosition(1, 3)).toEqual({
+    expect(nearSquareGridPosition(1, 2)).toEqual({
+      gridRow: 1,
+      gridColumn: 2,
+    });
+    expect(nearSquareGridPosition(2, 2)).toEqual({
       gridRow: 2,
       gridColumn: 1,
     });
-    expect(nearSquareGridPosition(2, 3)).toEqual({
-      gridRow: 3,
-      gridColumn: 1,
-    });
-    expect(nearSquareGridPosition(3, 3)).toEqual({
-      gridRow: 1,
+    expect(nearSquareGridPosition(3, 2)).toEqual({
+      gridRow: 2,
       gridColumn: 2,
+    });
+  });
+
+  it("continues row-major when the packed hand grows", () => {
+    expect(nearSquareGridPosition(4, 3)).toEqual({
+      gridRow: 2,
+      gridColumn: 2,
+    });
+    expect(nearSquareGridPosition(5, 3)).toEqual({
+      gridRow: 2,
+      gridColumn: 3,
     });
   });
 });

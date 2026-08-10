@@ -12,17 +12,18 @@ export function nearSquareGridShape(count: number): {
   return { rows, cols };
 }
 
+/** Row-major cell placement — matches the classic 2×2 hand (peeks on bottom). */
 export function nearSquareGridPosition(
   index: number,
-  rows: number,
+  cols: number,
 ): {
   gridRow: number;
   gridColumn: number;
 } {
-  const safeRows = Math.max(1, rows);
+  const safeCols = Math.max(1, cols);
   return {
-    gridRow: (index % safeRows) + 1,
-    gridColumn: Math.floor(index / safeRows) + 1,
+    gridRow: Math.floor(index / safeCols) + 1,
+    gridColumn: (index % safeCols) + 1,
   };
 }
 
