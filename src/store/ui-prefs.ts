@@ -10,7 +10,7 @@ import { uiPrefsPersistStateSchema } from "@/store/ui-prefs-schema";
 
 export type OwnSeatDisplay = "prominent" | "turn-order";
 
-type UiPrefsData = {
+interface UiPrefsData {
   soundEnabled: boolean;
   hintsEnabled: boolean;
   chatNotificationsEnabled: boolean;
@@ -20,7 +20,7 @@ type UiPrefsData = {
   playerName: string;
   botCount: number;
   botDifficulty: BotDifficulty;
-};
+}
 
 type UiPrefsState = UiPrefsData & {
   toggleSound: () => void;
@@ -48,7 +48,9 @@ const defaultPrefs: UiPrefsData = {
 
 function sanitizePersistedPrefs(persisted: unknown): Partial<UiPrefsData> {
   const result = uiPrefsPersistStateSchema.safeParse(persisted);
-  if (!result.success) return {};
+  if (!result.success) {
+    return {};
+  }
 
   const prefs = result.data;
   return {

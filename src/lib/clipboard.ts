@@ -1,5 +1,7 @@
 function legacyCopy(text: string): boolean {
-  if (typeof document === "undefined") return false;
+  if (typeof document === "undefined") {
+    return false;
+  }
 
   const scrollX = window.scrollX;
   const scrollY = window.scrollY;
@@ -52,7 +54,9 @@ function legacyCopy(text: string): boolean {
 
 /** Copy text to the clipboard. Tries a sync fallback first for mobile Safari. */
 export async function copyToClipboard(text: string): Promise<boolean> {
-  if (legacyCopy(text)) return true;
+  if (legacyCopy(text)) {
+    return true;
+  }
 
   if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
     try {

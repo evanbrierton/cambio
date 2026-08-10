@@ -13,7 +13,9 @@ export type BeforeInstallPromptEvent = Event & {
 };
 
 export function isStandaloneDisplay(): boolean {
-  if (typeof window === "undefined") return false;
+  if (typeof window === "undefined") {
+    return false;
+  }
 
   const mediaStandalone = window.matchMedia(
     "(display-mode: standalone)",
@@ -30,10 +32,14 @@ export function isStandaloneDisplay(): boolean {
 }
 
 export function isIosDevice(): boolean {
-  if (typeof navigator === "undefined") return false;
+  if (typeof navigator === "undefined") {
+    return false;
+  }
 
   const ua = navigator.userAgent;
-  if (/iPad|iPhone|iPod/.test(ua)) return true;
+  if (/iPad|iPhone|iPod/.test(ua)) {
+    return true;
+  }
 
   // iPadOS 13+ reports as MacIntel with touch points.
   return (
@@ -44,14 +50,20 @@ export function isIosDevice(): boolean {
 }
 
 export function isInstallDismissed(now = Date.now()): boolean {
-  if (typeof window === "undefined") return true;
+  if (typeof window === "undefined") {
+    return true;
+  }
 
   try {
     const raw = localStorage.getItem(PWA_INSTALL_DISMISS_KEY);
-    if (!raw) return false;
+    if (!raw) {
+      return false;
+    }
 
     const dismissedAt = Number(raw);
-    if (!Number.isFinite(dismissedAt)) return false;
+    if (!Number.isFinite(dismissedAt)) {
+      return false;
+    }
 
     return now - dismissedAt < PWA_INSTALL_DISMISS_MS;
   } catch {
@@ -60,7 +72,9 @@ export function isInstallDismissed(now = Date.now()): boolean {
 }
 
 export function dismissInstallPrompt(now = Date.now()): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
 
   try {
     localStorage.setItem(PWA_INSTALL_DISMISS_KEY, String(now));
@@ -70,7 +84,9 @@ export function dismissInstallPrompt(now = Date.now()): void {
 }
 
 export function clearInstallDismiss(): void {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") {
+    return;
+  }
 
   try {
     localStorage.removeItem(PWA_INSTALL_DISMISS_KEY);

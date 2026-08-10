@@ -27,7 +27,9 @@ export function parseUiPrefsPersistBlob(
   raw: unknown,
 ): UiPrefsPersistState | null {
   const result = uiPrefsPersistBlobSchema.safeParse(raw);
-  if (!result.success || !result.data.state) return null;
+  if (!(result.success && result.data.state)) {
+    return null;
+  }
   return result.data.state;
 }
 

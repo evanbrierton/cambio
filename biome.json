@@ -22,11 +22,65 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "all",
+      "complexity": {
+        "useArrowFunction": "warn",
+        "noStaticOnlyClass": "warn",
+        "noArguments": "warn",
+        "useFlatMap": "warn",
+        "noFlatMapIdentity": "warn",
+        "useArrayFind": "warn",
+        "useOptionalChain": "warn"
+      },
+      "correctness": {
+        "noReactPropAssignments": "warn",
+        "useImportExtensions": "off",
+        "noUnresolvedImports": "off",
+        "noNodejsModules": "off"
+      },
+      "nursery": {
+        "useArraySome": "warn",
+        "useNullishCoalescing": "warn",
+        "noExcessiveNestedCallbacks": "warn"
+      },
+      "performance": {
+        "noDelete": "warn"
+      },
+      "style": {
+        "useConst": "warn",
+        "noParameterAssign": "warn",
+        "noIncrementDecrement": "warn",
+        "noMultiAssign": "warn",
+        "useReadonlyClassProperties": "warn",
+        "useObjectSpread": "warn",
+        "noUselessElse": "warn",
+        "noNegationElse": "warn",
+        "noContinue": "warn",
+        "useForOf": "warn"
+      },
+      "suspicious": {
+        "noVar": "warn",
+        "noReturnAssign": "warn",
+        "noCatchAssign": "warn",
+        "noClassAssign": "warn",
+        "noFunctionAssign": "warn",
+        "noImportAssign": "warn"
+      }
     },
     "domains": {
-      "next": "recommended",
-      "react": "recommended"
+      "next": "all",
+      "react": "all",
+      "test": "all",
+      "project": "all",
+      "tailwind": "all",
+      "qwik": "none",
+      "solid": "none",
+      "vue": "none",
+      "svelte": "none",
+      "reactNative": "none",
+      "drizzle": "none",
+      "playwright": "none",
+      "turborepo": "none"
     }
   },
   "assist": {
@@ -35,5 +89,26 @@
         "organizeImports": "on"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "src/app/**",
+        "next.config.ts",
+        "postcss.config.mjs",
+        "vitest.config.mts",
+        "scripts/**",
+        "public/sw.js",
+        "party/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noDefaultExport": "off",
+            "useComponentExportOnlyModules": "off"
+          }
+        }
+      }
+    }
+  ]
 }

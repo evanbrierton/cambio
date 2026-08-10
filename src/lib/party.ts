@@ -1,3 +1,5 @@
+import process from "node:process";
+
 const PARTYKIT_PORT = 8787;
 
 export const DEFAULT_PARTY_HOST = "cambio.brierton.workers.dev";
@@ -12,9 +14,15 @@ function isLocalHostname(hostname: string): boolean {
     return true;
   }
 
-  if (/^10(?:\.\d+){3}$/.test(hostname)) return true;
-  if (/^192\.168(?:\.\d+){2}$/.test(hostname)) return true;
-  if (/^172\.(1[6-9]|2\d|3[0-1])(?:\.\d+){2}$/.test(hostname)) return true;
+  if (/^10(?:\.\d+){3}$/.test(hostname)) {
+    return true;
+  }
+  if (/^192\.168(?:\.\d+){2}$/.test(hostname)) {
+    return true;
+  }
+  if (/^172\.(1[6-9]|2\d|3[0-1])(?:\.\d+){2}$/.test(hostname)) {
+    return true;
+  }
 
   return false;
 }

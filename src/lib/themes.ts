@@ -10,14 +10,14 @@ export type ThemeId =
   | "lodge"
   | "ink";
 
-export type ThemeOption = {
+export interface ThemeOption {
   id: ThemeId;
   name: string;
   description: string;
   swatch: string;
-};
+}
 
-export type ThemePhases = {
+export interface ThemePhases {
   lobby: string;
   setup_peek: string;
   playing: string;
@@ -25,9 +25,9 @@ export type ThemePhases = {
   snap_window: string;
   revealed: string;
   ended: string;
-};
+}
 
-export type ThemeVoice = {
+export interface ThemeVoice {
   tagline: string;
   subtitle: string;
   footer: string;
@@ -147,7 +147,7 @@ export type ThemeVoice = {
   chatEmpty: string;
   chatNotification: (name: string, text: string) => string;
   chatOpen: string;
-};
+}
 
 export const THEME_OPTIONS: ThemeOption[] = [
   {

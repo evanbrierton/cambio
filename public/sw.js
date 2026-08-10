@@ -20,10 +20,14 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  if (event.request.method !== "GET") return;
+  if (event.request.method !== "GET") {
+    return;
+  }
 
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
+  if (url.origin !== self.location.origin) {
+    return;
+  }
 
   // Never cache-first document navigations — stale HTML + new chunk hashes
   // causes an infinite reload loop after deploys.
@@ -35,7 +39,9 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.open(CACHE_NAME).then(async (cache) => {
       const cached = await cache.match(event.request);
-      if (cached) return cached;
+      if (cached) {
+        return cached;
+      }
 
       const response = await fetch(event.request);
       if (response.ok && shouldCache(url.pathname)) {

@@ -37,7 +37,9 @@ export function useGameSounds(
       return;
     }
     const key = `${fleetingPeek.playerId}-${fleetingPeek.slot}`;
-    if (peekKey.current === key) return;
+    if (peekKey.current === key) {
+      return;
+    }
     peekKey.current = key;
     playSound("flip");
   }, [fleetingPeek]);
@@ -48,7 +50,9 @@ export function useGameSounds(
       return;
     }
     const key = `${peekFlash.kind}-${peekFlash.actorId}-${peekFlash.playerId}-${peekFlash.slot}`;
-    if (peekFlashKey.current === key) return;
+    if (peekFlashKey.current === key) {
+      return;
+    }
     peekFlashKey.current = key;
     playSound(peekFlash.kind === "spy" ? "spy" : "peek");
   }, [peekFlash]);
@@ -62,7 +66,9 @@ export function useGameSounds(
       .map((slot) => `${slot.playerId}-${slot.slot}`)
       .sort()
       .join("|");
-    if (swapFlashKey.current === key) return;
+    if (swapFlashKey.current === key) {
+      return;
+    }
     swapFlashKey.current = key;
     playSound("swap");
   }, [swapFlash]);
@@ -72,7 +78,9 @@ export function useGameSounds(
       cambioFlashKey.current = null;
       return;
     }
-    if (cambioFlashKey.current === cambioFlash.playerId) return;
+    if (cambioFlashKey.current === cambioFlash.playerId) {
+      return;
+    }
     cambioFlashKey.current = cambioFlash.playerId;
     playSound("cambio");
   }, [cambioFlash]);
@@ -82,18 +90,24 @@ export function useGameSounds(
       reshuffleFlashKey.current = null;
       return;
     }
-    if (reshuffleFlashKey.current === reshuffleFlash.id) return;
+    if (reshuffleFlashKey.current === reshuffleFlash.id) {
+      return;
+    }
     reshuffleFlashKey.current = reshuffleFlash.id;
     playSound("draw");
   }, [reshuffleFlash]);
 
   useEffect(() => {
-    if (!error?.includes("Wrong snap")) return;
+    if (!error?.includes("Wrong snap")) {
+      return;
+    }
     playSound("snapWrong");
   }, [error]);
 
   useEffect(() => {
-    if (!view) return;
+    if (!view) {
+      return;
+    }
 
     if (view.phase === "snap_window" && prevPhase.current !== "snap_window") {
       playSound("snapWindowStart");
@@ -116,9 +130,13 @@ export function useGameSounds(
     prevMyTurn.current = isMyTurn;
 
     if (view.log.length > prevLogLen.current) {
-      const lastLog = view.log[view.log.length - 1] ?? "";
-      if (lastLog.includes("snapped correctly")) playSound("snap");
-      else if (lastLog.includes("drew from") || lastLog.includes("discarded")) {
+      const lastLog = view.log.at(-1) ?? "";
+      if (lastLog.includes("snapped correctly")) {
+        playSound("snap");
+      } else if (
+        lastLog.includes("drew from") ||
+        lastLog.includes("discarded")
+      ) {
         playSound("draw");
       }
     }

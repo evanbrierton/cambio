@@ -19,7 +19,9 @@ import { useUiPrefsStore } from "@/store/ui-prefs";
 let audioCtx: AudioContext | null = null;
 
 function getCtx(): AudioContext | null {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined") {
+    return null;
+  }
   if (!audioCtx) {
     audioCtx = new AudioContext();
   }
@@ -28,7 +30,9 @@ function getCtx(): AudioContext | null {
 
 async function resumeCtx(): Promise<AudioContext | null> {
   const ctx = getCtx();
-  if (!ctx) return null;
+  if (!ctx) {
+    return null;
+  }
   if (ctx.state === "suspended") {
     await ctx.resume();
   }
@@ -57,9 +61,13 @@ function tone(
 }
 
 export async function playSound(id: SoundId): Promise<void> {
-  if (!useUiPrefsStore.getState().soundEnabled) return;
+  if (!useUiPrefsStore.getState().soundEnabled) {
+    return;
+  }
   const ctx = await resumeCtx();
-  if (!ctx) return;
+  if (!ctx) {
+    return;
+  }
 
   const t = ctx.currentTime;
 

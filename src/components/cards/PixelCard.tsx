@@ -12,7 +12,7 @@ export const HAND_GRID_WIDTH = "w-[7.25rem] sm:w-[8.25rem] lg:w-[10.375rem]";
 export const PILE_CARD_SIZE =
   "w-14 h-20 text-[10px] sm:w-16 sm:h-18 lg:w-20 lg:h-28 lg:text-xs";
 
-type PixelCardProps = {
+interface PixelCardProps {
   card: Card | null;
   hidden?: boolean;
   faceUp?: boolean;
@@ -34,7 +34,7 @@ type PixelCardProps = {
   revealing?: boolean;
   onClick?: () => void;
   disabled?: boolean;
-};
+}
 
 const suitGlyph: Record<string, string> = {
   hearts: "♥",

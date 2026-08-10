@@ -9,9 +9,9 @@ import {
   useRef,
 } from "react";
 
-type PlayerGridStageProps = {
+interface PlayerGridStageProps {
   children: ReactNode;
-};
+}
 
 export function PlayerGridStage({ children }: PlayerGridStageProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -20,7 +20,9 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
 
   const updateLayout = useCallback(() => {
     const scrollEl = scrollRef.current;
-    if (!scrollEl) return;
+    if (!scrollEl) {
+      return;
+    }
 
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -30,7 +32,9 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
     const halfH = Math.max(viewport.height / 2, 1);
 
     itemRefs.current.forEach((item) => {
-      if (!item) return;
+      if (!item) {
+        return;
+      }
 
       if (reducedMotion) {
         item.style.transform = "";
@@ -62,7 +66,9 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
 
   useEffect(() => {
     const scrollEl = scrollRef.current;
-    if (!scrollEl) return;
+    if (!scrollEl) {
+      return;
+    }
 
     const frame = requestAnimationFrame(updateLayout);
 
@@ -90,7 +96,7 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
           {Children.map(children, (child, index) => (
             <div
               key={
-                isValidElement(child) && child.key != null
+                isValidElement(child) && child.key !== null
                   ? `grid-${String(child.key)}`
                   : `grid-${index}`
               }

@@ -53,7 +53,7 @@ const lora = Lora({
   adjustFontFallback: true,
 });
 
-const notoSerifJP = Noto_Serif_JP({
+const notoSerifJp = Noto_Serif_JP({
   weight: ["400", "500", "600"],
   subsets: ["latin"],
   variable: "--font-noto-serif-jp",
@@ -70,7 +70,7 @@ const THEME_FONT_CLASSES: Record<ThemeId, string> = {
   calm: "",
   library: libreBaskerville.variable,
   lodge: lora.variable,
-  ink: notoSerifJP.variable,
+  ink: notoSerifJp.variable,
 };
 
 export function getThemeFontClassName(theme: ThemeId): string {
@@ -81,7 +81,11 @@ export function applyThemeFontClass(theme: ThemeId): void {
   const html = document.documentElement;
   const next = THEME_FONT_CLASSES[theme];
   for (const className of Object.values(THEME_FONT_CLASSES)) {
-    if (className && className !== next) html.classList.remove(className);
+    if (className && className !== next) {
+      html.classList.remove(className);
+    }
   }
-  if (next && !html.classList.contains(next)) html.classList.add(next);
+  if (next && !html.classList.contains(next)) {
+    html.classList.add(next);
+  }
 }

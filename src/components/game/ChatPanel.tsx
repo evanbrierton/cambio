@@ -4,13 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "@/game/types";
 import type { ThemeVoice } from "@/lib/themes";
 
-type ChatPanelProps = {
+interface ChatPanelProps {
   messages: ChatMessage[];
   playerId: string;
   connected: boolean;
   voice: ThemeVoice;
   onSend: (text: string) => void;
-};
+}
 
 export function ChatPanel({
   messages,
@@ -25,7 +25,9 @@ export function ChatPanel({
 
   useEffect(() => {
     const list = listRef.current;
-    if (!list) return;
+    if (!list) {
+      return;
+    }
     if (messages.length > prevCountRef.current) {
       list.scrollTop = list.scrollHeight;
     }
@@ -34,7 +36,9 @@ export function ChatPanel({
 
   const submit = () => {
     const text = draft.trim();
-    if (!text || !connected) return;
+    if (!(text && connected)) {
+      return;
+    }
     onSend(text);
     setDraft("");
   };
@@ -68,8 +72,7 @@ export function ChatPanel({
                 <span className="font-display text-[8px] uppercase tracking-wide">
                   {message.playerName}
                 </span>
-                {": "}
-                {message.text}
+                :{message.text}
               </p>
             );
           })
@@ -95,7 +98,7 @@ export function ChatPanel({
         />
         <button
           type="submit"
-          disabled={!connected || !draft.trim()}
+          disabled={!(connected && draft.trim())}
           className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors disabled:opacity-40"
         >
           {voice.chatSend}

@@ -11,7 +11,7 @@ import { DEFAULT_CARD_POINTS, SETUP_PEEK_SLOTS } from "./types";
 
 const SETUP_PEEKS = 2;
 
-type DifficultyConfig = {
+interface DifficultyConfig {
   ownUnknownPoints: number;
   opponentUnknownPoints: number;
   cambioBaseThreshold: number;
@@ -20,15 +20,15 @@ type DifficultyConfig = {
   hesitationChance: number;
   hesitationMinMs: number;
   hesitationMaxMs: number;
-};
+}
 
 const BOT_DIFFICULTY_CONFIG: Record<BotDifficulty, DifficultyConfig> = {
   easy: {
     ownUnknownPoints: 10,
     opponentUnknownPoints: 11,
     cambioBaseThreshold: 8,
-    delayMinMs: 1_500,
-    delayMaxMs: 3_000,
+    delayMinMs: 1500,
+    delayMaxMs: 3000,
     hesitationChance: 0.3,
     hesitationMinMs: 250,
     hesitationMaxMs: 700,
@@ -37,8 +37,8 @@ const BOT_DIFFICULTY_CONFIG: Record<BotDifficulty, DifficultyConfig> = {
     ownUnknownPoints: 9,
     opponentUnknownPoints: 10,
     cambioBaseThreshold: 9,
-    delayMinMs: 1_100,
-    delayMaxMs: 2_200,
+    delayMinMs: 1100,
+    delayMaxMs: 2200,
     hesitationChance: 0.24,
     hesitationMinMs: 200,
     hesitationMaxMs: 550,
@@ -48,7 +48,7 @@ const BOT_DIFFICULTY_CONFIG: Record<BotDifficulty, DifficultyConfig> = {
     opponentUnknownPoints: 9,
     cambioBaseThreshold: 10,
     delayMinMs: 850,
-    delayMaxMs: 1_700,
+    delayMaxMs: 1700,
     hesitationChance: 0.18,
     hesitationMinMs: 150,
     hesitationMaxMs: 450,
@@ -56,7 +56,9 @@ const BOT_DIFFICULTY_CONFIG: Record<BotDifficulty, DifficultyConfig> = {
 };
 
 function randomInt(min: number, max: number): number {
-  if (max <= min) return min;
+  if (max <= min) {
+    return min;
+  }
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
@@ -73,7 +75,7 @@ function cardKey(playerId: string, slot: number): string {
 }
 
 export class BotKnowledge {
-  private known = new Map<string, Card>();
+  private readonly known = new Map<string, Card>();
   private roundNumber: number | null = null;
   private pointValues: CardPointValues = DEFAULT_CARD_POINTS;
 
@@ -135,7 +137,9 @@ function slotHasCard(player: PlayerState, slot: number): boolean {
 }
 
 function getHandCard(player: PlayerState, slot: number): Card | null {
-  if (!slotHasCard(player, slot)) return null;
+  if (!slotHasCard(player, slot)) {
+    return null;
+  }
   return player.hand[slot].card;
 }
 
@@ -148,13 +152,17 @@ function canTargetPlayer(playerId: string, state: GameState): boolean {
 }
 
 function isSnapEligible(state: GameState): boolean {
-  if (state.discard.length === 0 || !state.snapEligibleTopCardId) return false;
+  if (state.discard.length === 0 || !state.snapEligibleTopCardId) {
+    return false;
+  }
   const top = state.discard[state.discard.length - 1];
   return top.id === state.snapEligibleTopCardId;
 }
 
 function canAttemptSnap(state: GameState): boolean {
-  if (state.discard.length === 0) return false;
+  if (state.discard.length === 0) {
+    return false;
+  }
   return isSnapEligible(state) || state.phase === "snap_window";
 }
 
@@ -163,14 +171,24 @@ function isSnapResolutionPending(state: GameState): boolean {
 }
 
 function canBotSnap(state: GameState, bot: PlayerState): boolean {
-  if (!bot.isBot || bot.isWaiting) return false;
-  if (!canAttemptSnap(state)) return false;
+  if (!bot.isBot || bot.isWaiting) {
+    return false;
+  }
+  if (!canAttemptSnap(state)) {
+    return false;
+  }
   if (state.snapChainPlayerId && state.snapChainPlayerId !== bot.id) {
     return false;
   }
-  if (isSnapResolutionPending(state)) return false;
-  if (bot.hasCalledCambio && state.phase === "cambio_final") return false;
-  if (state.pendingAbility?.playerId === bot.id) return false;
+  if (isSnapResolutionPending(state)) {
+    return false;
+  }
+  if (bot.hasCalledCambio && state.phase === "cambio_final") {
+    return false;
+  }
+  if (state.pendingAbility?.playerId === bot.id) {
+    return false;
+  }
 
   const turnPlayer = currentPlayer(state);
   if (
@@ -192,7 +210,9 @@ function estimateSlotPoints(
   difficulty: BotDifficulty,
 ): number {
   const known = knowledge.points(playerId, slot);
-  if (known !== null) return known;
+  if (known !== null) {
+    return known;
+  }
 
   const config = BOT_DIFFICULTY_CONFIG[difficulty];
   return playerId === botId
@@ -208,11 +228,15 @@ function estimatePlayerHandTotal(
   difficulty: BotDifficulty,
 ): number {
   const player = findPlayer(state, playerId);
-  if (!player) return 99;
+  if (!player) {
+    return 99;
+  }
 
   let total = 0;
   for (let slot = 0; slot < player.hand.length; slot++) {
-    if (!slotHasCard(player, slot)) continue;
+    if (!slotHasCard(player, slot)) {
+      continue;
+    }
     total += estimateSlotPoints(botId, playerId, slot, knowledge, difficulty);
   }
   return total;
@@ -227,10 +251,10 @@ function estimateHandTotal(
   return estimatePlayerHandTotal(state, botId, botId, knowledge, difficulty);
 }
 
-type StandingProjection = {
+interface StandingProjection {
   playerId: string;
   projectedTotal: number;
-};
+}
 
 function projectedStandings(
   state: GameState,
@@ -241,7 +265,9 @@ function projectedStandings(
   const standings: StandingProjection[] = [];
 
   for (const player of state.players) {
-    if (!isPlayingPlayer(player)) continue;
+    if (!isPlayingPlayer(player)) {
+      continue;
+    }
     const currentTotal = state.cumulativeScores[player.id] ?? 0;
     const estimatedRoundTotal = estimatePlayerHandTotal(
       state,
@@ -271,7 +297,9 @@ function standingsAwareCambioThreshold(
   const opponents = state.players.filter(
     (player) => player.id !== botId && isPlayingPlayer(player),
   );
-  if (opponents.length === 0) return threshold;
+  if (opponents.length === 0) {
+    return threshold;
+  }
 
   const botCumulative = state.cumulativeScores[botId] ?? 0;
   const bestOpponentCumulative = Math.min(
@@ -315,15 +343,23 @@ function shouldCallCambio(
     knowledge,
     difficulty,
   );
-  if (estimate > threshold) return false;
+  if (estimate > threshold) {
+    return false;
+  }
 
   const standings = projectedStandings(state, botId, knowledge, difficulty);
   const botStandingIndex = standings.findIndex(
     (entry) => entry.playerId === botId,
   );
-  if (botStandingIndex < 0) return false;
-  if (botStandingIndex > 1) return false;
-  if (difficulty === "easy" && botStandingIndex > 0) return false;
+  if (botStandingIndex < 0) {
+    return false;
+  }
+  if (botStandingIndex > 1) {
+    return false;
+  }
+  if (difficulty === "easy" && botStandingIndex > 0) {
+    return false;
+  }
 
   const currentLeader = standings[0];
   const botProjection = standings[botStandingIndex];
@@ -346,12 +382,16 @@ function worstKnownSlot(
   difficulty: BotDifficulty,
 ): number {
   const player = findPlayer(state, botId);
-  if (!player) return 0;
+  if (!player) {
+    return 0;
+  }
 
   let worstSlot = 0;
   let worstPoints = Number.NEGATIVE_INFINITY;
   for (let slot = 0; slot < player.hand.length; slot++) {
-    if (!slotHasCard(player, slot)) continue;
+    if (!slotHasCard(player, slot)) {
+      continue;
+    }
     const pts = estimateSlotPoints(botId, botId, slot, knowledge, difficulty);
     if (pts > worstPoints) {
       worstPoints = pts;
@@ -370,11 +410,17 @@ function bestUnknownOpponentSlot(
   let best: { playerId: string; slot: number; points: number } | null = null;
 
   for (const opponent of state.players) {
-    if (opponent.id === botId || opponent.isWaiting) continue;
-    if (!canTargetPlayer(opponent.id, state)) continue;
+    if (opponent.id === botId || opponent.isWaiting) {
+      continue;
+    }
+    if (!canTargetPlayer(opponent.id, state)) {
+      continue;
+    }
 
     for (let slot = 0; slot < opponent.hand.length; slot++) {
-      if (!slotHasCard(opponent, slot)) continue;
+      if (!slotHasCard(opponent, slot)) {
+        continue;
+      }
       const pts = estimateSlotPoints(
         botId,
         opponent.id,
@@ -405,15 +451,23 @@ function bestLookTarget(
       knowledge,
       difficulty,
     );
-    if (opponent) return opponent;
+    if (opponent) {
+      return opponent;
+    }
   }
 
   let best: { playerId: string; slot: number; points: number } | null = null;
   for (const player of state.players) {
-    if (!canTargetPlayer(player.id, state) && player.id !== botId) continue;
+    if (!canTargetPlayer(player.id, state) && player.id !== botId) {
+      continue;
+    }
     for (let slot = 0; slot < player.hand.length; slot++) {
-      if (!slotHasCard(player, slot)) continue;
-      if (knowledge.get(player.id, slot)) continue;
+      if (!slotHasCard(player, slot)) {
+        continue;
+      }
+      if (knowledge.get(player.id, slot)) {
+        continue;
+      }
       const pts = estimateSlotPoints(
         botId,
         player.id,
@@ -435,7 +489,9 @@ function firstUnknownOwnSlot(
   knowledge: BotKnowledge,
 ): number | null {
   const bot = findPlayer(state, botId);
-  if (!bot) return null;
+  if (!bot) {
+    return null;
+  }
   for (let slot = 0; slot < bot.hand.length; slot++) {
     if (slotHasCard(bot, slot) && knowledge.get(botId, slot) === undefined) {
       return slot;
@@ -452,12 +508,16 @@ function snapMatchScore(
 ): number {
   const known = knowledge.get(match.targetPlayerId, match.slot);
   const pts = known ? cardPoints(known, pointValues) : 8;
-  if (match.targetPlayerId !== botId) return pts + 10;
+  if (match.targetPlayerId !== botId) {
+    return pts + 10;
+  }
   return pts;
 }
 
 function randomItem<T>(items: T[]): T | null {
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    return null;
+  }
   return items[Math.floor(Math.random() * items.length)] ?? null;
 }
 
@@ -467,15 +527,21 @@ function findSnapTarget(
   knowledge: BotKnowledge,
   difficulty: BotDifficulty,
 ): { targetPlayerId: string; slot: number } | null {
-  if (state.discard.length === 0) return null;
+  if (state.discard.length === 0) {
+    return null;
+  }
   const top = state.discard[state.discard.length - 1];
 
   const matches: Array<{ targetPlayerId: string; slot: number }> = [];
 
   for (const player of state.players) {
-    if (!canTargetPlayer(player.id, state) && player.id !== botId) continue;
+    if (!canTargetPlayer(player.id, state) && player.id !== botId) {
+      continue;
+    }
     for (let slot = 0; slot < player.hand.length; slot++) {
-      if (!slotHasCard(player, slot)) continue;
+      if (!slotHasCard(player, slot)) {
+        continue;
+      }
       const known = knowledge.get(player.id, slot);
       if (known && cardsSnapMatch(known, top)) {
         matches.push({ targetPlayerId: player.id, slot });
@@ -483,7 +549,9 @@ function findSnapTarget(
     }
   }
 
-  if (matches.length === 0) return null;
+  if (matches.length === 0) {
+    return null;
+  }
 
   if (difficulty === "easy") {
     const own = matches.filter((m) => m.targetPlayerId === botId);
@@ -501,7 +569,9 @@ function findSnapTarget(
   }
 
   const own = matches.find((m) => m.targetPlayerId === botId);
-  if (own) return own;
+  if (own) {
+    return own;
+  }
   return matches[0] ?? null;
 }
 
@@ -512,11 +582,15 @@ function decideAbility(
   difficulty: BotDifficulty,
 ): ClientMessage | null {
   const pending = state.pendingAbility;
-  if (!pending || pending.playerId !== botId) return null;
+  if (!pending || pending.playerId !== botId) {
+    return null;
+  }
 
   if (pending.kind === "snap_give") {
     const bot = findPlayer(state, botId);
-    if (!bot) return null;
+    if (!bot) {
+      return null;
+    }
     const worst = worstKnownSlot(state, botId, knowledge, difficulty);
     return { type: "snap_give", slot: worst };
   }
@@ -529,7 +603,9 @@ function decideAbility(
   ) {
     if (pending.kind === "peek_own") {
       const bot = findPlayer(state, botId);
-      if (!bot) return null;
+      if (!bot) {
+        return null;
+      }
       if (isExpert(difficulty)) {
         const slot = firstUnknownOwnSlot(state, botId, knowledge);
         if (slot !== null) {
@@ -566,8 +642,9 @@ function decideAbility(
       }
       const candidates: Array<{ playerId: string; slot: number }> = [];
       for (const opponent of state.players) {
-        if (opponent.id === botId || !canTargetPlayer(opponent.id, state))
+        if (opponent.id === botId || !canTargetPlayer(opponent.id, state)) {
           continue;
+        }
         for (let slot = 0; slot < opponent.hand.length; slot++) {
           if (slotHasCard(opponent, slot)) {
             candidates.push({ playerId: opponent.id, slot });
@@ -575,7 +652,9 @@ function decideAbility(
         }
       }
       const pick = randomItem(candidates);
-      if (!pick) return null;
+      if (!pick) {
+        return null;
+      }
       return { type: "ability_look", playerId: pick.playerId, slot: pick.slot };
     }
 
@@ -598,7 +677,9 @@ function decideAbility(
 
     const lookTargets: Array<{ playerId: string; slot: number }> = [];
     for (const player of state.players) {
-      if (!canTargetPlayer(player.id, state) && player.id !== botId) continue;
+      if (!canTargetPlayer(player.id, state) && player.id !== botId) {
+        continue;
+      }
       for (let slot = 0; slot < player.hand.length; slot++) {
         if (slotHasCard(player, slot)) {
           lookTargets.push({ playerId: player.id, slot });
@@ -606,7 +687,9 @@ function decideAbility(
       }
     }
     const pick = randomItem(lookTargets);
-    if (!pick) return null;
+    if (!pick) {
+      return null;
+    }
     return { type: "ability_look", playerId: pick.playerId, slot: pick.slot };
   }
 
@@ -616,7 +699,9 @@ function decideAbility(
     pending.kind === "king_swap"
   ) {
     const bot = findPlayer(state, botId);
-    if (!bot) return null;
+    if (!bot) {
+      return null;
+    }
 
     const ownSlots = bot.hand
       .map((_, slot) => slot)
@@ -645,7 +730,9 @@ function decideAbility(
       (p) => p.id !== botId && canTargetPlayer(p.id, state),
     );
     const opponent = randomItem(opponents);
-    if (!opponent) return null;
+    if (!opponent) {
+      return null;
+    }
     const fromSlot = randomItem(ownSlots) ?? 0;
     const oppSlots = opponent.hand
       .map((_, slot) => slot)
@@ -670,20 +757,24 @@ function decideTurn(
   difficulty: BotDifficulty,
 ): ClientMessage | null {
   const bot = findPlayer(state, botId);
-  if (!bot) return null;
-
-  if (state.phase === "playing" && !state.turnStarted && !state.drawnCard) {
-    if (
-      !bot.hasCalledCambio &&
-      shouldCallCambio(state, botId, knowledge, difficulty)
-    ) {
-      return { type: "call_cambio" };
-    }
+  if (!bot) {
+    return null;
   }
 
-  if (!state.drawnCard && !state.pendingAbility) {
-    if (state.phase !== "playing" && state.phase !== "cambio_final")
+  if (
+    state.phase === "playing" &&
+    !state.turnStarted &&
+    !state.drawnCard &&
+    !bot.hasCalledCambio &&
+    shouldCallCambio(state, botId, knowledge, difficulty)
+  ) {
+    return { type: "call_cambio" };
+  }
+
+  if (!(state.drawnCard || state.pendingAbility)) {
+    if (state.phase !== "playing" && state.phase !== "cambio_final") {
       return null;
+    }
 
     if (isSmart(difficulty) && state.discard.length > 0) {
       const top = state.discard[state.discard.length - 1];
@@ -759,12 +850,16 @@ export function collectActingBots(state: GameState): string[] {
 
   if (state.pendingAbility?.playerId) {
     const actor = findPlayer(state, state.pendingAbility.playerId);
-    if (actor?.isBot) ids.push(actor.id);
+    if (actor?.isBot) {
+      ids.push(actor.id);
+    }
     return ids;
   }
 
   for (const bot of state.players) {
-    if (canBotSnap(state, bot)) ids.push(bot.id);
+    if (canBotSnap(state, bot)) {
+      ids.push(bot.id);
+    }
   }
 
   const current = currentPlayer(state);
@@ -779,7 +874,9 @@ export function findNextActingBot(
   state: GameState,
   botThinkingId: string | null,
 ): string | null {
-  if (botThinkingId) return null;
+  if (botThinkingId) {
+    return null;
+  }
 
   if (
     state.phase === "lobby" ||
@@ -798,7 +895,9 @@ export function decideBotAction(
   knowledge: BotKnowledge,
 ): ClientMessage | null {
   const bot = findPlayer(state, botId);
-  if (!bot?.isBot) return null;
+  if (!bot?.isBot) {
+    return null;
+  }
   const difficulty = bot.botDifficulty ?? "easy";
   knowledge.prepareForState(state);
 
@@ -807,7 +906,9 @@ export function decideBotAction(
       (slot) => !bot.setupPeekedSlots.includes(slot),
     );
     const slot = unpeeked[0];
-    if (slot !== undefined) return { type: "setup_peek", slot };
+    if (slot !== undefined) {
+      return { type: "setup_peek", slot };
+    }
   }
 
   if (state.pendingAbility?.playerId === botId) {
@@ -855,7 +956,9 @@ export function updateBotKnowledge(
   },
 ): void {
   const bot = findPlayer(state, botId);
-  if (!bot?.isBot) return;
+  if (!bot?.isBot) {
+    return;
+  }
 
   if (message.type === "snap" && result.error) {
     if (result.penaltyFlash || result.error === "No card in that slot.") {
@@ -866,7 +969,9 @@ export function updateBotKnowledge(
 
   if (message.type === "setup_peek") {
     const card = getHandCard(bot, message.slot);
-    if (card) knowledge.remember(botId, message.slot, card);
+    if (card) {
+      knowledge.remember(botId, message.slot, card);
+    }
   }
 
   if (result.secretPeek?.card) {
@@ -887,7 +992,9 @@ export function updateBotKnowledge(
 
   if (message.type === "swap") {
     const card = getHandCard(bot, message.slot);
-    if (card) knowledge.remember(botId, message.slot, card);
+    if (card) {
+      knowledge.remember(botId, message.slot, card);
+    }
   }
 
   if (message.type === "ability_look" && result.secretPeek?.card) {

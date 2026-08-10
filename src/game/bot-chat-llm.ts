@@ -17,7 +17,7 @@ export type BotChatFallbackReason =
   | "message_too_long"
   | "network_error";
 
-export type BotChatContext = {
+export interface BotChatContext {
   difficulty: BotDifficulty;
   botName: string;
   recentChat: ChatMessage[];
@@ -26,21 +26,21 @@ export type BotChatContext = {
   replyTo?: { playerName: string; text: string };
   gameMove?: GameMoveReaction;
   focusTarping: boolean;
-};
+}
 
-export type BotChatResult = {
+export interface BotChatResult {
   text: string;
   source: "groq" | "template";
   fallbackReason?: BotChatFallbackReason;
-};
+}
 
-type GroqChatResponse = {
+interface GroqChatResponse {
   choices?: Array<{
     message?: {
       content?: string;
     };
   }>;
-};
+}
 
 function difficultyTone(difficulty: BotDifficulty): string {
   if (difficulty === "hard") {
@@ -85,7 +85,9 @@ function buildSystemPrompt(ctx: BotChatContext): string {
 }
 
 function formatRecentChat(messages: ChatMessage[]): string {
-  if (messages.length === 0) return "(no recent messages)";
+  if (messages.length === 0) {
+    return "(no recent messages)";
+  }
   return messages
     .slice(-10)
     .map((message) => `${message.playerName}: ${message.text}`)
@@ -144,7 +146,9 @@ function buildUserPrompt(ctx: BotChatContext): string {
 
 function sanitizeBotReply(raw: string): string | null {
   let text = raw.trim();
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
   if (
     (text.startsWith('"') && text.endsWith('"')) ||
@@ -154,8 +158,12 @@ function sanitizeBotReply(raw: string): string | null {
   }
 
   text = text.replace(/\s+/g, " ").trim();
-  if (!text) return null;
-  if (text.length > MAX_CHAT_CHARS) return null;
+  if (!text) {
+    return null;
+  }
+  if (text.length > MAX_CHAT_CHARS) {
+    return null;
+  }
   return text;
 }
 

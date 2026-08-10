@@ -20,13 +20,13 @@ import {
 import { applyThemeFontClass } from "@/lib/theme-fonts";
 import { DEFAULT_THEME, type ThemeId } from "@/lib/themes";
 
-type ThemeContextValue = {
+interface ThemeContextValue {
   theme: ThemeId;
   setTheme: (theme: ThemeId) => void;
   appearancePreference: AppearancePreference;
   resolvedAppearance: ResolvedAppearance;
   setAppearancePreference: (preference: AppearancePreference) => void;
-};
+}
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
@@ -46,7 +46,9 @@ export function ThemeProvider({
     useState<ResolvedAppearance>(() => {
       if (typeof document !== "undefined") {
         const fromDom = document.documentElement.dataset.appearance;
-        if (fromDom === "light" || fromDom === "dark") return fromDom;
+        if (fromDom === "light" || fromDom === "dark") {
+          return fromDom;
+        }
       }
       return resolveAppearance(initialAppearancePreference, false);
     });
@@ -86,7 +88,9 @@ export function ThemeProvider({
     };
 
     applyCurrentAppearance();
-    if (appearancePreference !== "system") return;
+    if (appearancePreference !== "system") {
+      return;
+    }
 
     const handleChange = () => applyCurrentAppearance();
     mediaQuery.addEventListener("change", handleChange);
@@ -112,6 +116,8 @@ export function ThemeProvider({
 
 export function useTheme() {
   const ctx = useContext(ThemeContext);
-  if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
+  if (!ctx) {
+    throw new Error("useTheme must be used within ThemeProvider");
+  }
   return ctx;
 }
