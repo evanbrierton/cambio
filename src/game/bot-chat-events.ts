@@ -26,6 +26,8 @@ export type GameMoveReaction = {
 export type PreMoveSnapshot = {
   drawnCard: Card | null;
   swappedOutCard: Card | null;
+  /** True when the draw came from the discard pile (public). */
+  drawnFromDiscard: boolean;
 };
 
 type MessageResult = {
@@ -57,9 +59,21 @@ export function capturePreMoveSnapshot(
   return {
     drawnCard: state.drawnCard,
     swappedOutCard,
+    drawnFromDiscard: state.drawnFromDiscard,
   };
 }
 
+/**
+ * Build a move reaction that only uses publicly visible information.
+ *
+ * Public: discard pile (including a just-discarded draw), and cards taken
+ * from the discard pile (everyone already saw them).
+ * Private: face-down hand cards, deck draws kept/swapped into a hand.
+ *
+ * Deck-draw swaps are skipped entirely — commenting on the card that left a
+ * face-down hand (identity + points / “bad swap”) leaks hidden-hand knowledge,
+ * and the replacement card is still private.
+ */
 export function detectMoveReaction(
   state: GameState,
   player: PlayerState,
@@ -70,7 +84,7 @@ export function detectMoveReaction(
 ): GameMoveReaction | null {
   const playerName = player.name;
 
-  if (result.cambioFlash?.playerId === player.id) {
+  if (result.cambioFlash && result.cambioFlash.playerId === player.id) {
     return {
       kind: "called_cambio",
       playerName,
@@ -114,6 +128,7 @@ export function detectMoveReaction(
     snapshot?.drawnCard &&
     !result.error
   ) {
+    // Discarded draw is now on the discard pile — public.
     const card = snapshot.drawnCard;
     const points = cardPoints(card, state.cardPoints);
     const label = formatCard(card);
@@ -146,17 +161,28 @@ export function detectMoveReaction(
     snapshot.swappedOutCard &&
     !result.error
   ) {
+    // Deck-draw swaps: the kept card stays private, and scoring the card that
+    // just left a face-down hand (points / "bad swap") is still too much
+    // hidden-hand knowledge. Skip commentary.
+    if (!snapshot.drawnFromDiscard) {
+      return null;
+    }
+
+    // Discard-pile draws are fully public (everyone already saw the take).
+    // Name both cards, but do not attach point totals — those were just
+    // revealed from a face-down hand on one side of the swap.
     const incoming = snapshot.drawnCard;
     const outgoing = snapshot.swappedOutCard;
     const inPoints = cardPoints(incoming, state.cardPoints);
     const outPoints = cardPoints(outgoing, state.cardPoints);
     const inLabel = formatCard(incoming);
     const outLabel = formatCard(outgoing);
+
     if (outPoints <= 1 && inPoints >= outPoints + 4) {
       return {
         kind: "bad_swap",
         playerName,
-        detail: `${playerName} swapped away a ${outLabel} (${outPoints} pts) for a ${inLabel} (${inPoints} pts).`,
+        detail: `${playerName} swapped away a ${outLabel} for a ${inLabel}.`,
       };
     }
     if (outPoints >= 10 && inPoints <= 3) {
