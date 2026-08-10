@@ -6,6 +6,7 @@ import {
   createDeck,
   type DiscardAbility,
   deckSize,
+  normalizeCardPointValues,
   shuffle,
 } from "./cards";
 import { computeScores, determineWinners } from "./scoring";
@@ -25,6 +26,7 @@ import type {
   SwapFlashSlot,
 } from "./types";
 import {
+  DEFAULT_CARD_POINTS,
   DEFAULT_JOKER_COUNT,
   HAND_BASE_SLOTS,
   MAX_JOKER_COUNT,
@@ -128,6 +130,7 @@ export function createRoom(
     isSoloMode: false,
     soloDifficulty: null,
     jokerCount: DEFAULT_JOKER_COUNT,
+    cardPoints: { ...DEFAULT_CARD_POINTS },
     hostId: id,
     players: [
       {
@@ -1288,6 +1291,31 @@ export function handleMessage(
       return {};
     }
 
+    case "set_card_points": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can change card point values." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot change card point values during a game." };
+      }
+      const next = normalizeCardPointValues({
+        ...state.cardPoints,
+        ...message.values,
+      });
+      if (
+        next.ace === state.cardPoints.ace &&
+        next.face === state.cardPoints.face &&
+        next.joker === state.cardPoints.joker &&
+        next.blackKing === state.cardPoints.blackKing &&
+        next.redKing === state.cardPoints.redKing
+      ) {
+        return {};
+      }
+      state.cardPoints = next;
+      addLog(state, "Card point values updated.");
+      return {};
+    }
+
     case "chat": {
       const result = addChatMessage(state, playerId, message.text);
       if ("error" in result) return { error: result.error };
@@ -1569,6 +1597,10 @@ export function buildPlayerView(
       state.players.length < MAX_PLAYERS,
     jokerCount: state.jokerCount,
     canSetJokerCount:
+      viewerId === state.hostId &&
+      (state.phase === "lobby" || state.phase === "ended"),
+    cardPoints: { ...state.cardPoints },
+    canSetCardPoints:
       viewerId === state.hostId &&
       (state.phase === "lobby" || state.phase === "ended"),
     log: state.log,

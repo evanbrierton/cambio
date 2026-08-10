@@ -21,20 +21,27 @@ require_cloudflare_creds() {
 }
 
 preview_touches_worker() {
-  git fetch --depth=1 origin main 2>/dev/null || true
+  git fetch --no-tags --depth=50 origin main 2>/dev/null || \
+    git fetch --no-tags origin main 2>/dev/null || true
 
   local base_ref=""
   if git rev-parse --verify origin/main >/dev/null 2>&1; then
     base_ref="origin/main"
   elif git rev-parse --verify main >/dev/null 2>&1; then
     base_ref="main"
+  fi
+
+  local changed=""
+  if [ -n "${base_ref}" ]; then
+    changed="$(git diff --name-only "${base_ref}" HEAD || true)"
+  elif [ -n "${VERCEL_GIT_PULL_REQUEST_ID:-}" ]; then
+    echo "Could not resolve main on shallow clone; PR preview will deploy paired Worker."
+    return 0
   else
     echo "Could not resolve main ref to detect Worker changes; sharing production Worker."
     return 1
   fi
 
-  local changed
-  changed="$(git diff --name-only "${base_ref}" HEAD || true)"
   if [ -z "${changed}" ]; then
     return 1
   fi
@@ -66,7 +73,9 @@ if [ "${VERCEL_ENV:-}" = "production" ]; then
   fi
 elif [ "${VERCEL_ENV:-}" = "preview" ]; then
   if preview_touches_worker; then
-    deploy_preview_worker
+    deploy_preview_worker || {
+      echo "Preview Worker deploy failed; falling back to production Worker."
+    }
   else
     echo "No party/game Worker changes vs main; sharing production Worker."
   fi

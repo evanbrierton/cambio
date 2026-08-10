@@ -61,6 +61,7 @@ export function capturePreMoveSnapshot(
 }
 
 export function detectMoveReaction(
+  state: GameState,
   player: PlayerState,
   message: ClientMessage,
   result: MessageResult,
@@ -114,7 +115,7 @@ export function detectMoveReaction(
     !result.error
   ) {
     const card = snapshot.drawnCard;
-    const points = cardPoints(card);
+    const points = cardPoints(card, state.cardPoints);
     const label = formatCard(card);
     if (points <= 1) {
       return {
@@ -147,8 +148,8 @@ export function detectMoveReaction(
   ) {
     const incoming = snapshot.drawnCard;
     const outgoing = snapshot.swappedOutCard;
-    const inPoints = cardPoints(incoming);
-    const outPoints = cardPoints(outgoing);
+    const inPoints = cardPoints(incoming, state.cardPoints);
+    const outPoints = cardPoints(outgoing, state.cardPoints);
     const inLabel = formatCard(incoming);
     const outLabel = formatCard(outgoing);
     if (outPoints <= 1 && inPoints >= outPoints + 4) {

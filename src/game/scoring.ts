@@ -7,7 +7,7 @@ export function scorePlayer(state: GameState, playerId: string): number {
 
   let total = 0;
   for (const slot of player.hand) {
-    if (slot.card) total += cardPoints(slot.card);
+    if (slot.card) total += cardPoints(slot.card, state.cardPoints);
   }
   return total;
 }

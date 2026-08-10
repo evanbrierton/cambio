@@ -64,14 +64,7 @@ import { useGameSounds } from "@/hooks/useGameSounds";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { copyToClipboard } from "@/lib/clipboard";
 import type { ThemeVoice } from "@/lib/themes";
-import {
-  useHintsEnabled,
-  useNotificationPrefs,
-  useOwnSeatDisplay,
-  usePlayerGridEnabled,
-  useRehydrateUiPrefs,
-  useSoundEnabled,
-} from "@/store/ui-prefs";
+import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 type GameTableProps = {
   view: PlayerView;
@@ -648,16 +641,20 @@ export function GameTable({
 }: GameTableProps) {
   useRehydrateUiPrefs();
   const voice = useThemeVoice();
-  const { soundEnabled, toggleSound } = useSoundEnabled();
-  const { hintsEnabled, toggleHints } = useHintsEnabled();
-  const { playerGridEnabled, togglePlayerGrid } = usePlayerGridEnabled();
-  const { ownSeatProminent, toggleOwnSeatDisplay } = useOwnSeatDisplay();
   const {
+    soundEnabled,
+    toggleSound,
+    hintsEnabled,
+    toggleHints,
+    playerGridEnabled,
+    togglePlayerGrid,
+    ownSeatProminent,
+    toggleOwnSeatDisplay,
     chatNotificationsEnabled,
     eventNotificationsEnabled,
     toggleChatNotifications,
     toggleEventNotifications,
-  } = useNotificationPrefs();
+  } = useUiPrefs();
   const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,

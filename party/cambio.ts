@@ -322,6 +322,7 @@ export class CambioParty extends Server<Env> {
       }
 
       const moveReaction = detectMoveReaction(
+        this.state,
         actor,
         message,
         result,
