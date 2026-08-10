@@ -21,19 +21,11 @@ type UiPrefsData = {
 };
 
 type UiPrefsState = UiPrefsData & {
-  hasHydrated: boolean;
-  setHasHydrated: (hydrated: boolean) => void;
-  setSoundEnabled: (enabled: boolean) => void;
   toggleSound: () => void;
-  setHintsEnabled: (enabled: boolean) => void;
   toggleHints: () => void;
-  setChatNotificationsEnabled: (enabled: boolean) => void;
   toggleChatNotifications: () => void;
-  setEventNotificationsEnabled: (enabled: boolean) => void;
   toggleEventNotifications: () => void;
-  setPlayerGridEnabled: (enabled: boolean) => void;
   togglePlayerGrid: () => void;
-  setOwnSeatDisplay: (mode: OwnSeatDisplay) => void;
   toggleOwnSeatDisplay: () => void;
   setPlayerName: (name: string) => void;
   setBotCount: (count: number) => void;
@@ -52,28 +44,35 @@ const defaultPrefs: UiPrefsData = {
   botDifficulty: DEFAULT_BOT_SETTINGS.difficulty,
 };
 
+function sanitizePersistedPrefs(persisted: unknown): Partial<UiPrefsData> {
+  if (!persisted || typeof persisted !== "object") return {};
+
+  const prefs = persisted as Partial<UiPrefsData>;
+  return {
+    ...prefs,
+    botCount:
+      prefs.botCount === undefined ? undefined : clampBotCount(prefs.botCount),
+    botDifficulty:
+      prefs.botDifficulty === undefined
+        ? undefined
+        : parseBotDifficulty(prefs.botDifficulty),
+    ownSeatDisplay:
+      prefs.ownSeatDisplay === "turn-order" ? "turn-order" : "prominent",
+  };
+}
+
 export const useUiPrefsStore = create<UiPrefsState>()(
   persist(
     (set, get) => ({
       ...defaultPrefs,
-      hasHydrated: false,
-      setHasHydrated: (hydrated) => set({ hasHydrated: hydrated }),
-      setSoundEnabled: (enabled) => set({ soundEnabled: enabled }),
       toggleSound: () => set({ soundEnabled: !get().soundEnabled }),
-      setHintsEnabled: (enabled) => set({ hintsEnabled: enabled }),
       toggleHints: () => set({ hintsEnabled: !get().hintsEnabled }),
-      setChatNotificationsEnabled: (enabled) =>
-        set({ chatNotificationsEnabled: enabled }),
       toggleChatNotifications: () =>
         set({ chatNotificationsEnabled: !get().chatNotificationsEnabled }),
-      setEventNotificationsEnabled: (enabled) =>
-        set({ eventNotificationsEnabled: enabled }),
       toggleEventNotifications: () =>
         set({ eventNotificationsEnabled: !get().eventNotificationsEnabled }),
-      setPlayerGridEnabled: (enabled) => set({ playerGridEnabled: enabled }),
       togglePlayerGrid: () =>
         set({ playerGridEnabled: !get().playerGridEnabled }),
-      setOwnSeatDisplay: (mode) => set({ ownSeatDisplay: mode }),
       toggleOwnSeatDisplay: () =>
         set({
           ownSeatDisplay:
@@ -88,6 +87,10 @@ export const useUiPrefsStore = create<UiPrefsState>()(
       name: "cambio-ui-prefs",
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
+      merge: (persisted, current) => ({
+        ...current,
+        ...sanitizePersistedPrefs(persisted),
+      }),
       partialize: (state) => ({
         soundEnabled: state.soundEnabled,
         hintsEnabled: state.hintsEnabled,
@@ -99,20 +102,13 @@ export const useUiPrefsStore = create<UiPrefsState>()(
         botCount: state.botCount,
         botDifficulty: state.botDifficulty,
       }),
-      onRehydrateStorage: () => (state) => {
-        state?.setHasHydrated(true);
-      },
     },
   ),
 );
 
-export function rehydrateUiPrefs(): void {
-  void useUiPrefsStore.persist.rehydrate();
-}
-
 export function useRehydrateUiPrefs(): void {
   useEffect(() => {
-    rehydrateUiPrefs();
+    void useUiPrefsStore.persist.rehydrate();
   }, []);
 }
 
