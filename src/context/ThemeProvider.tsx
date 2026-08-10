@@ -22,12 +22,7 @@ import {
   setThemeCookie,
 } from "@/lib/theme-cookie";
 import { applyThemeFontClass } from "@/lib/theme-fonts";
-import {
-  DEFAULT_THEME,
-  isThemeId,
-  THEME_IDS,
-  type ThemeId,
-} from "@/lib/themes";
+import { DEFAULT_THEME, THEME_IDS, type ThemeId } from "@/lib/themes";
 
 type ThemeContextValue = {
   theme: ThemeId;
@@ -41,9 +36,11 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function ThemeContextProvider({
   children,
+  initialTheme,
   initialAppearancePreference = DEFAULT_APPEARANCE,
 }: {
   children: ReactNode;
+  initialTheme: ThemeId;
   initialAppearancePreference?: AppearancePreference;
 }) {
   const { theme: nextTheme, setTheme: setNextTheme } = useNextTheme();
@@ -58,7 +55,7 @@ function ThemeContextProvider({
       return resolveAppearance(initialAppearancePreference, false);
     });
 
-  const theme = nextTheme && isThemeId(nextTheme) ? nextTheme : DEFAULT_THEME;
+  const theme = (nextTheme ?? initialTheme) as ThemeId;
 
   const setTheme = useCallback(
     (next: ThemeId) => {
@@ -143,6 +140,7 @@ export function ThemeProvider({
       enableColorScheme={false}
     >
       <ThemeContextProvider
+        initialTheme={initialTheme}
         initialAppearancePreference={initialAppearancePreference}
       >
         {children}
