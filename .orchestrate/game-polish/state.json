@@ -395,14 +395,14 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-10T10:08:16.080Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-10T10:08:14.359Z",
+      "lastUpdate": "2026-08-10T10:08:16.080Z",
       "note": "respawned by self-planner (was error; attempts=1)",
-      "attempts": 1,
+      "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
@@ -727,6 +727,14 @@
     {
       "at": "2026-08-10T10:07:44.523Z",
       "message": "merge-cam-75-swap-vfx: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Upgrade to Ultra for more Cloud Agents: You've reached the limit for your current plan. Upgrade to Ultra to run more Cloud Agents simultaneously."
+    },
+    {
+      "at": "2026-08-10T10:08:15.485Z",
+      "message": "merge-cam-75-swap-vfx: respawned by self-planner (was error)"
+    },
+    {
+      "at": "2026-08-10T10:08:15.774Z",
+      "message": "merge-cam-75-swap-vfx: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
