@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import type { CardPointValues, ClientMessage, PlayerView } from "@/game/types";
 import {
+  DEFAULT_CARD_POINTS,
   MAX_CARD_POINT_VALUE,
   MAX_JOKER_COUNT,
   MIN_CARD_POINT_VALUE,
@@ -43,6 +44,7 @@ type LobbyPlayersProps = {
 
 export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
   const me = view.players.find((player) => player.id === view.playerId);
+  const cardPoints = view.cardPoints ?? DEFAULT_CARD_POINTS;
   const readyCount = view.players.filter(
     (player) => (player.connected || player.isBot) && !player.isWaiting,
   ).length;
@@ -183,7 +185,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
             </span>
             {view.canSetCardPoints ? (
               <select
-                value={view.cardPoints[key]}
+                value={cardPoints[key]}
                 onChange={(e) =>
                   send({
                     type: "set_card_points",
@@ -200,7 +202,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
               </select>
             ) : (
               <span className="font-display text-[10px] text-theme tabular-nums">
-                {view.cardPoints[key]}
+                {cardPoints[key]}
               </span>
             )}
           </div>

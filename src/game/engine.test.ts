@@ -702,6 +702,20 @@ describe("set_card_points (CAM-64)", () => {
     expect(state.scores).toEqual({ alice: 5 });
   });
 
+  it("exposes normalized card points when state is missing them", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    // @ts-expect-error simulate old persisted room
+    delete state.cardPoints;
+    const view = buildPlayerView(state, "alice");
+    expect(view.cardPoints).toEqual({
+      ace: 1,
+      face: 10,
+      joker: 0,
+      blackKing: -2,
+      redKing: 25,
+    });
+  });
+
   it("exposes card points and host edit flag in player view", () => {
     const state = createRoom("room-1", "Alice", "alice");
     const hostView = buildPlayerView(state, "alice");

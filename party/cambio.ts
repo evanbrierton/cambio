@@ -20,6 +20,7 @@ import {
   shouldReactToMove,
 } from "../src/game/bot-chat-events";
 import { generateBotChatMessage } from "../src/game/bot-chat-llm";
+import { normalizeCardPointValues } from "../src/game/cards";
 import {
   addBotPlayer,
   addChatMessage,
@@ -40,7 +41,6 @@ import type {
 } from "../src/game/types";
 import {
   DEFAULT_BOT_COUNT,
-  DEFAULT_CARD_POINTS,
   DEFAULT_JOKER_COUNT,
   MAX_BOT_COUNT,
   MIN_BOT_COUNT,
@@ -57,7 +57,7 @@ function migrateState(state: GameState): GameState {
     isSoloMode: state.isSoloMode ?? false,
     soloDifficulty: state.soloDifficulty ?? null,
     jokerCount: state.jokerCount ?? DEFAULT_JOKER_COUNT,
-    cardPoints: { ...DEFAULT_CARD_POINTS, ...state.cardPoints },
+    cardPoints: normalizeCardPointValues(state.cardPoints),
     botThinkingId: null,
     roundNumber: state.roundNumber ?? 0,
     roundHistory: migrateRoundHistory(state.roundHistory),
