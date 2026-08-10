@@ -13,6 +13,7 @@ import type {
 } from "@/game/types";
 import { freshSessionKey, getPartyHost, storageKey } from "@/lib/party";
 import { playSound } from "@/lib/sounds";
+import { isAbilitySwapFlash } from "@/lib/swap-flash";
 
 const PEEK_FLASH_MS = 3500;
 export const SWAP_FLASH_MS = 3000;
@@ -273,7 +274,7 @@ export function useGameConnection(
         }, PEEK_FLASH_MS);
       }
 
-      if (data.type === "swap_flash") {
+      if (data.type === "swap_flash" && isAbilitySwapFlash(data.slots)) {
         if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
         playSound("swap");
         setState((s) => ({
