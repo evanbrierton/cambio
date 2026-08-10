@@ -36,13 +36,18 @@
           "options": {
             "max": 8
           }
-        }
+        },
+        "noForEach": "warn",
+        "noExcessiveCognitiveComplexity": "off",
+        "noExcessiveLinesPerFunction": "off",
+        "noVoid": "off"
       },
       "correctness": {
         "noReactPropAssignments": "warn",
         "useImportExtensions": "off",
         "noUnresolvedImports": "off",
-        "noNodejsModules": "off"
+        "noNodejsModules": "off",
+        "noProcessGlobal": "off"
       },
       "nursery": {
         "useArraySome": "warn",
@@ -51,7 +56,8 @@
       },
       "performance": {
         "noDelete": "warn",
-        "noBarrelFile": "off"
+        "noBarrelFile": "off",
+        "noJsxPropsBind": "off"
       },
       "style": {
         "useConst": "warn",
@@ -63,7 +69,23 @@
         "noUselessElse": "warn",
         "noNegationElse": "warn",
         "noContinue": "warn",
-        "useForOf": "warn"
+        "useForOf": "warn",
+        "useComponentExportOnlyModules": "off",
+        "noDefaultExport": "off",
+        "noHexColors": "warn",
+        "noMagicNumbers": "off",
+        "noTernary": "off",
+        "noNestedTernary": "off",
+        "useNamingConvention": "off",
+        "noJsxLiterals": "off",
+        "noProcessEnv": "off",
+        "noExcessiveLinesPerFile": "off",
+        "useExportsLast": "off",
+        "useDestructuring": "off",
+        "useAtIndex": "off",
+        "noExportedImports": "off",
+        "useConsistentTypeDefinitions": "off",
+        "noImplicitBoolean": "off"
       },
       "suspicious": {
         "noVar": "warn",
@@ -71,7 +93,13 @@
         "noCatchAssign": "warn",
         "noClassAssign": "warn",
         "noFunctionAssign": "warn",
-        "noImportAssign": "warn"
+        "noImportAssign": "warn",
+        "noLeakedRender": "off",
+        "noUnnecessaryConditions": "off",
+        "noConsole": "off"
+      },
+      "security": {
+        "noSecrets": "off"
       }
     },
     "domains": {
@@ -87,7 +115,8 @@
       "reactNative": "none",
       "drizzle": "none",
       "playwright": "none",
-      "turborepo": "none"
+      "turborepo": "none",
+      "types": "none"
     }
   },
   "assist": {
