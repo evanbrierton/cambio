@@ -42,14 +42,10 @@ import type {
   SwapFlash,
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
-import { useHintsEnabled } from "@/hooks/useHintsEnabled";
-import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
-import { useOwnSeatDisplay } from "@/hooks/useOwnSeatDisplay";
-import { usePlayerGridEnabled } from "@/hooks/usePlayerGridEnabled";
-import { useSoundEnabled } from "@/hooks/useSoundEnabled";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { copyToClipboard } from "@/lib/clipboard";
 import type { ThemeVoice } from "@/lib/themes";
+import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 type GameTableProps = {
   view: PlayerView;
@@ -621,17 +617,22 @@ export function GameTable({
   deckDrawFlash,
   send,
 }: GameTableProps) {
+  useRehydrateUiPrefs();
   const voice = useThemeVoice();
-  const { soundEnabled, toggleSound } = useSoundEnabled();
-  const { hintsEnabled, toggleHints } = useHintsEnabled();
-  const { playerGridEnabled, togglePlayerGrid } = usePlayerGridEnabled();
-  const { ownSeatProminent, toggleOwnSeatDisplay } = useOwnSeatDisplay();
   const {
+    soundEnabled,
+    toggleSound,
+    hintsEnabled,
+    toggleHints,
+    playerGridEnabled,
+    togglePlayerGrid,
+    ownSeatProminent,
+    toggleOwnSeatDisplay,
     chatNotificationsEnabled,
     eventNotificationsEnabled,
     toggleChatNotifications,
     toggleEventNotifications,
-  } = useNotificationPrefs();
+  } = useUiPrefs();
   const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
