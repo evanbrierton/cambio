@@ -351,11 +351,12 @@ function PlayerSeat({
   onCardClick: (playerId: string, slot: number, isOwn: boolean) => void;
 }) {
   const isOwn = player.id === viewerId;
+  const setupPeekedSlots = player.setupPeekedSlots ?? [];
   const showDrawnSwapHint = isOwn && canSwap;
   const showSnapGiveHint = isOwn && snapGiveActive;
   const setupPeeksRemaining = Math.max(
     0,
-    SETUP_PEEK_SLOTS.length - player.setupPeekedSlots.length,
+    SETUP_PEEK_SLOTS.length - setupPeekedSlots.length,
   );
   const showSetupPeekHint =
     phase === "setup_peek" && isOwn && setupPeeksRemaining > 0;
@@ -412,7 +413,7 @@ function PlayerSeat({
     const isEmpty = !!slot.empty;
     const isFleetingPeek =
       fleetingPeek?.playerId === player.id && fleetingPeek.slot === index;
-    const alreadySetupPeeked = player.setupPeekedSlots.includes(index);
+    const alreadySetupPeeked = setupPeekedSlots.includes(index);
     const setupLocked =
       phase === "setup_peek" &&
       (!isOwn ||
@@ -1010,7 +1011,7 @@ export function GameTable({
       const ownPlayer = view.players.find(
         (entry) => entry.id === view.playerId,
       );
-      if (ownPlayer?.setupPeekedSlots.includes(slot)) return;
+      if (ownPlayer?.setupPeekedSlots?.includes(slot)) return;
       send({ type: "setup_peek", slot });
       return;
     }

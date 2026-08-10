@@ -634,6 +634,17 @@ describe("reconnect with drawn card (CAM-74)", () => {
 });
 
 describe("setup peek", () => {
+  it("defaults setupPeekedSlots when missing from persisted player state", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    delete (state.players[0] as { setupPeekedSlots?: number[] })
+      .setupPeekedSlots;
+
+    const view = buildPlayerView(state, "alice");
+    expect(
+      view.players.find((p) => p.id === "alice")?.setupPeekedSlots,
+    ).toEqual([]);
+  });
+
   it("exposes peeked slots only on the viewer's own public player", () => {
     const state = createRoom("room-1", "Alice", "alice");
     state.players.push({

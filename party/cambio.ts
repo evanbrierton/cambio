@@ -69,6 +69,7 @@ function migrateState(state: GameState): GameState {
       isWaiting: p.isWaiting ?? false,
       isBot: p.isBot ?? false,
       botDifficulty: p.botDifficulty ?? null,
+      setupPeekedSlots: p.setupPeekedSlots ?? [],
     })),
   };
 }
