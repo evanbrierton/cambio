@@ -9,8 +9,8 @@ import type {
   ClientMessage,
   PeekFlashKind,
   PlayerView,
-  ServerMessage,
 } from "@/game/types";
+import { parseServerMessageJson } from "@/game/wire-schema";
 import { freshSessionKey, getPartyHost, storageKey } from "@/lib/party";
 
 const PEEK_FLASH_MS = 3500;
@@ -226,7 +226,8 @@ export function useGameConnection(
     });
 
     socket.addEventListener("message", (event) => {
-      const data = JSON.parse(event.data as string) as ServerMessage;
+      const data = parseServerMessageJson(event.data as string);
+      if (!data) return;
 
       if (data.type === "room_info") {
         localStorage.setItem(key, data.playerId);

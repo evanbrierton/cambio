@@ -40,11 +40,13 @@ import type {
 } from "../src/game/types";
 import {
   DEFAULT_BOT_COUNT,
+  DEFAULT_CARD_POINTS,
   DEFAULT_JOKER_COUNT,
   MAX_BOT_COUNT,
   MIN_BOT_COUNT,
   parseBotDifficulty,
 } from "../src/game/types";
+import { parseClientMessageJson } from "../src/game/wire-schema";
 
 type PlayerConnectionState = { playerId?: string; debugEnabled?: boolean };
 
@@ -56,6 +58,7 @@ function migrateState(state: GameState): GameState {
     isSoloMode: state.isSoloMode ?? false,
     soloDifficulty: state.soloDifficulty ?? null,
     jokerCount: state.jokerCount ?? DEFAULT_JOKER_COUNT,
+    cardPoints: { ...DEFAULT_CARD_POINTS, ...state.cardPoints },
     botThinkingId: null,
     roundNumber: state.roundNumber ?? 0,
     roundHistory: migrateRoundHistory(state.roundHistory),
@@ -675,10 +678,8 @@ export class CambioParty extends Server<Env> {
 
     this.clearBotTimer();
 
-    let message: ClientMessage;
-    try {
-      message = JSON.parse(messageText(raw)) as ClientMessage;
-    } catch {
+    const message = parseClientMessageJson(messageText(raw));
+    if (!message) {
       connection.send(
         JSON.stringify({ type: "error", message: "Invalid message." }),
       );

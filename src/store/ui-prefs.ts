@@ -6,6 +6,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import { useShallow } from "zustand/react/shallow";
 import { type BotDifficulty, parseBotDifficulty } from "@/game/types";
 import { clampBotCount, DEFAULT_BOT_SETTINGS } from "@/lib/bot-settings";
+import { uiPrefsPersistStateSchema } from "@/store/ui-prefs-schema";
 
 export type OwnSeatDisplay = "prominent" | "turn-order";
 
@@ -46,9 +47,10 @@ const defaultPrefs: UiPrefsData = {
 };
 
 function sanitizePersistedPrefs(persisted: unknown): Partial<UiPrefsData> {
-  if (!persisted || typeof persisted !== "object") return {};
+  const result = uiPrefsPersistStateSchema.safeParse(persisted);
+  if (!result.success) return {};
 
-  const prefs = persisted as Partial<UiPrefsData>;
+  const prefs = result.data;
   return {
     ...prefs,
     botCount:
