@@ -1483,6 +1483,7 @@ export function buildPlayerView(
         };
       }),
       penaltyCount: p.penaltyCount,
+      setupPeekedSlots: p.id === viewerId ? [...p.setupPeekedSlots] : [],
       hasCalledCambio: p.hasCalledCambio,
       finalTurnDone: p.finalTurnDone,
       isWaiting: p.isWaiting,

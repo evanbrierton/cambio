@@ -353,7 +353,12 @@ function PlayerSeat({
   const isOwn = player.id === viewerId;
   const showDrawnSwapHint = isOwn && canSwap;
   const showSnapGiveHint = isOwn && snapGiveActive;
-  const showSetupPeekHint = phase === "setup_peek" && isOwn;
+  const setupPeeksRemaining = Math.max(
+    0,
+    SETUP_PEEK_SLOTS.length - player.setupPeekedSlots.length,
+  );
+  const showSetupPeekHint =
+    phase === "setup_peek" && isOwn && setupPeeksRemaining > 0;
   const isProtectedTarget =
     phase === "cambio_final" &&
     cambioCallerId === player.id &&
@@ -407,9 +412,13 @@ function PlayerSeat({
     const isEmpty = !!slot.empty;
     const isFleetingPeek =
       fleetingPeek?.playerId === player.id && fleetingPeek.slot === index;
+    const alreadySetupPeeked = player.setupPeekedSlots.includes(index);
     const setupLocked =
       phase === "setup_peek" &&
-      (!isOwn || !SETUP_PEEK_SLOTS.includes(index) || isEmpty);
+      (!isOwn ||
+        !SETUP_PEEK_SLOTS.includes(index) ||
+        isEmpty ||
+        alreadySetupPeeked);
     const abilityLocked = swapAbilityActive && !canPickForAbility;
     const lookLocked = lookAbilityActive && !canPickForLook(index);
     const canPickForSnapGive = Boolean(snapGiveActive && isOwn && !isEmpty);
@@ -998,6 +1007,10 @@ export function GameTable({
 
     if (view.phase === "setup_peek" && isOwn) {
       if (!SETUP_PEEK_SLOTS.includes(slot)) return;
+      const ownPlayer = view.players.find(
+        (entry) => entry.id === view.playerId,
+      );
+      if (ownPlayer?.setupPeekedSlots.includes(slot)) return;
       send({ type: "setup_peek", slot });
       return;
     }

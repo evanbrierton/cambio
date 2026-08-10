@@ -202,6 +202,8 @@ export type PublicPlayer = {
   name: string;
   hand: PublicCardSlot[];
   penaltyCount: number;
+  /** Bottom-row slots peeked during the initial setup phase (viewer-visible for own hand). */
+  setupPeekedSlots: number[];
   hasCalledCambio: boolean;
   finalTurnDone: boolean;
   isWaiting: boolean;

@@ -632,3 +632,41 @@ describe("reconnect with drawn card (CAM-74)", () => {
     expect(state.drawnCard).toBeNull();
   });
 });
+
+describe("setup peek", () => {
+  it("exposes peeked slots only on the viewer's own public player", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    state.players.push({
+      id: "bob",
+      name: "Bob",
+      hand: [],
+      penaltyCount: 0,
+      setupPeekedSlots: [],
+      hasCalledCambio: false,
+      finalTurnDone: false,
+      isWaiting: false,
+      connected: true,
+      isBot: false,
+      botDifficulty: null,
+    });
+
+    handleMessage(state, "alice", { type: "start_game" });
+    expect(state.phase).toBe("setup_peek");
+
+    const peek = handleMessage(state, "alice", { type: "setup_peek", slot: 2 });
+    expect("error" in peek).toBe(false);
+
+    const aliceView = buildPlayerView(state, "alice");
+    const bobView = buildPlayerView(state, "bob");
+
+    expect(
+      aliceView.players.find((p) => p.id === "alice")?.setupPeekedSlots,
+    ).toEqual([2]);
+    expect(
+      bobView.players.find((p) => p.id === "alice")?.setupPeekedSlots,
+    ).toEqual([]);
+    expect(
+      bobView.players.find((p) => p.id === "bob")?.setupPeekedSlots,
+    ).toEqual([]);
+  });
+});
