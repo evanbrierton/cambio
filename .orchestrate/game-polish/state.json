@@ -313,6 +313,143 @@
       "prNumber": null,
       "failureMode": null,
       "verification": null
+    },
+    {
+      "name": "merge-cam-82-zustand",
+      "type": "worker",
+      "branch": "orch/game-polish/cam-82-zustand",
+      "startingRef": "orch/game-polish/cam-82-zustand",
+      "dependsOn": [],
+      "agentId": null,
+      "runId": null,
+      "parentAgentId": null,
+      "status": "running",
+      "resultStatus": null,
+      "handoffPath": null,
+      "startedAt": "2026-08-10T10:05:55.700Z",
+      "finishedAt": null,
+      "lastUpdate": "2026-08-10T10:05:55.700Z",
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null,
+      "attempts": 1
+    },
+    {
+      "name": "merge-cam-81-83-themes",
+      "type": "worker",
+      "branch": "orch/game-polish/cam-81-83-themes",
+      "startingRef": "orch/game-polish/cam-81-83-themes",
+      "dependsOn": [
+        "merge-cam-82-zustand"
+      ],
+      "agentId": null,
+      "runId": null,
+      "parentAgentId": null,
+      "status": "pending",
+      "resultStatus": null,
+      "handoffPath": null,
+      "startedAt": null,
+      "finishedAt": null,
+      "lastUpdate": null,
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null
+    },
+    {
+      "name": "merge-cam-64-card-points",
+      "type": "worker",
+      "branch": "orch/game-polish/cam-64-card-points",
+      "startingRef": "orch/game-polish/cam-64-card-points",
+      "dependsOn": [
+        "merge-cam-81-83-themes"
+      ],
+      "agentId": null,
+      "runId": null,
+      "parentAgentId": null,
+      "status": "pending",
+      "resultStatus": null,
+      "handoffPath": null,
+      "startedAt": null,
+      "finishedAt": null,
+      "lastUpdate": null,
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null
+    },
+    {
+      "name": "merge-cam-75-swap-vfx",
+      "type": "worker",
+      "branch": "orch/game-polish/cam-75-swap-vfx",
+      "startingRef": "orch/game-polish/cam-75-swap-vfx",
+      "dependsOn": [
+        "merge-cam-64-card-points"
+      ],
+      "agentId": null,
+      "runId": null,
+      "parentAgentId": null,
+      "status": "pending",
+      "resultStatus": null,
+      "handoffPath": null,
+      "startedAt": null,
+      "finishedAt": null,
+      "lastUpdate": null,
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null
+    },
+    {
+      "name": "merge-cam-84-lucide",
+      "type": "worker",
+      "branch": "orch/game-polish/cam-84-lucide",
+      "startingRef": "orch/game-polish/cam-84-lucide",
+      "dependsOn": [
+        "merge-cam-75-swap-vfx"
+      ],
+      "agentId": null,
+      "runId": null,
+      "parentAgentId": null,
+      "status": "pending",
+      "resultStatus": null,
+      "handoffPath": null,
+      "startedAt": null,
+      "finishedAt": null,
+      "lastUpdate": null,
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null
+    },
+    {
+      "name": "merge-cam-85-zod",
+      "type": "worker",
+      "branch": "orch/game-polish/cam-85-zod",
+      "startingRef": "orch/game-polish/cam-85-zod",
+      "dependsOn": [
+        "merge-cam-84-lucide"
+      ],
+      "agentId": null,
+      "runId": null,
+      "parentAgentId": null,
+      "status": "pending",
+      "resultStatus": null,
+      "handoffPath": null,
+      "startedAt": null,
+      "finishedAt": null,
+      "lastUpdate": null,
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null
     }
   ],
   "attention": [
@@ -555,6 +692,10 @@
     {
       "at": "2026-08-09T11:30:58.056Z",
       "message": "verify-cam-85: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-10T10:05:55.187Z",
+      "message": "merge-cam-82-zustand: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
