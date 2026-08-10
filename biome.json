@@ -30,7 +30,13 @@
         "useFlatMap": "warn",
         "noFlatMapIdentity": "warn",
         "useArrayFind": "warn",
-        "useOptionalChain": "warn"
+        "useOptionalChain": "warn",
+        "useMaxParams": {
+          "level": "warn",
+          "options": {
+            "max": 8
+          }
+        }
       },
       "correctness": {
         "noReactPropAssignments": "warn",
@@ -44,7 +50,9 @@
         "noExcessiveNestedCallbacks": "warn"
       },
       "performance": {
-        "noDelete": "warn"
+        "noDelete": "warn",
+        "noBarrelFile": "off",
+        "noJsxPropsBind": "off"
       },
       "style": {
         "useConst": "warn",
@@ -56,7 +64,8 @@
         "noUselessElse": "warn",
         "noNegationElse": "warn",
         "noContinue": "warn",
-        "useForOf": "warn"
+        "useForOf": "warn",
+        "useComponentExportOnlyModules": "off"
       },
       "suspicious": {
         "noVar": "warn",
@@ -64,7 +73,9 @@
         "noCatchAssign": "warn",
         "noClassAssign": "warn",
         "noFunctionAssign": "warn",
-        "noImportAssign": "warn"
+        "noImportAssign": "warn",
+        "noUnnecessaryConditions": "off",
+        "noLeakedRender": "off"
       }
     },
     "domains": {
