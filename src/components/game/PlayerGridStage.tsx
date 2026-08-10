@@ -17,12 +17,10 @@ const GridItem = ({
   index,
   itemRefs,
   child,
-  itemKey,
 }: {
   index: number;
   itemRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
   child: ReactNode;
-  itemKey: string;
 }) => {
   const setRef = (element: HTMLDivElement | null) => {
     itemRefs.current[index] = element;
@@ -30,7 +28,6 @@ const GridItem = ({
 
   return (
     <div
-      key={itemKey}
       ref={setRef}
       className="players-grid-item min-w-0 w-full flex justify-center"
     >
@@ -46,7 +43,8 @@ export const PlayerGridStage = ({ children }: PlayerGridStageProps) => {
 
   const updateLayout = useCallback(() => {
     const scrollEl = scrollRef.current;
-    if (!scrollEl) {
+    // Ref is null before mount; Biome treats RefObject.current as non-nullable.
+    if (scrollEl === null) {
       return;
     }
 
@@ -57,15 +55,15 @@ export const PlayerGridStage = ({ children }: PlayerGridStageProps) => {
     const centerY = viewport.top + viewport.height / 2;
     const halfH = Math.max(viewport.height / 2, 1);
 
-    itemRefs.current.forEach((item) => {
+    for (const item of itemRefs.current) {
       if (!item) {
-        return;
+        continue;
       }
 
       if (reducedMotion) {
         item.style.transform = "";
         item.style.opacity = "";
-        return;
+        continue;
       }
 
       const rect = item.getBoundingClientRect();
@@ -81,7 +79,7 @@ export const PlayerGridStage = ({ children }: PlayerGridStageProps) => {
 
       item.style.transform = `rotateX(${rotateX}deg) scale(${scale}) translateZ(${translateZ}px)`;
       item.style.opacity = String(opacity);
-    });
+    }
   }, []);
 
   useEffect(() => {
@@ -92,7 +90,7 @@ export const PlayerGridStage = ({ children }: PlayerGridStageProps) => {
 
   useEffect(() => {
     const scrollEl = scrollRef.current;
-    if (!scrollEl) {
+    if (scrollEl === null) {
       return;
     }
 
@@ -130,7 +128,6 @@ export const PlayerGridStage = ({ children }: PlayerGridStageProps) => {
                 index={index}
                 itemRefs={itemRefs}
                 child={child}
-                itemKey={itemKey}
               />
             );
           })}

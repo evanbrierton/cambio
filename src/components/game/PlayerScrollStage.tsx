@@ -37,10 +37,30 @@ function applySeatCardScale(stage: HTMLElement, rail: HTMLElement) {
   stage.style.setProperty("--seat-card-fs", `${fontSize}px`);
 }
 
-export function PlayerScrollStage({
+const StageItem = ({
+  index,
+  itemRefs,
+  child,
+}: {
+  index: number;
+  itemRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
+  child: ReactNode;
+}) => {
+  const setRef = (element: HTMLDivElement | null) => {
+    itemRefs.current[index] = element;
+  };
+
+  return (
+    <div ref={setRef} className="players-3d-item">
+      {child}
+    </div>
+  );
+};
+
+export const PlayerScrollStage = ({
   children,
   centerIndex = 0,
-}: PlayerScrollStageProps) {
+}: PlayerScrollStageProps) => {
   const stageRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -197,7 +217,6 @@ export function PlayerScrollStage({
               index={index}
               itemRefs={itemRefs}
               child={child}
-              itemKey={itemKey}
             />
           );
         })}
@@ -210,4 +229,4 @@ export function PlayerScrollStage({
       </div>
     </div>
   );
-}
+};

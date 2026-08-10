@@ -25,7 +25,7 @@ export const ChatPanel = ({
 
   useEffect(() => {
     const list = listRef.current;
-    if (!list) {
+    if (list === null) {
       return;
     }
     if (messages.length > prevCountRef.current) {

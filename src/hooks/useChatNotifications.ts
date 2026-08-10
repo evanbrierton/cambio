@@ -45,7 +45,7 @@ export function useChatNotifications({
 
   const dismissNotification = useCallback(() => {
     setNotification(null);
-    if (notificationTimerRef.current) {
+    if (notificationTimerRef.current !== null) {
       globalThis.clearTimeout(notificationTimerRef.current);
       notificationTimerRef.current = null;
     }
@@ -133,7 +133,7 @@ export function useChatNotifications({
       text: truncateText(latest.text, 80),
     });
 
-    if (notificationTimerRef.current) {
+    if (notificationTimerRef.current !== null) {
       globalThis.clearTimeout(notificationTimerRef.current);
     }
     notificationTimerRef.current = globalThis.setTimeout(() => {
@@ -151,7 +151,7 @@ export function useChatNotifications({
 
   useEffect(
     () => () => {
-      if (notificationTimerRef.current) {
+      if (notificationTimerRef.current !== null) {
         globalThis.clearTimeout(notificationTimerRef.current);
       }
     },

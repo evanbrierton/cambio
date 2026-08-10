@@ -34,11 +34,10 @@ if (payload.error) {
 }
 
 for (const file of payload.files ?? []) {
-  if (file.diagnostics?.length === 0) {
-    continue;
-  }
-  for (const _diagnostic of file.diagnostics) {
-    // Diagnostics are counted via payload.summary below.
+  if ((file.diagnostics?.length ?? 0) > 0) {
+    for (const _diagnostic of file.diagnostics) {
+      // Diagnostics are counted via payload.summary below.
+    }
   }
 }
 

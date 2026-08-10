@@ -108,9 +108,7 @@ export class BotKnowledge {
         const handSlot = player.hand[slot];
         if (!handSlot?.card) {
           this.forget(player.id, slot);
-          continue;
-        }
-        if (handSlot.faceUp) {
+        } else if (handSlot.faceUp) {
           this.remember(player.id, slot, handSlot.card);
         }
       }
@@ -234,10 +232,9 @@ function estimatePlayerHandTotal(
 
   let total = 0;
   for (let slot = 0; slot < player.hand.length; slot += 1) {
-    if (!slotHasCard(player, slot)) {
-      continue;
+    if (slotHasCard(player, slot)) {
+      total += estimateSlotPoints(botId, playerId, slot, knowledge, difficulty);
     }
-    total += estimateSlotPoints(botId, playerId, slot, knowledge, difficulty);
   }
   return total;
 }
@@ -265,21 +262,20 @@ function projectedStandings(
   const standings: StandingProjection[] = [];
 
   for (const player of state.players) {
-    if (!isPlayingPlayer(player)) {
-      continue;
+    if (isPlayingPlayer(player)) {
+      const currentTotal = state.cumulativeScores[player.id] ?? 0;
+      const estimatedRoundTotal = estimatePlayerHandTotal(
+        state,
+        botId,
+        player.id,
+        knowledge,
+        difficulty,
+      );
+      standings.push({
+        playerId: player.id,
+        projectedTotal: currentTotal + estimatedRoundTotal,
+      });
     }
-    const currentTotal = state.cumulativeScores[player.id] ?? 0;
-    const estimatedRoundTotal = estimatePlayerHandTotal(
-      state,
-      botId,
-      player.id,
-      knowledge,
-      difficulty,
-    );
-    standings.push({
-      playerId: player.id,
-      projectedTotal: currentTotal + estimatedRoundTotal,
-    });
   }
 
   return standings.sort((a, b) => a.projectedTotal - b.projectedTotal);
@@ -389,13 +385,12 @@ function worstKnownSlot(
   let worstSlot = 0;
   let worstPoints = Number.NEGATIVE_INFINITY;
   for (let slot = 0; slot < player.hand.length; slot += 1) {
-    if (!slotHasCard(player, slot)) {
-      continue;
-    }
-    const pts = estimateSlotPoints(botId, botId, slot, knowledge, difficulty);
-    if (pts > worstPoints) {
-      worstPoints = pts;
-      worstSlot = slot;
+    if (slotHasCard(player, slot)) {
+      const pts = estimateSlotPoints(botId, botId, slot, knowledge, difficulty);
+      if (pts > worstPoints) {
+        worstPoints = pts;
+        worstSlot = slot;
+      }
     }
   }
   return worstSlot;
@@ -410,26 +405,24 @@ function bestUnknownOpponentSlot(
   let best: { playerId: string; slot: number; points: number } | null = null;
 
   for (const opponent of state.players) {
-    if (opponent.id === botId || opponent.isWaiting) {
-      continue;
-    }
-    if (!canTargetPlayer(opponent.id, state)) {
-      continue;
-    }
-
-    for (let slot = 0; slot < opponent.hand.length; slot += 1) {
-      if (!slotHasCard(opponent, slot)) {
-        continue;
-      }
-      const pts = estimateSlotPoints(
-        botId,
-        opponent.id,
-        slot,
-        knowledge,
-        difficulty,
-      );
-      if (!best || pts > best.points) {
-        best = { playerId: opponent.id, slot, points: pts };
+    if (
+      opponent.id !== botId &&
+      !opponent.isWaiting &&
+      canTargetPlayer(opponent.id, state)
+    ) {
+      for (let slot = 0; slot < opponent.hand.length; slot += 1) {
+        if (slotHasCard(opponent, slot)) {
+          const pts = estimateSlotPoints(
+            botId,
+            opponent.id,
+            slot,
+            knowledge,
+            difficulty,
+          );
+          if (!best || pts > best.points) {
+            best = { playerId: opponent.id, slot, points: pts };
+          }
+        }
       }
     }
   }
@@ -458,25 +451,20 @@ function bestLookTarget(
 
   let best: { playerId: string; slot: number; points: number } | null = null;
   for (const player of state.players) {
-    if (!canTargetPlayer(player.id, state) && player.id !== botId) {
-      continue;
-    }
-    for (let slot = 0; slot < player.hand.length; slot += 1) {
-      if (!slotHasCard(player, slot)) {
-        continue;
-      }
-      if (knowledge.get(player.id, slot)) {
-        continue;
-      }
-      const pts = estimateSlotPoints(
-        botId,
-        player.id,
-        slot,
-        knowledge,
-        difficulty,
-      );
-      if (!best || pts > best.points) {
-        best = { playerId: player.id, slot, points: pts };
+    if (canTargetPlayer(player.id, state) || player.id === botId) {
+      for (let slot = 0; slot < player.hand.length; slot += 1) {
+        if (slotHasCard(player, slot) && !knowledge.get(player.id, slot)) {
+          const pts = estimateSlotPoints(
+            botId,
+            player.id,
+            slot,
+            knowledge,
+            difficulty,
+          );
+          if (!best || pts > best.points) {
+            best = { playerId: player.id, slot, points: pts };
+          }
+        }
       }
     }
   }
@@ -535,16 +523,14 @@ function findSnapTarget(
   const matches: Array<{ targetPlayerId: string; slot: number }> = [];
 
   for (const player of state.players) {
-    if (!canTargetPlayer(player.id, state) && player.id !== botId) {
-      continue;
-    }
-    for (let slot = 0; slot < player.hand.length; slot += 1) {
-      if (!slotHasCard(player, slot)) {
-        continue;
-      }
-      const known = knowledge.get(player.id, slot);
-      if (known && cardsSnapMatch(known, top)) {
-        matches.push({ targetPlayerId: player.id, slot });
+    if (canTargetPlayer(player.id, state) || player.id === botId) {
+      for (let slot = 0; slot < player.hand.length; slot += 1) {
+        if (slotHasCard(player, slot)) {
+          const known = knowledge.get(player.id, slot);
+          if (known && cardsSnapMatch(known, top)) {
+            matches.push({ targetPlayerId: player.id, slot });
+          }
+        }
       }
     }
   }
@@ -643,12 +629,11 @@ function decideAbility(
       }
       const candidates: Array<{ playerId: string; slot: number }> = [];
       for (const opponent of state.players) {
-        if (opponent.id === botId || !canTargetPlayer(opponent.id, state)) {
-          continue;
-        }
-        for (let slot = 0; slot < opponent.hand.length; slot += 1) {
-          if (slotHasCard(opponent, slot)) {
-            candidates.push({ playerId: opponent.id, slot });
+        if (opponent.id !== botId && canTargetPlayer(opponent.id, state)) {
+          for (let slot = 0; slot < opponent.hand.length; slot += 1) {
+            if (slotHasCard(opponent, slot)) {
+              candidates.push({ playerId: opponent.id, slot });
+            }
           }
         }
       }
@@ -678,12 +663,11 @@ function decideAbility(
 
     const lookTargets: Array<{ playerId: string; slot: number }> = [];
     for (const player of state.players) {
-      if (!canTargetPlayer(player.id, state) && player.id !== botId) {
-        continue;
-      }
-      for (let slot = 0; slot < player.hand.length; slot += 1) {
-        if (slotHasCard(player, slot)) {
-          lookTargets.push({ playerId: player.id, slot });
+      if (canTargetPlayer(player.id, state) || player.id === botId) {
+        for (let slot = 0; slot < player.hand.length; slot += 1) {
+          if (slotHasCard(player, slot)) {
+            lookTargets.push({ playerId: player.id, slot });
+          }
         }
       }
     }

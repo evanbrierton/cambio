@@ -317,7 +317,7 @@ function getActionBanner(
   return null;
 }
 
-function PlayerSeat({
+const PlayerSeat = ({
   player,
   viewerId,
   phase,
@@ -359,7 +359,7 @@ function PlayerSeat({
   scaleHands?: boolean;
   voice: ThemeVoice;
   onCardClick: (playerId: string, slot: number, isOwn: boolean) => void;
-}) {
+}) => {
   const isOwn = player.id === viewerId;
   const showDrawnSwapHint = isOwn && canSwap;
   const showSnapGiveHint = isOwn && snapGiveActive;
@@ -437,7 +437,7 @@ function PlayerSeat({
       selectedSwapCard.slot === index;
     const canInteract =
       canPickForSnapGive ||
-      (!snapGivePending && !isEmpty) ||
+      !(snapGivePending || isEmpty) ||
       (showDrawnSwapHint && isOwn) ||
       (showAbilitySwapHint && !abilityLocked);
 
@@ -473,8 +473,7 @@ function PlayerSeat({
         peekFlashKind={showPeekFlashOverlay ? peekFlash?.kind : undefined}
         peekFlashSlotLabel={showPeekFlashOverlay ? `#${index + 1}` : undefined}
         highlightSwap={
-          !isEmpty &&
-          !setupLocked &&
+          !(isEmpty || setupLocked) &&
           [
             showDrawnSwapHint,
             showSnapGiveHint,
@@ -550,44 +549,44 @@ function PlayerSeat({
           {isOwn ? " (you)" : ""}
         </h2>
         <div className="flex flex-wrap items-center justify-center gap-1">
-          {hasSwapFlash && (
+          {hasSwapFlash ? (
             <span className="ui-badge text-accent animate-pulse">SWAPPED</span>
-          )}
-          {hasPeekFlash && peekFlash && (
+          ) : null}
+          {hasPeekFlash && peekFlash ? (
             <span className="ui-badge text-accent-alt animate-pulse">
               {peekFlashSeatLabel(peekFlash.kind)}
             </span>
-          )}
-          {hasPenaltyFlash && (
+          ) : null}
+          {hasPenaltyFlash ? (
             <span className="ui-badge text-accent animate-pulse">PENALTY</span>
-          )}
-          {player.isBot && (
+          ) : null}
+          {player.isBot ? (
             <span className="ui-badge text-accent-alt">{voice.botBadge}</span>
-          )}
-          {player.isHost && (
+          ) : null}
+          {player.isHost ? (
             <span className="ui-badge text-accent">{voice.host}</span>
-          )}
-          {player.isThinking && (
+          ) : null}
+          {player.isThinking ? (
             <span className="ui-badge text-accent-alt animate-pulse">
               {voice.botThinking}
             </span>
-          )}
-          {player.isCurrentTurn && !player.isThinking && (
+          ) : null}
+          {player.isCurrentTurn && !player.isThinking ? (
             <span className="ui-badge text-accent-alt animate-pulse">
               {voice.turn}
             </span>
-          )}
-          {player.hasCalledCambio && (
+          ) : null}
+          {player.hasCalledCambio ? (
             <span className="ui-badge text-accent-soft">{voice.cambio}</span>
-          )}
-          {!player.connected && (
+          ) : null}
+          {player.connected ? null : (
             <span className="ui-badge text-theme-muted">{voice.away}</span>
           )}
-          {player.isWaiting && (
+          {player.isWaiting ? (
             <span className="ui-badge text-theme-muted">
               {voice.waitingBadge}
             </span>
-          )}
+          ) : null}
         </div>
       </div>
       {player.isWaiting && phase !== "lobby" ? (
@@ -626,9 +625,9 @@ function PlayerSeat({
       )}
     </section>
   );
-}
+};
 
-export function GameTable({
+export const GameTable = ({
   view,
   connected,
   error,
@@ -641,7 +640,7 @@ export function GameTable({
   discardDrawFlash,
   deckDrawFlash,
   send,
-}: GameTableProps) {
+}: GameTableProps) => {
   useRehydrateUiPrefs();
   const voice = useThemeVoice();
   const {
@@ -668,6 +667,10 @@ export function GameTable({
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const openSettings = useCallback(() => setSettingsOpen(true), []);
+  const openChatFromToast = () => {
+    openSettings();
+    dismissNotification();
+  };
   const { unreadCount, notification, dismissNotification } =
     useChatNotifications({
       messages: view.chatMessages,
@@ -690,17 +693,14 @@ export function GameTable({
       action: (
         <button
           type="button"
-          onClick={() => {
-            openSettings();
-            dismissNotification();
-          }}
+          onClick={openChatFromToast}
           className="chip-btn text-[8px] px-2 py-1 border-accent text-accent hover:border-accent-alt transition-colors"
         >
           {voice.chatOpen}
         </button>
       ),
     };
-  }, [notification, voice, openSettings, dismissNotification]);
+  }, [notification, voice, openChatFromToast]);
   const [lobbyJoinToast, setLobbyJoinToast] = useState<GameToastItem | null>(
     null,
   );
@@ -1773,4 +1773,4 @@ export function GameTable({
       </div>
     </div>
   );
-}
+};

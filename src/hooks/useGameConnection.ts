@@ -117,13 +117,19 @@ function resolvePlayerId(roomId: string): string {
   return playerId;
 }
 
-export function useGameConnection(
-  roomId: string,
-  playerName: string,
-  sessionMode: SessionMode = "reconnect",
-  soloOptions?: SoloOptions,
+export function useGameConnection({
+  roomId,
+  playerName,
+  sessionMode = "reconnect",
+  soloOptions,
   debugEnabled = false,
-) {
+}: {
+  roomId: string;
+  playerName: string;
+  sessionMode?: SessionMode;
+  soloOptions?: SoloOptions;
+  debugEnabled?: boolean;
+}) {
   const [state, setState] = useState<ConnectionState>({
     connected: false,
     playerId: null,
@@ -154,11 +160,11 @@ export function useGameConnection(
 
   const send = useCallback((message: ClientMessage) => {
     const socket = socketRef.current;
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
+    if (socket === null || socket.readyState !== WebSocket.OPEN) {
       return;
     }
     if (
-      cambioFlashRef.current &&
+      cambioFlashRef.current !== null &&
       PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH.has(message.type)
     ) {
       return;
@@ -246,7 +252,7 @@ export function useGameConnection(
       }
 
       if (data.type === "secret_peek") {
-        if (peekTimerRef.current) {
+        if (peekTimerRef.current !== null) {
           clearTimeout(peekTimerRef.current);
         }
         setState((s) => ({
@@ -263,7 +269,7 @@ export function useGameConnection(
       }
 
       if (data.type === "peek_flash") {
-        if (peekEffectTimerRef.current) {
+        if (peekEffectTimerRef.current !== null) {
           clearTimeout(peekEffectTimerRef.current);
         }
         setState((s) => ({
@@ -281,7 +287,7 @@ export function useGameConnection(
       }
 
       if (data.type === "swap_flash") {
-        if (swapTimerRef.current) {
+        if (swapTimerRef.current !== null) {
           clearTimeout(swapTimerRef.current);
         }
         setState((s) => ({
@@ -294,7 +300,7 @@ export function useGameConnection(
       }
 
       if (data.type === "penalty_flash") {
-        if (penaltyTimerRef.current) {
+        if (penaltyTimerRef.current !== null) {
           clearTimeout(penaltyTimerRef.current);
         }
         setState((s) => ({
@@ -310,7 +316,7 @@ export function useGameConnection(
       }
 
       if (data.type === "cambio_flash") {
-        if (cambioTimerRef.current) {
+        if (cambioTimerRef.current !== null) {
           clearTimeout(cambioTimerRef.current);
         }
         const flash = { playerId: data.playerId };
@@ -326,7 +332,7 @@ export function useGameConnection(
       }
 
       if (data.type === "reshuffle_flash") {
-        if (reshuffleTimerRef.current) {
+        if (reshuffleTimerRef.current !== null) {
           clearTimeout(reshuffleTimerRef.current);
         }
         setState((s) => ({
@@ -339,7 +345,7 @@ export function useGameConnection(
       }
 
       if (data.type === "discard_draw_flash") {
-        if (discardDrawTimerRef.current) {
+        if (discardDrawTimerRef.current !== null) {
           clearTimeout(discardDrawTimerRef.current);
         }
         setState((s) => ({
@@ -352,7 +358,7 @@ export function useGameConnection(
       }
 
       if (data.type === "deck_draw_flash") {
-        if (deckDrawTimerRef.current) {
+        if (deckDrawTimerRef.current !== null) {
           clearTimeout(deckDrawTimerRef.current);
         }
         setState((s) => ({
@@ -370,28 +376,28 @@ export function useGameConnection(
     });
 
     return () => {
-      if (peekTimerRef.current) {
+      if (peekTimerRef.current !== null) {
         clearTimeout(peekTimerRef.current);
       }
-      if (peekEffectTimerRef.current) {
+      if (peekEffectTimerRef.current !== null) {
         clearTimeout(peekEffectTimerRef.current);
       }
-      if (swapTimerRef.current) {
+      if (swapTimerRef.current !== null) {
         clearTimeout(swapTimerRef.current);
       }
-      if (penaltyTimerRef.current) {
+      if (penaltyTimerRef.current !== null) {
         clearTimeout(penaltyTimerRef.current);
       }
-      if (cambioTimerRef.current) {
+      if (cambioTimerRef.current !== null) {
         clearTimeout(cambioTimerRef.current);
       }
-      if (reshuffleTimerRef.current) {
+      if (reshuffleTimerRef.current !== null) {
         clearTimeout(reshuffleTimerRef.current);
       }
-      if (discardDrawTimerRef.current) {
+      if (discardDrawTimerRef.current !== null) {
         clearTimeout(discardDrawTimerRef.current);
       }
-      if (deckDrawTimerRef.current) {
+      if (deckDrawTimerRef.current !== null) {
         clearTimeout(deckDrawTimerRef.current);
       }
       cambioFlashRef.current = null;
