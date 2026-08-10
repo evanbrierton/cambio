@@ -3,27 +3,10 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import {
-  type BotDifficulty,
-  DEFAULT_BOT_COUNT,
-  parseBotDifficulty,
-} from "@/game/types";
+import { type BotDifficulty, parseBotDifficulty } from "@/game/types";
 import { clampBotCount, DEFAULT_BOT_SETTINGS } from "@/lib/bot-settings";
-import { PLAYER_NAME_KEY } from "@/lib/party";
 
 export type OwnSeatDisplay = "prominent" | "turn-order";
-
-const PERSIST_KEY = "cambio-ui-prefs";
-
-const LEGACY_KEYS = {
-  sound: "cambio-sound-enabled",
-  hints: "cambio-hints-enabled",
-  chatNotifications: "cambio-chat-notifications-enabled",
-  eventNotifications: "cambio-event-notifications-enabled",
-  playerGrid: "cambio-player-grid-enabled",
-  ownSeatDisplay: "cambio-own-seat-display",
-  botSettings: "cambio-bot-settings",
-} as const;
 
 type UiPrefsData = {
   soundEnabled: boolean;
@@ -69,136 +52,6 @@ const defaultPrefs: UiPrefsData = {
   botDifficulty: DEFAULT_BOT_SETTINGS.difficulty,
 };
 
-function readLegacyBool(key: string, defaultEnabled: boolean): boolean {
-  if (typeof window === "undefined") return defaultEnabled;
-  const value = localStorage.getItem(key);
-  if (value === null) return defaultEnabled;
-  return value !== "0";
-}
-
-function readLegacyOwnSeatDisplay(): OwnSeatDisplay {
-  if (typeof window === "undefined") return "prominent";
-  return localStorage.getItem(LEGACY_KEYS.ownSeatDisplay) === "turn-order"
-    ? "turn-order"
-    : "prominent";
-}
-
-function readLegacyBotSettings(): Pick<
-  UiPrefsData,
-  "botCount" | "botDifficulty"
-> {
-  if (typeof window === "undefined") {
-    return {
-      botCount: DEFAULT_BOT_SETTINGS.botCount,
-      botDifficulty: DEFAULT_BOT_SETTINGS.difficulty,
-    };
-  }
-
-  try {
-    const raw = localStorage.getItem(LEGACY_KEYS.botSettings);
-    if (!raw) {
-      return {
-        botCount: DEFAULT_BOT_SETTINGS.botCount,
-        botDifficulty: DEFAULT_BOT_SETTINGS.difficulty,
-      };
-    }
-
-    const parsed = JSON.parse(raw) as Partial<{
-      botCount: number;
-      difficulty: BotDifficulty;
-    }>;
-    return {
-      botCount: clampBotCount(parsed.botCount ?? DEFAULT_BOT_COUNT),
-      botDifficulty: parseBotDifficulty(parsed.difficulty ?? null),
-    };
-  } catch {
-    return {
-      botCount: DEFAULT_BOT_SETTINGS.botCount,
-      botDifficulty: DEFAULT_BOT_SETTINGS.difficulty,
-    };
-  }
-}
-
-function migrateLegacyPrefs(): UiPrefsData {
-  const legacyBots = readLegacyBotSettings();
-  return {
-    soundEnabled: readLegacyBool(LEGACY_KEYS.sound, true),
-    hintsEnabled: readLegacyBool(LEGACY_KEYS.hints, true),
-    chatNotificationsEnabled: readLegacyBool(
-      LEGACY_KEYS.chatNotifications,
-      true,
-    ),
-    eventNotificationsEnabled: readLegacyBool(
-      LEGACY_KEYS.eventNotifications,
-      true,
-    ),
-    playerGridEnabled:
-      typeof window !== "undefined" &&
-      localStorage.getItem(LEGACY_KEYS.playerGrid) === "1",
-    ownSeatDisplay: readLegacyOwnSeatDisplay(),
-    playerName:
-      typeof window !== "undefined"
-        ? (localStorage.getItem(PLAYER_NAME_KEY) ?? "")
-        : "",
-    botCount: legacyBots.botCount,
-    botDifficulty: legacyBots.botDifficulty,
-  };
-}
-
-function readPersistedPrefs(): UiPrefsData | null {
-  if (typeof window === "undefined") return null;
-
-  const raw = localStorage.getItem(PERSIST_KEY);
-  if (!raw) return null;
-
-  try {
-    const parsed = JSON.parse(raw) as { state?: Partial<UiPrefsData> };
-    if (!parsed.state) return null;
-    return {
-      ...defaultPrefs,
-      ...parsed.state,
-      botCount: clampBotCount(parsed.state.botCount ?? defaultPrefs.botCount),
-      botDifficulty: parseBotDifficulty(parsed.state.botDifficulty ?? null),
-    };
-  } catch {
-    return null;
-  }
-}
-
-function hasLegacyPrefs(): boolean {
-  if (typeof window === "undefined") return false;
-
-  return (
-    localStorage.getItem(LEGACY_KEYS.sound) !== null ||
-    localStorage.getItem(LEGACY_KEYS.hints) !== null ||
-    localStorage.getItem(LEGACY_KEYS.chatNotifications) !== null ||
-    localStorage.getItem(LEGACY_KEYS.eventNotifications) !== null ||
-    localStorage.getItem(LEGACY_KEYS.playerGrid) !== null ||
-    localStorage.getItem(LEGACY_KEYS.ownSeatDisplay) !== null ||
-    localStorage.getItem(LEGACY_KEYS.botSettings) !== null ||
-    localStorage.getItem(PLAYER_NAME_KEY) !== null
-  );
-}
-
-const customStorage = createJSONStorage<UiPrefsData>(() => ({
-  getItem: () => {
-    const persisted = readPersistedPrefs();
-    if (persisted) {
-      return JSON.stringify({ state: persisted, version: 0 });
-    }
-    if (hasLegacyPrefs()) {
-      return JSON.stringify({ state: migrateLegacyPrefs(), version: 0 });
-    }
-    return null;
-  },
-  setItem: (_name, value) => {
-    localStorage.setItem(PERSIST_KEY, value);
-  },
-  removeItem: (_name) => {
-    localStorage.removeItem(PERSIST_KEY);
-  },
-}));
-
 export const useUiPrefsStore = create<UiPrefsState>()(
   persist(
     (set, get) => ({
@@ -232,8 +85,8 @@ export const useUiPrefsStore = create<UiPrefsState>()(
         set({ botDifficulty: parseBotDifficulty(difficulty) }),
     }),
     {
-      name: PERSIST_KEY,
-      storage: customStorage,
+      name: "cambio-ui-prefs",
+      storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       partialize: (state) => ({
         soundEnabled: state.soundEnabled,
