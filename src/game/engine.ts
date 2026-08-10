@@ -1298,17 +1298,16 @@ export function handleMessage(
       if (state.phase !== "lobby" && state.phase !== "ended") {
         return { error: "Cannot change card point values during a game." };
       }
-      const current = normalizeCardPointValues(state.cardPoints);
       const next = normalizeCardPointValues({
-        ...current,
+        ...state.cardPoints,
         ...message.values,
       });
       if (
-        next.ace === current.ace &&
-        next.face === current.face &&
-        next.joker === current.joker &&
-        next.blackKing === current.blackKing &&
-        next.redKing === current.redKing
+        next.ace === state.cardPoints.ace &&
+        next.face === state.cardPoints.face &&
+        next.joker === state.cardPoints.joker &&
+        next.blackKing === state.cardPoints.blackKing &&
+        next.redKing === state.cardPoints.redKing
       ) {
         return {};
       }
@@ -1600,7 +1599,7 @@ export function buildPlayerView(
     canSetJokerCount:
       viewerId === state.hostId &&
       (state.phase === "lobby" || state.phase === "ended"),
-    cardPoints: normalizeCardPointValues(state.cardPoints),
+    cardPoints: { ...state.cardPoints },
     canSetCardPoints:
       viewerId === state.hostId &&
       (state.phase === "lobby" || state.phase === "ended"),
