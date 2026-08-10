@@ -76,7 +76,7 @@ export function nameKey(name: string): string {
 export function generateBotName(usedNames: Iterable<string>): string {
   const taken = new Set([...usedNames].map(nameKey));
 
-  for (let attempt = 0; attempt < 80; attempt++) {
+  for (let attempt = 0; attempt < 80; attempt += 1) {
     const name = `${pick(ADJECTIVES)} ${pick(NOUNS)}`;
     if (!taken.has(nameKey(name))) {
       return name;
@@ -85,7 +85,7 @@ export function generateBotName(usedNames: Iterable<string>): string {
 
   let suffix = 2;
   while (taken.has(nameKey(`Bot ${suffix}`))) {
-    suffix++;
+    suffix += 1;
   }
   return `Bot ${suffix}`;
 }

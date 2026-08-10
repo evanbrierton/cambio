@@ -30,20 +30,19 @@ function createMemoryStorage(): Storage {
 beforeEach(() => {
   const storage = createMemoryStorage();
   vi.stubGlobal("localStorage", storage);
-  vi.stubGlobal("window", {
-    localStorage: storage,
-    matchMedia: (query: string) =>
-      ({
-        matches: false,
-        media: query,
-        onchange: null,
-        addListener: vi.fn(),
-        removeListener: vi.fn(),
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-        dispatchEvent: vi.fn(),
-      }) as MediaQueryList,
-  });
+  vi.stubGlobal("document", {});
+  const matchMedia = (query: string) =>
+    ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }) as MediaQueryList;
+  vi.stubGlobal("matchMedia", matchMedia);
   vi.stubGlobal("navigator", {
     userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
     platform: "Win32",
@@ -83,9 +82,9 @@ describe("isInstallDismissed", () => {
 
 describe("isStandaloneDisplay", () => {
   it("detects standalone display-mode", () => {
-    vi.stubGlobal("window", {
-      localStorage,
-      matchMedia: (query: string) =>
+    vi.stubGlobal(
+      "matchMedia",
+      (query: string) =>
         ({
           matches: query.includes("display-mode: standalone"),
           media: query,
@@ -96,7 +95,7 @@ describe("isStandaloneDisplay", () => {
           removeEventListener: vi.fn(),
           dispatchEvent: vi.fn(),
         }) as MediaQueryList,
-    });
+    );
 
     expect(isStandaloneDisplay()).toBe(true);
   });

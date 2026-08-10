@@ -12,7 +12,7 @@ import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 const roomCode = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 6);
 
-export default function HomePage() {
+const HomePage = () => {
   const router = useRouter();
   const voice = useThemeVoice();
   useRehydrateUiPrefs();
@@ -54,6 +54,30 @@ export default function HomePage() {
     router.push(`/play/${roomCode()}?${params.toString()}`);
   };
 
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPlayerName(e.target.value);
+  };
+
+  const handleCreateGame = () => {
+    goToRoom(roomCode(), "host");
+  };
+
+  const handleJoinCodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setJoinCode(e.target.value.toLowerCase());
+  };
+
+  const handleJoinGame = () => {
+    goToRoom(joinCode.trim(), "join");
+  };
+
+  const handleBotCountChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setBotCount(Number(e.target.value));
+  };
+
+  const handleDifficultyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setBotDifficulty(e.target.value as BotDifficulty);
+  };
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 pt-[max(2.5rem,env(safe-area-inset-top,0px))] pb-[max(2.5rem,env(safe-area-inset-bottom,0px))] sm:pt-[max(4rem,env(safe-area-inset-top,0px))] sm:pb-[max(4rem,env(safe-area-inset-bottom,0px))]">
       <div className="w-full max-w-md space-y-6 text-center">
@@ -76,7 +100,7 @@ export default function HomePage() {
             </span>
             <input
               value={name}
-              onChange={(e) => setPlayerName(e.target.value)}
+              onChange={handleNameChange}
               placeholder={voice.nicknamePlaceholder}
               maxLength={24}
               className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
@@ -86,7 +110,7 @@ export default function HomePage() {
           <RetroButton
             className="w-full"
             disabled={!hasName}
-            onClick={() => goToRoom(roomCode(), "host")}
+            onClick={handleCreateGame}
           >
             {voice.createGame}
           </RetroButton>
@@ -98,7 +122,7 @@ export default function HomePage() {
               </span>
               <input
                 value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toLowerCase())}
+                onChange={handleJoinCodeChange}
                 placeholder="abc123"
                 maxLength={6}
                 className="mt-2 w-full input-theme input-theme-accent px-3 py-2 font-mono uppercase"
@@ -107,7 +131,7 @@ export default function HomePage() {
             <RetroButton
               variant="secondary"
               disabled={joinCode.length < 4 || !hasName}
-              onClick={() => goToRoom(joinCode.trim(), "join")}
+              onClick={handleJoinGame}
             >
               {voice.join}
             </RetroButton>
@@ -126,7 +150,7 @@ export default function HomePage() {
               </span>
               <select
                 value={botCount}
-                onChange={(e) => setBotCount(Number(e.target.value))}
+                onChange={handleBotCountChange}
                 className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
               >
                 {Array.from(
@@ -146,9 +170,7 @@ export default function HomePage() {
               </span>
               <select
                 value={difficulty}
-                onChange={(e) =>
-                  setBotDifficulty(e.target.value as BotDifficulty)
-                }
+                onChange={handleDifficultyChange}
                 className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
               >
                 <option value="easy">{voice.difficultyEasy}</option>
@@ -175,4 +197,6 @@ export default function HomePage() {
       </div>
     </div>
   );
-}
+};
+
+export default HomePage;

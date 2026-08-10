@@ -76,10 +76,10 @@ export function PlayerScrollStage({
     if (stage) {
       applySeatCardScale(stage, rail);
       // Force layout so pack-when-fits measures scaled seat widths.
-      void stage.offsetWidth;
+      const _forceLayout = stage.offsetWidth;
     }
 
-    const reducedMotion = window.matchMedia(
+    const reducedMotion = globalThis.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
     const items = itemRefs.current
@@ -121,15 +121,15 @@ export function PlayerScrollStage({
     const railRect = rail.getBoundingClientRect();
     const center = railRect.left + railRect.width / 2;
 
-    itemRefs.current.forEach((item) => {
+    for (const item of itemRefs.current) {
       if (!item) {
-        return;
+        continue;
       }
 
       if (reducedMotion || fits) {
         item.style.transform = "";
         item.style.opacity = "";
-        return;
+        continue;
       }
 
       const rect = item.getBoundingClientRect();
@@ -142,7 +142,7 @@ export function PlayerScrollStage({
 
       item.style.transform = `rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
       item.style.opacity = String(1 - Math.abs(clamped) * 0.15);
-    });
+    }
   }, [centerIndex, childCount]);
 
   useEffect(() => {
@@ -161,7 +161,7 @@ export function PlayerScrollStage({
     });
 
     rail.addEventListener("scroll", updateLayout, { passive: true });
-    window.addEventListener("resize", updateLayout);
+    globalThis.addEventListener("resize", updateLayout);
 
     const observer = new ResizeObserver(() => {
       updateLayout();
@@ -172,7 +172,7 @@ export function PlayerScrollStage({
     return () => {
       cancelAnimationFrame(frame);
       rail.removeEventListener("scroll", updateLayout);
-      window.removeEventListener("resize", updateLayout);
+      globalThis.removeEventListener("resize", updateLayout);
       observer.disconnect();
     };
   }, [centerIndex, scrollToCenter, updateLayout]);
@@ -186,21 +186,21 @@ export function PlayerScrollStage({
           className="players-3d-spacer"
           aria-hidden={true}
         />
-        {Children.map(children, (child, index) => (
-          <div
-            key={
-              isValidElement(child) && child.key !== null
-                ? `stage-${String(child.key)}`
-                : `stage-${index}`
-            }
-            ref={(element) => {
-              itemRefs.current[index] = element;
-            }}
-            className="players-3d-item"
-          >
-            {child}
-          </div>
-        ))}
+        {Children.map(children, (child, index) => {
+          const itemKey =
+            isValidElement(child) && child.key !== null
+              ? `stage-${String(child.key)}`
+              : `stage-${index}`;
+          return (
+            <StageItem
+              key={itemKey}
+              index={index}
+              itemRefs={itemRefs}
+              child={child}
+              itemKey={itemKey}
+            />
+          );
+        })}
         <div
           key="spacer-trail"
           ref={trailSpacerRef}

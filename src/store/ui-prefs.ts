@@ -113,7 +113,13 @@ export const useUiPrefsStore = create<UiPrefsState>()(
 
 export function useRehydrateUiPrefs(): void {
   useEffect(() => {
-    void useUiPrefsStore.persist.rehydrate();
+    const result = useUiPrefsStore.persist.rehydrate();
+    if (result instanceof Promise) {
+      result.then(
+        () => undefined,
+        () => undefined,
+      );
+    }
   }, []);
 }
 

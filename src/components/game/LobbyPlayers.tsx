@@ -41,11 +41,77 @@ interface LobbyPlayersProps {
   send: (message: ClientMessage) => void;
 }
 
-export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
+const RemoveBotButton = ({
+  label,
+  playerId,
+  send,
+}: {
+  label: string;
+  playerId: string;
+  send: (message: ClientMessage) => void;
+}) => {
+  const handleClick = () => {
+    send({ type: "remove_bot", playerId });
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="ui-badge text-theme-muted hover:text-accent transition-colors"
+    >
+      {label}
+    </button>
+  );
+};
+
+const CardPointSelect = ({
+  field,
+  value,
+  send,
+}: {
+  field: CardPointField;
+  value: number;
+  send: (message: ClientMessage) => void;
+}) => {
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    send({
+      type: "set_card_points",
+      values: { [field]: Number(e.target.value) },
+    });
+  };
+
+  return (
+    <select
+      value={value}
+      onChange={handleChange}
+      className="input-theme px-2 py-1 font-mono text-[10px] normal-case"
+    >
+      {CARD_POINT_OPTIONS.map((option) => (
+        <option key={option} value={option}>
+          {option}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+export const LobbyPlayers = ({ view, voice, send }: LobbyPlayersProps) => {
   const me = view.players.find((player) => player.id === view.playerId);
   const readyCount = view.players.filter(
     (player) => (player.connected || player.isBot) && !player.isWaiting,
   ).length;
+
+  const handleAddBot = () => {
+    send({ type: "add_bot" });
+  };
+
+  const handleJokerCountChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    send({
+      type: "set_joker_count",
+      count: Number(e.target.value),
+    });
+  };
 
   return (
     <div className="flex flex-col gap-2 min-w-0">
@@ -81,38 +147,34 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                 </span>
 
                 <div className="flex flex-wrap items-center justify-end gap-1 shrink-0">
-                  {player.isBot && (
+                  {player.isBot ? (
                     <span className="ui-badge text-accent-alt">
                       {voice.botBadge}
                     </span>
-                  )}
-                  {player.isHost && (
+                  ) : null}
+                  {player.isHost ? (
                     <span className="ui-badge text-accent">{voice.host}</span>
-                  )}
-                  {!(player.connected || player.isBot) && (
+                  ) : null}
+                  {!(player.connected || player.isBot) ? (
                     <span className="ui-badge text-theme-muted">
                       {voice.away}
                     </span>
-                  )}
-                  {player.isWaiting && (
+                  ) : null}
+                  {player.isWaiting ? (
                     <span className="ui-badge text-theme-muted">
                       {voice.waitingBadge}
                     </span>
-                  )}
+                  ) : null}
                   {view.isSoloMode &&
-                    me?.isHost &&
-                    player.isBot &&
-                    view.canAddBot && (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          send({ type: "remove_bot", playerId: player.id })
-                        }
-                        className="ui-badge text-theme-muted hover:text-accent transition-colors"
-                      >
-                        {voice.removeBot}
-                      </button>
-                    )}
+                  me?.isHost &&
+                  player.isBot &&
+                  view.canAddBot ? (
+                    <RemoveBotButton
+                      label={voice.removeBot}
+                      playerId={player.id}
+                      send={send}
+                    />
+                  ) : null}
                 </div>
               </motion.li>
             );
@@ -132,15 +194,15 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
           )}
         </ul>
 
-        {view.canAddBot && (
+        {view.canAddBot ? (
           <button
             type="button"
-            onClick={() => send({ type: "add_bot" })}
+            onClick={handleAddBot}
             className="mt-3 w-full chip-btn text-[10px] py-2 border-theme-muted text-theme hover:border-accent transition-colors"
           >
             {voice.addBot}
           </button>
-        )}
+        ) : null}
 
         <div className="mt-3 flex items-center justify-between gap-3 px-1">
           <span className="font-display text-[10px] text-theme-muted">
@@ -149,12 +211,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
           {view.canSetJokerCount ? (
             <select
               value={view.jokerCount}
-              onChange={(e) =>
-                send({
-                  type: "set_joker_count",
-                  count: Number(e.target.value),
-                })
-              }
+              onChange={handleJokerCountChange}
               className="input-theme px-2 py-1 font-mono text-[10px] normal-case"
             >
               {Array.from(
@@ -182,22 +239,11 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
               {voice[labelKey]}
             </span>
             {view.canSetCardPoints ? (
-              <select
+              <CardPointSelect
+                field={key}
                 value={view.cardPoints[key]}
-                onChange={(e) =>
-                  send({
-                    type: "set_card_points",
-                    values: { [key]: Number(e.target.value) },
-                  })
-                }
-                className="input-theme px-2 py-1 font-mono text-[10px] normal-case"
-              >
-                {CARD_POINT_OPTIONS.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
+                send={send}
+              />
             ) : (
               <span className="font-display text-[10px] text-theme tabular-nums">
                 {view.cardPoints[key]}
@@ -214,4 +260,4 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
       </div>
     </div>
   );
-}
+};

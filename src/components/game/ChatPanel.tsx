@@ -12,13 +12,13 @@ interface ChatPanelProps {
   onSend: (text: string) => void;
 }
 
-export function ChatPanel({
+export const ChatPanel = ({
   messages,
   playerId,
   connected,
   voice,
   onSend,
-}: ChatPanelProps) {
+}: ChatPanelProps) => {
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(messages.length);
@@ -41,6 +41,15 @@ export function ChatPanel({
     }
     onSend(text);
     setDraft("");
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    submit();
+  };
+
+  const handleDraftChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDraft(event.target.value);
   };
 
   return (
@@ -79,17 +88,11 @@ export function ChatPanel({
         )}
       </div>
 
-      <form
-        className="flex gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          submit();
-        }}
-      >
+      <form className="flex gap-2" onSubmit={handleSubmit}>
         <input
           type="text"
           value={draft}
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={handleDraftChange}
           placeholder={voice.chatPlaceholder}
           maxLength={200}
           disabled={!connected}
@@ -106,4 +109,4 @@ export function ChatPanel({
       </form>
     </div>
   );
-}
+};

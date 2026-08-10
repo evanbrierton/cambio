@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  createContext,
-  type ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useState,
-} from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { ThemeContext } from "@/context/theme-context";
 import {
   APPEARANCE_MEDIA_QUERY,
   type AppearancePreference,
@@ -19,16 +13,6 @@ import {
 } from "@/lib/theme-cookie";
 import { applyThemeFontClass } from "@/lib/theme-fonts";
 import { DEFAULT_THEME, type ThemeId } from "@/lib/themes";
-
-interface ThemeContextValue {
-  theme: ThemeId;
-  setTheme: (theme: ThemeId) => void;
-  appearancePreference: AppearancePreference;
-  resolvedAppearance: ResolvedAppearance;
-  setAppearancePreference: (preference: AppearancePreference) => void;
-}
-
-const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({
   children,
@@ -72,15 +56,15 @@ export function ThemeProvider({
       setAppearanceCookie(next);
 
       const prefersDark =
-        typeof window !== "undefined" &&
-        window.matchMedia(APPEARANCE_MEDIA_QUERY).matches;
+        typeof document !== "undefined" &&
+        globalThis.matchMedia(APPEARANCE_MEDIA_QUERY).matches;
       applyResolvedAppearance(resolveAppearance(next, prefersDark));
     },
     [applyResolvedAppearance],
   );
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(APPEARANCE_MEDIA_QUERY);
+    const mediaQuery = globalThis.matchMedia(APPEARANCE_MEDIA_QUERY);
     const applyCurrentAppearance = () => {
       applyResolvedAppearance(
         resolveAppearance(appearancePreference, mediaQuery.matches),
@@ -112,12 +96,4 @@ export function ThemeProvider({
       {children}
     </ThemeContext.Provider>
   );
-}
-
-export function useTheme() {
-  const ctx = useContext(ThemeContext);
-  if (!ctx) {
-    throw new Error("useTheme must be used within ThemeProvider");
-  }
-  return ctx;
 }

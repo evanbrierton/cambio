@@ -1,10 +1,10 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useTheme } from "@/context/ThemeProvider";
+import { useTheme } from "@/context/useTheme";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import type { AppearancePreference } from "@/lib/theme-cookie";
-import { THEME_OPTIONS } from "@/lib/themes";
+import { THEME_OPTIONS, type ThemeId } from "@/lib/themes";
 
 function renderThemePickerName(name: string, isRetro: boolean) {
   if (!isRetro) {
@@ -90,7 +90,91 @@ const APPEARANCE_ICONS: Record<AppearancePreference, ReactNode> = {
   system: <SystemIcon />,
 };
 
-export function ThemePicker({ compact = false }: { compact?: boolean }) {
+const AppearanceOptionButton = ({
+  optionId,
+  label,
+  title,
+  active,
+  onSelect,
+}: {
+  optionId: AppearancePreference;
+  label: string;
+  title: string;
+  active: boolean;
+  onSelect: (id: AppearancePreference) => void;
+}) => {
+  const handleClick = () => {
+    onSelect(optionId);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      aria-label={label}
+      aria-pressed={active}
+      title={title}
+      className={`inline-flex h-7 w-7 items-center justify-center border transition-colors ${
+        active
+          ? "border-accent bg-surface-elevated text-accent"
+          : "border-transparent text-theme-muted hover:text-theme"
+      }`}
+    >
+      {APPEARANCE_ICONS[optionId]}
+    </button>
+  );
+};
+
+const ThemeOptionButton = ({
+  optionId,
+  name,
+  description,
+  swatch,
+  active,
+  compact,
+  isRetro,
+  onSelect,
+}: {
+  optionId: ThemeId;
+  name: string;
+  description: string;
+  swatch: string;
+  active: boolean;
+  compact: boolean;
+  isRetro: boolean;
+  onSelect: (id: ThemeId) => void;
+}) => {
+  const handleClick = () => {
+    onSelect(optionId);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={`theme-option-btn min-w-0 text-left px-3 py-2 border-2 transition-[border-color,background-color,color,box-shadow] font-sans ${
+        active
+          ? "border-accent-alt bg-surface text-accent shadow-glow-accent"
+          : "border-theme-muted bg-surface text-theme-muted hover:border-accent"
+      }`}
+    >
+      <span
+        className="block h-1.5 w-full rounded-full mb-1.5"
+        style={{ background: swatch }}
+      />
+      <span className="theme-option-name font-display block">
+        {renderThemePickerName(name, isRetro)}
+      </span>
+      {compact ? null : (
+        <span className="text-[10px] opacity-70 block mt-0.5 normal-case tracking-normal font-sans">
+          {description}
+        </span>
+      )}
+    </button>
+  );
+};
+
+export const ThemePicker = ({ compact = false }: { compact?: boolean }) => {
   const {
     theme,
     setTheme,
@@ -141,26 +225,16 @@ export function ThemePicker({ compact = false }: { compact?: boolean }) {
           {voice.styleLabel}
         </p>
         <div className="chip-btn border-theme-muted bg-surface px-1 py-1 inline-flex items-center gap-0.5 self-start">
-          {appearanceOptions.map((option) => {
-            const active = appearancePreference === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => setAppearancePreference(option.id)}
-                aria-label={option.label}
-                aria-pressed={active}
-                title={option.title}
-                className={`inline-flex h-7 w-7 items-center justify-center border transition-colors ${
-                  active
-                    ? "border-accent bg-surface-elevated text-accent"
-                    : "border-transparent text-theme-muted hover:text-theme"
-                }`}
-              >
-                {APPEARANCE_ICONS[option.id]}
-              </button>
-            );
-          })}
+          {appearanceOptions.map((option) => (
+            <AppearanceOptionButton
+              key={option.id}
+              optionId={option.id}
+              label={option.label}
+              title={option.title}
+              active={appearancePreference === option.id}
+              onSelect={setAppearancePreference}
+            />
+          ))}
         </div>
       </div>
       <div
@@ -170,35 +244,20 @@ export function ThemePicker({ compact = false }: { compact?: boolean }) {
             : "grid-cols-[minmax(0,1fr)] sm:grid-cols-2 lg:grid-cols-4"
         }`}
       >
-        {THEME_OPTIONS.map((option) => {
-          const active = theme === option.id;
-          return (
-            <button
-              key={option.id}
-              type="button"
-              onClick={() => setTheme(option.id)}
-              className={`theme-option-btn min-w-0 text-left px-3 py-2 border-2 transition-[border-color,background-color,color,box-shadow] font-sans ${
-                active
-                  ? "border-accent-alt bg-surface text-accent shadow-glow-accent"
-                  : "border-theme-muted bg-surface text-theme-muted hover:border-accent"
-              }`}
-            >
-              <span
-                className="block h-1.5 w-full rounded-full mb-1.5"
-                style={{ background: option.swatch }}
-              />
-              <span className="theme-option-name font-display block">
-                {renderThemePickerName(option.name, theme === "retro")}
-              </span>
-              {!compact && (
-                <span className="text-[10px] opacity-70 block mt-0.5 normal-case tracking-normal font-sans">
-                  {option.description}
-                </span>
-              )}
-            </button>
-          );
-        })}
+        {THEME_OPTIONS.map((option) => (
+          <ThemeOptionButton
+            key={option.id}
+            optionId={option.id}
+            name={option.name}
+            description={option.description}
+            swatch={option.swatch}
+            active={theme === option.id}
+            compact={compact}
+            isRetro={theme === "retro"}
+            onSelect={setTheme}
+          />
+        ))}
       </div>
     </div>
   );
-}
+};

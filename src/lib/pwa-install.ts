@@ -3,6 +3,8 @@ export const PWA_INSTALL_DISMISS_KEY = "cambio-pwa-install-dismissed";
 /** How long a "Not now" dismissal lasts before the prompt can show again. */
 export const PWA_INSTALL_DISMISS_MS = 14 * 24 * 60 * 60 * 1000;
 
+const IOS_UA_PATTERN = /iPad|iPhone|iPod/;
+
 export type BeforeInstallPromptOutcome = "accepted" | "dismissed";
 
 /** Chromium `beforeinstallprompt` event shape (not in standard DOM typings). */
@@ -13,17 +15,19 @@ export type BeforeInstallPromptEvent = Event & {
 };
 
 export function isStandaloneDisplay(): boolean {
-  if (typeof window === "undefined") {
+  if (typeof document === "undefined") {
     return false;
   }
 
-  const mediaStandalone = window.matchMedia(
+  const mediaStandalone = globalThis.matchMedia(
     "(display-mode: standalone)",
   ).matches;
-  const mediaFullscreen = window.matchMedia(
+  const mediaFullscreen = globalThis.matchMedia(
     "(display-mode: fullscreen)",
   ).matches;
-  const mediaMinimal = window.matchMedia("(display-mode: minimal-ui)").matches;
+  const mediaMinimal = globalThis.matchMedia(
+    "(display-mode: minimal-ui)",
+  ).matches;
   const iosStandalone =
     "standalone" in navigator &&
     Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
@@ -37,7 +41,7 @@ export function isIosDevice(): boolean {
   }
 
   const ua = navigator.userAgent;
-  if (/iPad|iPhone|iPod/.test(ua)) {
+  if (IOS_UA_PATTERN.test(ua)) {
     return true;
   }
 
@@ -50,7 +54,7 @@ export function isIosDevice(): boolean {
 }
 
 export function isInstallDismissed(now = Date.now()): boolean {
-  if (typeof window === "undefined") {
+  if (typeof document === "undefined") {
     return true;
   }
 
@@ -72,7 +76,7 @@ export function isInstallDismissed(now = Date.now()): boolean {
 }
 
 export function dismissInstallPrompt(now = Date.now()): void {
-  if (typeof window === "undefined") {
+  if (typeof document === "undefined") {
     return;
   }
 
@@ -84,7 +88,7 @@ export function dismissInstallPrompt(now = Date.now()): void {
 }
 
 export function clearInstallDismiss(): void {
-  if (typeof window === "undefined") {
+  if (typeof document === "undefined") {
     return;
   }
 

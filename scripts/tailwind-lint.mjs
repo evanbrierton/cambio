@@ -38,6 +38,7 @@ for (const file of payload.files ?? []) {
     continue;
   }
   for (const _diagnostic of file.diagnostics) {
+    // Diagnostics are counted via payload.summary below.
   }
 }
 

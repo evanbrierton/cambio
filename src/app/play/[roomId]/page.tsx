@@ -76,11 +76,11 @@ export default function PlayPage({
     if (!(view && isNavFresh)) {
       return;
     }
-    const params = new URLSearchParams({ name });
+    const query = new URLSearchParams({ name });
     if (debugEnabled) {
-      appendDebugQueryParam(params);
+      appendDebugQueryParam(query);
     }
-    router.replace(`/play/${roomId}?${params.toString()}`);
+    router.replace(`/play/${roomId}?${query.toString()}`);
   }, [debugEnabled, view, isNavFresh, name, roomId, router]);
 
   useEffect(() => {
@@ -88,10 +88,10 @@ export default function PlayPage({
       setShowConnecting(false);
       return;
     }
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       setShowConnecting(true);
     }, CONNECTING_UI_DELAY_MS);
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [view, error]);
 
   const pageScrollable = allowsPageScroll(view);

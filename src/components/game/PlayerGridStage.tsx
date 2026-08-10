@@ -13,7 +13,33 @@ interface PlayerGridStageProps {
   children: ReactNode;
 }
 
-export function PlayerGridStage({ children }: PlayerGridStageProps) {
+const GridItem = ({
+  index,
+  itemRefs,
+  child,
+  itemKey,
+}: {
+  index: number;
+  itemRefs: React.MutableRefObject<(HTMLDivElement | null)[]>;
+  child: ReactNode;
+  itemKey: string;
+}) => {
+  const setRef = (element: HTMLDivElement | null) => {
+    itemRefs.current[index] = element;
+  };
+
+  return (
+    <div
+      key={itemKey}
+      ref={setRef}
+      className="players-grid-item min-w-0 w-full flex justify-center"
+    >
+      {child}
+    </div>
+  );
+};
+
+export const PlayerGridStage = ({ children }: PlayerGridStageProps) => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const childCount = Children.count(children);
@@ -24,7 +50,7 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
       return;
     }
 
-    const reducedMotion = window.matchMedia(
+    const reducedMotion = globalThis.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
     const viewport = scrollEl.getBoundingClientRect();
@@ -73,7 +99,7 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
     const frame = requestAnimationFrame(updateLayout);
 
     scrollEl.addEventListener("scroll", updateLayout, { passive: true });
-    window.addEventListener("resize", updateLayout);
+    globalThis.addEventListener("resize", updateLayout);
 
     const observer = new ResizeObserver(updateLayout);
     observer.observe(scrollEl);
@@ -81,7 +107,7 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
     return () => {
       cancelAnimationFrame(frame);
       scrollEl.removeEventListener("scroll", updateLayout);
-      window.removeEventListener("resize", updateLayout);
+      globalThis.removeEventListener("resize", updateLayout);
       observer.disconnect();
     };
   }, [updateLayout]);
@@ -93,23 +119,23 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
         className="players-grid-scroll flex-1 basis-0 min-h-0 overflow-y-auto overflow-x-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
       >
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 p-2 justify-items-center">
-          {Children.map(children, (child, index) => (
-            <div
-              key={
-                isValidElement(child) && child.key !== null
-                  ? `grid-${String(child.key)}`
-                  : `grid-${index}`
-              }
-              ref={(element) => {
-                itemRefs.current[index] = element;
-              }}
-              className="players-grid-item min-w-0 w-full flex justify-center"
-            >
-              {child}
-            </div>
-          ))}
+          {Children.map(children, (child, index) => {
+            const itemKey =
+              isValidElement(child) && child.key !== null
+                ? `grid-${String(child.key)}`
+                : `grid-${index}`;
+            return (
+              <GridItem
+                key={itemKey}
+                index={index}
+                itemRefs={itemRefs}
+                child={child}
+                itemKey={itemKey}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
   );
-}
+};

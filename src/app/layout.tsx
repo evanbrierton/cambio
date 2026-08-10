@@ -95,7 +95,7 @@ const APPEARANCE_INIT_SCRIPT = `
     ? cookieValue
     : fallback;
   const resolved = preference === "system"
-    ? (window.matchMedia(${JSON.stringify(APPEARANCE_MEDIA_QUERY)}).matches ? "dark" : "light")
+    ? (globalThis.matchMedia(${JSON.stringify(APPEARANCE_MEDIA_QUERY)}).matches ? "dark" : "light")
     : preference;
   root.dataset.appearance = resolved;
   root.style.colorScheme = resolved;

@@ -104,7 +104,7 @@ export class BotKnowledge {
     this.pointValues = state.cardPoints;
 
     for (const player of state.players) {
-      for (let slot = 0; slot < player.hand.length; slot++) {
+      for (let slot = 0; slot < player.hand.length; slot += 1) {
         const handSlot = player.hand[slot];
         if (!handSlot?.card) {
           this.forget(player.id, slot);
@@ -233,7 +233,7 @@ function estimatePlayerHandTotal(
   }
 
   let total = 0;
-  for (let slot = 0; slot < player.hand.length; slot++) {
+  for (let slot = 0; slot < player.hand.length; slot += 1) {
     if (!slotHasCard(player, slot)) {
       continue;
     }
@@ -388,7 +388,7 @@ function worstKnownSlot(
 
   let worstSlot = 0;
   let worstPoints = Number.NEGATIVE_INFINITY;
-  for (let slot = 0; slot < player.hand.length; slot++) {
+  for (let slot = 0; slot < player.hand.length; slot += 1) {
     if (!slotHasCard(player, slot)) {
       continue;
     }
@@ -417,7 +417,7 @@ function bestUnknownOpponentSlot(
       continue;
     }
 
-    for (let slot = 0; slot < opponent.hand.length; slot++) {
+    for (let slot = 0; slot < opponent.hand.length; slot += 1) {
       if (!slotHasCard(opponent, slot)) {
         continue;
       }
@@ -461,7 +461,7 @@ function bestLookTarget(
     if (!canTargetPlayer(player.id, state) && player.id !== botId) {
       continue;
     }
-    for (let slot = 0; slot < player.hand.length; slot++) {
+    for (let slot = 0; slot < player.hand.length; slot += 1) {
       if (!slotHasCard(player, slot)) {
         continue;
       }
@@ -492,7 +492,7 @@ function firstUnknownOwnSlot(
   if (!bot) {
     return null;
   }
-  for (let slot = 0; slot < bot.hand.length; slot++) {
+  for (let slot = 0; slot < bot.hand.length; slot += 1) {
     if (slotHasCard(bot, slot) && knowledge.get(botId, slot) === undefined) {
       return slot;
     }
@@ -538,7 +538,7 @@ function findSnapTarget(
     if (!canTargetPlayer(player.id, state) && player.id !== botId) {
       continue;
     }
-    for (let slot = 0; slot < player.hand.length; slot++) {
+    for (let slot = 0; slot < player.hand.length; slot += 1) {
       if (!slotHasCard(player, slot)) {
         continue;
       }
@@ -607,21 +607,22 @@ function decideAbility(
         return null;
       }
       if (isExpert(difficulty)) {
-        const slot = firstUnknownOwnSlot(state, botId, knowledge);
-        if (slot !== null) {
-          return { type: "ability_look", playerId: botId, slot };
+        const expertSlot = firstUnknownOwnSlot(state, botId, knowledge);
+        if (expertSlot !== null) {
+          return { type: "ability_look", playerId: botId, slot: expertSlot };
         }
       }
       const unknown = bot.hand
-        .map((_, slot) => slot)
+        .map((_, handSlot) => handSlot)
         .filter(
-          (slot) =>
-            slotHasCard(bot, slot) && knowledge.get(botId, slot) === undefined,
+          (handSlot) =>
+            slotHasCard(bot, handSlot) &&
+            knowledge.get(botId, handSlot) === undefined,
         );
-      const slot =
+      const lookSlot =
         randomItem(unknown) ??
         worstKnownSlot(state, botId, knowledge, difficulty);
-      return { type: "ability_look", playerId: botId, slot };
+      return { type: "ability_look", playerId: botId, slot: lookSlot };
     }
 
     if (pending.kind === "spy") {
@@ -645,7 +646,7 @@ function decideAbility(
         if (opponent.id === botId || !canTargetPlayer(opponent.id, state)) {
           continue;
         }
-        for (let slot = 0; slot < opponent.hand.length; slot++) {
+        for (let slot = 0; slot < opponent.hand.length; slot += 1) {
           if (slotHasCard(opponent, slot)) {
             candidates.push({ playerId: opponent.id, slot });
           }
@@ -680,7 +681,7 @@ function decideAbility(
       if (!canTargetPlayer(player.id, state) && player.id !== botId) {
         continue;
       }
-      for (let slot = 0; slot < player.hand.length; slot++) {
+      for (let slot = 0; slot < player.hand.length; slot += 1) {
         if (slotHasCard(player, slot)) {
           lookTargets.push({ playerId: player.id, slot });
         }
@@ -903,11 +904,11 @@ export function decideBotAction(
 
   if (state.phase === "setup_peek" && isPlayingPlayer(bot)) {
     const unpeeked = SETUP_PEEK_SLOTS.filter(
-      (slot) => !bot.setupPeekedSlots.includes(slot),
+      (peekSlot) => !bot.setupPeekedSlots.includes(peekSlot),
     );
-    const slot = unpeeked[0];
-    if (slot !== undefined) {
-      return { type: "setup_peek", slot };
+    const nextSetupSlot = unpeeked[0];
+    if (nextSetupSlot !== undefined) {
+      return { type: "setup_peek", slot: nextSetupSlot };
     }
   }
 

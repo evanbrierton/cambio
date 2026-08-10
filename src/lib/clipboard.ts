@@ -3,8 +3,8 @@ function legacyCopy(text: string): boolean {
     return false;
   }
 
-  const scrollX = window.scrollX;
-  const scrollY = window.scrollY;
+  const scrollX = globalThis.scrollX;
+  const scrollY = globalThis.scrollY;
   const activeElement = document.activeElement;
 
   const textarea = document.createElement("textarea");
@@ -47,7 +47,7 @@ function legacyCopy(text: string): boolean {
   if (activeElement instanceof HTMLElement) {
     activeElement.focus({ preventScroll: true });
   }
-  window.scrollTo(scrollX, scrollY);
+  globalThis.scrollTo(scrollX, scrollY);
 
   return copied;
 }

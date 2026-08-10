@@ -97,7 +97,11 @@ export function addBotPlayer(
   const reserved = state.players.map((p) => p.name);
   let name = generateBotName(reserved);
 
-  for (let attempt = 0; attempt < 100 && isNameTaken(state, name); attempt++) {
+  for (
+    let attempt = 0;
+    attempt < 100 && isNameTaken(state, name);
+    attempt += 1
+  ) {
     reserved.push(name);
     name = generateBotName(reserved);
   }
@@ -266,7 +270,7 @@ function rotatePlayerOrder(state: GameState): void {
 
 function nextActivePlayerIndex(state: GameState, fromIndex: number): number {
   const n = state.players.length;
-  for (let i = 1; i <= n; i++) {
+  for (let i = 1; i <= n; i += 1) {
     const idx = (fromIndex + i) % n;
     if (isPlayingPlayer(state.players[idx])) {
       return idx;
@@ -823,7 +827,7 @@ function firstEmptySlot(hand: CardSlot[]): number {
 
 /** First open slot in the original 2×2 hand grid (including gaps after snaps). */
 function firstEmptyBaseSlot(hand: CardSlot[]): number {
-  for (let i = 0; i < HAND_BASE_SLOTS; i++) {
+  for (let i = 0; i < HAND_BASE_SLOTS; i += 1) {
     if (i >= hand.length || hand[i].card === null) {
       return i;
     }

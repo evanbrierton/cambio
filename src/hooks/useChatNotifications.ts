@@ -39,18 +39,20 @@ export function useChatNotifications({
   );
   const isMobileRef = useRef(false);
   const lastNotifiedIdRef = useRef<string | null>(null);
-  const notificationTimerRef = useRef<number | null>(null);
+  const notificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   const dismissNotification = useCallback(() => {
     setNotification(null);
     if (notificationTimerRef.current) {
-      window.clearTimeout(notificationTimerRef.current);
+      globalThis.clearTimeout(notificationTimerRef.current);
       notificationTimerRef.current = null;
     }
   }, []);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
+    const mediaQuery = globalThis.matchMedia(MOBILE_MEDIA_QUERY);
     const update = () => {
       isMobileRef.current = mediaQuery.matches;
     };
@@ -132,9 +134,9 @@ export function useChatNotifications({
     });
 
     if (notificationTimerRef.current) {
-      window.clearTimeout(notificationTimerRef.current);
+      globalThis.clearTimeout(notificationTimerRef.current);
     }
-    notificationTimerRef.current = window.setTimeout(() => {
+    notificationTimerRef.current = globalThis.setTimeout(() => {
       setNotification(null);
       notificationTimerRef.current = null;
     }, CHAT_TOAST_MS);
@@ -150,7 +152,7 @@ export function useChatNotifications({
   useEffect(
     () => () => {
       if (notificationTimerRef.current) {
-        window.clearTimeout(notificationTimerRef.current);
+        globalThis.clearTimeout(notificationTimerRef.current);
       }
     },
     [],

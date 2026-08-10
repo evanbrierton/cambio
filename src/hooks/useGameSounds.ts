@@ -64,7 +64,7 @@ export function useGameSounds(
     }
     const key = swapFlash.slots
       .map((slot) => `${slot.playerId}-${slot.slot}`)
-      .sort()
+      .sort((left, right) => left.localeCompare(right))
       .join("|");
     if (swapFlashKey.current === key) {
       return;

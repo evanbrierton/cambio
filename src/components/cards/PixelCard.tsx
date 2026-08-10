@@ -2,15 +2,9 @@
 
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { HAND_CARD_SIZE, TABLE_CARD_SIZE } from "@/components/cards/card-sizes";
 import { cardLabel, isRed } from "@/game/cards";
 import type { Card, PeekFlashKind } from "@/game/types";
-
-export const TABLE_CARD_SIZE = "w-20 h-28";
-export const HAND_CARD_SIZE =
-  "w-14 h-20 text-[10px] sm:w-16 sm:h-18 lg:w-20 lg:h-28 lg:text-xs";
-export const HAND_GRID_WIDTH = "w-[7.25rem] sm:w-[8.25rem] lg:w-[10.375rem]";
-export const PILE_CARD_SIZE =
-  "w-14 h-20 text-[10px] sm:w-16 sm:h-18 lg:w-20 lg:h-28 lg:text-xs";
 
 interface PixelCardProps {
   card: Card | null;
@@ -62,11 +56,11 @@ function SwapFlashOverlay({
       <div className="absolute inset-0 bg-accent/65" />
       <div className="absolute inset-0 bg-linear-to-br from-accent-alt/70 via-white/25 to-accent/70 swap-flash-shimmer" />
       <div className="absolute inset-0 border-4 border-accent swap-flash-ring" />
-      {slotLabel && (
+      {slotLabel ? (
         <span className="relative mb-1 font-display font-bold text-[8px] sm:text-[9px] text-white/90 tracking-wider">
           {slotLabel}
         </span>
-      )}
+      ) : null}
       <span
         className={`relative font-display font-bold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] swap-flash-icon ${
           small ? "text-3xl lg:text-5xl" : "text-5xl"
@@ -97,11 +91,11 @@ function PeekFlashOverlay({
       <div className="absolute inset-0 bg-accent-alt/65" />
       <div className="absolute inset-0 bg-linear-to-br from-accent-alt/70 via-white/25 to-accent/50 peek-flash-shimmer" />
       <div className="absolute inset-0 border-4 border-accent-alt peek-flash-ring" />
-      {slotLabel && (
+      {slotLabel ? (
         <span className="relative mb-1 font-display font-bold text-[8px] sm:text-[9px] text-white/90 tracking-wider">
           {slotLabel}
         </span>
-      )}
+      ) : null}
       <span
         className={`relative font-display font-bold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] peek-flash-icon ${
           small ? "text-3xl lg:text-5xl" : "text-5xl"
@@ -128,11 +122,11 @@ function PenaltyFlashOverlay({
       <div className="absolute inset-0 bg-danger-surface/70" />
       <div className="absolute inset-0 bg-linear-to-br from-accent/70 via-white/20 to-danger-surface/70 penalty-flash-shimmer" />
       <div className="absolute inset-0 border-4 border-accent penalty-flash-ring" />
-      {slotLabel && (
+      {slotLabel ? (
         <span className="relative mb-1 font-display font-bold text-[8px] sm:text-[9px] text-white/90 tracking-wider">
           {slotLabel}
         </span>
-      )}
+      ) : null}
       <span
         className={`relative font-display font-bold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] penalty-flash-icon ${
           small ? "text-3xl lg:text-5xl" : "text-5xl"
@@ -230,22 +224,22 @@ function CardShell({
       >
         {children}
       </Shell>
-      {swapFlashing && (
+      {swapFlashing ? (
         <SwapFlashOverlay small={overlaySmall} slotLabel={swapFlashSlotLabel} />
-      )}
-      {peekFlashing && peekFlashKind && (
+      ) : null}
+      {peekFlashing && peekFlashKind ? (
         <PeekFlashOverlay
           small={overlaySmall}
           kind={peekFlashKind}
           slotLabel={peekFlashSlotLabel}
         />
-      )}
-      {penaltyFlashing && (
+      ) : null}
+      {penaltyFlashing ? (
         <PenaltyFlashOverlay
           small={overlaySmall}
           slotLabel={penaltyFlashSlotLabel}
         />
-      )}
+      ) : null}
     </div>
   );
 }
@@ -277,7 +271,9 @@ export function PixelCard({
     sizeClass ?? (small ? HAND_CARD_SIZE : `${TABLE_CARD_SIZE} text-xs`);
 
   if (empty) {
-    const effectFlashing = swapFlashing || peekFlashing || penaltyFlashing;
+    const effectFlashing = [swapFlashing, peekFlashing, penaltyFlashing].some(
+      Boolean,
+    );
     const wrapClass = swapFlashing
       ? "swap-flash-wrap border-accent border-solid"
       : peekFlashing
@@ -291,27 +287,27 @@ export function PixelCard({
         className={`${size} shrink-0 pixel-border rounded-card border-dashed relative overflow-hidden ${wrapClass}`}
         aria-hidden={!effectFlashing}
       >
-        {swapFlashing && (
+        {swapFlashing ? (
           <SwapFlashOverlay small={small} slotLabel={swapFlashSlotLabel} />
-        )}
-        {peekFlashing && peekFlashKind && (
+        ) : null}
+        {peekFlashing && peekFlashKind ? (
           <PeekFlashOverlay
             small={small}
             kind={peekFlashKind}
             slotLabel={peekFlashSlotLabel}
           />
-        )}
-        {penaltyFlashing && (
+        ) : null}
+        {penaltyFlashing ? (
           <PenaltyFlashOverlay
             small={small}
             slotLabel={penaltyFlashSlotLabel}
           />
-        )}
+        ) : null}
       </div>
     );
   }
 
-  const showFace = card && !hidden && (faceUp || !hidden);
+  const showFace = Boolean(card) && !hidden && faceUp;
   const interactive = Boolean(onClick && !disabled);
 
   const swapGlow = highlightSwap
@@ -359,11 +355,11 @@ export function PixelCard({
         baseClass={baseClass}
         faceClass="bg-surface-card"
       >
-        {swapFirstSelected && (
+        {swapFirstSelected ? (
           <span className="absolute -top-2 -right-2 z-20 ui-badge bg-accent-alt text-[8px] px-1.5 py-0.5 rounded-full shadow-glow-accent-alt">
             1
           </span>
-        )}
+        ) : null}
         <div
           className={`absolute inset-0 ${penaltyFlashing ? "bg-danger-surface/80" : "opacity-80"}`}
           style={{
@@ -410,11 +406,11 @@ export function PixelCard({
       baseClass={baseClass}
       faceClass={`bg-surface-card-alt ${color} flex flex-col items-center justify-center gap-0.5 lg:gap-1`}
     >
-      {swapFirstSelected && (
+      {swapFirstSelected ? (
         <span className="absolute -top-2 -right-2 z-20 ui-badge bg-accent-alt text-[8px] px-1.5 py-0.5 rounded-full shadow-glow-accent-alt">
           1
         </span>
-      )}
+      ) : null}
       <span className="font-display leading-none">
         {card ? cardLabel(card) : ""}
       </span>

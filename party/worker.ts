@@ -1,7 +1,6 @@
 import { routePartykitRequest } from "partyserver";
-import { CambioParty } from "./cambio";
 
-export { CambioParty };
+export { CambioParty } from "./cambio";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {

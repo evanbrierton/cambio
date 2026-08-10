@@ -3,7 +3,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { HAND_GRID_WIDTH, PixelCard } from "@/components/cards/PixelCard";
+import { HAND_GRID_WIDTH } from "@/components/cards/card-sizes";
+import { PixelCard } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
@@ -436,7 +437,7 @@ function PlayerSeat({
       selectedSwapCard.slot === index;
     const canInteract =
       canPickForSnapGive ||
-      !(snapGivePending || isEmpty) ||
+      (!snapGivePending && !isEmpty) ||
       (showDrawnSwapHint && isOwn) ||
       (showAbilitySwapHint && !abilityLocked);
 
@@ -473,9 +474,12 @@ function PlayerSeat({
         peekFlashSlotLabel={showPeekFlashOverlay ? `#${index + 1}` : undefined}
         highlightSwap={
           !isEmpty &&
-          ((showDrawnSwapHint && !setupLocked) ||
-            (showSnapGiveHint && !setupLocked) ||
-            (showAbilitySwapHint && !setupLocked && !abilityLocked))
+          !setupLocked &&
+          [
+            showDrawnSwapHint,
+            showSnapGiveHint,
+            showAbilitySwapHint && !abilityLocked,
+          ].some(Boolean)
         }
         highlightAction={
           !isEmpty &&
@@ -701,7 +705,7 @@ export function GameTable({
     null,
   );
   const lobbyPlayersRef = useRef<Set<string>>(new Set());
-  const lobbyJoinTimerRef = useRef<number | null>(null);
+  const lobbyJoinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tableDeckRef = useRef<HTMLDivElement>(null);
 
   useGameSounds(
@@ -884,7 +888,7 @@ export function GameTable({
       );
       setLobbyJoinToast(null);
       if (lobbyJoinTimerRef.current) {
-        window.clearTimeout(lobbyJoinTimerRef.current);
+        globalThis.clearTimeout(lobbyJoinTimerRef.current);
         lobbyJoinTimerRef.current = null;
       }
       return;
@@ -905,9 +909,9 @@ export function GameTable({
         tone: "info",
       });
       if (lobbyJoinTimerRef.current) {
-        window.clearTimeout(lobbyJoinTimerRef.current);
+        globalThis.clearTimeout(lobbyJoinTimerRef.current);
       }
-      lobbyJoinTimerRef.current = window.setTimeout(() => {
+      lobbyJoinTimerRef.current = globalThis.setTimeout(() => {
         setLobbyJoinToast(null);
         lobbyJoinTimerRef.current = null;
       }, LOBBY_JOIN_TOAST_MS);
@@ -930,8 +934,8 @@ export function GameTable({
     };
 
     update();
-    const timer = window.setInterval(update, 250);
-    return () => window.clearInterval(timer);
+    const timer = globalThis.setInterval(update, 250);
+    return () => globalThis.clearInterval(timer);
   }, [view.phase, view.snapWindowEndsAt]);
 
   useEffect(() => {
@@ -955,7 +959,7 @@ export function GameTable({
 
     const self = playersInTurnOrder[selfIndex];
     const opponents: PublicPlayer[] = [];
-    for (let i = 1; i < playersInTurnOrder.length; i++) {
+    for (let i = 1; i < playersInTurnOrder.length; i += 1) {
       opponents.push(
         playersInTurnOrder[(selfIndex + i) % playersInTurnOrder.length],
       );
@@ -972,7 +976,7 @@ export function GameTable({
     }
 
     const opponents: PublicPlayer[] = [];
-    for (let i = 1; i < playersInTurnOrder.length; i++) {
+    for (let i = 1; i < playersInTurnOrder.length; i += 1) {
       opponents.push(
         playersInTurnOrder[(selfIndex + i) % playersInTurnOrder.length],
       );
@@ -1108,7 +1112,7 @@ export function GameTable({
         return;
       }
       setRoomCopied(true);
-      window.setTimeout(() => setRoomCopied(false), 2000);
+      globalThis.setTimeout(() => setRoomCopied(false), 2000);
     });
   };
 

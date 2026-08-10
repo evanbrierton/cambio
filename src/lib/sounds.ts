@@ -19,7 +19,7 @@ import { useUiPrefsStore } from "@/store/ui-prefs";
 let audioCtx: AudioContext | null = null;
 
 function getCtx(): AudioContext | null {
-  if (typeof window === "undefined") {
+  if (typeof document === "undefined") {
     return null;
   }
   if (!audioCtx) {
@@ -134,5 +134,10 @@ export async function playSound(id: SoundId): Promise<void> {
       tone(ctx, 880, t, 0.04, "sine", 0.035);
       tone(ctx, 1100, t + 0.05, 0.06, "sine", 0.03);
       break;
+    default: {
+      const _exhaustive: never = id;
+      void _exhaustive;
+      break;
+    }
   }
 }

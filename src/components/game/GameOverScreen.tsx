@@ -96,7 +96,36 @@ const fadeUp = {
   animate: { opacity: 1, y: 0 },
 };
 
-export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
+const RoundTabButton = ({
+  label,
+  active,
+  onSelect,
+  tabRef,
+}: {
+  label: string;
+  active: boolean;
+  onSelect: () => void;
+  tabRef?: React.Ref<HTMLButtonElement>;
+}) => (
+  <button
+    ref={tabRef}
+    type="button"
+    onClick={onSelect}
+    className={`chip-btn shrink-0 text-[8px] px-2 py-1 transition-colors ${
+      active
+        ? "border-accent text-accent"
+        : "border-theme-muted text-theme-muted"
+    }`}
+  >
+    {label}
+  </button>
+);
+
+export const GameOverScreen = ({
+  view,
+  connected,
+  send,
+}: GameOverScreenProps) => {
   const voice = useThemeVoice();
   const latestRound = latestRoundNumber(view);
   const latestRoundTabRef = useRef<HTMLButtonElement>(null);
@@ -133,6 +162,10 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
     send({ type: "start_game" });
   };
 
+  const selectTotal = () => {
+    setSelectedRound("total");
+  };
+
   return (
     <motion.div
       className="w-full max-w-2xl mx-auto flex flex-col gap-5 py-6 px-4"
@@ -152,7 +185,7 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
         <h1 className="font-display text-2xl sm:text-3xl title-glow mt-2">
           {voice.gameOverTitle}
         </h1>
-        {winners.length > 0 && (
+        {winners.length > 0 ? (
           <motion.p
             className="text-sm text-theme mt-2 normal-case tracking-normal"
             initial={{ scale: 0.9, opacity: 0 }}
@@ -170,7 +203,7 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
             </span>
             ★
           </motion.p>
-        )}
+        ) : null}
         <p className="font-display text-[10px] text-theme-muted mt-2">
           {connected ? voice.online : voice.reconnecting}
         </p>
@@ -182,36 +215,29 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
         transition={{ duration: 0.4, delay: 0.12 }}
       >
         <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto pb-1 scroll-stable">
-          <button
-            type="button"
-            onClick={() => setSelectedRound("total")}
-            className={`chip-btn shrink-0 text-[8px] px-2 py-1 transition-colors ${
-              selectedRound === "total"
-                ? "border-accent text-accent"
-                : "border-theme-muted text-theme-muted"
-            }`}
-          >
-            {voice.cumulativeScores}
-          </button>
-          {asArray(view.roundHistory).map((round) => (
-            <button
-              key={round.roundNumber}
-              ref={
-                round.roundNumber === latestRound
-                  ? latestRoundTabRef
-                  : undefined
-              }
-              type="button"
-              onClick={() => setSelectedRound(round.roundNumber)}
-              className={`chip-btn shrink-0 text-[8px] px-2 py-1 transition-colors ${
-                selectedRound === round.roundNumber
-                  ? "border-accent text-accent"
-                  : "border-theme-muted text-theme-muted"
-              }`}
-            >
-              {voice.roundLabel(round.roundNumber)}
-            </button>
-          ))}
+          <RoundTabButton
+            label={voice.cumulativeScores}
+            active={selectedRound === "total"}
+            onSelect={selectTotal}
+          />
+          {asArray(view.roundHistory).map((round) => {
+            const selectRound = () => {
+              setSelectedRound(round.roundNumber);
+            };
+            return (
+              <RoundTabButton
+                key={round.roundNumber}
+                label={voice.roundLabel(round.roundNumber)}
+                active={selectedRound === round.roundNumber}
+                onSelect={selectRound}
+                tabRef={
+                  round.roundNumber === latestRound
+                    ? latestRoundTabRef
+                    : undefined
+                }
+              />
+            );
+          })}
         </div>
 
         {selectedRound === "total" ? (
@@ -304,4 +330,4 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
       <ThemePicker compact={true} />
     </motion.div>
   );
-}
+};

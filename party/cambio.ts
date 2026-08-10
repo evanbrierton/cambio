@@ -147,7 +147,10 @@ export class CambioParty extends Server<Env> {
     const delay = botChatDelay();
     this.botChatTimer = setTimeout(() => {
       this.botChatTimer = null;
-      void this.sendBotChat();
+      this.sendBotChat().then(
+        () => undefined,
+        () => undefined,
+      );
     }, delay);
   }
 
@@ -160,7 +163,10 @@ export class CambioParty extends Server<Env> {
     const delay = 2000 + Math.floor(Math.random() * 3000);
     this.botChatReplyTimer = setTimeout(() => {
       this.botChatReplyTimer = null;
-      void this.sendBotChat({ replyTo: { playerName, text } });
+      this.sendBotChat({ replyTo: { playerName, text } }).then(
+        () => undefined,
+        () => undefined,
+      );
     }, delay);
   }
 
@@ -179,7 +185,10 @@ export class CambioParty extends Server<Env> {
     const delay = 1500 + Math.floor(Math.random() * 2500);
     this.botChatReplyTimer = setTimeout(() => {
       this.botChatReplyTimer = null;
-      void this.sendBotChat({ gameMove: reaction });
+      this.sendBotChat({ gameMove: reaction }).then(
+        () => undefined,
+        () => undefined,
+      );
     }, delay);
   }
 
@@ -223,6 +232,7 @@ export class CambioParty extends Server<Env> {
     });
 
     if (result.source === "template" && result.fallbackReason) {
+      // Template fallback reason is currently unused beyond generation.
     }
 
     const posted = addChatMessage(this.state, bot.id, result.text, {
@@ -411,7 +421,10 @@ export class CambioParty extends Server<Env> {
         return;
       }
       this.state.botThinkingId = null;
-      void this.dispatchMessage(scheduledBotId, scheduledAction);
+      this.dispatchMessage(scheduledBotId, scheduledAction).then(
+        () => undefined,
+        () => undefined,
+      );
     }, delay);
   }
 
@@ -607,7 +620,7 @@ export class CambioParty extends Server<Env> {
       if (isSolo) {
         this.state.isSoloMode = true;
         this.state.soloDifficulty = difficulty;
-        for (let i = 0; i < botCount; i++) {
+        for (let i = 0; i < botCount; i += 1) {
           addBotPlayer(this.state, difficulty);
         }
       }

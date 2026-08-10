@@ -50,16 +50,19 @@ export function PwaInstallPrompt() {
       setVisible(false);
     };
 
-    window.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-    window.addEventListener("appinstalled", onAppInstalled);
+    globalThis.addEventListener("beforeinstallprompt", onBeforeInstallPrompt);
+    globalThis.addEventListener("appinstalled", onAppInstalled);
 
     if (isIosDevice()) {
       setIosGuide(true);
     }
 
     return () => {
-      window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
-      window.removeEventListener("appinstalled", onAppInstalled);
+      globalThis.removeEventListener(
+        "beforeinstallprompt",
+        onBeforeInstallPrompt,
+      );
+      globalThis.removeEventListener("appinstalled", onAppInstalled);
     };
   }, []);
 
@@ -147,9 +150,7 @@ export function PwaInstallPrompt() {
                   <RetroButton
                     className="py-2! px-3!"
                     disabled={installing}
-                    onClick={() => {
-                      void onInstall();
-                    }}
+                    onClick={onInstall}
                   >
                     {installing ? "Installing…" : "Install"}
                   </RetroButton>

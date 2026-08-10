@@ -1,10 +1,10 @@
 const CACHE_NAME = "cambio-v2";
 
-self.addEventListener("install", (event) => {
-  event.waitUntil(self.skipWaiting());
+globalThis.addEventListener("install", (event) => {
+  event.waitUntil(globalThis.skipWaiting());
 });
 
-self.addEventListener("activate", (event) => {
+globalThis.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
@@ -15,17 +15,17 @@ self.addEventListener("activate", (event) => {
             .map((key) => caches.delete(key)),
         ),
       )
-      .then(() => self.clients.claim()),
+      .then(() => globalThis.clients.claim()),
   );
 });
 
-self.addEventListener("fetch", (event) => {
+globalThis.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
     return;
   }
 
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) {
+  if (url.origin !== globalThis.location.origin) {
     return;
   }
 
@@ -58,7 +58,7 @@ function isDocumentPath(pathname) {
   );
 }
 
-async function networkOnly(request) {
+function networkOnly(request) {
   return fetch(request);
 }
 

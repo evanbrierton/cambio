@@ -3,7 +3,7 @@ import { siteConfig } from "@/lib/site";
 
 let displayFont: ArrayBuffer | null = null;
 
-export async function loadDisplayFont(): Promise<ArrayBuffer> {
+async function loadDisplayFont(): Promise<ArrayBuffer> {
   if (displayFont) {
     return displayFont;
   }
@@ -15,7 +15,7 @@ export async function loadDisplayFont(): Promise<ArrayBuffer> {
   return displayFont;
 }
 
-export function CambioIconMarkup(size: number) {
+function CambioIconMarkup(size: number) {
   const border = Math.max(2, Math.round(size * 0.03));
   const letterSize = Math.round(size * 0.3);
   const cardW = Math.round(size * 0.14);
@@ -87,7 +87,7 @@ export async function renderIcon(size: number) {
   });
 }
 
-export function CambioShareMarkup() {
+function CambioShareMarkup() {
   const width = 1200;
   const height = 630;
 

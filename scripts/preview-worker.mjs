@@ -18,8 +18,10 @@ export function hasWorkerChanges(changedFiles) {
   );
 }
 
+const PR_ID_PATTERN = /^\d+$/;
+
 export function previewWorkerName({ prId, branch } = {}) {
-  if (prId && /^\d+$/.test(String(prId))) {
+  if (prId && PR_ID_PATTERN.test(String(prId))) {
     return `cambio-pr-${prId}`;
   }
 

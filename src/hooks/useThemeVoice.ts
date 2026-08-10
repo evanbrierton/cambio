@@ -1,4 +1,4 @@
-import { useTheme } from "@/context/ThemeProvider";
+import { useTheme } from "@/context/useTheme";
 import { getThemeVoice } from "@/lib/themes";
 
 export function useThemeVoice() {

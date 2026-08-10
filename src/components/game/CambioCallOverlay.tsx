@@ -15,6 +15,8 @@ export function CambioCallOverlay({
   isSelfCall: boolean;
   voice: ThemeVoice;
 }) {
+  const callSubtitle = isSelfCall ? voice.cambioSelf : callerName;
+
   return (
     <AnimatePresence>
       {cambioFlash ? (
@@ -57,7 +59,7 @@ export function CambioCallOverlay({
                 isSelfCall ? "text-danger-text" : "text-accent-soft"
               }`}
             >
-              {isSelfCall ? voice.cambioSelf : callerName}
+              {callSubtitle}
             </p>
             <p className="mt-2 font-display text-[10px] sm:text-xs text-theme-muted">
               {voice.cambioFinalRound}
