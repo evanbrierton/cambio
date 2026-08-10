@@ -443,9 +443,10 @@ const PlayerSeat = ({
     const isSelectedForSwap =
       selectedSwapCard?.playerId === player.id &&
       selectedSwapCard.slot === index;
+    const snapOrEmptyBlocks = snapGivePending ? true : isEmpty;
     const canInteract =
       canPickForSnapGive ||
-      (!snapGivePending && !isEmpty) ||
+      !snapOrEmptyBlocks ||
       (showDrawnSwapHint && isOwn) ||
       (showAbilitySwapHint && !abilityLocked);
 
