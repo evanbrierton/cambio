@@ -8,7 +8,7 @@ import { ThemePicker } from "@/components/ui/ThemePicker";
 import type { BotDifficulty } from "@/game/types";
 import { MAX_BOT_COUNT, MIN_BOT_COUNT } from "@/game/types";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
-import { useRehydrateUiPrefs, useUiPrefsStore } from "@/store/ui-prefs";
+import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 const roomCode = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 6);
 
@@ -18,12 +18,14 @@ export default function HomePage() {
   useRehydrateUiPrefs();
   const [joinCode, setJoinCode] = useState("");
 
-  const name = useUiPrefsStore((state) => state.playerName);
-  const setPlayerName = useUiPrefsStore((state) => state.setPlayerName);
-  const botCount = useUiPrefsStore((state) => state.botCount);
-  const setBotCount = useUiPrefsStore((state) => state.setBotCount);
-  const difficulty = useUiPrefsStore((state) => state.botDifficulty);
-  const setBotDifficulty = useUiPrefsStore((state) => state.setBotDifficulty);
+  const {
+    playerName: name,
+    setPlayerName,
+    botCount,
+    setBotCount,
+    botDifficulty: difficulty,
+    setBotDifficulty,
+  } = useUiPrefs();
 
   const trimmedName = name.trim();
   const hasName = trimmedName.length > 0;
