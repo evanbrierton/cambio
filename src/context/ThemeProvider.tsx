@@ -1,6 +1,10 @@
 "use client";
 
 import {
+  ThemeProvider as NextThemesProvider,
+  useTheme as useNextTheme,
+} from "next-themes";
+import {
   createContext,
   type ReactNode,
   useCallback,
@@ -11,14 +15,13 @@ import {
 import {
   APPEARANCE_MEDIA_QUERY,
   type AppearancePreference,
-  DEFAULT_APPEARANCE,
   type ResolvedAppearance,
   resolveAppearance,
   setAppearanceCookie,
   setThemeCookie,
 } from "@/lib/theme-cookie";
 import { applyThemeFontClass } from "@/lib/theme-fonts";
-import { DEFAULT_THEME, type ThemeId } from "@/lib/themes";
+import { THEME_IDS, type ThemeId } from "@/lib/themes";
 
 type ThemeContextValue = {
   theme: ThemeId;
@@ -30,33 +33,29 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({
+function ThemeContextProvider({
   children,
-  initialTheme = DEFAULT_THEME,
-  initialAppearancePreference = DEFAULT_APPEARANCE,
+  initialAppearancePreference,
 }: {
   children: ReactNode;
-  initialTheme?: ThemeId;
-  initialAppearancePreference?: AppearancePreference;
+  initialAppearancePreference: AppearancePreference;
 }) {
-  const [theme, setThemeState] = useState<ThemeId>(initialTheme);
+  const { theme: nextTheme, setTheme: setNextTheme } = useNextTheme();
+  const theme = nextTheme as ThemeId;
   const [appearancePreference, setAppearancePreferenceState] =
     useState<AppearancePreference>(initialAppearancePreference);
   const [resolvedAppearance, setResolvedAppearance] =
-    useState<ResolvedAppearance>(() => {
-      if (typeof document !== "undefined") {
-        const fromDom = document.documentElement.dataset.appearance;
-        if (fromDom === "light" || fromDom === "dark") return fromDom;
-      }
-      return resolveAppearance(initialAppearancePreference, false);
-    });
+    useState<ResolvedAppearance>(() =>
+      resolveAppearance(initialAppearancePreference, false),
+    );
 
-  const setTheme = useCallback((next: ThemeId) => {
-    setThemeState(next);
-    setThemeCookie(next);
-    document.documentElement.dataset.theme = next;
-    applyThemeFontClass(next);
-  }, []);
+  const setTheme = useCallback(
+    (next: ThemeId) => {
+      setNextTheme(next);
+      setThemeCookie(next);
+    },
+    [setNextTheme],
+  );
 
   const applyResolvedAppearance = useCallback((next: ResolvedAppearance) => {
     setResolvedAppearance(next);
@@ -68,14 +67,19 @@ export function ThemeProvider({
     (next: AppearancePreference) => {
       setAppearancePreferenceState(next);
       setAppearanceCookie(next);
-
-      const prefersDark =
-        typeof window !== "undefined" &&
-        window.matchMedia(APPEARANCE_MEDIA_QUERY).matches;
-      applyResolvedAppearance(resolveAppearance(next, prefersDark));
+      applyResolvedAppearance(
+        resolveAppearance(
+          next,
+          window.matchMedia(APPEARANCE_MEDIA_QUERY).matches,
+        ),
+      );
     },
     [applyResolvedAppearance],
   );
+
+  useEffect(() => {
+    applyThemeFontClass(theme);
+  }, [theme]);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(APPEARANCE_MEDIA_QUERY);
@@ -107,6 +111,32 @@ export function ThemeProvider({
     >
       {children}
     </ThemeContext.Provider>
+  );
+}
+
+export function ThemeProvider({
+  children,
+  initialTheme,
+  initialAppearancePreference,
+}: {
+  children: ReactNode;
+  initialTheme: ThemeId;
+  initialAppearancePreference: AppearancePreference;
+}) {
+  return (
+    <NextThemesProvider
+      attribute="data-theme"
+      defaultTheme={initialTheme}
+      themes={THEME_IDS}
+      enableSystem={false}
+      enableColorScheme={false}
+    >
+      <ThemeContextProvider
+        initialAppearancePreference={initialAppearancePreference}
+      >
+        {children}
+      </ThemeContextProvider>
+    </NextThemesProvider>
   );
 }
 

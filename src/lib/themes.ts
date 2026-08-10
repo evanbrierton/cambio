@@ -1366,6 +1366,8 @@ export const THEME_BACKGROUNDS: Record<ThemeId, string> = {
   ink: "#f5f0e8",
 };
 
+export const THEME_IDS: ThemeId[] = THEME_OPTIONS.map((option) => option.id);
+
 export const DEFAULT_THEME: ThemeId = "retro";
 
 export function isThemeId(value: string): value is ThemeId {
