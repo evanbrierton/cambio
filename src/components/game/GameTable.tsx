@@ -689,6 +689,8 @@ export function GameTable({
     cambioFlash,
     reshuffleFlash,
     snapWindowSeconds,
+    deckDrawFlash,
+    discardDrawFlash,
   );
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);

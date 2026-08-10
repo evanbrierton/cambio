@@ -4,6 +4,8 @@ import { useEffect, useRef } from "react";
 import type { PlayerView } from "@/game/types";
 import type {
   CambioFlash,
+  DeckDrawFlash,
+  DiscardDrawFlash,
   FleetingPeek,
   PeekFlash,
   ReshuffleFlash,
@@ -16,16 +18,22 @@ export function useGameSounds(
   error: string | null,
   fleetingPeek: FleetingPeek | null,
   peekFlash: PeekFlash | null,
-  _swapFlash: SwapFlash | null,
+  swapFlash: SwapFlash | null,
   cambioFlash: CambioFlash | null,
-  _reshuffleFlash: ReshuffleFlash | null,
+  reshuffleFlash: ReshuffleFlash | null,
   snapWindowSeconds: number | null,
+  deckDrawFlash: DeckDrawFlash | null = null,
+  discardDrawFlash: DiscardDrawFlash | null = null,
 ) {
   const prevPhase = useRef<PlayerView["phase"] | null>(null);
   const prevMyTurn = useRef(false);
   const peekKey = useRef<string | null>(null);
   const peekFlashKey = useRef<string | null>(null);
+  const swapFlashKey = useRef<string | null>(null);
   const cambioFlashKey = useRef<string | null>(null);
+  const reshuffleFlashKey = useRef<number | null>(null);
+  const deckDrawFlashKey = useRef<string | null>(null);
+  const discardDrawFlashKey = useRef<string | null>(null);
   const prevSnapSeconds = useRef<number | null>(null);
 
   useEffect(() => {
@@ -51,6 +59,20 @@ export function useGameSounds(
   }, [peekFlash]);
 
   useEffect(() => {
+    if (!swapFlash) {
+      swapFlashKey.current = null;
+      return;
+    }
+    const key = swapFlash.slots
+      .map((slot) => `${slot.playerId}-${slot.slot}`)
+      .sort()
+      .join("|");
+    if (swapFlashKey.current === key) return;
+    swapFlashKey.current = key;
+    playSound("swap");
+  }, [swapFlash]);
+
+  useEffect(() => {
     if (!cambioFlash) {
       cambioFlashKey.current = null;
       return;
@@ -59,6 +81,36 @@ export function useGameSounds(
     cambioFlashKey.current = cambioFlash.playerId;
     playSound("cambio");
   }, [cambioFlash]);
+
+  useEffect(() => {
+    if (!reshuffleFlash) {
+      reshuffleFlashKey.current = null;
+      return;
+    }
+    if (reshuffleFlashKey.current === reshuffleFlash.id) return;
+    reshuffleFlashKey.current = reshuffleFlash.id;
+    playSound("reshuffle");
+  }, [reshuffleFlash]);
+
+  useEffect(() => {
+    if (!deckDrawFlash) {
+      deckDrawFlashKey.current = null;
+      return;
+    }
+    if (deckDrawFlashKey.current === deckDrawFlash.playerId) return;
+    deckDrawFlashKey.current = deckDrawFlash.playerId;
+    playSound("deckDraw");
+  }, [deckDrawFlash]);
+
+  useEffect(() => {
+    if (!discardDrawFlash) {
+      discardDrawFlashKey.current = null;
+      return;
+    }
+    if (discardDrawFlashKey.current === discardDrawFlash.playerId) return;
+    discardDrawFlashKey.current = discardDrawFlash.playerId;
+    playSound("discardDraw");
+  }, [discardDrawFlash]);
 
   useEffect(() => {
     if (!error?.includes("Wrong snap")) return;
