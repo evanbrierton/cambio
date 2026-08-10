@@ -11,16 +11,25 @@ import type {
 } from "@/hooks/useGameConnection";
 import { playSound } from "@/lib/sounds";
 
-export function useGameSounds(
-  view: PlayerView | null,
-  error: string | null,
-  fleetingPeek: FleetingPeek | null,
-  peekFlash: PeekFlash | null,
-  swapFlash: SwapFlash | null,
-  cambioFlash: CambioFlash | null,
-  reshuffleFlash: ReshuffleFlash | null,
-  snapWindowSeconds: number | null,
-) {
+export function useGameSounds({
+  view,
+  error,
+  fleetingPeek,
+  peekFlash,
+  swapFlash,
+  cambioFlash,
+  reshuffleFlash,
+  snapWindowSeconds,
+}: {
+  view: PlayerView | null;
+  error: string | null;
+  fleetingPeek: FleetingPeek | null;
+  peekFlash: PeekFlash | null;
+  swapFlash: SwapFlash | null;
+  cambioFlash: CambioFlash | null;
+  reshuffleFlash: ReshuffleFlash | null;
+  snapWindowSeconds: number | null;
+}) {
   const prevPhase = useRef<PlayerView["phase"] | null>(null);
   const prevLogLen = useRef(0);
   const prevMyTurn = useRef(false);

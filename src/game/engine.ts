@@ -462,7 +462,7 @@ function isSnapEligible(state: GameState): boolean {
   if (state.discard.length === 0 || !state.snapEligibleTopCardId) {
     return false;
   }
-  const top = state.discard[state.discard.length - 1];
+  const top = state.discard.at(-1);
   return top.id === state.snapEligibleTopCardId;
 }
 
@@ -492,7 +492,7 @@ function reshuffleDiscardIntoDeck(state: GameState): boolean {
     return false;
   }
 
-  const top = state.discard[state.discard.length - 1];
+  const top = state.discard.at(-1);
   const toShuffle = [...state.deck, ...state.discard.slice(0, -1)];
   state.deck = shuffle(toShuffle);
   state.discard = [top];
@@ -630,18 +630,15 @@ function hasLegalLookTarget(
   ability: "peek_own" | "spy" | "queen_look" | "king_look",
 ): boolean {
   for (const player of state.players) {
-    if (ability === "peek_own" && player.id !== playerId) {
-      continue;
-    }
-    if (ability === "spy" && player.id === playerId) {
-      continue;
-    }
-    if (player.id !== playerId && !canTargetPlayer(player.id, state)) {
-      continue;
-    }
-    for (let slot = 0; slot < player.hand.length; slot += 1) {
-      if (slotHasCard(player, slot)) {
-        return true;
+    const isOwn = player.id === playerId;
+    const peekOwnOk = ability !== "peek_own" || isOwn;
+    const spyOk = ability !== "spy" || !isOwn;
+    const targetOk = isOwn || canTargetPlayer(player.id, state);
+    if (peekOwnOk && spyOk && targetOk) {
+      for (let slot = 0; slot < player.hand.length; slot += 1) {
+        if (slotHasCard(player, slot)) {
+          return true;
+        }
       }
     }
   }
@@ -651,12 +648,11 @@ function hasLegalLookTarget(
 function hasLegalSwapTargets(state: GameState): boolean {
   let swappableSlotCount = 0;
   for (const player of state.players) {
-    if (!canTargetPlayer(player.id, state)) {
-      continue;
-    }
-    swappableSlotCount += player.hand.length;
-    if (swappableSlotCount >= 2) {
-      return true;
+    if (canTargetPlayer(player.id, state)) {
+      swappableSlotCount += player.hand.length;
+      if (swappableSlotCount >= 2) {
+        return true;
+      }
     }
   }
   return false;
@@ -862,7 +858,7 @@ function placeCardInHand(
 }
 
 function trimTrailingEmptySlots(hand: CardSlot[]): void {
-  while (hand.length > 0 && hand[hand.length - 1].card === null) {
+  while (hand.length > 0 && hand.at(-1).card === null) {
     hand.pop();
   }
 }
@@ -887,13 +883,19 @@ function getHandCard(player: PlayerState, slot: number): Card | null {
   return player.hand[slot].card;
 }
 
-function swapSlots(
-  state: GameState,
-  playerAId: string,
-  slotA: number,
-  playerBId: string,
-  slotB: number,
-): boolean {
+function swapSlots({
+  state,
+  playerAId,
+  slotA,
+  playerBId,
+  slotB,
+}: {
+  state: GameState;
+  playerAId: string;
+  slotA: number;
+  playerBId: string;
+  slotB: number;
+}): boolean {
   const a = findPlayer(state, playerAId);
   const b = findPlayer(state, playerBId);
   if (!(a && b)) {
@@ -1241,7 +1243,7 @@ export function handleMessage(
         return { error: "That player's cards are protected." };
       }
 
-      const top = state.discard[state.discard.length - 1];
+      const top = state.discard.at(-1);
       const handCard = getHandCard(target, message.slot);
       if (!handCard) {
         return { error: "No card in that slot." };
@@ -1582,13 +1584,13 @@ export function handleMessage(
         return { error: "That player's cards are protected." };
       }
 
-      const ok = swapSlots(
+      const ok = swapSlots({
         state,
-        message.fromPlayerId,
-        message.fromSlot,
-        message.toPlayerId,
-        message.toSlot,
-      );
+        playerAId: message.fromPlayerId,
+        slotA: message.fromSlot,
+        playerBId: message.toPlayerId,
+        slotB: message.toSlot,
+      });
       if (!ok) {
         return { error: "Swap failed." };
       }
@@ -1620,7 +1622,7 @@ export function buildPlayerView(
 ): PlayerView {
   const viewer = findPlayer(state, viewerId);
   const current = currentPlayer(state);
-  const viewerWaiting = viewer?.isWaiting ?? false;
+  const viewerWaiting = viewer ? viewer.isWaiting : false;
   const snapWindowActive = state.phase === "snap_window";
   const gameInteractive =
     !viewerWaiting &&
@@ -1683,8 +1685,7 @@ export function buildPlayerView(
     currentPlayerIndex: state.currentPlayerIndex,
     deckCount:
       state.phase === "lobby" ? deckSize(state.jokerCount) : state.deck.length,
-    discardTop:
-      state.discard.length > 0 ? state.discard[state.discard.length - 1] : null,
+    discardTop: state.discard.length > 0 ? state.discard.at(-1) : null,
     drawnCard: isTurnHolder ? state.drawnCard : null,
     drawnFromDiscard: isTurnHolder ? state.drawnFromDiscard : false,
     hasDrawnCard: Boolean(state.drawnCard),
@@ -1728,7 +1729,7 @@ export function buildPlayerView(
     canShowResults: viewerId === state.hostId && state.phase === "revealed",
     roundNumber: state.roundNumber,
     roundHistory: migrateRoundHistory(state.roundHistory),
-    cumulativeScores: { ...(state.cumulativeScores ?? {}) },
+    cumulativeScores: { ...state.cumulativeScores },
     cambioCallerId: state.cambioCallerId,
     winnerIds: state.winnerIds,
     scores: state.scores,

@@ -15,7 +15,7 @@ async function loadDisplayFont(): Promise<ArrayBuffer> {
   return displayFont;
 }
 
-function CambioIconMarkup(size: number) {
+function cambioIconMarkup(size: number) {
   const border = Math.max(2, Math.round(size * 0.03));
   const letterSize = Math.round(size * 0.3);
   const cardW = Math.round(size * 0.14);
@@ -80,14 +80,14 @@ function CambioIconMarkup(size: number) {
 export async function renderIcon(size: number) {
   const font = await loadDisplayFont();
 
-  return new ImageResponse(CambioIconMarkup(size), {
+  return new ImageResponse(cambioIconMarkup(size), {
     width: size,
     height: size,
     fonts: [{ name: "PressStart", data: font, style: "normal", weight: 400 }],
   });
 }
 
-function CambioShareMarkup() {
+function cambioShareMarkup() {
   const width = 1200;
   const height = 630;
 
@@ -183,7 +183,7 @@ function CambioShareMarkup() {
 export async function renderShareImage() {
   const font = await loadDisplayFont();
 
-  return new ImageResponse(CambioShareMarkup(), {
+  return new ImageResponse(cambioShareMarkup(), {
     width: 1200,
     height: 630,
     fonts: [{ name: "PressStart", data: font, style: "normal", weight: 400 }],

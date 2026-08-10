@@ -155,11 +155,11 @@ export const LobbyPlayers = ({ view, voice, send }: LobbyPlayersProps) => {
                   {player.isHost ? (
                     <span className="ui-badge text-accent">{voice.host}</span>
                   ) : null}
-                  {!(player.connected || player.isBot) ? (
+                  {player.connected || player.isBot ? null : (
                     <span className="ui-badge text-theme-muted">
                       {voice.away}
                     </span>
-                  ) : null}
+                  )}
                   {player.isWaiting ? (
                     <span className="ui-badge text-theme-muted">
                       {voice.waitingBadge}

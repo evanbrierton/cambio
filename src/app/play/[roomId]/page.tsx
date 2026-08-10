@@ -68,7 +68,13 @@ export default function PlayPage({
     discardDrawFlash,
     deckDrawFlash,
     send,
-  } = useGameConnection({ roomId, playerName: name, sessionMode, soloOptions, debugEnabled });
+  } = useGameConnection({
+    roomId,
+    playerName: name,
+    sessionMode,
+    soloOptions,
+    debugEnabled,
+  });
 
   const [showConnecting, setShowConnecting] = useState(false);
 

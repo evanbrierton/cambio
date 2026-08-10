@@ -116,10 +116,11 @@ function isSwapFlashing(
   playerId: string,
   slot: number,
 ): boolean {
-  return (
-    swapFlash?.slots.some(
-      (entry) => entry.playerId === playerId && entry.slot === slot,
-    ) ?? false
+  if (swapFlash === null) {
+    return false;
+  }
+  return swapFlash.slots.some(
+    (entry) => entry.playerId === playerId && entry.slot === slot,
   );
 }
 
@@ -181,7 +182,7 @@ function isSwapAbility(kind: string | undefined) {
   );
 }
 
-function isLookAbility(kind: string | undefined) {
+function isLookAbility(kind: string | null | undefined) {
   return (
     kind === "peek_own" ||
     kind === "spy" ||
@@ -236,13 +237,19 @@ function applyTableCardScale(el: HTMLElement) {
   el.style.setProperty("--table-pile-h", `${pileH}px`);
 }
 
-function getActionBanner(
-  view: PlayerView,
-  voice: ThemeVoice,
-  swapAbilityActive: boolean,
-  selectedSwapCard: SelectedCard | null,
-  snapWindowSeconds: number | null,
-): { text: string; tone: "swap" | "action" | "snap" | "turn" } | null {
+function getActionBanner({
+  view,
+  voice,
+  swapAbilityActive,
+  selectedSwapCard,
+  snapWindowSeconds,
+}: {
+  view: PlayerView;
+  voice: ThemeVoice;
+  swapAbilityActive: boolean;
+  selectedSwapCard: SelectedCard | null;
+  snapWindowSeconds: number | null;
+}): { text: string; tone: "swap" | "action" | "snap" | "turn" } | null {
   if (view.phase === "snap_window" && snapWindowSeconds !== null) {
     return {
       text: voice.snapWindowHint(snapWindowSeconds),
@@ -397,8 +404,9 @@ const PlayerSeat = ({
   const showLookSeatHint =
     lookAbilityActive && player.hand.some((_, index) => canPickForLook(index));
 
-  const hasSwapFlash =
-    swapFlash?.slots.some((entry) => entry.playerId === player.id) ?? false;
+  const hasSwapFlash = swapFlash?.slots.some(
+    (entry) => entry.playerId === player.id,
+  );
   const hasPeekFlash =
     peekFlash?.playerId === player.id || peekFlash?.actorId === player.id;
   const hasPenaltyFlash = penaltyFlash?.playerId === player.id;
@@ -667,10 +675,6 @@ export const GameTable = ({
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
   const openSettings = useCallback(() => setSettingsOpen(true), []);
-  const openChatFromToast = () => {
-    openSettings();
-    dismissNotification();
-  };
   const { unreadCount, notification, dismissNotification } =
     useChatNotifications({
       messages: view.chatMessages,
@@ -679,6 +683,10 @@ export const GameTable = ({
       soundEnabled,
       notificationsEnabled: chatNotificationsEnabled,
     });
+  const openChatFromToast = useCallback(() => {
+    openSettings();
+    dismissNotification();
+  }, [openSettings, dismissNotification]);
   const chatToast = useMemo((): GameToastItem | null => {
     if (!notification) {
       return null;
@@ -708,7 +716,7 @@ export const GameTable = ({
   const lobbyJoinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const tableDeckRef = useRef<HTMLDivElement>(null);
 
-  useGameSounds(
+  useGameSounds({
     view,
     error,
     fleetingPeek,
@@ -717,22 +725,21 @@ export const GameTable = ({
     cambioFlash,
     reshuffleFlash,
     snapWindowSeconds,
-  );
+  });
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
   const snapGiveActive = view.pendingAbility?.kind === "snap_give";
   const snapGivePending = view.snapGivePending;
-  const lookAbilityActive = isLookAbility(view.pendingAbility?.kind);
-  const pendingLookKind = lookAbilityActive
-    ? (view.pendingAbility?.kind ?? null)
-    : null;
-  const actionBanner = getActionBanner(
+  const pendingAbilityKind = view.pendingAbility?.kind;
+  const lookAbilityActive = isLookAbility(pendingAbilityKind);
+  const pendingLookKind = lookAbilityActive ? pendingAbilityKind : null;
+  const actionBanner = getActionBanner({
     view,
     voice,
     swapAbilityActive,
     selectedSwapCard,
     snapWindowSeconds,
-  );
+  });
 
   const gameToasts = useMemo((): GameToastItem[] => {
     const items: GameToastItem[] = [];
@@ -819,6 +826,10 @@ export const GameTable = ({
     voice,
   ]);
 
+  const clearSelectedSwapCard = () => {
+    setSelectedSwapCard(null);
+  };
+
   const actionToast: GameToastItem | null =
     hintsEnabled && actionBanner
       ? {
@@ -830,7 +841,7 @@ export const GameTable = ({
             swapAbilityActive && selectedSwapCard ? (
               <button
                 type="button"
-                onClick={() => setSelectedSwapCard(null)}
+                onClick={clearSelectedSwapCard}
                 className="chip-btn text-[8px] px-2 py-1 border-accent-alt text-accent-alt hover:border-accent transition-colors"
               >
                 {voice.swapAbilityCancel}
@@ -849,7 +860,7 @@ export const GameTable = ({
       return;
     }
     const el = tableDeckRef.current;
-    if (!el) {
+    if (el === null) {
       return;
     }
 
@@ -887,7 +898,7 @@ export const GameTable = ({
           .map((player) => player.id),
       );
       setLobbyJoinToast(null);
-      if (lobbyJoinTimerRef.current) {
+      if (lobbyJoinTimerRef.current !== null) {
         globalThis.clearTimeout(lobbyJoinTimerRef.current);
         lobbyJoinTimerRef.current = null;
       }
@@ -908,7 +919,7 @@ export const GameTable = ({
         message: voice.playerJoined(newcomer.name),
         tone: "info",
       });
-      if (lobbyJoinTimerRef.current) {
+      if (lobbyJoinTimerRef.current !== null) {
         globalThis.clearTimeout(lobbyJoinTimerRef.current);
       }
       lobbyJoinTimerRef.current = globalThis.setTimeout(() => {
@@ -1107,14 +1118,65 @@ export const GameTable = ({
   };
 
   const copyRoomCode = () => {
-    void copyToClipboard(view.roomId.toUpperCase()).then((copied) => {
-      if (!copied) {
-        return;
-      }
-      setRoomCopied(true);
-      globalThis.setTimeout(() => setRoomCopied(false), 2000);
-    });
+    copyToClipboard(view.roomId.toUpperCase()).then(
+      (copied) => {
+        if (!copied) {
+          return;
+        }
+        setRoomCopied(true);
+        globalThis.setTimeout(() => setRoomCopied(false), 2000);
+      },
+      () => undefined,
+    );
   };
+
+  const startGame = () => {
+    send({ type: "start_game" });
+  };
+
+  const showResults = () => {
+    send({ type: "show_results" });
+  };
+
+  const callCambio = () => {
+    send({ type: "call_cambio" });
+  };
+
+  const toggleDebug = () => {
+    send({ type: "toggle_debug" });
+  };
+
+  const restartGame = () => {
+    send({ type: "restart_game" });
+  };
+
+  const sendChat = (text: string) => {
+    send({ type: "chat", text });
+  };
+
+  const closeSettings = () => {
+    setSettingsOpen(false);
+  };
+
+  const drawFromDeck = () => {
+    send({ type: "draw", source: "deck" });
+  };
+
+  const handleDiscardPileClick = () => {
+    if (view.canDiscardDrawn) {
+      send({ type: "discard_drawn" });
+      return;
+    }
+    if (canTakeFromDiscard) {
+      send({ type: "draw", source: "discard" });
+    }
+  };
+
+  const discardDrawn = () => {
+    send({ type: "discard_drawn" });
+  };
+
+  const unreadBadgeLabel = unreadCount > 9 ? "9+" : String(unreadCount);
 
   const playerSeats = orderedPlayers.map((player) => {
     const isOwn = player.id === view.playerId;
@@ -1150,17 +1212,13 @@ export const GameTable = ({
       className="action-buttons-slot flex flex-wrap gap-2 sm:gap-3 justify-center lg:justify-start items-center"
       aria-live="polite"
     >
-      {view.canStartGame && (
-        <RetroButton onClick={() => send({ type: "start_game" })}>
-          {voice.startGame}
-        </RetroButton>
-      )}
+      {view.canStartGame ? (
+        <RetroButton onClick={startGame}>{voice.startGame}</RetroButton>
+      ) : null}
 
-      {view.canShowResults && (
-        <RetroButton onClick={() => send({ type: "show_results" })}>
-          {voice.showResults}
-        </RetroButton>
-      )}
+      {view.canShowResults ? (
+        <RetroButton onClick={showResults}>{voice.showResults}</RetroButton>
+      ) : null}
     </div>
   );
 
@@ -1169,7 +1227,7 @@ export const GameTable = ({
   const callCambioChip = view.canCallCambio ? (
     <button
       type="button"
-      onClick={() => send({ type: "call_cambio" })}
+      onClick={callCambio}
       className="table-cambio-chip chip-btn"
     >
       {voice.callCambio}
@@ -1231,31 +1289,31 @@ export const GameTable = ({
         </button>
       </div>
 
-      {canDebugRestart && (
+      {canDebugRestart ? (
         <div className="flex flex-wrap gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => send({ type: "toggle_debug" })}
+            onClick={toggleDebug}
             className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
           >
             {view.debugReveal ? voice.debugHide : voice.debugReveal}
           </button>
           <button
             type="button"
-            onClick={() => send({ type: "restart_game" })}
+            onClick={restartGame}
             className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
           >
             {voice.debugRestart}
           </button>
         </div>
-      )}
+      ) : null}
 
       <ChatPanel
         messages={view.chatMessages}
         playerId={view.playerId}
         connected={connected}
         voice={voice}
-        onSend={(text) => send({ type: "chat", text })}
+        onSend={sendChat}
       />
 
       <div className="pixel-border p-3 bg-surface w-full min-w-0 flex flex-col overflow-hidden shrink-0 lg:flex-1 lg:min-h-0">
@@ -1303,12 +1361,12 @@ export const GameTable = ({
         voice={voice}
       />
 
-      {settingsOpen && (
+      {settingsOpen ? (
         <div className="lg:hidden fixed inset-0 z-90">
           <button
             type="button"
             className="absolute inset-0 bg-black/50"
-            onClick={() => setSettingsOpen(false)}
+            onClick={closeSettings}
             aria-label="Close menu"
           />
           <div className="mobile-settings-sheet absolute inset-x-0 bottom-0 top-[max(0.75rem,env(safe-area-inset-top,0px))] flex flex-col bg-surface pixel-border border-b-0 overflow-hidden">
@@ -1318,7 +1376,7 @@ export const GameTable = ({
               </p>
               <button
                 type="button"
-                onClick={() => setSettingsOpen(false)}
+                onClick={closeSettings}
                 className="sheet-close-btn border-theme-muted text-theme hover:border-accent hover:text-accent transition-colors"
                 aria-label="Close menu"
               >
@@ -1330,7 +1388,7 @@ export const GameTable = ({
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
       <div
         className={`lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-3 flex flex-col min-w-0 ${
@@ -1400,7 +1458,7 @@ export const GameTable = ({
                   ···
                   {unreadCount > 0 ? (
                     <span className="absolute -top-1 -right-1 min-w-3.5 h-3.5 px-0.5 flex items-center justify-center rounded-full bg-accent text-[8px] font-display text-surface leading-none">
-                      {unreadCount > 9 ? "9+" : unreadCount}
+                      {unreadBadgeLabel}
                     </span>
                   ) : null}
                 </button>
@@ -1419,11 +1477,11 @@ export const GameTable = ({
               {phaseLabel}
             </h1>
 
-            {debugEnabled && view.debugReveal && (
+            {debugEnabled && view.debugReveal ? (
               <p className="font-display text-[8px] text-accent-alt mt-0.5">
                 DEBUG: ALL CARDS VISIBLE
               </p>
-            )}
+            ) : null}
           </header>
 
           {view.phase !== "lobby" && (
@@ -1474,7 +1532,7 @@ export const GameTable = ({
                   <button
                     type="button"
                     disabled={!view.canDraw || snapGivePending}
-                    onClick={() => send({ type: "draw", source: "deck" })}
+                    onClick={drawFromDeck}
                     className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
                       view.canDraw && !snapGivePending
                         ? "pile-interactable-btn cursor-pointer active:opacity-80"
@@ -1569,15 +1627,7 @@ export const GameTable = ({
                   <button
                     type="button"
                     disabled={!canInteractWithDiscard}
-                    onClick={() => {
-                      if (view.canDiscardDrawn) {
-                        send({ type: "discard_drawn" });
-                        return;
-                      }
-                      if (canTakeFromDiscard) {
-                        send({ type: "draw", source: "discard" });
-                      }
-                    }}
+                    onClick={handleDiscardPileClick}
                     className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
                       canInteractWithDiscard
                         ? "pile-interactable-btn cursor-pointer active:opacity-80"
@@ -1611,7 +1661,11 @@ export const GameTable = ({
                     >
                       <AnimatePresence mode="wait">
                         <motion.div
-                          key={view.discardTop?.id ?? "empty-discard"}
+                          key={
+                            view.discardTop
+                              ? view.discardTop.id
+                              : "empty-discard"
+                          }
                           className="h-full w-full"
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -1637,7 +1691,7 @@ export const GameTable = ({
                       view.canDiscardDrawn ? (
                         <button
                           type="button"
-                          onClick={() => send({ type: "discard_drawn" })}
+                          onClick={discardDrawn}
                           className="table-grid-context-action w-full truncate"
                         >
                           {discardActionLabel}
@@ -1675,7 +1729,7 @@ export const GameTable = ({
                         {view.canDiscardDrawn ? (
                           <button
                             type="button"
-                            onClick={() => send({ type: "discard_drawn" })}
+                            onClick={discardDrawn}
                             className="chip-btn text-[8px] px-2 py-1 border-accent-alt text-accent-alt hover:border-accent transition-colors"
                           >
                             {discardActionLabel}

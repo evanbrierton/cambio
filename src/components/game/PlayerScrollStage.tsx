@@ -72,7 +72,7 @@ export const PlayerScrollStage = ({
     (index: number, behavior: ScrollBehavior = "auto") => {
       const rail = railRef.current;
       const item = itemRefs.current[index];
-      if (!(rail && item)) {
+      if (rail === null || item === null) {
         return;
       }
       if (rail.classList.contains("is-static")) {
@@ -89,11 +89,11 @@ export const PlayerScrollStage = ({
   const updateLayout = useCallback(() => {
     const stage = stageRef.current;
     const rail = railRef.current;
-    if (!rail) {
+    if (rail === null) {
       return;
     }
 
-    if (stage) {
+    if (stage !== null) {
       applySeatCardScale(stage, rail);
       // Force layout so pack-when-fits measures scaled seat widths.
       const _forceLayout = stage.offsetWidth;
@@ -127,10 +127,10 @@ export const PlayerScrollStage = ({
       ? 0
       : Math.max(16, rail.clientWidth / 2 - itemHalf);
 
-    if (leadSpacerRef.current) {
+    if (leadSpacerRef.current !== null) {
       leadSpacerRef.current.style.width = `${spacerWidth}px`;
     }
-    if (trailSpacerRef.current) {
+    if (trailSpacerRef.current !== null) {
       trailSpacerRef.current.style.width = `${spacerWidth}px`;
     }
 
@@ -142,26 +142,23 @@ export const PlayerScrollStage = ({
     const center = railRect.left + railRect.width / 2;
 
     for (const item of itemRefs.current) {
-      if (!item) {
-        continue;
+      if (item !== null) {
+        if (reducedMotion || fits) {
+          item.style.transform = "";
+          item.style.opacity = "";
+        } else {
+          const rect = item.getBoundingClientRect();
+          const itemCenter = rect.left + rect.width / 2;
+          const offset = (itemCenter - center) / Math.max(railRect.width, 1);
+          const clamped = Math.max(-1, Math.min(1, offset));
+          const rotateY = clamped * -12;
+          const scale = 1 - Math.abs(clamped) * 0.06;
+          const translateZ = (1 - Math.abs(clamped)) * 14;
+
+          item.style.transform = `rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
+          item.style.opacity = String(1 - Math.abs(clamped) * 0.15);
+        }
       }
-
-      if (reducedMotion || fits) {
-        item.style.transform = "";
-        item.style.opacity = "";
-        continue;
-      }
-
-      const rect = item.getBoundingClientRect();
-      const itemCenter = rect.left + rect.width / 2;
-      const offset = (itemCenter - center) / Math.max(railRect.width, 1);
-      const clamped = Math.max(-1, Math.min(1, offset));
-      const rotateY = clamped * -12;
-      const scale = 1 - Math.abs(clamped) * 0.06;
-      const translateZ = (1 - Math.abs(clamped)) * 14;
-
-      item.style.transform = `rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
-      item.style.opacity = String(1 - Math.abs(clamped) * 0.15);
     }
   }, [centerIndex, childCount]);
 
@@ -171,7 +168,7 @@ export const PlayerScrollStage = ({
 
   useEffect(() => {
     const rail = railRef.current;
-    if (!rail) {
+    if (rail === null) {
       return;
     }
 

@@ -56,29 +56,26 @@ export const PlayerGridStage = ({ children }: PlayerGridStageProps) => {
     const halfH = Math.max(viewport.height / 2, 1);
 
     for (const item of itemRefs.current) {
-      if (!item) {
-        continue;
+      if (item) {
+        if (reducedMotion) {
+          item.style.transform = "";
+          item.style.opacity = "";
+        } else {
+          const rect = item.getBoundingClientRect();
+          const offsetY = (rect.top + rect.height / 2 - centerY) / halfH;
+          const clampedY = Math.max(-1, Math.min(1, offsetY));
+          const dist = Math.abs(clampedY);
+
+          // Vertical scroll only — skip rotateY so side columns stay upright.
+          const rotateX = clampedY * 2;
+          const scale = 1 - dist * 0.02;
+          const translateZ = (1 - dist) * 4;
+          const opacity = 1 - dist * 0.05;
+
+          item.style.transform = `rotateX(${rotateX}deg) scale(${scale}) translateZ(${translateZ}px)`;
+          item.style.opacity = String(opacity);
+        }
       }
-
-      if (reducedMotion) {
-        item.style.transform = "";
-        item.style.opacity = "";
-        continue;
-      }
-
-      const rect = item.getBoundingClientRect();
-      const offsetY = (rect.top + rect.height / 2 - centerY) / halfH;
-      const clampedY = Math.max(-1, Math.min(1, offsetY));
-      const dist = Math.abs(clampedY);
-
-      // Vertical scroll only — skip rotateY so side columns stay upright.
-      const rotateX = clampedY * 2;
-      const scale = 1 - dist * 0.02;
-      const translateZ = (1 - dist) * 4;
-      const opacity = 1 - dist * 0.05;
-
-      item.style.transform = `rotateX(${rotateX}deg) scale(${scale}) translateZ(${translateZ}px)`;
-      item.style.opacity = String(opacity);
     }
   }, []);
 

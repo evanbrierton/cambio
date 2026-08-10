@@ -39,15 +39,23 @@ async function resumeCtx(): Promise<AudioContext | null> {
   return ctx;
 }
 
-function tone(
-  ctx: AudioContext,
-  freq: number,
-  start: number,
-  duration: number,
-  type: OscillatorType = "square",
+function tone({
+  ctx,
+  freq,
+  start,
+  duration,
+  type = "square",
   volume = 0.06,
   gainEnd = 0.001,
-) {
+}: {
+  ctx: AudioContext;
+  freq: number;
+  start: number;
+  duration: number;
+  type?: OscillatorType;
+  volume?: number;
+  gainEnd?: number;
+}) {
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
@@ -73,71 +81,308 @@ export async function playSound(id: SoundId): Promise<void> {
 
   switch (id) {
     case "flip":
-      tone(ctx, 440, t, 0.06, "square", 0.05);
-      tone(ctx, 660, t + 0.07, 0.08, "square", 0.04);
+      tone({
+        ctx,
+        freq: 440,
+        start: t,
+        duration: 0.06,
+        type: "square",
+        volume: 0.05,
+      });
+      tone({
+        ctx,
+        freq: 660,
+        start: t + 0.07,
+        duration: 0.08,
+        type: "square",
+        volume: 0.04,
+      });
       break;
     case "peek":
-      tone(ctx, 620, t, 0.05, "sine", 0.05);
-      tone(ctx, 880, t + 0.06, 0.1, "sine", 0.04);
+      tone({
+        ctx,
+        freq: 620,
+        start: t,
+        duration: 0.05,
+        type: "sine",
+        volume: 0.05,
+      });
+      tone({
+        ctx,
+        freq: 880,
+        start: t + 0.06,
+        duration: 0.1,
+        type: "sine",
+        volume: 0.04,
+      });
       break;
     case "spy":
-      tone(ctx, 520, t, 0.04, "triangle", 0.05);
-      tone(ctx, 780, t + 0.05, 0.07, "triangle", 0.05);
-      tone(ctx, 1040, t + 0.1, 0.08, "triangle", 0.04);
+      tone({
+        ctx,
+        freq: 520,
+        start: t,
+        duration: 0.04,
+        type: "triangle",
+        volume: 0.05,
+      });
+      tone({
+        ctx,
+        freq: 780,
+        start: t + 0.05,
+        duration: 0.07,
+        type: "triangle",
+        volume: 0.05,
+      });
+      tone({
+        ctx,
+        freq: 1040,
+        start: t + 0.1,
+        duration: 0.08,
+        type: "triangle",
+        volume: 0.04,
+      });
       break;
     case "snap":
-      tone(ctx, 880, t, 0.05, "square", 0.07);
-      tone(ctx, 1320, t + 0.04, 0.1, "square", 0.05);
+      tone({
+        ctx,
+        freq: 880,
+        start: t,
+        duration: 0.05,
+        type: "square",
+        volume: 0.07,
+      });
+      tone({
+        ctx,
+        freq: 1320,
+        start: t + 0.04,
+        duration: 0.1,
+        type: "square",
+        volume: 0.05,
+      });
       break;
     case "snapWrong":
-      tone(ctx, 180, t, 0.15, "sawtooth", 0.08);
-      tone(ctx, 120, t + 0.1, 0.2, "sawtooth", 0.06);
+      tone({
+        ctx,
+        freq: 180,
+        start: t,
+        duration: 0.15,
+        type: "sawtooth",
+        volume: 0.08,
+      });
+      tone({
+        ctx,
+        freq: 120,
+        start: t + 0.1,
+        duration: 0.2,
+        type: "sawtooth",
+        volume: 0.06,
+      });
       break;
     case "snapWindowStart":
-      tone(ctx, 440, t, 0.08, "square", 0.07);
-      tone(ctx, 660, t + 0.1, 0.1, "square", 0.08);
-      tone(ctx, 880, t + 0.22, 0.14, "square", 0.09);
+      tone({
+        ctx,
+        freq: 440,
+        start: t,
+        duration: 0.08,
+        type: "square",
+        volume: 0.07,
+      });
+      tone({
+        ctx,
+        freq: 660,
+        start: t + 0.1,
+        duration: 0.1,
+        type: "square",
+        volume: 0.08,
+      });
+      tone({
+        ctx,
+        freq: 880,
+        start: t + 0.22,
+        duration: 0.14,
+        type: "square",
+        volume: 0.09,
+      });
       break;
     case "snapCountdown":
-      tone(ctx, 740, t, 0.05, "square", 0.06);
-      tone(ctx, 980, t + 0.05, 0.07, "square", 0.05);
+      tone({
+        ctx,
+        freq: 740,
+        start: t,
+        duration: 0.05,
+        type: "square",
+        volume: 0.06,
+      });
+      tone({
+        ctx,
+        freq: 980,
+        start: t + 0.05,
+        duration: 0.07,
+        type: "square",
+        volume: 0.05,
+      });
       break;
     case "draw":
-      tone(ctx, 520, t, 0.04, "triangle", 0.05);
-      tone(ctx, 390, t + 0.05, 0.06, "triangle", 0.04);
+      tone({
+        ctx,
+        freq: 520,
+        start: t,
+        duration: 0.04,
+        type: "triangle",
+        volume: 0.05,
+      });
+      tone({
+        ctx,
+        freq: 390,
+        start: t + 0.05,
+        duration: 0.06,
+        type: "triangle",
+        volume: 0.04,
+      });
       break;
     case "swap":
-      tone(ctx, 330, t, 0.05, "triangle", 0.05);
-      tone(ctx, 494, t + 0.07, 0.08, "triangle", 0.05);
-      tone(ctx, 392, t + 0.14, 0.06, "triangle", 0.04);
+      tone({
+        ctx,
+        freq: 330,
+        start: t,
+        duration: 0.05,
+        type: "triangle",
+        volume: 0.05,
+      });
+      tone({
+        ctx,
+        freq: 494,
+        start: t + 0.07,
+        duration: 0.08,
+        type: "triangle",
+        volume: 0.05,
+      });
+      tone({
+        ctx,
+        freq: 392,
+        start: t + 0.14,
+        duration: 0.06,
+        type: "triangle",
+        volume: 0.04,
+      });
       break;
     case "cambio":
-      tone(ctx, 523, t, 0.1, "square", 0.09);
-      tone(ctx, 659, t + 0.1, 0.1, "square", 0.09);
-      tone(ctx, 784, t + 0.2, 0.1, "square", 0.09);
-      tone(ctx, 1047, t + 0.3, 0.2, "square", 0.1);
-      tone(ctx, 1319, t + 0.45, 0.35, "square", 0.08);
-      tone(ctx, 784, t + 0.1, 0.5, "triangle", 0.04);
+      tone({
+        ctx,
+        freq: 523,
+        start: t,
+        duration: 0.1,
+        type: "square",
+        volume: 0.09,
+      });
+      tone({
+        ctx,
+        freq: 659,
+        start: t + 0.1,
+        duration: 0.1,
+        type: "square",
+        volume: 0.09,
+      });
+      tone({
+        ctx,
+        freq: 784,
+        start: t + 0.2,
+        duration: 0.1,
+        type: "square",
+        volume: 0.09,
+      });
+      tone({
+        ctx,
+        freq: 1047,
+        start: t + 0.3,
+        duration: 0.2,
+        type: "square",
+        volume: 0.1,
+      });
+      tone({
+        ctx,
+        freq: 1319,
+        start: t + 0.45,
+        duration: 0.35,
+        type: "square",
+        volume: 0.08,
+      });
+      tone({
+        ctx,
+        freq: 784,
+        start: t + 0.1,
+        duration: 0.5,
+        type: "triangle",
+        volume: 0.04,
+      });
       break;
     case "gameOver":
-      tone(ctx, 392, t, 0.12, "triangle", 0.06);
-      tone(ctx, 330, t + 0.12, 0.12, "triangle", 0.05);
-      tone(ctx, 523, t + 0.28, 0.2, "triangle", 0.06);
+      tone({
+        ctx,
+        freq: 392,
+        start: t,
+        duration: 0.12,
+        type: "triangle",
+        volume: 0.06,
+      });
+      tone({
+        ctx,
+        freq: 330,
+        start: t + 0.12,
+        duration: 0.12,
+        type: "triangle",
+        volume: 0.05,
+      });
+      tone({
+        ctx,
+        freq: 523,
+        start: t + 0.28,
+        duration: 0.2,
+        type: "triangle",
+        volume: 0.06,
+      });
       break;
     case "yourTurn":
-      tone(ctx, 740, t, 0.08, "sine", 0.04);
+      tone({
+        ctx,
+        freq: 740,
+        start: t,
+        duration: 0.08,
+        type: "sine",
+        volume: 0.04,
+      });
       break;
     case "click":
-      tone(ctx, 600, t, 0.03, "square", 0.03);
+      tone({
+        ctx,
+        freq: 600,
+        start: t,
+        duration: 0.03,
+        type: "square",
+        volume: 0.03,
+      });
       break;
     case "chat":
-      tone(ctx, 880, t, 0.04, "sine", 0.035);
-      tone(ctx, 1100, t + 0.05, 0.06, "sine", 0.03);
+      tone({
+        ctx,
+        freq: 880,
+        start: t,
+        duration: 0.04,
+        type: "sine",
+        volume: 0.035,
+      });
+      tone({
+        ctx,
+        freq: 1100,
+        start: t + 0.05,
+        duration: 0.06,
+        type: "sine",
+        volume: 0.03,
+      });
       break;
     default: {
       const _exhaustive: never = id;
-      void _exhaustive;
-      break;
+      return _exhaustive;
     }
   }
 }

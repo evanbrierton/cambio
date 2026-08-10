@@ -66,14 +66,21 @@ export function capturePreMoveSnapshot(
   };
 }
 
-export function detectMoveReaction(
-  state: GameState,
-  player: PlayerState,
-  message: ClientMessage,
-  result: MessageResult,
-  snapshot: PreMoveSnapshot | null,
-  snapStreak: number,
-): GameMoveReaction | null {
+export function detectMoveReaction({
+  state,
+  player,
+  message,
+  result,
+  snapshot,
+  snapStreak,
+}: {
+  state: GameState;
+  player: PlayerState;
+  message: ClientMessage;
+  result: MessageResult;
+  snapshot: PreMoveSnapshot | null;
+  snapStreak: number;
+}): GameMoveReaction | null {
   const playerName = player.name;
 
   if (result.cambioFlash?.playerId === player.id) {

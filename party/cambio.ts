@@ -55,7 +55,31 @@ interface PlayerConnectionState {
 
 const MOVE_REACTION_COOLDOWN_MS = 12_000;
 
-function migrateState(state: GameState): GameState {
+/** Older persisted rooms may omit fields added after launch. */
+type StoredGameState = Omit<
+  GameState,
+  | "isSoloMode"
+  | "jokerCount"
+  | "roundNumber"
+  | "cumulativeScores"
+  | "chatMessages"
+  | "players"
+> & {
+  isSoloMode?: boolean;
+  jokerCount?: number;
+  roundNumber?: number;
+  cumulativeScores?: Record<string, number>;
+  chatMessages?: GameState["chatMessages"];
+  players: Array<
+    Omit<GameState["players"][number], "isWaiting" | "isBot" | "botDifficulty"> & {
+      isWaiting?: boolean;
+      isBot?: boolean;
+      botDifficulty?: GameState["players"][number]["botDifficulty"];
+    }
+  >;
+};
+
+function migrateState(state: StoredGameState): GameState {
   return {
     ...state,
     isSoloMode: state.isSoloMode ?? false,
@@ -258,13 +282,13 @@ export class CambioParty extends Server<Env> {
     }
     const bot = findPlayer(this.state, botId);
     if (bot?.isBot) {
-      updateBotKnowledge(
-        this.getBotKnowledge(botId),
-        this.state,
+      updateBotKnowledge({
+        knowledge: this.getBotKnowledge(botId),
+        state: this.state,
         botId,
         message,
         result,
-      );
+      });
     }
   }
 
@@ -360,14 +384,14 @@ export class CambioParty extends Server<Env> {
         }
       }
 
-      const moveReaction = detectMoveReaction(
-        this.state,
-        actor,
+      const moveReaction = detectMoveReaction({
+        state: this.state,
+        player: actor,
         message,
         result,
         snapshot,
-        this.humanSnapStreak,
-      );
+        snapStreak: this.humanSnapStreak,
+      });
       if (moveReaction && shouldReactToMove(moveReaction)) {
         this.scheduleBotMoveReaction(moveReaction);
       }
@@ -387,18 +411,17 @@ export class CambioParty extends Server<Env> {
 
     for (const botId of collectActingBots(this.state)) {
       const bot = findPlayer(this.state, botId);
-      if (!bot?.isBot) {
-        continue;
-      }
-      const action = decideBotAction(
-        this.state,
-        botId,
-        this.getBotKnowledge(botId),
-      );
-      if (action) {
-        scheduledBotId = botId;
-        scheduledAction = action;
-        break;
+      if (bot?.isBot) {
+        const action = decideBotAction(
+          this.state,
+          botId,
+          this.getBotKnowledge(botId),
+        );
+        if (action) {
+          scheduledBotId = botId;
+          scheduledAction = action;
+          break;
+        }
       }
     }
 
@@ -429,7 +452,7 @@ export class CambioParty extends Server<Env> {
   }
 
   async onStart() {
-    const saved = await this.ctx.storage.get<GameState>("state");
+    const saved = await this.ctx.storage.get<StoredGameState>("state");
     if (saved) {
       this.state = migrateState(saved);
       await this.syncSnapWindow();
@@ -500,11 +523,10 @@ export class CambioParty extends Server<Env> {
     }
     for (const conn of this.getConnections<PlayerConnectionState>()) {
       const playerId = this.getPlayerId(conn);
-      if (!playerId) {
-        continue;
+      if (playerId) {
+        const view = buildPlayerView(this.state, playerId);
+        conn.send(JSON.stringify({ type: "state", view }));
       }
-      const view = buildPlayerView(this.state, playerId);
-      conn.send(JSON.stringify({ type: "state", view }));
     }
   }
 
@@ -595,9 +617,10 @@ export class CambioParty extends Server<Env> {
     );
     const difficulty = parseBotDifficulty(url.searchParams.get("difficulty"));
 
-    const existingPlayer = queryPlayerId
-      ? this.state?.players.find((p) => p.id === queryPlayerId)
-      : undefined;
+    const existingPlayer =
+      queryPlayerId && this.state
+        ? this.state.players.find((p) => p.id === queryPlayerId)
+        : undefined;
 
     if (!(existingPlayer || name)) {
       connection.send(
