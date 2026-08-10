@@ -352,12 +352,12 @@
       "handoffPath": "handoffs/merge-cam-81-83-themes.md",
       "startedAt": "2026-08-10T10:06:28.640Z",
       "finishedAt": "2026-08-10T10:06:54.484Z",
-      "lastUpdate": "2026-08-10T10:06:54.484Z",
+      "lastUpdate": "2026-08-10T10:06:55.822Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
+      "verification": "not-verified",
       "attempts": 1
     },
     {
@@ -371,17 +371,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-10T10:07:01.575Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-10T10:07:01.575Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "merge-cam-75-swap-vfx",
@@ -705,6 +706,14 @@
     {
       "at": "2026-08-10T10:06:28.570Z",
       "message": "merge-cam-81-83-themes: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-10T10:06:55.822Z",
+      "message": "merge-cam-81-83-themes: verification self-reported (not-verified)"
+    },
+    {
+      "at": "2026-08-10T10:07:01.259Z",
+      "message": "merge-cam-64-card-points: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
