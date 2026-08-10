@@ -1561,7 +1561,7 @@ export function GameTable({
                           DRAWN
                         </span>
                       )}
-                      {view.deckCount}
+                      <span className="relative z-10">{view.deckCount}</span>
                     </div>
                   </button>
 
