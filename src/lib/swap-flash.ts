@@ -4,3 +4,7 @@ export type SwapFlashSlot = { playerId: string; slot: number };
 export function isAbilitySwapFlash(slots: SwapFlashSlot[]): boolean {
   return slots.length >= 2;
 }
+
+export function isHandTakeFlash(slots: SwapFlashSlot[]): boolean {
+  return slots.length === 1;
+}

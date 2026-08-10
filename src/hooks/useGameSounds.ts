@@ -4,12 +4,11 @@ import { useEffect, useRef } from "react";
 import type { PlayerView } from "@/game/types";
 import type {
   CambioFlash,
-  DeckDrawFlash,
-  DiscardDrawFlash,
   FleetingPeek,
   PeekFlash,
   ReshuffleFlash,
   SwapFlash,
+  TakeFlash,
 } from "@/hooks/useGameConnection";
 import { playSound } from "@/lib/sounds";
 
@@ -22,18 +21,17 @@ export function useGameSounds(
   cambioFlash: CambioFlash | null,
   reshuffleFlash: ReshuffleFlash | null,
   snapWindowSeconds: number | null,
-  deckDrawFlash: DeckDrawFlash | null = null,
-  discardDrawFlash: DiscardDrawFlash | null = null,
+  takeFlash: TakeFlash | null = null,
 ) {
   const prevPhase = useRef<PlayerView["phase"] | null>(null);
+  const prevLogLen = useRef(0);
   const prevMyTurn = useRef(false);
   const peekKey = useRef<string | null>(null);
   const peekFlashKey = useRef<string | null>(null);
   const swapFlashKey = useRef<string | null>(null);
+  const takeFlashKey = useRef<string | null>(null);
   const cambioFlashKey = useRef<string | null>(null);
   const reshuffleFlashKey = useRef<number | null>(null);
-  const deckDrawFlashKey = useRef<string | null>(null);
-  const discardDrawFlashKey = useRef<string | null>(null);
   const prevSnapSeconds = useRef<number | null>(null);
 
   useEffect(() => {
@@ -73,6 +71,17 @@ export function useGameSounds(
   }, [swapFlash]);
 
   useEffect(() => {
+    if (!takeFlash) {
+      takeFlashKey.current = null;
+      return;
+    }
+    const key = `${takeFlash.playerId}-${takeFlash.slot}`;
+    if (takeFlashKey.current === key) return;
+    takeFlashKey.current = key;
+    playSound("take");
+  }, [takeFlash]);
+
+  useEffect(() => {
     if (!cambioFlash) {
       cambioFlashKey.current = null;
       return;
@@ -91,26 +100,6 @@ export function useGameSounds(
     reshuffleFlashKey.current = reshuffleFlash.id;
     playSound("reshuffle");
   }, [reshuffleFlash]);
-
-  useEffect(() => {
-    if (!deckDrawFlash) {
-      deckDrawFlashKey.current = null;
-      return;
-    }
-    if (deckDrawFlashKey.current === deckDrawFlash.playerId) return;
-    deckDrawFlashKey.current = deckDrawFlash.playerId;
-    playSound("deckDraw");
-  }, [deckDrawFlash]);
-
-  useEffect(() => {
-    if (!discardDrawFlash) {
-      discardDrawFlashKey.current = null;
-      return;
-    }
-    if (discardDrawFlashKey.current === discardDrawFlash.playerId) return;
-    discardDrawFlashKey.current = discardDrawFlash.playerId;
-    playSound("discardDraw");
-  }, [discardDrawFlash]);
 
   useEffect(() => {
     if (!error?.includes("Wrong snap")) return;
@@ -140,10 +129,19 @@ export function useGameSounds(
     }
     prevMyTurn.current = isMyTurn;
 
-    if (view.log.length > 0) {
+    if (view.log.length > prevLogLen.current) {
       const lastLog = view.log[view.log.length - 1] ?? "";
-      if (lastLog.includes("snapped correctly")) playSound("snap");
+      if (lastLog.includes("snapped correctly")) {
+        playSound("snap");
+      } else if (lastLog.includes("drew from the discard")) {
+        playSound("discardDraw");
+      } else if (lastLog.includes("drew from")) {
+        playSound("deckDraw");
+      } else if (lastLog.includes("discarded")) {
+        playSound("take");
+      }
     }
+    prevLogLen.current = view.log.length;
   }, [view]);
 
   useEffect(() => {

@@ -12,10 +12,11 @@ import type {
   ServerMessage,
 } from "@/game/types";
 import { freshSessionKey, getPartyHost, storageKey } from "@/lib/party";
-import { isAbilitySwapFlash } from "@/lib/swap-flash";
+import { isAbilitySwapFlash, isHandTakeFlash } from "@/lib/swap-flash";
 
 const PEEK_FLASH_MS = 3500;
 export const SWAP_FLASH_MS = 3000;
+export const TAKE_FLASH_MS = 1500;
 export const PENALTY_FLASH_MS = 2500;
 export const CAMBIO_FLASH_MS = 3500;
 export const RESHUFFLE_FLASH_MS = 3500;
@@ -65,6 +66,12 @@ export type SwapFlash = {
   slots: Array<{ playerId: string; slot: number }>;
 };
 
+/** Drawn-card into hand (single-slot server swap_flash) — distinct from ability swaps. */
+export type TakeFlash = {
+  playerId: string;
+  slot: number;
+};
+
 export type PenaltyFlash = {
   playerId: string;
   slot: number;
@@ -94,6 +101,7 @@ type ConnectionState = {
   fleetingPeek: FleetingPeek | null;
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
+  takeFlash: TakeFlash | null;
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
@@ -133,6 +141,7 @@ export function useGameConnection(
     fleetingPeek: null,
     peekFlash: null,
     swapFlash: null,
+    takeFlash: null,
     penaltyFlash: null,
     cambioFlash: null,
     reshuffleFlash: null,
@@ -143,6 +152,7 @@ export function useGameConnection(
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const peekEffectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const takeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const penaltyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cambioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reshuffleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -273,15 +283,30 @@ export function useGameConnection(
         }, PEEK_FLASH_MS);
       }
 
-      if (data.type === "swap_flash" && isAbilitySwapFlash(data.slots)) {
-        if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
-        setState((s) => ({
-          ...s,
-          swapFlash: { slots: data.slots },
-        }));
-        swapTimerRef.current = setTimeout(() => {
-          setState((s) => ({ ...s, swapFlash: null }));
-        }, SWAP_FLASH_MS);
+      if (data.type === "swap_flash") {
+        const slots = data.slots ?? [];
+        if (isAbilitySwapFlash(slots)) {
+          if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+          setState((s) => ({
+            ...s,
+            swapFlash: { slots },
+            takeFlash: null,
+          }));
+          swapTimerRef.current = setTimeout(() => {
+            setState((s) => ({ ...s, swapFlash: null }));
+          }, SWAP_FLASH_MS);
+        } else if (isHandTakeFlash(slots)) {
+          if (takeTimerRef.current) clearTimeout(takeTimerRef.current);
+          const [slot] = slots;
+          setState((s) => ({
+            ...s,
+            takeFlash: { playerId: slot.playerId, slot: slot.slot },
+            swapFlash: null,
+          }));
+          takeTimerRef.current = setTimeout(() => {
+            setState((s) => ({ ...s, takeFlash: null }));
+          }, TAKE_FLASH_MS);
+        }
       }
 
       if (data.type === "penalty_flash") {
@@ -355,6 +380,7 @@ export function useGameConnection(
       if (peekTimerRef.current) clearTimeout(peekTimerRef.current);
       if (peekEffectTimerRef.current) clearTimeout(peekEffectTimerRef.current);
       if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+      if (takeTimerRef.current) clearTimeout(takeTimerRef.current);
       if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
       if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
       if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);

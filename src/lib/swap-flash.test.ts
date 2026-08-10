@@ -1,26 +1,28 @@
 import { describe, expect, it } from "vitest";
-import { isAbilitySwapFlash } from "./swap-flash";
+import { isAbilitySwapFlash, isHandTakeFlash } from "./swap-flash";
 
-describe("isAbilitySwapFlash", () => {
-  it("returns false for drawn-card hand swap (single slot)", () => {
-    expect(isAbilitySwapFlash([{ playerId: "alice", slot: 1 }])).toBe(false);
+describe("swap flash classification", () => {
+  it("treats single-slot flash as hand take, not ability", () => {
+    const slots = [{ playerId: "alice", slot: 1 }];
+    expect(isHandTakeFlash(slots)).toBe(true);
+    expect(isAbilitySwapFlash(slots)).toBe(false);
   });
 
-  it("returns true for ability swap (two slots)", () => {
-    expect(
-      isAbilitySwapFlash([
-        { playerId: "alice", slot: 0 },
-        { playerId: "bob", slot: 2 },
-      ]),
-    ).toBe(true);
+  it("treats two-slot flash as ability swap", () => {
+    const slots = [
+      { playerId: "alice", slot: 0 },
+      { playerId: "bob", slot: 2 },
+    ];
+    expect(isAbilitySwapFlash(slots)).toBe(true);
+    expect(isHandTakeFlash(slots)).toBe(false);
   });
 
-  it("returns true for same-player ability swap (two slots)", () => {
-    expect(
-      isAbilitySwapFlash([
-        { playerId: "alice", slot: 0 },
-        { playerId: "alice", slot: 3 },
-      ]),
-    ).toBe(true);
+  it("treats same-player two-slot flash as ability swap", () => {
+    const slots = [
+      { playerId: "alice", slot: 0 },
+      { playerId: "alice", slot: 3 },
+    ];
+    expect(isAbilitySwapFlash(slots)).toBe(true);
+    expect(isHandTakeFlash(slots)).toBe(false);
   });
 });

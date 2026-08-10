@@ -8,6 +8,7 @@ export type SoundId =
   | "snapCountdown"
   | "deckDraw"
   | "discardDraw"
+  | "take"
   | "reshuffle"
   | "swap"
   | "cambio"
@@ -113,6 +114,10 @@ export async function playSound(id: SoundId): Promise<void> {
       tone(ctx, 480, t, 0.04, "sine", 0.045);
       tone(ctx, 360, t + 0.05, 0.07, "sine", 0.04);
       tone(ctx, 520, t + 0.1, 0.05, "sine", 0.035);
+      break;
+    case "take":
+      tone(ctx, 520, t, 0.04, "triangle", 0.05);
+      tone(ctx, 390, t + 0.05, 0.06, "triangle", 0.04);
       break;
     case "reshuffle":
       tone(ctx, 420, t, 0.05, "triangle", 0.045);

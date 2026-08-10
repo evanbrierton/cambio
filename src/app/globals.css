@@ -1887,6 +1887,93 @@ body::after {
     0 0 36px 10px var(--glow-swap-b);
 }
 
+@keyframes take-flash-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-alt) 0%, transparent);
+    filter: brightness(1);
+  }
+  30% {
+    box-shadow:
+      0 0 0 4px var(--accent-alt),
+      0 0 28px 8px var(--glow-accent-alt);
+    filter: brightness(1.18);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent-alt) 0%, transparent);
+    filter: brightness(1);
+  }
+}
+
+@keyframes take-flash-ring {
+  0% {
+    transform: scale(0.9);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+}
+
+@keyframes take-flash-shimmer {
+  0% {
+    transform: translateX(-100%) rotate(8deg);
+    opacity: 0.3;
+  }
+  100% {
+    transform: translateX(100%) rotate(8deg);
+    opacity: 0.15;
+  }
+}
+
+@keyframes take-flash-icon {
+  0% {
+    transform: translateY(-8px) scale(0.6);
+    opacity: 0;
+  }
+  35% {
+    transform: translateY(0) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.2;
+  }
+}
+
+@keyframes take-flash-label {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  25%,
+  70% {
+    opacity: 1;
+  }
+}
+
+.take-flash-wrap {
+  z-index: 30;
+  border-radius: var(--radius-card);
+  animation: take-flash-pulse 1.5s ease-out 1;
+}
+
+.take-flash-ring {
+  animation: take-flash-ring 1.5s ease-out 1;
+}
+
+.take-flash-shimmer {
+  animation: take-flash-shimmer 1.2s ease-in-out 1;
+}
+
+.take-flash-icon {
+  animation: take-flash-icon 1.5s ease-out 1;
+}
+
+.take-flash-label {
+  animation: take-flash-label 1.5s ease-in-out 1;
+}
+
 @keyframes peek-flash-pulse {
   0% {
     box-shadow:

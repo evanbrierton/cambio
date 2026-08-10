@@ -40,6 +40,7 @@ import type {
   PenaltyFlash,
   ReshuffleFlash,
   SwapFlash,
+  TakeFlash,
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { useHintsEnabled } from "@/hooks/useHintsEnabled";
@@ -58,6 +59,7 @@ type GameTableProps = {
   fleetingPeek: FleetingPeek | null;
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
+  takeFlash: TakeFlash | null;
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
@@ -117,6 +119,14 @@ function isSwapFlashing(
       (entry) => entry.playerId === playerId && entry.slot === slot,
     ) ?? false
   );
+}
+
+function isTakeFlashing(
+  takeFlash: TakeFlash | null,
+  playerId: string,
+  slot: number,
+): boolean {
+  return takeFlash?.playerId === playerId && takeFlash.slot === slot;
 }
 
 function formatSwapFlashNotice(
@@ -315,6 +325,7 @@ function PlayerSeat({
   fleetingPeek,
   peekFlash,
   swapFlash,
+  takeFlash,
   penaltyFlash,
   selectedSwapCard,
   canSwap,
@@ -336,6 +347,7 @@ function PlayerSeat({
   fleetingPeek: FleetingPeek | null;
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
+  takeFlash: TakeFlash | null;
   penaltyFlash: PenaltyFlash | null;
   selectedSwapCard: SelectedCard | null;
   canSwap?: boolean;
@@ -448,6 +460,12 @@ function PlayerSeat({
         swapFlashing={isSwapFlashing(swapFlash, player.id, index)}
         swapFlashSlotLabel={
           isSwapFlashing(swapFlash, player.id, index)
+            ? `#${index + 1}`
+            : undefined
+        }
+        takeFlashing={isTakeFlashing(takeFlash, player.id, index)}
+        takeFlashSlotLabel={
+          isTakeFlashing(takeFlash, player.id, index)
             ? `#${index + 1}`
             : undefined
         }
@@ -614,6 +632,7 @@ export function GameTable({
   fleetingPeek,
   peekFlash,
   swapFlash,
+  takeFlash,
   penaltyFlash,
   cambioFlash,
   reshuffleFlash,
@@ -689,8 +708,7 @@ export function GameTable({
     cambioFlash,
     reshuffleFlash,
     snapWindowSeconds,
-    deckDrawFlash,
-    discardDrawFlash,
+    takeFlash,
   );
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
@@ -1087,6 +1105,7 @@ export function GameTable({
         fleetingPeek={fleetingPeek}
         peekFlash={peekFlash}
         swapFlash={swapFlash}
+        takeFlash={takeFlash}
         penaltyFlash={penaltyFlash}
         selectedSwapCard={selectedSwapCard}
         canSwap={isOwn ? view.canSwap : undefined}
