@@ -55,7 +55,7 @@ describe("detectMoveReaction card visibility (CAM-87)", () => {
     expect(reaction?.detail).toContain("A♥");
   });
 
-  it("never names the private deck card swapped into a hand", () => {
+  it("does not react to deck-draw swaps (private take + hand-card points)", () => {
     const reaction = detectMoveReaction(
       alicePlayer(),
       { type: "swap", slot: 0 },
@@ -68,13 +68,10 @@ describe("detectMoveReaction card visibility (CAM-87)", () => {
       0,
     );
 
-    expect(reaction).not.toBeNull();
-    expect(reaction?.detail).toContain("K♠");
-    expect(reaction?.detail).not.toMatch(/J♥|Jack/i);
-    expect(reaction?.detail.toLowerCase()).not.toContain("for a");
+    expect(reaction).toBeNull();
   });
 
-  it("may name both cards when swapping a public discard-pile draw", () => {
+  it("may name both public discard-pile swap cards without point totals", () => {
     const reaction = detectMoveReaction(
       alicePlayer([
         slot(card("A", "hearts")),
@@ -95,6 +92,7 @@ describe("detectMoveReaction card visibility (CAM-87)", () => {
     expect(reaction?.kind).toBe("bad_swap");
     expect(reaction?.detail).toContain("A♥");
     expect(reaction?.detail).toContain("J♣");
+    expect(reaction?.detail).not.toMatch(/\d+\s*pts/i);
   });
 
   it("capturePreMoveSnapshot records drawnFromDiscard", () => {
@@ -143,5 +141,6 @@ describe("bot chat LLM prompt (CAM-87)", () => {
     expect(prompt).toMatch(/discard pile/i);
     expect(prompt).toMatch(/PRIVATE/i);
     expect(prompt).toMatch(/Call Cambio/i);
+    expect(prompt).toMatch(/point values/i);
   });
 });

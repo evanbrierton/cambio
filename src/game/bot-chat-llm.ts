@@ -84,10 +84,11 @@ export const CAMBIO_RULES_FOR_CHAT = [
 /** What other players (including bots) can see at the table. */
 export const CAMBIO_VISIBILITY_FOR_CHAT = [
   "Card visibility (critical — never break this):",
-  "- PUBLIC: top of discard pile, face-up cards, cards just discarded or swapped onto the discard pile, cards taken from the discard pile (everyone already saw them).",
+  "- PUBLIC: top of discard pile, face-up cards, cards just discarded onto the discard pile, cards taken from the discard pile (everyone already saw them).",
   "- PRIVATE: face-down hand cards, cards drawn from the deck while held or swapped into a hand, peek/spy results, penalty cards.",
-  "- Only name or imply ranks/suits of PUBLIC cards. Never invent or guess private card identities.",
-  "- If a player swapped a deck draw into their hand, you may only comment on the card that went to the discard pile — not what they took.",
+  "- Only name ranks/suits of PUBLIC cards. Never invent or guess private card identities.",
+  "- Never mention point values of cards that are or were face-down in someone's hand. Do not tally or imply hidden hand totals.",
+  "- If a player swapped a deck draw into their hand, do not comment on what they took or how good/bad that swap was — you cannot know.",
 ].join("\n");
 
 export function buildSystemPrompt(ctx: BotChatContext): string {
