@@ -7,7 +7,13 @@
   },
   "files": {
     "ignoreUnknown": true,
-    "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
+    "includes": [
+      "**",
+      "!node_modules",
+      "!.next",
+      "!dist",
+      "!build"
+    ]
   },
   "css": {
     "parser": {
@@ -35,7 +41,8 @@
       "correctness": {
         "noReactPropAssignments": "warn",
         "useImportExtensions": "off",
-        "noUnresolvedImports": "off"
+        "noUnresolvedImports": "off",
+        "noNodejsModules": "off"
       },
       "nursery": {
         "useArraySome": "warn",
