@@ -153,8 +153,8 @@ function isSnapEligible(state: GameState): boolean {
   if (state.discard.length === 0 || !state.snapEligibleTopCardId) {
     return false;
   }
-  const top = state.discard[state.discard.length - 1]!;
-  return top.id === state.snapEligibleTopCardId;
+  const top = state.discard[state.discard.length - 1];
+  return top !== undefined && top.id === state.snapEligibleTopCardId;
 }
 
 function canAttemptSnap(state: GameState): boolean {
@@ -554,7 +554,10 @@ function findSnapTarget(
   if (state.discard.length === 0) {
     return null;
   }
-  const top = state.discard[state.discard.length - 1]!;
+  const top = state.discard[state.discard.length - 1];
+  if (top === undefined) {
+    return null;
+  }
 
   const matches: Array<{ targetPlayerId: string; slot: number }> = [];
 
@@ -798,7 +801,10 @@ function decideTurn(
     }
 
     if (isSmart(difficulty) && state.discard.length > 0) {
-      const top = state.discard[state.discard.length - 1]!;
+      const top = state.discard[state.discard.length - 1];
+      if (top === undefined) {
+        return { type: "draw", source: "deck" };
+      }
       const worst = worstKnownSlot(state, botId, knowledge, difficulty);
       const worstPts = estimateSlotPoints({
         botId,

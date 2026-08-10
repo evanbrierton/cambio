@@ -30,7 +30,13 @@
         "useFlatMap": "warn",
         "noFlatMapIdentity": "warn",
         "useArrayFind": "warn",
-        "useOptionalChain": "warn"
+        "useOptionalChain": "warn",
+        "useMaxParams": {
+          "level": "warn",
+          "options": {
+            "max": 8
+          }
+        }
       },
       "correctness": {
         "noReactPropAssignments": "warn",
@@ -44,7 +50,8 @@
         "noExcessiveNestedCallbacks": "warn"
       },
       "performance": {
-        "noDelete": "warn"
+        "noDelete": "warn",
+        "noBarrelFile": "off"
       },
       "style": {
         "useConst": "warn",
@@ -99,7 +106,8 @@
         "vitest.config.mts",
         "scripts/**",
         "public/sw.js",
-        "party/**"
+        "party/**",
+        "src/lib/brand-image.tsx"
       ],
       "linter": {
         "rules": {
