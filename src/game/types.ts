@@ -16,17 +16,17 @@ export type Rank =
   | "A"
   | "JOKER";
 
-export type Card = {
+export interface Card {
   id: string;
   suit: Suit;
   rank: Rank;
-};
+}
 
-export type CardSlot = {
+export interface CardSlot {
   card: Card | null;
   faceUp: boolean;
   isPenalty?: boolean;
-};
+}
 
 export type GamePhase =
   | "lobby"
@@ -50,20 +50,24 @@ export type PendingAbilityKind =
   | "king_swap"
   | "snap_give";
 
-export type PendingAbility = {
+export interface PendingAbility {
   playerId: string;
   kind: PendingAbilityKind;
   lookedCards: Array<{ playerId: string; slot: number; card: Card }>;
   maxLooks: number;
   /** Opponent who lost a card to a correct snap — snapper must give them one card. */
   snapTargetPlayerId?: string;
-};
+}
 
 export type BotDifficulty = "easy" | "medium" | "hard";
 
 export function parseBotDifficulty(value: string | null): BotDifficulty {
-  if (value === "hard") return "hard";
-  if (value === "medium") return "medium";
+  if (value === "hard") {
+    return "hard";
+  }
+  if (value === "medium") {
+    return "medium";
+  }
   return "easy";
 }
 
@@ -75,13 +79,13 @@ export const DEFAULT_JOKER_COUNT = 2;
 export const MIN_JOKER_COUNT = 2;
 export const MAX_JOKER_COUNT = 4;
 
-export type CardPointValues = {
+export interface CardPointValues {
   ace: number;
   face: number;
   joker: number;
   blackKing: number;
   redKing: number;
-};
+}
 
 export const DEFAULT_CARD_POINTS: CardPointValues = {
   ace: 1,
@@ -94,28 +98,28 @@ export const DEFAULT_CARD_POINTS: CardPointValues = {
 export const MIN_CARD_POINT_VALUE = -5;
 export const MAX_CARD_POINT_VALUE = 25;
 
-export type ChatMessage = {
+export interface ChatMessage {
   id: string;
   playerId: string;
   playerName: string;
   text: string;
   sentAt: number;
-};
+}
 
-export type ScoreboardEntry = {
+export interface ScoreboardEntry {
   id: string;
   name: string;
   score: number;
-};
+}
 
-export type RoundResult = {
+export interface RoundResult {
   roundNumber: number;
   entries: ScoreboardEntry[];
   winnerIds: string[];
   cambioCallerId: string | null;
-};
+}
 
-export type PlayerState = {
+export interface PlayerState {
   id: string;
   name: string;
   hand: CardSlot[];
@@ -127,9 +131,9 @@ export type PlayerState = {
   connected: boolean;
   isBot: boolean;
   botDifficulty: BotDifficulty | null;
-};
+}
 
-export type GameState = {
+export interface GameState {
   roomId: string;
   phase: GamePhase;
   isSoloMode: boolean;
@@ -160,28 +164,28 @@ export type GameState = {
   botThinkingId: string | null;
   log: string[];
   chatMessages: ChatMessage[];
-};
+}
 
-export type SwapFlashSlot = {
+export interface SwapFlashSlot {
   playerId: string;
   slot: number;
-};
+}
 
 export type PeekFlashKind = "setup_peek" | "peek_own" | "spy" | "look";
 
-export type PeekFlash = {
+export interface PeekFlash {
   kind: PeekFlashKind;
   actorId: string;
   playerId: string;
   slot: number;
-};
+}
 
 export const HAND_BASE_SLOTS = 4;
 
-export type PenaltyFlash = {
+export interface PenaltyFlash {
   playerId: string;
   slot: number;
-};
+}
 
 export type ClientMessage =
   | { type: "join"; playerId?: string; name: string }
@@ -213,15 +217,15 @@ export type ClientMessage =
       toSlot: number;
     };
 
-export type PublicCardSlot = {
+export interface PublicCardSlot {
   card: Card | null;
   faceUp: boolean;
   hidden: boolean;
   empty?: boolean;
   isPenalty?: boolean;
-};
+}
 
-export type PublicPlayer = {
+export interface PublicPlayer {
   id: string;
   name: string;
   hand: PublicCardSlot[];
@@ -234,9 +238,9 @@ export type PublicPlayer = {
   isHost: boolean;
   isCurrentTurn: boolean;
   isThinking: boolean;
-};
+}
 
-export type PlayerView = {
+export interface PlayerView {
   roomId: string;
   playerId: string;
   phase: GamePhase;
@@ -273,15 +277,15 @@ export type PlayerView = {
   canSetCardPoints: boolean;
   log: string[];
   chatMessages: ChatMessage[];
-};
+}
 
-export type DiscardDrawFlash = {
+export interface DiscardDrawFlash {
   playerId: string;
-};
+}
 
-export type DeckDrawFlash = {
+export interface DeckDrawFlash {
   playerId: string;
-};
+}
 
 export type ServerMessage =
   | { type: "state"; view: PlayerView }

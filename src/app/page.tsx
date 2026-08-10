@@ -31,14 +31,18 @@ export default function HomePage() {
   const hasName = trimmedName.length > 0;
 
   const goToRoom = (code: string, mode: "host" | "join") => {
-    if (!hasName) return;
+    if (!hasName) {
+      return;
+    }
     setPlayerName(trimmedName);
     const params = new URLSearchParams({ name: trimmedName, [mode]: "1" });
     router.push(`/play/${code}?${params.toString()}`);
   };
 
   const goToSolo = () => {
-    if (!hasName) return;
+    if (!hasName) {
+      return;
+    }
     setPlayerName(trimmedName);
     const params = new URLSearchParams({
       name: trimmedName,

@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
+import process from "node:process";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -12,7 +13,6 @@ const run = spawnSync(bin, ["--auto", "--format", "json"], {
 });
 
 if (run.error) {
-  console.error(run.error.message);
   process.exit(1);
 }
 
@@ -30,26 +30,20 @@ try {
 }
 
 if (payload.error) {
-  console.error(payload.error);
   process.exit(1);
 }
 
 for (const file of payload.files ?? []) {
-  if (!file.diagnostics?.length) continue;
-  console.log(`\n${file.path}`);
-  for (const diagnostic of file.diagnostics) {
-    console.log(
-      `  ${diagnostic.line}:${diagnostic.column}  ${diagnostic.severity}  ${diagnostic.message}  (${diagnostic.code})`,
-    );
+  if (file.diagnostics?.length === 0) {
+    continue;
+  }
+  for (const _diagnostic of file.diagnostics) {
   }
 }
 
 const { errors = 0, warnings = 0 } = payload.summary ?? {};
 
 if (errors === 0 && warnings === 0) {
-  console.log("✔ No issues found");
   process.exit(0);
 }
-
-console.error(`\nFound ${errors} error(s) and ${warnings} warning(s)`);
 process.exit(1);

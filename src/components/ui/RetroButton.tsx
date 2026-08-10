@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 
-type RetroButtonProps = {
+interface RetroButtonProps {
   children: ReactNode;
   onClick?: () => void;
   variant?: "primary" | "secondary" | "danger";
   disabled?: boolean;
   className?: string;
-};
+}
 
 export function RetroButton({
   children,

@@ -78,10 +78,14 @@ export function generateBotName(usedNames: Iterable<string>): string {
 
   for (let attempt = 0; attempt < 80; attempt++) {
     const name = `${pick(ADJECTIVES)} ${pick(NOUNS)}`;
-    if (!taken.has(nameKey(name))) return name;
+    if (!taken.has(nameKey(name))) {
+      return name;
+    }
   }
 
   let suffix = 2;
-  while (taken.has(nameKey(`Bot ${suffix}`))) suffix++;
+  while (taken.has(nameKey(`Bot ${suffix}`))) {
+    suffix++;
+  }
   return `Bot ${suffix}`;
 }

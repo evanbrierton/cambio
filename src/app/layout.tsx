@@ -122,9 +122,10 @@ export default async function RootLayout({
       data-theme={theme}
       data-appearance={appearance}
       style={{ backgroundColor: "var(--background)", colorScheme: appearance }}
-      suppressHydrationWarning
+      suppressHydrationWarning={true}
     >
       <head>
+        {/* biome-ignore lint/correctness/useUniqueElementIds: single root boot script */}
         <script id="cambio-appearance-init">{APPEARANCE_INIT_SCRIPT}</script>
       </head>
       <body className="min-h-full flex flex-col relative z-0">

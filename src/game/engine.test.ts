@@ -303,15 +303,7 @@ describe("discard abilities (CAM-76)", () => {
   });
 
   it("does not trigger ability for each ability rank when swapped out", () => {
-    const abilityRanks: Array<Card["rank"]> = [
-      "7",
-      "8",
-      "9",
-      "10",
-      "J",
-      "Q",
-      "K",
-    ];
+    const abilityRanks: Card["rank"][] = ["7", "8", "9", "10", "J", "Q", "K"];
 
     for (const rank of abilityRanks) {
       const state = playingState();
@@ -553,8 +545,8 @@ describe("expireSnapWindow (CAM-14)", () => {
     expect("error" in result).toBe(false);
     expect(state.pendingAbility?.kind).toBe("snap_give");
     expect(state.phase).toBe("snap_window");
-    expect(state.snapWindowEndsAt).toBeGreaterThanOrEqual(before + 3_000);
-    expect(state.snapWindowEndsAt).toBeLessThanOrEqual(after + 3_000);
+    expect(state.snapWindowEndsAt).toBeGreaterThanOrEqual(before + 3000);
+    expect(state.snapWindowEndsAt).toBeLessThanOrEqual(after + 3000);
 
     expect(expireSnapWindow(state, state.snapWindowEndsAt ?? after)).toBe(true);
     expect(state.phase).toBe("revealed");

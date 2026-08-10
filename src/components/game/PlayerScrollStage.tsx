@@ -9,10 +9,10 @@ import {
   useRef,
 } from "react";
 
-type PlayerScrollStageProps = {
+interface PlayerScrollStageProps {
   children: ReactNode;
   centerIndex?: number;
-};
+}
 
 const SEAT_CARD_RATIO = 5 / 7;
 
@@ -52,8 +52,12 @@ export function PlayerScrollStage({
     (index: number, behavior: ScrollBehavior = "auto") => {
       const rail = railRef.current;
       const item = itemRefs.current[index];
-      if (!rail || !item) return;
-      if (rail.classList.contains("is-static")) return;
+      if (!(rail && item)) {
+        return;
+      }
+      if (rail.classList.contains("is-static")) {
+        return;
+      }
 
       const target =
         item.offsetLeft + item.offsetWidth / 2 - rail.clientWidth / 2;
@@ -65,7 +69,9 @@ export function PlayerScrollStage({
   const updateLayout = useCallback(() => {
     const stage = stageRef.current;
     const rail = railRef.current;
-    if (!rail) return;
+    if (!rail) {
+      return;
+    }
 
     if (stage) {
       applySeatCardScale(stage, rail);
@@ -78,7 +84,7 @@ export function PlayerScrollStage({
     ).matches;
     const items = itemRefs.current
       .slice(0, childCount)
-      .filter((item): item is HTMLDivElement => item != null);
+      .filter((item): item is HTMLDivElement => item !== null);
     const styles = getComputedStyle(rail);
     const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0;
     const contentWidth = items.reduce(
@@ -116,7 +122,9 @@ export function PlayerScrollStage({
     const center = railRect.left + railRect.width / 2;
 
     itemRefs.current.forEach((item) => {
-      if (!item) return;
+      if (!item) {
+        return;
+      }
 
       if (reducedMotion || fits) {
         item.style.transform = "";
@@ -143,7 +151,9 @@ export function PlayerScrollStage({
 
   useEffect(() => {
     const rail = railRef.current;
-    if (!rail) return;
+    if (!rail) {
+      return;
+    }
 
     const frame = requestAnimationFrame(() => {
       updateLayout();
@@ -174,12 +184,12 @@ export function PlayerScrollStage({
           key="spacer-lead"
           ref={leadSpacerRef}
           className="players-3d-spacer"
-          aria-hidden
+          aria-hidden={true}
         />
         {Children.map(children, (child, index) => (
           <div
             key={
-              isValidElement(child) && child.key != null
+              isValidElement(child) && child.key !== null
                 ? `stage-${String(child.key)}`
                 : `stage-${index}`
             }
@@ -195,7 +205,7 @@ export function PlayerScrollStage({
           key="spacer-trail"
           ref={trailSpacerRef}
           className="players-3d-spacer"
-          aria-hidden
+          aria-hidden={true}
         />
       </div>
     </div>

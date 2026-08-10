@@ -217,8 +217,12 @@ export function shouldFocusTarpingForChat(options: {
   replyText?: string;
   humanChatTexts?: string[];
 }): boolean {
-  if (options.replyText && mentionsTarping(options.replyText)) return true;
-  if (options.humanChatTexts?.some(mentionsTarping)) return true;
+  if (options.replyText && mentionsTarping(options.replyText)) {
+    return true;
+  }
+  if (options.humanChatTexts?.some(mentionsTarping)) {
+    return true;
+  }
   return shouldFocusTarping();
 }
 
@@ -228,12 +232,20 @@ export function pickBotChatMessage(
 ): string {
   const focusTarping = options?.focusTarping ?? shouldFocusTarping();
   if (focusTarping) {
-    if (difficulty === "hard") return pick(HARD_TARPING_MESSAGES);
-    if (difficulty === "medium") return pick(MEDIUM_TARPING_MESSAGES);
+    if (difficulty === "hard") {
+      return pick(HARD_TARPING_MESSAGES);
+    }
+    if (difficulty === "medium") {
+      return pick(MEDIUM_TARPING_MESSAGES);
+    }
     return pick(EASY_TARPING_MESSAGES);
   }
-  if (difficulty === "hard") return pick(HARD_MESSAGES);
-  if (difficulty === "medium") return pick(MEDIUM_MESSAGES);
+  if (difficulty === "hard") {
+    return pick(HARD_MESSAGES);
+  }
+  if (difficulty === "medium") {
+    return pick(MEDIUM_MESSAGES);
+  }
   return pick(EASY_MESSAGES);
 }
 

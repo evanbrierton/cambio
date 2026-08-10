@@ -56,7 +56,9 @@ export function shuffle<T>(items: T[]): T[] {
 }
 
 export function cardLabel(card: Card): string {
-  if (card.rank === "JOKER") return "JK";
+  if (card.rank === "JOKER") {
+    return "JK";
+  }
   return card.rank;
 }
 
@@ -96,22 +98,45 @@ export function cardPoints(
   card: Card,
   values: CardPointValues = DEFAULT_CARD_POINTS,
 ): number {
-  if (card.rank === "JOKER") return values.joker;
-  if (card.rank === "A") return values.ace;
-  if (card.rank === "J" || card.rank === "Q") return values.face;
+  if (card.rank === "JOKER") {
+    return values.joker;
+  }
+  if (card.rank === "A") {
+    return values.ace;
+  }
+  if (card.rank === "J" || card.rank === "Q") {
+    return values.face;
+  }
   if (card.rank === "K") {
-    if (card.suit === "hearts" || card.suit === "diamonds")
+    if (card.suit === "hearts" || card.suit === "diamonds") {
       return values.redKing;
+    }
     return values.blackKing;
   }
-  if (card.rank === "2") return 2;
-  if (card.rank === "3") return 3;
-  if (card.rank === "4") return 4;
-  if (card.rank === "5") return 5;
-  if (card.rank === "6") return 6;
-  if (card.rank === "7") return 7;
-  if (card.rank === "8") return 8;
-  if (card.rank === "9") return 9;
+  if (card.rank === "2") {
+    return 2;
+  }
+  if (card.rank === "3") {
+    return 3;
+  }
+  if (card.rank === "4") {
+    return 4;
+  }
+  if (card.rank === "5") {
+    return 5;
+  }
+  if (card.rank === "6") {
+    return 6;
+  }
+  if (card.rank === "7") {
+    return 7;
+  }
+  if (card.rank === "8") {
+    return 8;
+  }
+  if (card.rank === "9") {
+    return 9;
+  }
   return 10;
 }
 
@@ -132,11 +157,21 @@ export type DiscardAbility =
   | "king_look";
 
 export function abilityForDiscard(card: Card): DiscardAbility | null {
-  if (card.rank === "7" || card.rank === "8") return "peek_own";
-  if (card.rank === "9" || card.rank === "10") return "spy";
-  if (card.rank === "J") return "blind_switch";
-  if (card.rank === "Q") return "queen_look";
-  if (card.rank === "K") return "king_look";
+  if (card.rank === "7" || card.rank === "8") {
+    return "peek_own";
+  }
+  if (card.rank === "9" || card.rank === "10") {
+    return "spy";
+  }
+  if (card.rank === "J") {
+    return "blind_switch";
+  }
+  if (card.rank === "Q") {
+    return "queen_look";
+  }
+  if (card.rank === "K") {
+    return "king_look";
+  }
   return null;
 }
 

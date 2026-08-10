@@ -48,7 +48,10 @@ import {
 } from "../src/game/types";
 import { parseClientMessageJson } from "../src/game/wire-schema";
 
-type PlayerConnectionState = { playerId?: string; debugEnabled?: boolean };
+interface PlayerConnectionState {
+  playerId?: string;
+  debugEnabled?: boolean;
+}
 
 const MOVE_REACTION_COOLDOWN_MS = 12_000;
 
@@ -77,14 +80,18 @@ function migrateState(state: GameState): GameState {
 }
 
 function messageText(raw: WSMessage): string {
-  if (typeof raw === "string") return raw;
-  if (raw instanceof ArrayBuffer) return new TextDecoder().decode(raw);
+  if (typeof raw === "string") {
+    return raw;
+  }
+  if (raw instanceof ArrayBuffer) {
+    return new TextDecoder().decode(raw);
+  }
   return new TextDecoder().decode(raw);
 }
 
 export class CambioParty extends Server<Env> {
   state: GameState | null = null;
-  private botKnowledge = new Map<string, BotKnowledge>();
+  private readonly botKnowledge = new Map<string, BotKnowledge>();
   private botTimer: ReturnType<typeof setTimeout> | null = null;
   private botChatTimer: ReturnType<typeof setTimeout> | null = null;
   private botChatReplyTimer: ReturnType<typeof setTimeout> | null = null;
@@ -125,11 +132,17 @@ export class CambioParty extends Server<Env> {
   }
 
   private scheduleBotChat() {
-    if (this.botChatTimer) return;
-    if (!this.state?.isSoloMode) return;
+    if (this.botChatTimer) {
+      return;
+    }
+    if (!this.state?.isSoloMode) {
+      return;
+    }
 
     const bots = this.state.players.filter((p) => p.isBot);
-    if (bots.length === 0) return;
+    if (bots.length === 0) {
+      return;
+    }
 
     const delay = botChatDelay();
     this.botChatTimer = setTimeout(() => {
@@ -139,10 +152,12 @@ export class CambioParty extends Server<Env> {
   }
 
   private scheduleBotChatReply(playerName: string, text: string) {
-    if (!this.state?.isSoloMode) return;
+    if (!this.state?.isSoloMode) {
+      return;
+    }
 
     this.clearBotChatReplyTimer();
-    const delay = 2_000 + Math.floor(Math.random() * 3_000);
+    const delay = 2000 + Math.floor(Math.random() * 3000);
     this.botChatReplyTimer = setTimeout(() => {
       this.botChatReplyTimer = null;
       void this.sendBotChat({ replyTo: { playerName, text } });
@@ -150,14 +165,18 @@ export class CambioParty extends Server<Env> {
   }
 
   private scheduleBotMoveReaction(reaction: GameMoveReaction) {
-    if (!this.state?.isSoloMode) return;
+    if (!this.state?.isSoloMode) {
+      return;
+    }
 
     const now = Date.now();
-    if (now - this.lastMoveReactionAt < MOVE_REACTION_COOLDOWN_MS) return;
+    if (now - this.lastMoveReactionAt < MOVE_REACTION_COOLDOWN_MS) {
+      return;
+    }
 
     this.clearBotChatReplyTimer();
     this.lastMoveReactionAt = now;
-    const delay = 1_500 + Math.floor(Math.random() * 2_500);
+    const delay = 1500 + Math.floor(Math.random() * 2500);
     this.botChatReplyTimer = setTimeout(() => {
       this.botChatReplyTimer = null;
       void this.sendBotChat({ gameMove: reaction });
@@ -168,11 +187,15 @@ export class CambioParty extends Server<Env> {
     replyTo?: { playerName: string; text: string };
     gameMove?: GameMoveReaction;
   }) {
-    if (!this.state?.isSoloMode) return;
+    if (!this.state?.isSoloMode) {
+      return;
+    }
 
     const bots = this.state.players.filter((p) => p.isBot);
     if (bots.length === 0) {
-      if (!options?.replyTo) this.scheduleBotChat();
+      if (!options?.replyTo) {
+        this.scheduleBotChat();
+      }
       return;
     }
 
@@ -200,9 +223,6 @@ export class CambioParty extends Server<Env> {
     });
 
     if (result.source === "template" && result.fallbackReason) {
-      console.log(
-        `[bot-chat] template fallback (${result.fallbackReason}) for ${bot.name}`,
-      );
     }
 
     const posted = addChatMessage(this.state, bot.id, result.text, {
@@ -213,7 +233,9 @@ export class CambioParty extends Server<Env> {
       this.broadcastState();
     }
 
-    if (!options?.replyTo && !options?.gameMove) this.scheduleBotChat();
+    if (!(options?.replyTo || options?.gameMove)) {
+      this.scheduleBotChat();
+    }
   }
 
   private applyMessageResult(
@@ -221,7 +243,9 @@ export class CambioParty extends Server<Env> {
     message: ClientMessage,
     result: ReturnType<typeof handleMessage>,
   ) {
-    if (!this.state) return;
+    if (!this.state) {
+      return;
+    }
     const bot = findPlayer(this.state, botId);
     if (bot?.isBot) {
       updateBotKnowledge(
@@ -239,7 +263,9 @@ export class CambioParty extends Server<Env> {
     message: ClientMessage,
     connection?: Connection<PlayerConnectionState>,
   ) {
-    if (!this.state) return;
+    if (!this.state) {
+      return;
+    }
 
     const actor = findPlayer(this.state, playerId);
     const isHuman = actor !== undefined && !actor.isBot;
@@ -342,14 +368,18 @@ export class CambioParty extends Server<Env> {
 
   scheduleBotTurns() {
     this.clearBotTimer();
-    if (!this.state) return;
+    if (!this.state) {
+      return;
+    }
 
     let scheduledBotId: string | null = null;
     let scheduledAction: ClientMessage | null = null;
 
     for (const botId of collectActingBots(this.state)) {
       const bot = findPlayer(this.state, botId);
-      if (!bot?.isBot) continue;
+      if (!bot?.isBot) {
+        continue;
+      }
       const action = decideBotAction(
         this.state,
         botId,
@@ -362,10 +392,14 @@ export class CambioParty extends Server<Env> {
       }
     }
 
-    if (!scheduledBotId || !scheduledAction) return;
+    if (!(scheduledBotId && scheduledAction)) {
+      return;
+    }
 
     const bot = findPlayer(this.state, scheduledBotId);
-    if (!bot?.isBot) return;
+    if (!bot?.isBot) {
+      return;
+    }
 
     this.state.botThinkingId = scheduledBotId;
     this.broadcastState();
@@ -373,7 +407,9 @@ export class CambioParty extends Server<Env> {
     const delay = botThinkDelay(bot.botDifficulty ?? "easy");
     this.botTimer = setTimeout(() => {
       this.botTimer = null;
-      if (!this.state) return;
+      if (!this.state) {
+        return;
+      }
       this.state.botThinkingId = null;
       void this.dispatchMessage(scheduledBotId, scheduledAction);
     }, delay);
@@ -405,7 +441,9 @@ export class CambioParty extends Server<Env> {
   }
 
   async syncSnapWindow() {
-    if (this.state?.phase !== "snap_window") return;
+    if (this.state?.phase !== "snap_window") {
+      return;
+    }
     if (expireSnapWindow(this.state)) {
       await this.persist();
       await this.ctx.storage.deleteAlarm();
@@ -417,7 +455,9 @@ export class CambioParty extends Server<Env> {
   }
 
   async onAlarm() {
-    if (!this.state) return;
+    if (!this.state) {
+      return;
+    }
     if (expireSnapWindow(this.state)) {
       await this.persist();
       await this.ctx.storage.deleteAlarm();
@@ -442,10 +482,14 @@ export class CambioParty extends Server<Env> {
   }
 
   broadcastState() {
-    if (!this.state) return;
+    if (!this.state) {
+      return;
+    }
     for (const conn of this.getConnections<PlayerConnectionState>()) {
       const playerId = this.getPlayerId(conn);
-      if (!playerId) continue;
+      if (!playerId) {
+        continue;
+      }
       const view = buildPlayerView(this.state, playerId);
       conn.send(JSON.stringify({ type: "state", view }));
     }
@@ -542,7 +586,7 @@ export class CambioParty extends Server<Env> {
       ? this.state?.players.find((p) => p.id === queryPlayerId)
       : undefined;
 
-    if (!existingPlayer && !name) {
+    if (!(existingPlayer || name)) {
       connection.send(
         JSON.stringify({ type: "error", message: "Please enter a name." }),
       );
@@ -552,7 +596,11 @@ export class CambioParty extends Server<Env> {
 
     let playerId = queryPlayerId ?? crypto.randomUUID().slice(0, 10);
 
-    if (!this.state) {
+    if (this.state) {
+      playerId = this.resolveReconnectPlayerId(queryPlayerId, name);
+      connection.setState({ playerId, debugEnabled });
+      this.closeStaleConnections(connection, playerId);
+    } else {
       this.state = createRoom(this.name, name, queryPlayerId ?? undefined);
       playerId = this.state.hostId;
 
@@ -563,10 +611,6 @@ export class CambioParty extends Server<Env> {
           addBotPlayer(this.state, difficulty);
         }
       }
-    } else {
-      playerId = this.resolveReconnectPlayerId(queryPlayerId, name);
-      connection.setState({ playerId, debugEnabled });
-      this.closeStaleConnections(connection, playerId);
     }
 
     connection.setState({ playerId, debugEnabled });
@@ -602,23 +646,27 @@ export class CambioParty extends Server<Env> {
   }
 
   resolveReconnectPlayerId(queryPlayerId: string | null, name: string): string {
-    if (!this.state) return queryPlayerId ?? crypto.randomUUID().slice(0, 10);
+    if (!this.state) {
+      return queryPlayerId ?? crypto.randomUUID().slice(0, 10);
+    }
 
     if (queryPlayerId) {
       const existing = this.state.players.find((p) => p.id === queryPlayerId);
-      if (existing) return queryPlayerId;
+      if (existing) {
+        return queryPlayerId;
+      }
     }
 
     const normalizedName = name.trim().toLowerCase();
     if (normalizedName) {
       const reclaimable = this.state.players.find(
         (p) =>
-          !p.isBot &&
-          !p.connected &&
-          !p.isWaiting &&
+          !(p.isBot || p.connected || p.isWaiting) &&
           p.name.trim().toLowerCase() === normalizedName,
       );
-      if (reclaimable) return reclaimable.id;
+      if (reclaimable) {
+        return reclaimable.id;
+      }
     }
 
     return crypto.randomUUID().slice(0, 10);
@@ -647,15 +695,21 @@ export class CambioParty extends Server<Env> {
 
   async onClose(connection: Connection<PlayerConnectionState>) {
     const playerId = this.getPlayerId(connection);
-    if (!this.state || !playerId) return;
+    if (!(this.state && playerId)) {
+      return;
+    }
 
-    if (this.playerHasOtherConnection(playerId, connection.id)) return;
+    if (this.playerHasOtherConnection(playerId, connection.id)) {
+      return;
+    }
 
     this.clearBotChatTimer();
     this.clearBotChatReplyTimer();
 
     const player = this.state.players.find((p) => p.id === playerId);
-    if (!player) return;
+    if (!player) {
+      return;
+    }
 
     player.connected = false;
     await this.persist();
@@ -674,7 +728,9 @@ export class CambioParty extends Server<Env> {
     raw: WSMessage,
   ) {
     const playerId = this.getPlayerId(connection);
-    if (!this.state || !playerId) return;
+    if (!(this.state && playerId)) {
+      return;
+    }
 
     this.clearBotTimer();
 

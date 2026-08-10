@@ -14,19 +14,25 @@ export type ResolvedAppearance = Exclude<AppearancePreference, "system">;
 export const DEFAULT_APPEARANCE: AppearancePreference = "system";
 
 export function parseThemeCookie(value: string | undefined): ThemeId {
-  if (value && isThemeId(value)) return value;
+  if (value && isThemeId(value)) {
+    return value;
+  }
   return DEFAULT_THEME;
 }
 
 export function parseAppearanceCookie(
   value: string | undefined,
 ): AppearancePreference {
-  if (value && isAppearancePreference(value)) return value;
+  if (value && isAppearancePreference(value)) {
+    return value;
+  }
   return DEFAULT_APPEARANCE;
 }
 
 export function setThemeCookie(theme: ThemeId): void {
-  if (typeof cookieStore === "undefined") return;
+  if (typeof cookieStore === "undefined") {
+    return;
+  }
 
   void cookieStore.set({
     name: THEME_COOKIE_KEY,
@@ -38,7 +44,9 @@ export function setThemeCookie(theme: ThemeId): void {
 }
 
 export function setAppearanceCookie(preference: AppearancePreference): void {
-  if (typeof cookieStore === "undefined") return;
+  if (typeof cookieStore === "undefined") {
+    return;
+  }
 
   void cookieStore.set({
     name: APPEARANCE_COOKIE_KEY,
@@ -53,7 +61,9 @@ export function resolveAppearance(
   preference: AppearancePreference,
   prefersDark: boolean,
 ): ResolvedAppearance {
-  if (preference === "system") return prefersDark ? "dark" : "light";
+  if (preference === "system") {
+    return prefersDark ? "dark" : "light";
+  }
   return preference;
 }
 

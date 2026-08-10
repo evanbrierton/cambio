@@ -11,7 +11,7 @@
     "build": "next build",
     "vercel-build": "bash scripts/vercel-build.sh",
     "start": "next start",
-    "lint": "biome check && node scripts/tailwind-lint.mjs",
+    "lint": "biome check --error-on-warnings && node scripts/tailwind-lint.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "format": "biome format --write",

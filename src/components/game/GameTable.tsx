@@ -47,7 +47,7 @@ import { copyToClipboard } from "@/lib/clipboard";
 import type { ThemeVoice } from "@/lib/themes";
 import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
-type GameTableProps = {
+interface GameTableProps {
   view: PlayerView;
   connected: boolean;
   error: string | null;
@@ -60,9 +60,12 @@ type GameTableProps = {
   discardDrawFlash: DiscardDrawFlash | null;
   deckDrawFlash: DeckDrawFlash | null;
   send: (message: ClientMessage) => void;
-};
+}
 
-type SelectedCard = { playerId: string; slot: number };
+interface SelectedCard {
+  playerId: string;
+  slot: number;
+}
 
 const LOBBY_JOIN_TOAST_MS = 3000;
 
@@ -98,8 +101,12 @@ function isPeekFlashing(
 }
 
 function peekFlashSeatLabel(kind: PeekFlash["kind"]): string {
-  if (kind === "spy") return "SPY";
-  if (kind === "look") return "LOOK";
+  if (kind === "spy") {
+    return "SPY";
+  }
+  if (kind === "look") {
+    return "LOOK";
+  }
   return "PEEK";
 }
 
@@ -141,13 +148,19 @@ function formatPenaltyFlashNotice(
   fallback: string,
 ): string {
   const player = players.find((entry) => entry.id === penaltyFlash.playerId);
-  if (!player) return fallback;
+  if (!player) {
+    return fallback;
+  }
   return `! ${player.name} drew a penalty card (#${penaltyFlash.slot + 1})`;
 }
 
 function penaltyGridColumns(count: number): number {
-  if (count <= 0) return 0;
-  if (count <= 2) return 1;
+  if (count <= 0) {
+    return 0;
+  }
+  if (count <= 2) {
+    return 1;
+  }
   return Math.ceil(count / 2);
 }
 
@@ -362,10 +375,18 @@ function PlayerSeat({
     swapAbilityActive && selectedSwapCard?.playerId === player.id;
 
   const canPickForLook = (slotIndex: number) => {
-    if (!lookAbilityActive || !pendingLookKind) return false;
-    if (player.hand[slotIndex]?.empty) return false;
-    if (pendingLookKind === "peek_own") return isOwn;
-    if (pendingLookKind === "spy") return !isOwn && !isProtectedTarget;
+    if (!(lookAbilityActive && pendingLookKind)) {
+      return false;
+    }
+    if (player.hand[slotIndex]?.empty) {
+      return false;
+    }
+    if (pendingLookKind === "peek_own") {
+      return isOwn;
+    }
+    if (pendingLookKind === "spy") {
+      return !(isOwn || isProtectedTarget);
+    }
     if (pendingLookKind === "queen_look" || pendingLookKind === "king_look") {
       return !isProtectedTarget || isOwn;
     }
@@ -400,12 +421,12 @@ function PlayerSeat({
     .filter(({ slot, index }) => !slot.empty && isPenaltyColumnSlot(index));
 
   const renderHandSlot = (slot: PublicCardSlot, index: number) => {
-    const isEmpty = !!slot.empty;
+    const isEmpty = Boolean(slot.empty);
     const isFleetingPeek =
       fleetingPeek?.playerId === player.id && fleetingPeek.slot === index;
     const setupLocked =
       phase === "setup_peek" &&
-      (!isOwn || !SETUP_PEEK_SLOTS.includes(index) || isEmpty);
+      (!(isOwn && SETUP_PEEK_SLOTS.includes(index)) || isEmpty);
     const abilityLocked = swapAbilityActive && !canPickForAbility;
     const lookLocked = lookAbilityActive && !canPickForLook(index);
     const canPickForSnapGive = Boolean(snapGiveActive && isOwn && !isEmpty);
@@ -415,7 +436,7 @@ function PlayerSeat({
       selectedSwapCard.slot === index;
     const canInteract =
       canPickForSnapGive ||
-      (!snapGivePending && !isEmpty) ||
+      !(snapGivePending || isEmpty) ||
       (showDrawnSwapHint && isOwn) ||
       (showAbilitySwapHint && !abilityLocked);
 
@@ -652,7 +673,9 @@ export function GameTable({
       notificationsEnabled: chatNotificationsEnabled,
     });
   const chatToast = useMemo((): GameToastItem | null => {
-    if (!notification) return null;
+    if (!notification) {
+      return null;
+    }
     return {
       id: `chat-${notification.id}`,
       message: voice.chatNotification(
@@ -798,7 +821,7 @@ export function GameTable({
           id: "action",
           message: actionBanner.text,
           tone: actionBanner.tone,
-          pulse: swapAbilityActive && !!selectedSwapCard,
+          pulse: swapAbilityActive && Boolean(selectedSwapCard),
           action:
             swapAbilityActive && selectedSwapCard ? (
               <button
@@ -818,9 +841,13 @@ export function GameTable({
     (view.canSwap || view.canDiscardDrawn);
 
   useEffect(() => {
-    if (view.phase === "lobby") return;
+    if (view.phase === "lobby") {
+      return;
+    }
     const el = tableDeckRef.current;
-    if (!el) return;
+    if (!el) {
+      return;
+    }
 
     const clearScaleVars = () => {
       el.style.removeProperty("--table-drawn-w");
@@ -922,7 +949,9 @@ export function GameTable({
     const selfIndex = playersInTurnOrder.findIndex(
       (p) => p.id === view.playerId,
     );
-    if (selfIndex === -1) return playersInTurnOrder;
+    if (selfIndex === -1) {
+      return playersInTurnOrder;
+    }
 
     const self = playersInTurnOrder[selfIndex];
     const opponents: PublicPlayer[] = [];
@@ -938,7 +967,9 @@ export function GameTable({
     const selfIndex = playersInTurnOrder.findIndex(
       (p) => p.id === view.playerId,
     );
-    if (selfIndex === -1) return playersInTurnOrder;
+    if (selfIndex === -1) {
+      return playersInTurnOrder;
+    }
 
     const opponents: PublicPlayer[] = [];
     for (let i = 1; i < playersInTurnOrder.length; i++) {
@@ -955,11 +986,11 @@ export function GameTable({
     ];
   }, [playersInTurnOrder, view.playerId]);
 
-  const orderedPlayers = !ownSeatProminent
-    ? playersInTurnOrder
-    : playerGridEnabled
+  const orderedPlayers = ownSeatProminent
+    ? playerGridEnabled
       ? playersInGridOrder
-      : playersInCarouselOrder;
+      : playersInCarouselOrder
+    : playersInTurnOrder;
 
   if (view.isWaiting) {
     return <WaitingScreen view={view} connected={connected} />;
@@ -995,10 +1026,14 @@ export function GameTable({
     : voice.discardDrawn;
 
   const handleCardClick = (playerId: string, slot: number, isOwn: boolean) => {
-    if (view.phase === "setup_peek" && !isOwn) return;
+    if (view.phase === "setup_peek" && !isOwn) {
+      return;
+    }
 
     if (view.phase === "setup_peek" && isOwn) {
-      if (!SETUP_PEEK_SLOTS.includes(slot)) return;
+      if (!SETUP_PEEK_SLOTS.includes(slot)) {
+        return;
+      }
       send({ type: "setup_peek", slot });
       return;
     }
@@ -1060,15 +1095,18 @@ export function GameTable({
         view.phase === "cambio_final" &&
         view.cambioCallerId === playerId &&
         playerId !== view.playerId;
-      if (isProtected) return;
+      if (isProtected) {
+        return;
+      }
       send({ type: "snap", targetPlayerId: playerId, slot });
-      return;
     }
   };
 
   const copyRoomCode = () => {
     void copyToClipboard(view.roomId.toUpperCase()).then((copied) => {
-      if (!copied) return;
+      if (!copied) {
+        return;
+      }
       setRoomCopied(true);
       window.setTimeout(() => setRoomCopied(false), 2000);
     });
@@ -1095,7 +1133,7 @@ export function GameTable({
         swapAbilityActive={swapAbilityActive}
         lookAbilityActive={lookAbilityActive}
         pendingLookKind={pendingLookKind}
-        compact
+        compact={true}
         scaleHands={!playerGridEnabled}
         voice={voice}
         onCardClick={handleCardClick}
@@ -1236,7 +1274,7 @@ export function GameTable({
       </div>
 
       <div className="shrink-0">
-        <ThemePicker compact />
+        <ThemePicker compact={true} />
       </div>
     </>
   );
@@ -1399,7 +1437,7 @@ export function GameTable({
             >
               {hintsEnabled ? (
                 <div
-                  data-table-hint
+                  data-table-hint={true}
                   className="table-hint table-hint-slot shrink-0 mx-auto w-full flex items-center justify-center"
                 >
                   <AnimatePresence initial={false} mode="wait">
@@ -1407,7 +1445,7 @@ export function GameTable({
                       <GameToast
                         key={actionToast.id}
                         toast={actionToast}
-                        inline
+                        inline={true}
                         className="p-2! text-[9px]! sm:text-[10px]! leading-[1.45]! shadow-none"
                       />
                     ) : null}
@@ -1516,7 +1554,7 @@ export function GameTable({
                             card={view.drawnCard}
                             faceUp={isDrawnSlotMine}
                             hidden={showDrawnFaceDown}
-                            empty={!isDrawnSlotMine && !view.hasDrawnCard}
+                            empty={!(isDrawnSlotMine || view.hasDrawnCard)}
                             sizeClass="drawn-card-size"
                           />
                         </div>
@@ -1578,7 +1616,7 @@ export function GameTable({
                         >
                           <PixelCard
                             card={view.discardTop}
-                            faceUp={!!view.discardTop}
+                            faceUp={Boolean(view.discardTop)}
                             hidden={!view.discardTop}
                             empty={!view.discardTop}
                             sizeClass="scaled-pile-size"
@@ -1610,7 +1648,7 @@ export function GameTable({
                     ) : (
                       <p
                         className="table-grid-context-hint truncate invisible"
-                        aria-hidden
+                        aria-hidden={true}
                       >
                         —
                       </p>
@@ -1618,9 +1656,9 @@ export function GameTable({
                   </div>
                 ) : null}
 
-                {!playerGridEnabled ? (
+                {playerGridEnabled ? null : (
                   <div
-                    data-table-chrome
+                    data-table-chrome={true}
                     className="table-action-chrome table-chrome-slot flex flex-col items-center justify-center gap-1.5 shrink-0"
                   >
                     {showDrawnActionChrome ? (
@@ -1644,12 +1682,12 @@ export function GameTable({
                       callCambioChip
                     )}
                   </div>
-                ) : null}
+                )}
               </div>
 
-              {!playerGridEnabled ? (
+              {playerGridEnabled ? null : (
                 <div
-                  data-table-event
+                  data-table-event={true}
                   className="table-event-strip table-event-slot shrink-0 w-full min-w-0"
                   aria-live="polite"
                 >
@@ -1669,14 +1707,14 @@ export function GameTable({
                       <p
                         key="empty-event"
                         className="font-mono text-[9px] sm:text-[10px] text-transparent text-center truncate px-1 select-none"
-                        aria-hidden
+                        aria-hidden={true}
                       >
                         —
                       </p>
                     )}
                   </AnimatePresence>
                 </div>
-              ) : null}
+              )}
             </div>
           )}
 

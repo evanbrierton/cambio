@@ -17,25 +17,27 @@ export type GameMoveKind =
   | "snap_streak"
   | "called_cambio";
 
-export type GameMoveReaction = {
+export interface GameMoveReaction {
   kind: GameMoveKind;
   playerName: string;
   detail: string;
-};
+}
 
-export type PreMoveSnapshot = {
+export interface PreMoveSnapshot {
   drawnCard: Card | null;
   swappedOutCard: Card | null;
-};
+}
 
-type MessageResult = {
+interface MessageResult {
   error?: string;
   penaltyFlash?: { playerId: string; slot: number };
   cambioFlash?: { playerId: string };
-};
+}
 
 function formatCard(card: Card): string {
-  if (card.rank === "JOKER") return "Joker";
+  if (card.rank === "JOKER") {
+    return "Joker";
+  }
   return `${cardLabel(card)}${suitGlyph(card.suit)}`;
 }
 
@@ -44,10 +46,14 @@ export function capturePreMoveSnapshot(
   playerId: string,
   message: ClientMessage,
 ): PreMoveSnapshot | null {
-  if (message.type !== "discard_drawn" && message.type !== "swap") return null;
+  if (message.type !== "discard_drawn" && message.type !== "swap") {
+    return null;
+  }
 
   const player = state.players.find((entry) => entry.id === playerId);
-  if (!player) return null;
+  if (!player) {
+    return null;
+  }
 
   let swappedOutCard: Card | null = null;
   if (message.type === "swap") {

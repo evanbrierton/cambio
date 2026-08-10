@@ -14,11 +14,11 @@ import type {
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { playSound } from "@/lib/sounds";
 
-type GameOverScreenProps = {
+interface GameOverScreenProps {
   view: PlayerView;
   connected: boolean;
   send: (message: ClientMessage) => void;
-};
+}
 
 function asArray<T>(value: T[] | null | undefined): T[] {
   return Array.isArray(value) ? value : [];
@@ -68,7 +68,9 @@ function sortedCumulative(view: PlayerView): ScoreboardEntry[] {
 
   if (isScoreRecord(view.cumulativeScores)) {
     for (const [id, score] of Object.entries(view.cumulativeScores)) {
-      if (names.has(id)) totals.set(id, score);
+      if (names.has(id)) {
+        totals.set(id, score);
+      }
     }
   } else {
     for (const round of asArray(view.roundHistory)) {
@@ -107,7 +109,9 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
   }, [view]);
 
   useEffect(() => {
-    if (selectedRound !== latestRound) return;
+    if (selectedRound !== latestRound) {
+      return;
+    }
     latestRoundTabRef.current?.scrollIntoView({
       behavior: "smooth",
       inline: "end",
@@ -164,7 +168,7 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
             <span className="player-name">
               {winners.map((w) => w.name).join(", ")}
             </span>
-            {" ★"}
+            ★
           </motion.p>
         )}
         <p className="font-display text-[10px] text-theme-muted mt-2">
@@ -297,7 +301,7 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
         </Link>
       </motion.div>
 
-      <ThemePicker compact />
+      <ThemePicker compact={true} />
     </motion.div>
   );
 }

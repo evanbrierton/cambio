@@ -12,13 +12,13 @@ export type GameToastTone =
   | "peek"
   | "info";
 
-export type GameToastItem = {
+export interface GameToastItem {
   id: string;
   message: ReactNode;
   tone: GameToastTone;
   pulse?: boolean;
   action?: ReactNode;
-};
+}
 
 const toneClass: Record<GameToastTone, string> = {
   error: "bg-danger-surface text-danger-text ring-danger/60",
@@ -69,7 +69,9 @@ export function GameToast({
 }
 
 export function GameToastLayer({ toasts }: { toasts: GameToastItem[] }) {
-  if (toasts.length === 0) return null;
+  if (toasts.length === 0) {
+    return null;
+  }
 
   return (
     <div
@@ -81,7 +83,7 @@ export function GameToastLayer({ toasts }: { toasts: GameToastItem[] }) {
           <GameToast
             key={toast.id}
             toast={toast}
-            fromBottom
+            fromBottom={true}
             className="pointer-events-auto"
           />
         ))}

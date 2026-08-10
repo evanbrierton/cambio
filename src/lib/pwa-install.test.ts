@@ -64,7 +64,7 @@ describe("isInstallDismissed", () => {
   it("returns true within the dismiss window", () => {
     const now = 1_700_000_000_000;
     dismissInstallPrompt(now);
-    expect(isInstallDismissed(now + 1_000)).toBe(true);
+    expect(isInstallDismissed(now + 1000)).toBe(true);
   });
 
   it("returns false after the dismiss window expires", () => {

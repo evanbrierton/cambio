@@ -13,7 +13,7 @@ import {
   isStandaloneDisplay,
 } from "@/lib/pwa-install";
 
-const SHOW_DELAY_MS = 2_500;
+const SHOW_DELAY_MS = 2500;
 
 export function PwaInstallPrompt() {
   const pathname = usePathname();
@@ -34,7 +34,9 @@ export function PwaInstallPrompt() {
 
   // Capture installability independently of route so the event isn't missed.
   useEffect(() => {
-    if (isStandaloneDisplay()) return;
+    if (isStandaloneDisplay()) {
+      return;
+    }
 
     const onBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
@@ -94,7 +96,9 @@ export function PwaInstallPrompt() {
   }, [hide]);
 
   const onInstall = useCallback(async () => {
-    if (!deferredPrompt || installing) return;
+    if (!deferredPrompt || installing) {
+      return;
+    }
 
     setInstalling(true);
     try {
@@ -115,7 +119,7 @@ export function PwaInstallPrompt() {
   const canShowNativeInstall = deferredPrompt !== null;
   const canShowIosGuide = iosGuide && !canShowNativeInstall;
 
-  if (!visible || (!canShowNativeInstall && !canShowIosGuide)) {
+  if (!(visible && (canShowNativeInstall || canShowIosGuide))) {
     return null;
   }
 
@@ -128,7 +132,7 @@ export function PwaInstallPrompt() {
         {canShowNativeInstall ? (
           <GameToast
             key="pwa-install"
-            fromBottom
+            fromBottom={true}
             className="pointer-events-auto"
             toast={{
               id: "pwa-install",
@@ -163,7 +167,7 @@ export function PwaInstallPrompt() {
         ) : (
           <GameToast
             key="pwa-ios"
-            fromBottom
+            fromBottom={true}
             className="pointer-events-auto"
             toast={{
               id: "pwa-ios",

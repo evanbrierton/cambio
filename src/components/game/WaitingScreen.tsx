@@ -5,10 +5,10 @@ import { ThemePicker } from "@/components/ui/ThemePicker";
 import type { PlayerView } from "@/game/types";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 
-type WaitingScreenProps = {
+interface WaitingScreenProps {
   view: PlayerView;
   connected: boolean;
-};
+}
 
 export function WaitingScreen({ view, connected }: WaitingScreenProps) {
   const voice = useThemeVoice();
@@ -47,7 +47,7 @@ export function WaitingScreen({ view, connected }: WaitingScreenProps) {
       </div>
 
       <div className="flex flex-col gap-4">
-        <ThemePicker compact />
+        <ThemePicker compact={true} />
         <Link
           href="/"
           className="chip-btn text-center text-[10px] px-3 py-2 border-theme-muted text-theme hover:border-accent transition-colors"

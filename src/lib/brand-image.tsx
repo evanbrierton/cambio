@@ -4,7 +4,9 @@ import { siteConfig } from "@/lib/site";
 let displayFont: ArrayBuffer | null = null;
 
 export async function loadDisplayFont(): Promise<ArrayBuffer> {
-  if (displayFont) return displayFont;
+  if (displayFont) {
+    return displayFont;
+  }
 
   const response = await fetch(
     "https://raw.githubusercontent.com/google/fonts/main/ofl/pressstart2p/PressStart2P-Regular.ttf",

@@ -3,11 +3,15 @@ import type { GameState } from "./types";
 
 export function scorePlayer(state: GameState, playerId: string): number {
   const player = state.players.find((p) => p.id === playerId);
-  if (!player) return 0;
+  if (!player) {
+    return 0;
+  }
 
   let total = 0;
   for (const slot of player.hand) {
-    if (slot.card) total += cardPoints(slot.card, state.cardPoints);
+    if (slot.card) {
+      total += cardPoints(slot.card, state.cardPoints);
+    }
   }
   return total;
 }
@@ -26,7 +30,9 @@ export function determineWinners(state: GameState): string[] {
   const minScore = Math.min(...entries.map(([, s]) => s));
   const tied = entries.filter(([, s]) => s === minScore).map(([id]) => id);
 
-  if (tied.length === 1) return tied;
+  if (tied.length === 1) {
+    return tied;
+  }
 
   // On a draw, the Cambio caller ranks lower; other tied players share the win.
   const nonCallers = tied.filter((id) => id !== state.cambioCallerId);

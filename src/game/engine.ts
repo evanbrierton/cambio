@@ -37,8 +37,8 @@ import {
 const MAX_PLAYERS = 6;
 const MIN_PLAYERS = 2;
 const SETUP_PEEKS = 2;
-export const SNAP_WINDOW_MS = 6_000;
-const SNAP_WINDOW_GRACE_MS = 3_000;
+export const SNAP_WINDOW_MS = 6000;
+const SNAP_WINDOW_GRACE_MS = 3000;
 const MAX_CHAT_MESSAGES = 100;
 const MAX_CHAT_LENGTH = 200;
 const CHAT_COOLDOWN_MS = 500;
@@ -47,19 +47,21 @@ export function isParticipant(player: PlayerState): boolean {
   return !player.isWaiting && (player.connected || player.isBot);
 }
 
-type LegacyRoundResult = {
+interface LegacyRoundResult {
   roundNumber: number;
   scores?: Record<string, number>;
   playerNames?: Record<string, string>;
   entries?: ScoreboardEntry[];
   winnerIds: string[];
   cambioCallerId: string | null;
-};
+}
 
 export function migrateRoundHistory(
   rounds: LegacyRoundResult[] | undefined,
 ): RoundResult[] {
-  if (!rounds) return [];
+  if (!rounds) {
+    return [];
+  }
 
   return rounds.map((round) => {
     if (round.entries !== undefined) {
@@ -75,7 +77,7 @@ export function migrateRoundHistory(
       round.scores ?? {},
     ).flatMap(([id, score]) => {
       const name = round.playerNames?.[id];
-      return name !== undefined ? [{ id, name, score }] : [];
+      return name === undefined ? [] : [{ id, name, score }];
     });
 
     return {
@@ -181,10 +183,14 @@ export function addChatMessage(
   options?: { fromBot?: boolean },
 ): ChatMessage | { error: string } {
   const player = findPlayer(state, playerId);
-  if (!player) return { error: "Player not found." };
+  if (!player) {
+    return { error: "Player not found." };
+  }
 
   const trimmed = text.trim();
-  if (!trimmed) return { error: "Message cannot be empty." };
+  if (!trimmed) {
+    return { error: "Message cannot be empty." };
+  }
   if (trimmed.length > MAX_CHAT_LENGTH) {
     return { error: `Message too long (max ${MAX_CHAT_LENGTH} characters).` };
   }
@@ -251,7 +257,9 @@ function firstActivePlayerIndex(state: GameState): number {
 }
 
 function rotatePlayerOrder(state: GameState): void {
-  if (state.players.length <= 1) return;
+  if (state.players.length <= 1) {
+    return;
+  }
   const [first, ...rest] = state.players;
   state.players = [...rest, first];
 }
@@ -260,7 +268,9 @@ function nextActivePlayerIndex(state: GameState, fromIndex: number): number {
   const n = state.players.length;
   for (let i = 1; i <= n; i++) {
     const idx = (fromIndex + i) % n;
-    if (isPlayingPlayer(state.players[idx])) return idx;
+    if (isPlayingPlayer(state.players[idx])) {
+      return idx;
+    }
   }
   return fromIndex;
 }
@@ -310,11 +320,15 @@ function passTurn(state: GameState, actingPlayerId: string): void {
     actingPlayerId !== state.cambioCallerId
   ) {
     const acting = findPlayer(state, actingPlayerId);
-    if (acting) acting.finalTurnDone = true;
+    if (acting) {
+      acting.finalTurnDone = true;
+    }
   }
 
   const actor = findPlayer(state, actingPlayerId);
-  if (actor) addLog(state, `${actor.name} ended their turn.`);
+  if (actor) {
+    addLog(state, `${actor.name} ended their turn.`);
+  }
 
   advanceTurn(state);
 
@@ -329,14 +343,20 @@ function tryPassTurnAfterAction(
   state: GameState,
   actingPlayerId: string,
 ): void {
-  if (state.phase !== "playing" && state.phase !== "cambio_final") return;
-  if (state.drawnCard || state.pendingAbility) return;
+  if (state.phase !== "playing" && state.phase !== "cambio_final") {
+    return;
+  }
+  if (state.drawnCard || state.pendingAbility) {
+    return;
+  }
   passTurn(state, actingPlayerId);
 }
 
 function enterCambioFinal(state: GameState, playerId: string): boolean {
   const player = findPlayer(state, playerId);
-  if (!player) return false;
+  if (!player) {
+    return false;
+  }
 
   player.hasCalledCambio = true;
   state.cambioCallerId = playerId;
@@ -352,10 +372,10 @@ function resolveCambioCallTurnTransition(
   const othersNeedTurn = state.players.some(
     (p) => p.id !== cambioCallerId && !p.finalTurnDone && isPlayingPlayer(p),
   );
-  if (!othersNeedTurn) {
-    endRound(state);
-  } else {
+  if (othersNeedTurn) {
     advanceTurn(state);
+  } else {
+    endRound(state);
   }
 }
 
@@ -363,11 +383,19 @@ function tryAutoCallCambioForEmptyHand(
   state: GameState,
   playerId: string,
 ): void {
-  if (state.cambioCallerId || state.phase === "cambio_final") return;
-  if (state.phase !== "playing") return;
+  if (state.cambioCallerId || state.phase === "cambio_final") {
+    return;
+  }
+  if (state.phase !== "playing") {
+    return;
+  }
   const player = findPlayer(state, playerId);
-  if (!player || player.hand.length > 0) return;
-  if (!enterCambioFinal(state, playerId)) return;
+  if (!player || player.hand.length > 0) {
+    return;
+  }
+  if (!enterCambioFinal(state, playerId)) {
+    return;
+  }
 
   if (currentPlayer(state)?.id === playerId) {
     resolveCambioCallTurnTransition(state, playerId);
@@ -375,12 +403,16 @@ function tryAutoCallCambioForEmptyHand(
 }
 
 function canAttemptSnap(state: GameState): boolean {
-  if (state.discard.length === 0) return false;
+  if (state.discard.length === 0) {
+    return false;
+  }
   return isSnapEligible(state) || state.phase === "snap_window";
 }
 
 function canPlayerSnap(state: GameState, playerId: string): boolean {
-  if (!canAttemptSnap(state)) return false;
+  if (!canAttemptSnap(state)) {
+    return false;
+  }
   // First successful snapper owns the pile until a non-snap discard resets it.
   if (state.snapChainPlayerId && state.snapChainPlayerId !== playerId) {
     return false;
@@ -423,7 +455,9 @@ const PLAY_ACTIONS_BLOCKED_DURING_SNAP_GIVE = new Set<ClientMessage["type"]>([
 
 /** Snapping is only allowed against an unsnapped card currently on top of discard. */
 function isSnapEligible(state: GameState): boolean {
-  if (state.discard.length === 0 || !state.snapEligibleTopCardId) return false;
+  if (state.discard.length === 0 || !state.snapEligibleTopCardId) {
+    return false;
+  }
   const top = state.discard[state.discard.length - 1];
   return top.id === state.snapEligibleTopCardId;
 }
@@ -447,8 +481,12 @@ function clearSnapEligibleDiscard(state: GameState): void {
 
 /** When the deck is empty, shuffle the discard pile into it, keeping the top discard visible. */
 function reshuffleDiscardIntoDeck(state: GameState): boolean {
-  if (state.deck.length > 0) return false;
-  if (state.discard.length <= 1) return false;
+  if (state.deck.length > 0) {
+    return false;
+  }
+  if (state.discard.length <= 1) {
+    return false;
+  }
 
   const top = state.discard[state.discard.length - 1];
   const toShuffle = [...state.deck, ...state.discard.slice(0, -1)];
@@ -501,9 +539,12 @@ export function finalizeRound(state: GameState): void {
 }
 
 export function expireSnapWindow(state: GameState, now = Date.now()): boolean {
-  if (state.phase !== "snap_window") return false;
-  if (state.snapWindowEndsAt === null || now < state.snapWindowEndsAt)
+  if (state.phase !== "snap_window") {
     return false;
+  }
+  if (state.snapWindowEndsAt === null || now < state.snapWindowEndsAt) {
+    return false;
+  }
   enterRevealedPhase(state);
   return true;
 }
@@ -512,7 +553,9 @@ function extendSnapWindowForPendingGive(
   state: GameState,
   now = Date.now(),
 ): void {
-  if (state.phase !== "snap_window") return;
+  if (state.phase !== "snap_window") {
+    return;
+  }
   const graceEndsAt = now + SNAP_WINDOW_GRACE_MS;
   if (state.snapWindowEndsAt === null || graceEndsAt > state.snapWindowEndsAt) {
     state.snapWindowEndsAt = graceEndsAt;
@@ -583,11 +626,19 @@ function hasLegalLookTarget(
   ability: "peek_own" | "spy" | "queen_look" | "king_look",
 ): boolean {
   for (const player of state.players) {
-    if (ability === "peek_own" && player.id !== playerId) continue;
-    if (ability === "spy" && player.id === playerId) continue;
-    if (player.id !== playerId && !canTargetPlayer(player.id, state)) continue;
+    if (ability === "peek_own" && player.id !== playerId) {
+      continue;
+    }
+    if (ability === "spy" && player.id === playerId) {
+      continue;
+    }
+    if (player.id !== playerId && !canTargetPlayer(player.id, state)) {
+      continue;
+    }
     for (let slot = 0; slot < player.hand.length; slot += 1) {
-      if (slotHasCard(player, slot)) return true;
+      if (slotHasCard(player, slot)) {
+        return true;
+      }
     }
   }
   return false;
@@ -596,9 +647,13 @@ function hasLegalLookTarget(
 function hasLegalSwapTargets(state: GameState): boolean {
   let swappableSlotCount = 0;
   for (const player of state.players) {
-    if (!canTargetPlayer(player.id, state)) continue;
+    if (!canTargetPlayer(player.id, state)) {
+      continue;
+    }
     swappableSlotCount += player.hand.length;
-    if (swappableSlotCount >= 2) return true;
+    if (swappableSlotCount >= 2) {
+      return true;
+    }
   }
   return false;
 }
@@ -634,10 +689,18 @@ function canResolveDiscardAbility(
 }
 
 function abilityLabel(ability: DiscardAbility): string {
-  if (ability === "peek_own") return "Peek";
-  if (ability === "spy") return "Spy";
-  if (ability === "blind_switch") return "Blind switch";
-  if (ability === "queen_look") return "Queen";
+  if (ability === "peek_own") {
+    return "Peek";
+  }
+  if (ability === "spy") {
+    return "Spy";
+  }
+  if (ability === "blind_switch") {
+    return "Blind switch";
+  }
+  if (ability === "queen_look") {
+    return "Queen";
+  }
   return "King";
 }
 
@@ -646,12 +709,16 @@ function addPenalty(
   playerId: string,
 ): { slot: number; reshuffleFlash?: boolean } | null {
   const player = findPlayer(state, playerId);
-  if (!player) return null;
+  if (!player) {
+    return null;
+  }
 
   const reshuffled = reshuffleDiscardIntoDeck(state);
 
   const card = state.deck.pop();
-  if (!card) return null;
+  if (!card) {
+    return null;
+  }
 
   const slot = placeCardInHand(player.hand, card, { isPenalty: true });
   player.penaltyCount += 1;
@@ -720,15 +787,16 @@ function triggerAbility(
       maxLooks: 2,
     };
     addLog(state, "King — look at 2 cards, then swap.");
-    return;
   }
 }
 
 function completeAbilityIfDone(state: GameState): void {
   const pending = state.pendingAbility;
-  if (!pending) return;
+  if (!pending) {
+    return;
+  }
 
-  if (pending.kind === "queen_look" && pending.lookedCards.length >= 1) {
+  if (pending.kind === "queen_look" && pending.lookedCards.length > 0) {
     state.pendingAbility = {
       playerId: pending.playerId,
       kind: "queen_swap",
@@ -809,7 +877,9 @@ function slotHasCard(player: PlayerState, slot: number): boolean {
 }
 
 function getHandCard(player: PlayerState, slot: number): Card | null {
-  if (!slotHasCard(player, slot)) return null;
+  if (!slotHasCard(player, slot)) {
+    return null;
+  }
   return player.hand[slot].card;
 }
 
@@ -822,15 +892,17 @@ function swapSlots(
 ): boolean {
   const a = findPlayer(state, playerAId);
   const b = findPlayer(state, playerBId);
-  if (!a || !b) return false;
-  if (!isValidHandSlot(a, slotA) || !isValidHandSlot(b, slotB)) return false;
-  if (playerAId !== playerBId) {
-    if (
-      !canTargetPlayer(playerAId, state) ||
-      !canTargetPlayer(playerBId, state)
-    ) {
-      return false;
-    }
+  if (!(a && b)) {
+    return false;
+  }
+  if (!(isValidHandSlot(a, slotA) && isValidHandSlot(b, slotB))) {
+    return false;
+  }
+  if (
+    playerAId !== playerBId &&
+    !(canTargetPlayer(playerAId, state) && canTargetPlayer(playerBId, state))
+  ) {
+    return false;
   }
 
   const temp = a.hand[slotA];
@@ -911,8 +983,9 @@ export function handleMessage(
     }
 
     case "start_game": {
-      if (playerId !== state.hostId)
+      if (playerId !== state.hostId) {
         return { error: "Only the host can start." };
+      }
       if (state.phase !== "lobby" && state.phase !== "ended") {
         return { error: "A game is already in progress." };
       }
@@ -930,11 +1003,16 @@ export function handleMessage(
     }
 
     case "setup_peek": {
-      if (state.phase !== "setup_peek") return { error: "Not in setup." };
+      if (state.phase !== "setup_peek") {
+        return { error: "Not in setup." };
+      }
       const player = findPlayer(state, playerId);
-      if (!player) return { error: "Player not found." };
-      if (player.isWaiting)
+      if (!player) {
+        return { error: "Player not found." };
+      }
+      if (player.isWaiting) {
         return { error: "You are waiting for the next game." };
+      }
       if (!SETUP_PEEK_SLOTS.includes(message.slot)) {
         return { error: "You can only peek the bottom two cards." };
       }
@@ -950,7 +1028,9 @@ export function handleMessage(
       }
 
       const peekedCard = getHandCard(player, message.slot);
-      if (!peekedCard) return { error: "Invalid slot." };
+      if (!peekedCard) {
+        return { error: "Invalid slot." };
+      }
 
       player.setupPeekedSlots = [...player.setupPeekedSlots, message.slot];
       addLog(state, `${player.name} peeked at a card.`);
@@ -962,7 +1042,9 @@ export function handleMessage(
         state.phase = "playing";
         state.currentPlayerIndex = firstActivePlayerIndex(state);
         const first = currentPlayer(state);
-        if (first) addLog(state, `${first.name}'s turn.`);
+        if (first) {
+          addLog(state, `${first.name}'s turn.`);
+        }
       }
       return {
         secretPeek: {
@@ -980,12 +1062,19 @@ export function handleMessage(
     }
 
     case "call_cambio": {
-      if (state.phase !== "playing")
+      if (state.phase !== "playing") {
         return { error: "Cannot call Cambio now." };
+      }
       const player = currentPlayer(state);
-      if (!player || player.id !== playerId) return { error: "Not your turn." };
-      if (state.turnStarted) return { error: "Call Cambio before drawing." };
-      if (state.drawnCard) return { error: "Already drew a card." };
+      if (!player || player.id !== playerId) {
+        return { error: "Not your turn." };
+      }
+      if (state.turnStarted) {
+        return { error: "Call Cambio before drawing." };
+      }
+      if (state.drawnCard) {
+        return { error: "Already drew a card." };
+      }
 
       enterCambioFinal(state, playerId);
       resolveCambioCallTurnTransition(state, playerId);
@@ -994,20 +1083,27 @@ export function handleMessage(
 
     case "draw": {
       const player = currentPlayer(state);
-      if (!player || player.id !== playerId) return { error: "Not your turn." };
-      if (state.pendingAbility)
+      if (!player || player.id !== playerId) {
+        return { error: "Not your turn." };
+      }
+      if (state.pendingAbility) {
         return { error: "Resolve the special ability first." };
+      }
       if (state.phase !== "playing" && state.phase !== "cambio_final") {
         return { error: "Cannot draw now." };
       }
-      if (state.drawnCard) return { error: "Already drew a card." };
+      if (state.drawnCard) {
+        return { error: "Already drew a card." };
+      }
 
       state.turnStarted = true;
 
       if (message.source === "deck") {
         const reshuffled = reshuffleDiscardIntoDeck(state);
         const card = state.deck.pop();
-        if (!card) return { error: "No cards to draw." };
+        if (!card) {
+          return { error: "No cards to draw." };
+        }
         state.drawnCard = card;
         state.drawnFromDiscard = false;
         addLog(state, `${player.name} drew from the deck.`);
@@ -1017,10 +1113,13 @@ export function handleMessage(
         };
       }
 
-      if (state.discard.length === 0)
+      if (state.discard.length === 0) {
         return { error: "Discard pile is empty." };
+      }
       const card = state.discard.pop();
-      if (!card) return { error: "Discard pile is empty." };
+      if (!card) {
+        return { error: "Discard pile is empty." };
+      }
       clearSnapEligibleDiscard(state);
       state.drawnCard = card;
       state.drawnFromDiscard = true;
@@ -1030,10 +1129,15 @@ export function handleMessage(
 
     case "swap": {
       const player = currentPlayer(state);
-      if (!player || player.id !== playerId) return { error: "Not your turn." };
-      if (!state.drawnCard) return { error: "Draw a card first." };
-      if (!isValidHandSlot(player, message.slot))
+      if (!player || player.id !== playerId) {
+        return { error: "Not your turn." };
+      }
+      if (!state.drawnCard) {
+        return { error: "Draw a card first." };
+      }
+      if (!isValidHandSlot(player, message.slot)) {
         return { error: "Invalid slot." };
+      }
 
       const drawnCard = state.drawnCard;
       const existing = player.hand[message.slot];
@@ -1055,9 +1159,15 @@ export function handleMessage(
 
     case "discard_drawn": {
       const player = currentPlayer(state);
-      if (!player || player.id !== playerId) return { error: "Not your turn." };
-      if (!state.drawnCard) return { error: "No drawn card." };
-      if (state.drawnFromDiscard) return { error: "Must swap discard draws." };
+      if (!player || player.id !== playerId) {
+        return { error: "Not your turn." };
+      }
+      if (!state.drawnCard) {
+        return { error: "No drawn card." };
+      }
+      if (state.drawnFromDiscard) {
+        return { error: "Must swap discard draws." };
+      }
 
       const card = state.drawnCard;
       state.discard.push(card);
@@ -1066,7 +1176,9 @@ export function handleMessage(
       addLog(state, `${player.name} discarded ${card.rank}.`);
 
       const ability = abilityForDiscard(card);
-      if (ability) triggerAbility(state, playerId, ability);
+      if (ability) {
+        triggerAbility(state, playerId, ability);
+      }
 
       tryPassTurnAfterAction(state, playerId);
       return {};
@@ -1074,7 +1186,9 @@ export function handleMessage(
 
     case "snap": {
       const player = findPlayer(state, playerId);
-      if (!player) return { error: "Player not found." };
+      if (!player) {
+        return { error: "Player not found." };
+      }
       if (isSnapResolutionPending(state)) {
         return { error: "Another player is resolving a snap." };
       }
@@ -1102,10 +1216,14 @@ export function handleMessage(
       ) {
         return { error: "Swap or discard your drawn card before snapping." };
       }
-      if (state.discard.length === 0) return { error: "Nothing to snap." };
+      if (state.discard.length === 0) {
+        return { error: "Nothing to snap." };
+      }
 
       const target = findPlayer(state, message.targetPlayerId);
-      if (!target) return { error: "Player not found." };
+      if (!target) {
+        return { error: "Player not found." };
+      }
       if (!isValidHandSlot(target, message.slot)) {
         return { error: "Invalid slot." };
       }
@@ -1121,24 +1239,26 @@ export function handleMessage(
 
       const top = state.discard[state.discard.length - 1];
       const handCard = getHandCard(target, message.slot);
-      if (!handCard) return { error: "No card in that slot." };
+      if (!handCard) {
+        return { error: "No card in that slot." };
+      }
 
       if (!cardsSnapMatch(handCard, top)) {
         const penaltyResult = addPenalty(state, playerId);
-        if (message.targetPlayerId !== playerId) {
+        if (message.targetPlayerId === playerId) {
+          addLog(state, `${player.name} snapped wrong — penalty!`);
+        } else {
           addLog(
             state,
             `${player.name} wrong snap on ${target.name}'s card — penalty!`,
           );
-        } else {
-          addLog(state, `${player.name} snapped wrong — penalty!`);
         }
         return {
           error: "Wrong snap! Penalty card added.",
           penaltyFlash:
-            penaltyResult !== null
-              ? { playerId, slot: penaltyResult.slot }
-              : undefined,
+            penaltyResult === null
+              ? undefined
+              : { playerId, slot: penaltyResult.slot },
           reshuffleFlash: penaltyResult?.reshuffleFlash,
         };
       }
@@ -1174,17 +1294,23 @@ export function handleMessage(
         return { error: "No snap give pending." };
       }
       const recipientId = pending.snapTargetPlayerId;
-      if (!recipientId) return { error: "Invalid snap target." };
+      if (!recipientId) {
+        return { error: "Invalid snap target." };
+      }
 
       const snapper = findPlayer(state, playerId);
       const recipient = findPlayer(state, recipientId);
-      if (!snapper || !recipient) return { error: "Player not found." };
+      if (!(snapper && recipient)) {
+        return { error: "Player not found." };
+      }
       if (!slotHasCard(snapper, message.slot)) {
         return { error: "Invalid slot." };
       }
 
       const givenCard = getHandCard(snapper, message.slot);
-      if (!givenCard) return { error: "Invalid slot." };
+      if (!givenCard) {
+        return { error: "Invalid slot." };
+      }
       clearHandSlot(snapper.hand, message.slot);
       placeCardInHand(recipient.hand, givenCard);
       state.pendingAbility = null;
@@ -1285,7 +1411,9 @@ export function handleMessage(
         MAX_JOKER_COUNT,
         Math.max(MIN_JOKER_COUNT, message.count),
       );
-      if (count === state.jokerCount) return {};
+      if (count === state.jokerCount) {
+        return {};
+      }
       state.jokerCount = count;
       addLog(state, `Jokers set to ${count}.`);
       return {};
@@ -1318,7 +1446,9 @@ export function handleMessage(
 
     case "chat": {
       const result = addChatMessage(state, playerId, message.text);
-      if ("error" in result) return { error: result.error };
+      if ("error" in result) {
+        return { error: result.error };
+      }
       return {};
     }
 
@@ -1337,9 +1467,12 @@ export function handleMessage(
       }
 
       const target = findPlayer(state, message.playerId);
-      if (!target) return { error: "Player not found." };
-      if (!isValidHandSlot(target, message.slot))
+      if (!target) {
+        return { error: "Player not found." };
+      }
+      if (!isValidHandSlot(target, message.slot)) {
         return { error: "Invalid slot." };
+      }
       if (!slotHasCard(target, message.slot)) {
         return { error: "No card in that slot." };
       }
@@ -1365,7 +1498,9 @@ export function handleMessage(
       }
 
       const card = getHandCard(target, message.slot);
-      if (!card) return { error: "No card in that slot." };
+      if (!card) {
+        return { error: "No card in that slot." };
+      }
       pending.lookedCards.push({
         playerId: message.playerId,
         slot: message.slot,
@@ -1421,7 +1556,9 @@ export function handleMessage(
 
       const fromPlayer = findPlayer(state, message.fromPlayerId);
       const toPlayer = findPlayer(state, message.toPlayerId);
-      if (!fromPlayer || !toPlayer) return { error: "Player not found." };
+      if (!(fromPlayer && toPlayer)) {
+        return { error: "Player not found." };
+      }
       if (!isValidHandSlot(fromPlayer, message.fromSlot)) {
         return { error: "Invalid source slot." };
       }
@@ -1448,7 +1585,9 @@ export function handleMessage(
         message.toPlayerId,
         message.toSlot,
       );
-      if (!ok) return { error: "Swap failed." };
+      if (!ok) {
+        return { error: "Swap failed." };
+      }
 
       state.pendingAbility = null;
       addLog(
@@ -1489,38 +1628,36 @@ export function buildPlayerView(
 
   const participants = state.players.filter(isParticipant);
 
-  const players = state.players.map((p) => {
-    return {
-      id: p.id,
-      name: p.name,
-      hand: p.hand.map((slot) => {
-        if (!slot.card) {
-          return {
-            card: null,
-            faceUp: false,
-            hidden: false,
-            empty: true,
-          };
-        }
-        const reveal = state.debugReveal || slot.faceUp;
+  const players = state.players.map((p) => ({
+    id: p.id,
+    name: p.name,
+    hand: p.hand.map((slot) => {
+      if (!slot.card) {
         return {
-          card: reveal ? slot.card : null,
-          faceUp: reveal,
-          hidden: !reveal,
-          isPenalty: slot.isPenalty ? true : undefined,
+          card: null,
+          faceUp: false,
+          hidden: false,
+          empty: true,
         };
-      }),
-      penaltyCount: p.penaltyCount,
-      hasCalledCambio: p.hasCalledCambio,
-      finalTurnDone: p.finalTurnDone,
-      isWaiting: p.isWaiting,
-      connected: p.connected,
-      isBot: p.isBot,
-      isHost: p.id === state.hostId,
-      isCurrentTurn: current?.id === p.id,
-      isThinking: state.botThinkingId === p.id,
-    };
-  });
+      }
+      const reveal = state.debugReveal || slot.faceUp;
+      return {
+        card: reveal ? slot.card : null,
+        faceUp: reveal,
+        hidden: !reveal,
+        isPenalty: slot.isPenalty ? true : undefined,
+      };
+    }),
+    penaltyCount: p.penaltyCount,
+    hasCalledCambio: p.hasCalledCambio,
+    finalTurnDone: p.finalTurnDone,
+    isWaiting: p.isWaiting,
+    connected: p.connected,
+    isBot: p.isBot,
+    isHost: p.id === state.hostId,
+    isCurrentTurn: current?.id === p.id,
+    isThinking: state.botThinkingId === p.id,
+  }));
 
   const isTurnHolder = current?.id === viewerId;
   const isMyTurn = isTurnHolder && gameInteractive;
@@ -1546,7 +1683,7 @@ export function buildPlayerView(
       state.discard.length > 0 ? state.discard[state.discard.length - 1] : null,
     drawnCard: isTurnHolder ? state.drawnCard : null,
     drawnFromDiscard: isTurnHolder ? state.drawnFromDiscard : false,
-    hasDrawnCard: !!state.drawnCard,
+    hasDrawnCard: Boolean(state.drawnCard),
     canCallCambio,
     canDraw:
       gameInteractive &&
@@ -1556,11 +1693,14 @@ export function buildPlayerView(
       !state.pendingAbility &&
       (state.phase === "playing" || state.phase === "cambio_final"),
     canSwap:
-      gameInteractive && isMyTurn && !!state.drawnCard && !state.pendingAbility,
+      gameInteractive &&
+      isMyTurn &&
+      Boolean(state.drawnCard) &&
+      !state.pendingAbility,
     canDiscardDrawn:
       gameInteractive &&
       isMyTurn &&
-      !!state.drawnCard &&
+      Boolean(state.drawnCard) &&
       !state.drawnFromDiscard &&
       !state.pendingAbility,
     canSnap:

@@ -35,11 +35,11 @@ const CARD_POINT_FIELDS: Array<{
   { key: "redKing", labelKey: "redKingPointsLabel" },
 ];
 
-type LobbyPlayersProps = {
+interface LobbyPlayersProps {
   view: PlayerView;
   voice: ThemeVoice;
   send: (message: ClientMessage) => void;
-};
+}
 
 export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
   const me = view.players.find((player) => player.id === view.playerId);
@@ -89,7 +89,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                   {player.isHost && (
                     <span className="ui-badge text-accent">{voice.host}</span>
                   )}
-                  {!player.connected && !player.isBot && (
+                  {!(player.connected || player.isBot) && (
                     <span className="ui-badge text-theme-muted">
                       {voice.away}
                     </span>
@@ -206,11 +206,11 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
           </div>
         ))}
 
-        {!view.canStartGame && !me?.isHost ? (
+        {view.canStartGame || me?.isHost ? null : (
           <p className="font-display text-[10px] text-theme-muted text-center mt-4 animate-pulse">
             {voice.waitingForHost}
           </p>
-        ) : null}
+        )}
       </div>
     </div>
   );

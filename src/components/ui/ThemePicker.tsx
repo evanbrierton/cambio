@@ -7,13 +7,19 @@ import type { AppearancePreference } from "@/lib/theme-cookie";
 import { THEME_OPTIONS } from "@/lib/themes";
 
 function renderThemePickerName(name: string, isRetro: boolean) {
-  if (!isRetro) return name;
+  if (!isRetro) {
+    return name;
+  }
 
   const space = name.indexOf(" ");
-  if (space === -1) return name;
+  if (space === -1) {
+    return name;
+  }
 
   const firstWord = name.slice(0, space);
-  if (firstWord.length <= 9) return name;
+  if (firstWord.length <= 9) {
+    return name;
+  }
 
   return (
     <>

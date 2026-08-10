@@ -17,7 +17,9 @@ import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
 const CONNECTING_UI_DELAY_MS = 300;
 
 function allowsPageScroll(view: PlayerView | null): boolean {
-  if (!view) return true;
+  if (!view) {
+    return true;
+  }
   return view.isWaiting || view.phase === "lobby" || view.phase === "ended";
 }
 
@@ -71,9 +73,13 @@ export default function PlayPage({
   const [showConnecting, setShowConnecting] = useState(false);
 
   useEffect(() => {
-    if (!view || !isNavFresh) return;
+    if (!(view && isNavFresh)) {
+      return;
+    }
     const params = new URLSearchParams({ name });
-    if (debugEnabled) appendDebugQueryParam(params);
+    if (debugEnabled) {
+      appendDebugQueryParam(params);
+    }
     router.replace(`/play/${roomId}?${params.toString()}`);
   }, [debugEnabled, view, isNavFresh, name, roomId, router]);
 

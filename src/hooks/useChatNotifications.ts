@@ -7,14 +7,16 @@ import { playSound } from "@/lib/sounds";
 const CHAT_TOAST_MS = 4000;
 const MOBILE_MEDIA_QUERY = "(max-width: 1023px)";
 
-export type ChatNotification = {
+export interface ChatNotification {
   id: string;
   playerName: string;
   text: string;
-};
+}
 
 function truncateText(text: string, maxLength: number): string {
-  if (text.length <= maxLength) return text;
+  if (text.length <= maxLength) {
+    return text;
+  }
   return `${text.slice(0, maxLength - 1)}…`;
 }
 
@@ -58,25 +60,37 @@ export function useChatNotifications({
   }, []);
 
   useEffect(() => {
-    if (lastSeenId !== null) return;
-    const latest = messages[messages.length - 1];
-    if (latest) setLastSeenId(latest.id);
+    if (lastSeenId !== null) {
+      return;
+    }
+    const latest = messages.at(-1);
+    if (latest) {
+      setLastSeenId(latest.id);
+    }
   }, [messages, lastSeenId]);
 
   useEffect(() => {
-    if (!settingsOpen) return;
-    const latest = messages[messages.length - 1];
-    if (latest) setLastSeenId(latest.id);
+    if (!settingsOpen) {
+      return;
+    }
+    const latest = messages.at(-1);
+    if (latest) {
+      setLastSeenId(latest.id);
+    }
     dismissNotification();
   }, [settingsOpen, messages, dismissNotification]);
 
   useEffect(() => {
-    if (notificationsEnabled) return;
+    if (notificationsEnabled) {
+      return;
+    }
     dismissNotification();
   }, [notificationsEnabled, dismissNotification]);
 
   const unreadCount = useMemo(() => {
-    if (lastSeenId === null) return 0;
+    if (lastSeenId === null) {
+      return 0;
+    }
     const lastSeenIndex = messages.findIndex(
       (message) => message.id === lastSeenId,
     );
@@ -101,11 +115,15 @@ export function useChatNotifications({
     const incoming = (
       lastSeenIndex === -1 ? messages : messages.slice(lastSeenIndex + 1)
     ).filter((message) => message.playerId !== playerId);
-    const latest = incoming[incoming.length - 1];
-    if (!latest || latest.id === lastNotifiedIdRef.current) return;
+    const latest = incoming.at(-1);
+    if (!latest || latest.id === lastNotifiedIdRef.current) {
+      return;
+    }
 
     lastNotifiedIdRef.current = latest.id;
-    if (soundEnabled) playSound("chat");
+    if (soundEnabled) {
+      playSound("chat");
+    }
 
     setNotification({
       id: latest.id,
@@ -129,13 +147,14 @@ export function useChatNotifications({
     notificationsEnabled,
   ]);
 
-  useEffect(() => {
-    return () => {
+  useEffect(
+    () => () => {
       if (notificationTimerRef.current) {
         window.clearTimeout(notificationTimerRef.current);
       }
-    };
-  }, []);
+    },
+    [],
+  );
 
   return { unreadCount, notification, dismissNotification };
 }

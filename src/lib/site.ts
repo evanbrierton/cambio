@@ -1,3 +1,4 @@
+import process from "node:process";
 export const siteConfig = {
   name: "Cambio",
   shortName: "Cambio",

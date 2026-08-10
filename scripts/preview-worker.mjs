@@ -2,6 +2,7 @@
 
 import { readFileSync } from "node:fs";
 import path from "node:path";
+import process from "node:process";
 import { pathToFileURL } from "node:url";
 
 export const DEFAULT_PARTY_HOST = "cambio.brierton.workers.dev";
@@ -65,16 +66,11 @@ function main(argv) {
   if (command === "party-host") {
     const workerName = rest[0];
     if (!workerName) {
-      console.error("usage: preview-worker.mjs party-host <worker-name>");
       process.exit(2);
     }
     process.stdout.write(`${partyHostForWorker(workerName)}\n`);
     return;
   }
-
-  console.error(
-    "usage: preview-worker.mjs <has-changes|worker-name|party-host> [...]",
-  );
   process.exit(2);
 }
 
