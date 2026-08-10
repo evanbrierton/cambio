@@ -52,7 +52,9 @@ async function main() {
 
   const log = (name, ok, detail) => {
     results.push({ name, ok, detail });
-    console.log(`${ok ? "PASS" : "FAIL"}: ${name}${detail ? ` — ${detail}` : ""}`);
+    console.log(
+      `${ok ? "PASS" : "FAIL"}: ${name}${detail ? ` — ${detail}` : ""}`,
+    );
   };
 
   // 1) SSR + FOUC init: cookie should win over stale localStorage
@@ -161,7 +163,11 @@ async function main() {
     }
   }
   if (allThemesOk) {
-    log("All 8 style themes selectable via ThemePicker", true, THEME_IDS.join(", "));
+    log(
+      "All 8 style themes selectable via ThemePicker",
+      true,
+      THEME_IDS.join(", "),
+    );
   }
 
   // 6) System appearance
@@ -187,7 +193,9 @@ async function main() {
 
   const failed = results.filter((r) => !r.ok);
   console.log("\n--- SUMMARY ---");
-  console.log(`Total: ${results.length}, Passed: ${results.length - failed.length}, Failed: ${failed.length}`);
+  console.log(
+    `Total: ${results.length}, Passed: ${results.length - failed.length}, Failed: ${failed.length}`,
+  );
   if (failed.length) {
     console.error("Failed checks:", failed);
     process.exit(1);
