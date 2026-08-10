@@ -91,9 +91,7 @@ const APPEARANCE_INIT_SCRIPT = `
     .split("; ")
     .find((entry) => entry.startsWith(key + "="))
     ?.slice(key.length + 1);
-  const preference = cookieValue === "light" || cookieValue === "dark" || cookieValue === "system"
-    ? cookieValue
-    : fallback;
+  const preference = cookieValue ?? fallback;
   const resolved = preference === "system"
     ? (window.matchMedia(${JSON.stringify(APPEARANCE_MEDIA_QUERY)}).matches ? "dark" : "light")
     : preference;

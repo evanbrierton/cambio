@@ -1,5 +1,5 @@
 import { setCookie } from "cookies-next";
-import { DEFAULT_THEME, isThemeId, type ThemeId } from "@/lib/themes";
+import { DEFAULT_THEME, type ThemeId } from "@/lib/themes";
 
 export const THEME_COOKIE_KEY = "cambio-theme";
 export const APPEARANCE_COOKIE_KEY = "cambio-appearance";
@@ -20,15 +20,13 @@ export type ResolvedAppearance = Exclude<AppearancePreference, "system">;
 export const DEFAULT_APPEARANCE: AppearancePreference = "system";
 
 export function parseThemeCookie(value: string | undefined): ThemeId {
-  if (value && isThemeId(value)) return value;
-  return DEFAULT_THEME;
+  return (value ?? DEFAULT_THEME) as ThemeId;
 }
 
 export function parseAppearanceCookie(
   value: string | undefined,
 ): AppearancePreference {
-  if (value && isAppearancePreference(value)) return value;
-  return DEFAULT_APPEARANCE;
+  return (value ?? DEFAULT_APPEARANCE) as AppearancePreference;
 }
 
 export function setThemeCookie(theme: ThemeId): void {
@@ -51,8 +49,4 @@ export function resolveAppearance(
 ): ResolvedAppearance {
   if (preference === "system") return prefersDark ? "dark" : "light";
   return preference;
-}
-
-function isAppearancePreference(value: string): value is AppearancePreference {
-  return APPEARANCE_PREFERENCES.includes(value as AppearancePreference);
 }

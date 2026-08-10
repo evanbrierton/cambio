@@ -15,14 +15,13 @@ import {
 import {
   APPEARANCE_MEDIA_QUERY,
   type AppearancePreference,
-  DEFAULT_APPEARANCE,
   type ResolvedAppearance,
   resolveAppearance,
   setAppearanceCookie,
   setThemeCookie,
 } from "@/lib/theme-cookie";
 import { applyThemeFontClass } from "@/lib/theme-fonts";
-import { DEFAULT_THEME, THEME_IDS, type ThemeId } from "@/lib/themes";
+import { THEME_IDS, type ThemeId } from "@/lib/themes";
 
 type ThemeContextValue = {
   theme: ThemeId;
@@ -36,32 +35,24 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function ThemeContextProvider({
   children,
-  initialTheme,
-  initialAppearancePreference = DEFAULT_APPEARANCE,
+  initialAppearancePreference,
 }: {
   children: ReactNode;
-  initialTheme: ThemeId;
-  initialAppearancePreference?: AppearancePreference;
+  initialAppearancePreference: AppearancePreference;
 }) {
   const { theme: nextTheme, setTheme: setNextTheme } = useNextTheme();
+  const theme = nextTheme as ThemeId;
   const [appearancePreference, setAppearancePreferenceState] =
     useState<AppearancePreference>(initialAppearancePreference);
   const [resolvedAppearance, setResolvedAppearance] =
-    useState<ResolvedAppearance>(() => {
-      if (typeof document !== "undefined") {
-        const fromDom = document.documentElement.dataset.appearance;
-        if (fromDom === "light" || fromDom === "dark") return fromDom;
-      }
-      return resolveAppearance(initialAppearancePreference, false);
-    });
-
-  const theme = (nextTheme ?? initialTheme) as ThemeId;
+    useState<ResolvedAppearance>(() =>
+      resolveAppearance(initialAppearancePreference, false),
+    );
 
   const setTheme = useCallback(
     (next: ThemeId) => {
       setNextTheme(next);
       setThemeCookie(next);
-      applyThemeFontClass(next);
     },
     [setNextTheme],
   );
@@ -76,11 +67,12 @@ function ThemeContextProvider({
     (next: AppearancePreference) => {
       setAppearancePreferenceState(next);
       setAppearanceCookie(next);
-
-      const prefersDark =
-        typeof window !== "undefined" &&
-        window.matchMedia(APPEARANCE_MEDIA_QUERY).matches;
-      applyResolvedAppearance(resolveAppearance(next, prefersDark));
+      applyResolvedAppearance(
+        resolveAppearance(
+          next,
+          window.matchMedia(APPEARANCE_MEDIA_QUERY).matches,
+        ),
+      );
     },
     [applyResolvedAppearance],
   );
@@ -124,23 +116,22 @@ function ThemeContextProvider({
 
 export function ThemeProvider({
   children,
-  initialTheme = DEFAULT_THEME,
-  initialAppearancePreference = DEFAULT_APPEARANCE,
+  initialTheme,
+  initialAppearancePreference,
 }: {
   children: ReactNode;
-  initialTheme?: ThemeId;
-  initialAppearancePreference?: AppearancePreference;
+  initialTheme: ThemeId;
+  initialAppearancePreference: AppearancePreference;
 }) {
   return (
     <NextThemesProvider
       attribute="data-theme"
       defaultTheme={initialTheme}
-      themes={[...THEME_IDS]}
+      themes={THEME_IDS}
       enableSystem={false}
       enableColorScheme={false}
     >
       <ThemeContextProvider
-        initialTheme={initialTheme}
         initialAppearancePreference={initialAppearancePreference}
       >
         {children}
