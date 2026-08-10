@@ -1,6 +1,25 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Bell,
+  BellOff,
+  Check,
+  CircleUser,
+  Copy,
+  GalleryHorizontal,
+  LayoutGrid,
+  Lightbulb,
+  LightbulbOff,
+  ListOrdered,
+  LogOut,
+  MessageSquare,
+  MessageSquareOff,
+  MoreHorizontal,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HAND_GRID_WIDTH, PixelCard } from "@/components/cards/PixelCard";
@@ -65,6 +84,9 @@ type GameTableProps = {
 type SelectedCard = { playerId: string; slot: number };
 
 const LOBBY_JOIN_TOAST_MS = 3000;
+const CHROME_ICON_CLASS = "size-3.5 shrink-0";
+const CHROME_ICON_BTN =
+  "chip-btn inline-flex items-center justify-center p-1 border-theme-muted text-theme hover:border-accent transition-colors";
 
 function formatPeekFlashNotice(
   peekFlash: PeekFlash,
@@ -1146,46 +1168,98 @@ export function GameTable({
         <button
           type="button"
           onClick={toggleSound}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={soundEnabled ? voice.soundOn : voice.soundOff}
+          title={soundEnabled ? voice.soundOn : voice.soundOff}
+          className={CHROME_ICON_BTN}
         >
-          {soundEnabled ? voice.soundOn : voice.soundOff}
+          {soundEnabled ? (
+            <Volume2 aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <VolumeX aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
         <button
           type="button"
           onClick={toggleHints}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={hintsEnabled ? voice.hintsOn : voice.hintsOff}
+          title={hintsEnabled ? voice.hintsOn : voice.hintsOff}
+          className={CHROME_ICON_BTN}
         >
-          {hintsEnabled ? voice.hintsOn : voice.hintsOff}
+          {hintsEnabled ? (
+            <Lightbulb aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <LightbulbOff aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
         <button
           type="button"
           onClick={togglePlayerGrid}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={
+            playerGridEnabled ? voice.playerGridOn : voice.playerGridOff
+          }
+          title={playerGridEnabled ? voice.playerGridOn : voice.playerGridOff}
+          className={CHROME_ICON_BTN}
         >
-          {playerGridEnabled ? voice.playerGridOn : voice.playerGridOff}
+          {playerGridEnabled ? (
+            <LayoutGrid aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <GalleryHorizontal aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
         <button
           type="button"
           onClick={toggleOwnSeatDisplay}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={
+            ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder
+          }
+          title={
+            ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder
+          }
+          className={CHROME_ICON_BTN}
         >
-          {ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder}
+          {ownSeatProminent ? (
+            <CircleUser aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <ListOrdered aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
         <button
           type="button"
           onClick={toggleChatNotifications}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={
+            chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff
+          }
+          title={
+            chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff
+          }
+          className={CHROME_ICON_BTN}
         >
-          {chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff}
+          {chatNotificationsEnabled ? (
+            <MessageSquare aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <MessageSquareOff aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
         <button
           type="button"
           onClick={toggleEventNotifications}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={
+            eventNotificationsEnabled
+              ? voice.eventNotifsOn
+              : voice.eventNotifsOff
+          }
+          title={
+            eventNotificationsEnabled
+              ? voice.eventNotifsOn
+              : voice.eventNotifsOff
+          }
+          className={CHROME_ICON_BTN}
         >
-          {eventNotificationsEnabled
-            ? voice.eventNotifsOn
-            : voice.eventNotifsOff}
+          {eventNotificationsEnabled ? (
+            <Bell aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <BellOff aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
       </div>
 
@@ -1280,7 +1354,7 @@ export function GameTable({
                 className="sheet-close-btn border-theme-muted text-theme hover:border-accent hover:text-accent transition-colors"
                 aria-label="Close menu"
               >
-                <span aria-hidden="true">×</span>
+                <X aria-hidden className="size-5" />
               </button>
             </div>
             <div className="mobile-game-sheet overflow-y-auto flex-1 min-h-0 px-4 pt-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex flex-col gap-3">
@@ -1316,13 +1390,18 @@ export function GameTable({
                   onClick={copyRoomCode}
                   aria-live="polite"
                   aria-label={roomCopied ? voice.copied : voice.copy}
-                  className={`chip-btn chip-btn-sm shrink-0 transition-colors ${
+                  title={roomCopied ? voice.copied : voice.copy}
+                  className={`chip-btn chip-btn-sm inline-flex items-center justify-center shrink-0 transition-colors ${
                     roomCopied
                       ? "border-accent text-accent"
                       : "border-theme-muted text-theme hover:border-accent"
                   }`}
                 >
-                  {roomCopied ? voice.copied : voice.copy}
+                  {roomCopied ? (
+                    <Check aria-hidden className={CHROME_ICON_CLASS} />
+                  ) : (
+                    <Copy aria-hidden className={CHROME_ICON_CLASS} />
+                  )}
                 </button>
                 <span
                   role="status"
@@ -1347,7 +1426,7 @@ export function GameTable({
                 <button
                   type="button"
                   onClick={openSettings}
-                  className="chip-btn chip-btn-sm border-theme-muted text-theme hover:border-accent transition-colors lg:hidden relative"
+                  className="chip-btn chip-btn-sm inline-flex items-center justify-center border-theme-muted text-theme hover:border-accent transition-colors lg:hidden relative"
                   aria-label={
                     unreadCount > 0
                       ? `Game menu (${unreadCount} unread messages)`
@@ -1355,7 +1434,7 @@ export function GameTable({
                   }
                   title={voice.gameMenuLabel}
                 >
-                  ···
+                  <MoreHorizontal aria-hidden className={CHROME_ICON_CLASS} />
                   {unreadCount > 0 ? (
                     <span className="absolute -top-1 -right-1 min-w-3.5 h-3.5 px-0.5 flex items-center justify-center rounded-full bg-accent text-[8px] font-display text-surface leading-none">
                       {unreadCount > 9 ? "9+" : unreadCount}
@@ -1364,11 +1443,11 @@ export function GameTable({
                 </button>
                 <Link
                   href="/"
-                  className="chip-btn chip-btn-sm border-theme-muted text-theme hover:border-accent transition-colors"
+                  className="chip-btn chip-btn-sm inline-flex items-center justify-center border-theme-muted text-theme hover:border-accent transition-colors"
                   aria-label={voice.leaveGame}
                   title={voice.leaveGame}
                 >
-                  EXIT
+                  <LogOut aria-hidden className={CHROME_ICON_CLASS} />
                 </Link>
               </div>
             </div>
