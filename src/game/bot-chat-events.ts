@@ -84,7 +84,7 @@ export function detectMoveReaction(
 ): GameMoveReaction | null {
   const playerName = player.name;
 
-  if (result.cambioFlash?.playerId === player.id) {
+  if (result.cambioFlash && result.cambioFlash.playerId === player.id) {
     return {
       kind: "called_cambio",
       playerName,

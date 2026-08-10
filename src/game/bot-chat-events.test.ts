@@ -6,7 +6,7 @@ import {
   CAMBIO_VISIBILITY_FOR_CHAT,
 } from "./bot-chat-llm";
 import { createRoom } from "./engine";
-import type { Card, CardSlot, PlayerState } from "./types";
+import type { Card, CardSlot, GameState, PlayerState } from "./types";
 
 function card(rank: Card["rank"], suit: Card["suit"] = "clubs"): Card {
   return { id: `${rank}-${suit}`, rank, suit };
@@ -37,10 +37,19 @@ function alicePlayer(hand?: CardSlot[]): PlayerState {
   };
 }
 
+function playingState(player: PlayerState = alicePlayer()): GameState {
+  const state = createRoom("room-1", player.name, player.id);
+  state.phase = "playing";
+  state.players[0] = player;
+  return state;
+}
+
 describe("detectMoveReaction card visibility (CAM-87)", () => {
   it("names discarded deck draws (public on discard pile)", () => {
+    const player = alicePlayer();
     const reaction = detectMoveReaction(
-      alicePlayer(),
+      playingState(player),
+      player,
       { type: "discard_drawn" },
       {},
       {
@@ -56,8 +65,10 @@ describe("detectMoveReaction card visibility (CAM-87)", () => {
   });
 
   it("does not react to deck-draw swaps (private take + hand-card points)", () => {
+    const player = alicePlayer();
     const reaction = detectMoveReaction(
-      alicePlayer(),
+      playingState(player),
+      player,
       { type: "swap", slot: 0 },
       {},
       {
@@ -72,13 +83,15 @@ describe("detectMoveReaction card visibility (CAM-87)", () => {
   });
 
   it("may name both public discard-pile swap cards without point totals", () => {
+    const player = alicePlayer([
+      slot(card("A", "hearts")),
+      slot(card("3")),
+      slot(card("4")),
+      slot(card("5")),
+    ]);
     const reaction = detectMoveReaction(
-      alicePlayer([
-        slot(card("A", "hearts")),
-        slot(card("3")),
-        slot(card("4")),
-        slot(card("5")),
-      ]),
+      playingState(player),
+      player,
       { type: "swap", slot: 0 },
       {},
       {
