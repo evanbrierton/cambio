@@ -39,6 +39,7 @@ import type {
   PeekFlash,
   PenaltyFlash,
   ReshuffleFlash,
+  SnapFlash,
   SwapFlash,
   TakeFlash,
 } from "@/hooks/useGameConnection";
@@ -60,6 +61,7 @@ type GameTableProps = {
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
   takeFlash: TakeFlash | null;
+  snapFlash: SnapFlash | null;
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
@@ -127,6 +129,31 @@ function isTakeFlashing(
   slot: number,
 ): boolean {
   return takeFlash?.playerId === playerId && takeFlash.slot === slot;
+}
+
+function isSnapFlashing(
+  snapFlash: SnapFlash | null,
+  playerId: string,
+  slot: number,
+): boolean {
+  return snapFlash?.playerId === playerId && snapFlash.slot === slot;
+}
+
+function formatSnapFlashNotice(
+  snapFlash: SnapFlash,
+  players: PlayerView["players"],
+  fallback: string,
+): string {
+  const actor = players.find((entry) => entry.id === snapFlash.actorId);
+  const target = players.find((entry) => entry.id === snapFlash.playerId);
+  const slotLabel = `#${snapFlash.slot + 1}`;
+  if (actor && target && actor.id === target.id) {
+    return `✦ ${actor.name} snapped ${slotLabel}`;
+  }
+  if (actor && target) {
+    return `✦ ${actor.name} snapped ${target.name} ${slotLabel}`;
+  }
+  return fallback;
 }
 
 function formatSwapFlashNotice(
@@ -326,6 +353,7 @@ function PlayerSeat({
   peekFlash,
   swapFlash,
   takeFlash,
+  snapFlash,
   penaltyFlash,
   selectedSwapCard,
   canSwap,
@@ -348,6 +376,7 @@ function PlayerSeat({
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
   takeFlash: TakeFlash | null;
+  snapFlash: SnapFlash | null;
   penaltyFlash: PenaltyFlash | null;
   selectedSwapCard: SelectedCard | null;
   canSwap?: boolean;
@@ -393,6 +422,8 @@ function PlayerSeat({
 
   const hasSwapFlash =
     swapFlash?.slots.some((entry) => entry.playerId === player.id) ?? false;
+  const hasSnapFlash =
+    snapFlash?.playerId === player.id || snapFlash?.actorId === player.id;
   const hasPeekFlash =
     peekFlash?.playerId === player.id || peekFlash?.actorId === player.id;
   const hasPenaltyFlash = penaltyFlash?.playerId === player.id;
@@ -469,6 +500,12 @@ function PlayerSeat({
             ? `#${index + 1}`
             : undefined
         }
+        snapFlashing={isSnapFlashing(snapFlash, player.id, index)}
+        snapFlashSlotLabel={
+          isSnapFlashing(snapFlash, player.id, index)
+            ? `#${index + 1}`
+            : undefined
+        }
         peekFlashing={showPeekFlashOverlay}
         peekFlashKind={showPeekFlashOverlay ? peekFlash?.kind : undefined}
         peekFlashSlotLabel={showPeekFlashOverlay ? `#${index + 1}` : undefined}
@@ -508,21 +545,23 @@ function PlayerSeat({
       className={`pixel-border ${seatPadding} w-full max-w-full shrink-0 flex flex-col items-center text-center ${
         hasSwapFlash
           ? "swap-seat-flash bg-swap-seat-flash ring-2 ring-accent shadow-glow-accent"
-          : hasPeekFlash
-            ? "peek-seat-flash bg-peek-seat-flash ring-2 ring-accent-alt shadow-glow-accent-alt"
-            : hasPenaltyFlash
-              ? "penalty-seat-flash bg-danger-surface/20 ring-2 ring-accent shadow-glow-accent"
-              : showDrawnSwapHint || showSnapGiveHint
-                ? "bg-swap-hint ring-2 ring-accent animate-pulse"
-                : showLookSeatHint
-                  ? "bg-action-hint ring-2 ring-accent-alt"
-                  : showSetupPeekHint
+          : hasSnapFlash
+            ? "snap-seat-flash bg-snap-seat-flash ring-2 ring-danger shadow-glow-accent"
+            : hasPeekFlash
+              ? "peek-seat-flash bg-peek-seat-flash ring-2 ring-accent-alt shadow-glow-accent-alt"
+              : hasPenaltyFlash
+                ? "penalty-seat-flash bg-danger-surface/20 ring-2 ring-accent shadow-glow-accent"
+                : showDrawnSwapHint || showSnapGiveHint
+                  ? "bg-swap-hint ring-2 ring-accent animate-pulse"
+                  : showLookSeatHint
                     ? "bg-action-hint ring-2 ring-accent-alt"
-                    : hasSwapFirstSelected
-                      ? "bg-swap-first-selected ring-2 ring-accent-alt shadow-glow-accent-alt"
-                      : player.isCurrentTurn
-                        ? "bg-surface-elevated ring-2 ring-accent-alt"
-                        : "bg-surface"
+                    : showSetupPeekHint
+                      ? "bg-action-hint ring-2 ring-accent-alt"
+                      : hasSwapFirstSelected
+                        ? "bg-swap-first-selected ring-2 ring-accent-alt shadow-glow-accent-alt"
+                        : player.isCurrentTurn
+                          ? "bg-surface-elevated ring-2 ring-accent-alt"
+                          : "bg-surface"
       } ${phase === "setup_peek" && !isOwn ? "opacity-40" : ""} ${
         lookAbilityActive &&
         !showLookSeatHint &&
@@ -549,6 +588,11 @@ function PlayerSeat({
         <div className="flex flex-wrap items-center justify-center gap-1">
           {hasSwapFlash && (
             <span className="ui-badge text-accent animate-pulse">SWAPPED</span>
+          )}
+          {hasSnapFlash && (
+            <span className="ui-badge text-danger-text animate-pulse">
+              SNAPPED
+            </span>
           )}
           {hasPeekFlash && peekFlash && (
             <span className="ui-badge text-accent-alt animate-pulse">
@@ -633,6 +677,7 @@ export function GameTable({
   peekFlash,
   swapFlash,
   takeFlash,
+  snapFlash,
   penaltyFlash,
   cambioFlash,
   reshuffleFlash,
@@ -709,6 +754,7 @@ export function GameTable({
     reshuffleFlash,
     snapWindowSeconds,
     takeFlash,
+    snapFlash,
   );
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
@@ -747,6 +793,19 @@ export function GameTable({
             voice.swapFlashNotice,
           ),
           tone: "swap",
+          pulse: true,
+        });
+      }
+
+      if (snapFlash) {
+        items.push({
+          id: "snap-flash",
+          message: formatSnapFlashNotice(
+            snapFlash,
+            view.players,
+            "✦ Card snapped",
+          ),
+          tone: "snap",
           pulse: true,
         });
       }
@@ -805,6 +864,7 @@ export function GameTable({
     lobbyJoinToast,
     peekFlash,
     penaltyFlash,
+    snapFlash,
     swapFlash,
     view.phase,
     view.players,
@@ -1106,6 +1166,7 @@ export function GameTable({
         peekFlash={peekFlash}
         swapFlash={swapFlash}
         takeFlash={takeFlash}
+        snapFlash={snapFlash}
         penaltyFlash={penaltyFlash}
         selectedSwapCard={selectedSwapCard}
         canSwap={isOwn ? view.canSwap : undefined}

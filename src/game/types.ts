@@ -163,6 +163,12 @@ export type PenaltyFlash = {
   slot: number;
 };
 
+export type SnapFlash = {
+  actorId: string;
+  playerId: string;
+  slot: number;
+};
+
 export type ClientMessage =
   | { type: "join"; playerId?: string; name: string }
   | { type: "start_game" }
@@ -268,6 +274,7 @@ export type ServerMessage =
       slot: number;
     }
   | { type: "swap_flash"; slots: SwapFlashSlot[] }
+  | { type: "snap_flash"; actorId: string; playerId: string; slot: number }
   | { type: "penalty_flash"; playerId: string; slot: number }
   | { type: "cambio_flash"; playerId: string }
   | { type: "reshuffle_flash" }

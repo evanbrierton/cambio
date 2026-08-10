@@ -7,6 +7,7 @@ import type {
   FleetingPeek,
   PeekFlash,
   ReshuffleFlash,
+  SnapFlash,
   SwapFlash,
   TakeFlash,
 } from "@/hooks/useGameConnection";
@@ -22,6 +23,7 @@ export function useGameSounds(
   reshuffleFlash: ReshuffleFlash | null,
   snapWindowSeconds: number | null,
   takeFlash: TakeFlash | null = null,
+  snapFlash: SnapFlash | null = null,
 ) {
   const prevPhase = useRef<PlayerView["phase"] | null>(null);
   const prevLogLen = useRef(0);
@@ -30,6 +32,7 @@ export function useGameSounds(
   const peekFlashKey = useRef<string | null>(null);
   const swapFlashKey = useRef<string | null>(null);
   const takeFlashKey = useRef<string | null>(null);
+  const snapFlashKey = useRef<string | null>(null);
   const cambioFlashKey = useRef<string | null>(null);
   const reshuffleFlashKey = useRef<number | null>(null);
   const prevSnapSeconds = useRef<number | null>(null);
@@ -82,6 +85,17 @@ export function useGameSounds(
   }, [takeFlash]);
 
   useEffect(() => {
+    if (!snapFlash) {
+      snapFlashKey.current = null;
+      return;
+    }
+    const key = `${snapFlash.actorId}-${snapFlash.playerId}-${snapFlash.slot}`;
+    if (snapFlashKey.current === key) return;
+    snapFlashKey.current = key;
+    playSound("snap");
+  }, [snapFlash]);
+
+  useEffect(() => {
     if (!cambioFlash) {
       cambioFlashKey.current = null;
       return;
@@ -131,9 +145,8 @@ export function useGameSounds(
 
     if (view.log.length > prevLogLen.current) {
       const lastLog = view.log[view.log.length - 1] ?? "";
-      if (lastLog.includes("snapped correctly")) {
-        playSound("snap");
-      } else if (lastLog.includes("drew from the discard")) {
+      // Successful snaps play via snapFlash; wrong snaps use error → snapWrong.
+      if (lastLog.includes("drew from the discard")) {
         playSound("discardDraw");
       } else if (lastLog.includes("drew from")) {
         playSound("deckDraw");

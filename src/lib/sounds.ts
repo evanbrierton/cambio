@@ -90,8 +90,10 @@ export async function playSound(id: SoundId): Promise<void> {
       tone(ctx, 1040, t + 0.1, 0.08, "triangle", 0.04);
       break;
     case "snap":
-      tone(ctx, 880, t, 0.05, "square", 0.07);
-      tone(ctx, 1320, t + 0.04, 0.1, "square", 0.05);
+      tone(ctx, 988, t, 0.05, "square", 0.08);
+      tone(ctx, 1480, t + 0.04, 0.08, "square", 0.07);
+      tone(ctx, 1760, t + 0.1, 0.12, "square", 0.05);
+      tone(ctx, 660, t + 0.05, 0.18, "triangle", 0.035);
       break;
     case "snapWrong":
       tone(ctx, 180, t, 0.15, "sawtooth", 0.08);

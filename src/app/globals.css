@@ -1974,6 +1974,126 @@ body::after {
   animation: take-flash-label 1.5s ease-in-out 1;
 }
 
+@keyframes snap-flash-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 0%, transparent);
+    filter: brightness(1) scale(1);
+  }
+  20% {
+    box-shadow:
+      0 0 0 5px var(--danger),
+      0 0 36px 12px var(--glow-accent);
+    filter: brightness(1.3) scale(1.06);
+  }
+  55% {
+    box-shadow:
+      0 0 0 3px var(--danger),
+      0 0 24px 8px var(--glow-accent);
+    filter: brightness(1.15) scale(1.02);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 0%, transparent);
+    filter: brightness(1) scale(1);
+  }
+}
+
+@keyframes snap-flash-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes snap-flash-shimmer {
+  0% {
+    transform: translateY(100%) rotate(-8deg);
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-100%) rotate(-8deg);
+    opacity: 0.15;
+  }
+}
+
+@keyframes snap-flash-icon {
+  0% {
+    transform: scale(0.2) rotate(-30deg);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1.6) rotate(0deg);
+    opacity: 1;
+  }
+  60% {
+    transform: scale(1.15) rotate(8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.2;
+  }
+}
+
+@keyframes snap-flash-label {
+  0%,
+  100% {
+    opacity: 0;
+    letter-spacing: 0.05em;
+  }
+  20%,
+  70% {
+    opacity: 1;
+    letter-spacing: 0.28em;
+  }
+}
+
+@keyframes snap-seat-flash {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--danger) 0%, transparent);
+  }
+  30%,
+  65% {
+    box-shadow:
+      0 0 0 4px var(--danger),
+      0 0 28px 8px var(--glow-accent);
+  }
+}
+
+.snap-flash-wrap {
+  z-index: 30;
+  border-radius: var(--radius-card);
+  animation: snap-flash-pulse 2s ease-out 1;
+}
+
+.snap-flash-ring {
+  animation: snap-flash-ring 2s ease-out 1;
+}
+
+.snap-flash-shimmer {
+  animation: snap-flash-shimmer 1s ease-in-out 2;
+}
+
+.snap-flash-icon {
+  animation: snap-flash-icon 2s ease-out 1;
+}
+
+.snap-flash-label {
+  animation: snap-flash-label 2s ease-in-out 1;
+}
+
+.snap-seat-flash {
+  animation: snap-seat-flash 2s ease-in-out 1;
+}
+
+.bg-snap-seat-flash {
+  background: color-mix(in srgb, var(--danger) 22%, var(--surface-elevated));
+}
+
 @keyframes peek-flash-pulse {
   0% {
     box-shadow:
