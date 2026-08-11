@@ -20,3 +20,4 @@
 [2026-08-11T14:30:14.761Z] stack-tutorial-pr: verification self-reported (unit-test-verified)
 [2026-08-11T14:30:15.827Z] stack-mobile-pr: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
 [2026-08-11T14:34:10.343Z] stack-mobile-pr: verification self-reported (unit-test-verified)
+[2026-08-11T14:40:03.670Z] fix-pr-stack-cam-88-cancel: verification self-reported (not-verified)
