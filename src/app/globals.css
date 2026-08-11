@@ -831,6 +831,9 @@
   --glow-accent: rgba(217, 53, 102, 0.18);
   --glow-accent-alt: rgba(31, 127, 143, 0.13);
   --vignette: rgba(255, 241, 251, 0.08);
+  /* Crisp titles on pale gradients — avoid dark CAM-16 halo blur. */
+  --title-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.85), 0 0 10px rgba(207, 47, 174, 0.18);
   --bg-image: linear-gradient(
     135deg,
     color-mix(in srgb, #ff4fd8 30%, #fff1fb) 0%,
@@ -1495,9 +1498,12 @@ body::after {
   color: var(--foreground-muted);
 }
 
-/* Soft dark halo behind theme text sitting on the animated gradient. */
-[data-theme="party"] .text-theme,
-[data-theme="party"] .text-theme-muted {
+/*
+ * Soft dark halo behind theme text sitting on the animated gradient.
+ * Dark appearance only — on light mode the same halo blurs dark text.
+ */
+[data-theme="party"][data-appearance="dark"] .text-theme,
+[data-theme="party"][data-appearance="dark"] .text-theme-muted {
   text-shadow:
     0 1px 2px rgba(26, 10, 62, 0.9),
     0 0 10px rgba(26, 10, 62, 0.55);
@@ -3175,7 +3181,19 @@ html.play-scroll-lock body {
 }
 
 .table-action-chrome {
-  max-width: min(100%, 16rem);
+  /* Use the full deck row so wide theme fonts (Retro Press Start) stay horizontal */
+  width: 100%;
+  max-width: 100%;
+}
+
+.table-action-chrome-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  width: 100%;
+  min-width: 0;
 }
 
 .table-cambio-chip {
@@ -3188,6 +3206,9 @@ html.play-scroll-lock body {
   box-shadow: var(--btn-danger-shadow);
   animation: table-cambio-pulse 1.8s ease-in-out infinite;
   cursor: pointer;
+  flex: 0 1 auto;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .table-cambio-chip:hover {
@@ -3213,6 +3234,12 @@ html.play-scroll-lock body {
     font-size: 9px;
     padding: 0.4rem 0.75rem;
   }
+}
+
+.table-action-chrome-row .chip-btn {
+  flex: 0 1 auto;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 .table-grid-context {
@@ -3255,7 +3282,11 @@ html.play-scroll-lock body {
 }
 
 .table-chrome-slot {
-  min-height: 1.75rem;
+  /*
+   * Fixed single-row reserve (fits Retro 4px borders + chip padding).
+   * Same height on every theme so deck card scale stays consistent.
+   */
+  min-height: 2.25rem;
 }
 
 /* In-flow slots (lobby / desktop aside) keep reserved height to avoid shift */
@@ -3325,7 +3356,7 @@ html.play-scroll-lock body {
   }
 
   .table-chrome-slot {
-    min-height: 2rem;
+    min-height: 2.5rem;
   }
 
   .action-buttons-slot {
