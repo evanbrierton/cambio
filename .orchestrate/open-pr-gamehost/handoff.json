@@ -1,0 +1,18 @@
+{
+  "task": "open-pr-gamehost",
+  "status": "success",
+  "featureBranch": "evanbrierton/gamehost-phase0-5425",
+  "pr": {
+    "number": 186,
+    "url": "https://github.com/evanbrierton/cambio/pull/186",
+    "title": "CAM-19: Extract GameHost from CambioParty (Offline P2P Phase 0)",
+    "draft": true,
+    "base": "main"
+  },
+  "linear": {
+    "issues": ["CAM-19", "CAM-20", "CAM-21"],
+    "state": "In Review"
+  },
+  "mergeOrderNote": "CAM-88 / PR #185 should merge before PR #186",
+  "completedAt": "2026-08-11T14:27:00.000Z"
+}
