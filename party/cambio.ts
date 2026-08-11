@@ -193,6 +193,7 @@ export class CambioParty extends Server<Env> {
     const result = await generateBotChatMessage(this.env.GROQ_API_KEY, {
       difficulty: bot.botDifficulty ?? "easy",
       botName: bot.name,
+      playerNames: this.state.players.map((player) => player.name),
       recentChat: this.state.chatMessages.slice(-12),
       gamePhase: this.state.phase,
       roundNumber: this.state.roundNumber,

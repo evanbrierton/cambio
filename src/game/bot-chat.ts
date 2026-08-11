@@ -190,6 +190,19 @@ function pick<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
 
+/** Fill `{name}` placeholders with a real table display name. */
+export function fillPlayerName(template: string, playerName?: string): string {
+  if (playerName) {
+    return template.replaceAll("{name}", playerName);
+  }
+  return template
+    .replaceAll(", {name}", "")
+    .replaceAll("{name}, ", "")
+    .replaceAll("{name}", "you")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function shouldFocusTarping(): boolean {
   return Math.random() < TARPING_WEIGHT;
 }
@@ -224,17 +237,22 @@ export function shouldFocusTarpingForChat(options: {
 
 export function pickBotChatMessage(
   difficulty: BotDifficulty,
-  options?: { focusTarping?: boolean },
+  options?: { focusTarping?: boolean; playerName?: string },
 ): string {
   const focusTarping = options?.focusTarping ?? shouldFocusTarping();
+  let template: string;
   if (focusTarping) {
-    if (difficulty === "hard") return pick(HARD_TARPING_MESSAGES);
-    if (difficulty === "medium") return pick(MEDIUM_TARPING_MESSAGES);
-    return pick(EASY_TARPING_MESSAGES);
+    if (difficulty === "hard") template = pick(HARD_TARPING_MESSAGES);
+    else if (difficulty === "medium") template = pick(MEDIUM_TARPING_MESSAGES);
+    else template = pick(EASY_TARPING_MESSAGES);
+  } else if (difficulty === "hard") {
+    template = pick(HARD_MESSAGES);
+  } else if (difficulty === "medium") {
+    template = pick(MEDIUM_MESSAGES);
+  } else {
+    template = pick(EASY_MESSAGES);
   }
-  if (difficulty === "hard") return pick(HARD_MESSAGES);
-  if (difficulty === "medium") return pick(MEDIUM_MESSAGES);
-  return pick(EASY_MESSAGES);
+  return fillPlayerName(template, options?.playerName);
 }
 
 /** Random delay before the next bot chat message (ms). */
