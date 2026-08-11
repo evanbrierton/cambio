@@ -66,6 +66,11 @@ export type SoloOptions = {
   difficulty: BotDifficulty;
 };
 
+export type MatchOptions = {
+  targetSize: number;
+  fillWithBots: boolean;
+};
+
 function resolvePlayerId(roomId: string): string {
   const key = storageKey(roomId);
   const stored =
@@ -82,6 +87,7 @@ export function useGameConnection(
   sessionMode: SessionMode = "reconnect",
   soloOptions?: SoloOptions,
   debugEnabled = false,
+  matchOptions?: MatchOptions,
 ) {
   const [connected, setConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -165,6 +171,13 @@ export function useGameConnection(
               difficulty: soloOptions.difficulty,
             }
           : {}),
+        ...(matchOptions && sessionMode === "new"
+          ? {
+              match: "1",
+              targetSize: String(matchOptions.targetSize),
+              fillWithBots: matchOptions.fillWithBots ? "1" : "0",
+            }
+          : {}),
         ...(debugEnabled ? { debug: "1" } : {}),
       },
     });
@@ -204,6 +217,7 @@ export function useGameConnection(
     sessionMode,
     soloOptions,
     debugEnabled,
+    matchOptions,
     applyMessage,
   ]);
 

@@ -57,17 +57,31 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
   const readyCount = view.players.filter(
     (player) => (player.connected || player.isBot) && !player.isWaiting,
   ).length;
+  const lobbyLabel = view.isMatchmade
+    ? voice.matchmadeLobby
+    : view.isSoloMode
+      ? voice.soloMode
+      : voice.playersInLobby;
+  const lobbyCountLabel = view.isMatchmade
+    ? voice.matchFillStatus(view.matchHumanCount, view.matchTargetSize)
+    : `${readyCount}/${MAX_PLAYERS}`;
 
   return (
     <div className="flex flex-col gap-2 min-w-0">
       <div className="flex items-center justify-between shrink-0 px-1">
         <p className="font-display text-[8px] text-theme-muted tracking-widest">
-          {view.isSoloMode ? voice.soloMode : voice.playersInLobby}
+          {lobbyLabel}
         </p>
         <p className="font-display text-[8px] text-theme-muted tabular-nums">
-          {readyCount}/{MAX_PLAYERS}
+          {lobbyCountLabel}
         </p>
       </div>
+
+      {view.isMatchmade && view.matchStartingSoon ? (
+        <p className="font-display text-[8px] text-theme-muted text-center animate-pulse">
+          {voice.matchStartingSoon}
+        </p>
+      ) : null}
 
       <div className="pixel-border bg-surface p-3 sm:p-4">
         <ul className="space-y-2">
@@ -251,7 +265,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
           </AnimatePresence>
         </div>
 
-        {!view.canStartGame && !me?.isHost ? (
+        {!view.isMatchmade && !view.canStartGame && !me?.isHost ? (
           <p className="font-display text-[10px] text-theme-muted text-center mt-4 animate-pulse">
             {voice.waitingForHost}
           </p>
