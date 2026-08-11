@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  decideIgnore,
   EXIT_BUILD,
   EXIT_SKIP,
-  decideIgnore,
   fetchPrDraft,
   runIgnoreCheck,
 } from "./vercel-ignore.mjs";

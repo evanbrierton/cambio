@@ -8,8 +8,8 @@
  * GitHub API failures fail open (build) so previews are never stuck skipped.
  */
 
-import { pathToFileURL } from "node:url";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 
 export const EXIT_SKIP = 0;
 export const EXIT_BUILD = 1;
@@ -124,7 +124,7 @@ export async function fetchPrDraft({
 }
 
 /**
- * @param {NodeJS.ProcessEnv} env
+ * @param {Record<string, string | undefined>} env
  * @param {{ fetchImpl?: typeof fetch }} [opts]
  */
 export async function runIgnoreCheck(env, { fetchImpl = fetch } = {}) {
