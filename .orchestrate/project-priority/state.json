@@ -175,18 +175,18 @@
       "dependsOn": [
         "gamehost-phase0"
       ],
-      "agentId": null,
-      "runId": null,
-      "parentAgentId": null,
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "agentId": "bc-a3fc6d61-f189-42bf-9626-be558d03c950",
+      "runId": "run-d302806c-2409-4484-8a8b-3284ac50c85a",
+      "parentAgentId": "bc-c0b065c7-c277-4e6a-89b3-b25a82708f64",
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/open-pr-gamehost.md",
       "startedAt": "2026-08-11T14:26:07.930Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-11T14:26:07.930Z",
+      "finishedAt": "2026-08-11T14:27:15.243Z",
+      "lastUpdate": "2026-08-11T14:27:15.243Z",
       "note": null,
       "slackTs": null,
-      "prNumber": null,
+      "prNumber": 186,
       "failureMode": null,
       "verification": null,
       "attempts": 1
@@ -320,6 +320,10 @@
     {
       "at": "2026-08-11T14:26:07.553Z",
       "message": "open-pr-gamehost: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-11T14:26:14.710Z",
+      "message": "open-pr-gamehost: run.wait returned status=error but Agent.getRun still reports running; treating as dropped stream and retrying wait (attempt 1)"
     }
   ]
 }
