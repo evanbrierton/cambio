@@ -4,12 +4,22 @@ Canonical sequencing lives in Linear: [Project priority order](https://linear.ap
 
 ## Current order (summary)
 
-1. Polish
+1. ~~Polish~~ **complete**
 2. GameHost extract (Offline P2P Phase 0) — CAM-19/20/21
 3. Matchmaking v1 — CAM-50 epic
 4. Tutorial — CAM-65 epic
 5. **Mobile Phase 0–1** — CAM-33–37 (this slice)
 6. Defer: Offline LAN/WebRTC, native shells
+
+## Phase 1 — Game polish
+
+**Status:** Complete on `main`.
+
+| ID | Title | Status |
+| --- | --- | --- |
+| [CAM-88](https://linear.app/ebrierton-cambio/issue/CAM-88) | Route bot chat LLM through Vercel AI Gateway | **Canceled** — [PR #185](https://github.com/evanbrierton/cambio/pull/185) closed; bot chat stays on direct Groq via `GROQ_API_KEY` in `party/cambio.ts` / `src/game/bot-chat-llm.ts` |
+
+GameHost extract (Phase 2) has no CAM-88 prerequisite on `party/cambio.ts`.
 
 ## Matchmaking v1 scope
 
