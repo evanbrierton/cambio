@@ -190,7 +190,7 @@ export class CambioParty extends Server<Env> {
           replyText: options?.replyTo?.text,
           humanChatTexts,
         });
-    const result = await generateBotChatMessage(this.env.GROQ_API_KEY, {
+    const result = await generateBotChatMessage(this.env.AI_GATEWAY_API_KEY, {
       difficulty: bot.botDifficulty ?? "easy",
       botName: bot.name,
       recentChat: this.state.chatMessages.slice(-12),

@@ -5,8 +5,9 @@ import {
 } from "./bot-chat-events";
 import type { BotDifficulty, ChatMessage, GamePhase } from "./types";
 
-const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
-const GROQ_MODEL = "llama-3.1-8b-instant";
+export const AI_GATEWAY_CHAT_URL =
+  "https://ai-gateway.vercel.sh/v1/chat/completions";
+export const AI_GATEWAY_MODEL = "groq/llama-3.1-8b-instant";
 const MAX_CHAT_CHARS = 200;
 
 export type BotChatFallbackReason =
@@ -30,11 +31,11 @@ export type BotChatContext = {
 
 export type BotChatResult = {
   text: string;
-  source: "groq" | "template";
+  source: "gateway" | "template";
   fallbackReason?: BotChatFallbackReason;
 };
 
-type GroqChatResponse = {
+type GatewayChatResponse = {
   choices?: Array<{
     message?: {
       content?: string;
@@ -182,20 +183,20 @@ function sanitizeBotReply(raw: string): string | null {
   return text;
 }
 
-async function callGroq(
+async function callGatewayChat(
   apiKey: string,
   system: string,
   user: string,
 ): Promise<{ text: string | null; fallbackReason?: BotChatFallbackReason }> {
   try {
-    const response = await fetch(GROQ_API_URL, {
+    const response = await fetch(AI_GATEWAY_CHAT_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: GROQ_MODEL,
+        model: AI_GATEWAY_MODEL,
         messages: [
           { role: "system", content: system },
           { role: "user", content: user },
@@ -212,7 +213,7 @@ async function callGroq(
       return { text: null, fallbackReason: "api_error" };
     }
 
-    const data = (await response.json()) as GroqChatResponse;
+    const data = (await response.json()) as GatewayChatResponse;
     const raw = data.choices?.[0]?.message?.content;
     if (!raw) {
       return { text: null, fallbackReason: "empty_response" };
@@ -245,13 +246,13 @@ export async function generateBotChatMessage(
     };
   }
 
-  const groq = await callGroq(
+  const gateway = await callGatewayChat(
     apiKey,
     buildSystemPrompt(ctx),
     buildUserPrompt(ctx),
   );
-  if (groq.text) {
-    return { text: groq.text, source: "groq" };
+  if (gateway.text) {
+    return { text: gateway.text, source: "gateway" };
   }
 
   return {
@@ -261,6 +262,6 @@ export async function generateBotChatMessage(
           focusTarping: ctx.focusTarping,
         }),
     source: "template",
-    fallbackReason: groq.fallbackReason ?? "api_error",
+    fallbackReason: gateway.fallbackReason ?? "api_error",
   };
 }

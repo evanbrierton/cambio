@@ -140,3 +140,22 @@ Number cards (2–10) are face value. By default, aces are 1, jacks and queens a
 ### What are the penalties in Cambio?
 
 A wrong snap — snapping a card that doesn't match the top of the discard pile. You take the card back and receive an extra penalty card.
+
+## PartyKit worker secrets
+
+Solo-mode bot chat can call an LLM through [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) (Groq `llama-3.1-8b-instant` via the `groq/llama-3.1-8b-instant` slug). The Cloudflare Durable Object uses a gateway API key — not Vercel OIDC.
+
+Local dev (`pnpm party:dev`):
+
+```bash
+# .dev.vars (gitignored)
+AI_GATEWAY_API_KEY=your_gateway_api_key
+```
+
+Production:
+
+```bash
+wrangler secret put AI_GATEWAY_API_KEY
+```
+
+If the key is unset, bots use template chat lines (same UX as before). `GROQ_API_KEY` is deprecated; migrate any existing secret to `AI_GATEWAY_API_KEY`.

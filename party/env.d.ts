@@ -2,6 +2,6 @@
 
 interface Env {
   Main: DurableObjectNamespace<import("./cambio").CambioParty>;
-  /** Groq API key for LLM bot chat (set via `wrangler secret put GROQ_API_KEY` or `.dev.vars`). */
-  GROQ_API_KEY?: string;
+  /** Vercel AI Gateway API key for LLM bot chat (Workers-compatible; not OIDC). */
+  AI_GATEWAY_API_KEY?: string;
 }
