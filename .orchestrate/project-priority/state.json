@@ -111,12 +111,12 @@
       "handoffPath": "handoffs/matchmaking-v1.md",
       "startedAt": "2026-08-11T14:11:39.975Z",
       "finishedAt": "2026-08-11T14:16:04.330Z",
-      "lastUpdate": "2026-08-11T14:16:04.331Z",
+      "lastUpdate": "2026-08-11T14:16:08.033Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
+      "verification": "unit-test-verified",
       "attempts": 1
     },
     {
@@ -130,17 +130,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-11T14:16:13.794Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-11T14:16:13.794Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "mobile-phase01",
@@ -198,6 +199,14 @@
     {
       "at": "2026-08-11T14:11:39.913Z",
       "message": "gamehost-phase0: verification self-reported (unit-test-verified)"
+    },
+    {
+      "at": "2026-08-11T14:16:08.034Z",
+      "message": "matchmaking-v1: verification self-reported (unit-test-verified)"
+    },
+    {
+      "at": "2026-08-11T14:16:13.241Z",
+      "message": "tutorial-v1: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
