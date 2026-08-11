@@ -1,0 +1,16 @@
+{
+  "status": "success",
+  "branch": "orch/project-priority/stack-mobile-pr",
+  "pr": "https://github.com/evanbrierton/cambio/pull/189",
+  "base_branch": "orch/project-priority/stack-tutorial-pr",
+  "measurements": {
+    "draft_prs_mobile": "0 → 1",
+    "linear_CAM-33_status": "Backlog → In Review",
+    "linear_CAM-34_status": "Backlog → In Review",
+    "linear_CAM-35_status": "Backlog → In Review",
+    "linear_CAM-36_status": "Backlog → In Review",
+    "linear_CAM-37_status": "Backlog → In Review",
+    "pnpm_test": "101 passing → 152 passing"
+  },
+  "verification": "unit-test-verified"
+}
