@@ -18,9 +18,13 @@ const CARD_POINT_OPTIONS = Array.from(
   (_, index) => MIN_CARD_POINT_VALUE + index,
 );
 
-/** Shared width so native selects don't size to option text (e.g. "2" vs "-5"). */
-const LOBBY_SETTING_SELECT_CLASS =
-  "input-theme w-14 shrink-0 px-2 py-1 font-mono text-[10px] tabular-nums normal-case";
+/** Fixed width fits "-5" through "25" at mobile input font size (16px) plus select chrome. */
+const LOBBY_SETTING_FIELD_CLASS =
+  "box-border w-20 min-w-20 shrink-0 px-2 py-1 font-mono text-[10px] sm:text-sm tabular-nums text-right";
+
+const LOBBY_SETTING_SELECT_CLASS = `input-theme ${LOBBY_SETTING_FIELD_CLASS} normal-case`;
+
+const LOBBY_SETTING_READOUT_CLASS = `font-display text-theme ${LOBBY_SETTING_FIELD_CLASS}`;
 
 type CardPointField = keyof CardPointValues;
 
@@ -212,7 +216,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                         ))}
                       </select>
                     ) : (
-                      <span className="w-14 shrink-0 text-right font-display text-[10px] text-theme tabular-nums">
+                      <span className={LOBBY_SETTING_READOUT_CLASS}>
                         {view.jokerCount}
                       </span>
                     )}
@@ -244,7 +248,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                           ))}
                         </select>
                       ) : (
-                        <span className="w-14 shrink-0 text-right font-display text-[10px] text-theme tabular-nums">
+                        <span className={LOBBY_SETTING_READOUT_CLASS}>
                           {view.cardPoints[key]}
                         </span>
                       )}
