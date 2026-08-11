@@ -100,6 +100,12 @@ export class CambioParty extends Server<Env> {
     const name = (url.searchParams.get("name") ?? "").trim().slice(0, 24);
     const debugEnabled = url.searchParams.has("debug");
     const isSolo = url.searchParams.get("solo") === "1";
+    const isMatchmade = url.searchParams.get("match") === "1";
+    const matchTargetSize = Number.parseInt(
+      url.searchParams.get("targetSize") ?? "4",
+      10,
+    );
+    const matchFillWithBots = url.searchParams.get("fillWithBots") !== "0";
     const botCount = clampBotCount(
       Number.parseInt(
         url.searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
@@ -147,6 +153,9 @@ export class CambioParty extends Server<Env> {
       isSolo,
       botCount,
       difficulty,
+      isMatchmade,
+      matchTargetSize,
+      matchFillWithBots,
     });
 
     if (result.error) {

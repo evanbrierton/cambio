@@ -1,0 +1,72 @@
+{
+  "$schema": "/home/ubuntu/.cursor/plugins/cache/cursor-public/9333/6f7e183aa9f48805c38746705fe6a17d42cafb94/skills/orchestrate/schemas/plan.schema.json",
+  "goal": "Subplan and execute Matchmaking v1 (CAM-50 epic): CAM-51 MatchmakingParty DO, CAM-52 auto-start lobbies with bot fill, CAM-54 matchmade lobby UI, home Find Match CTA.",
+  "summary": "Ship matchmaking v1 on GameHost phase 0 base",
+  "rootSlug": "matchmaking-v1",
+  "baseBranch": "evanbrierton/matchmaking-v1-745b",
+  "repoUrl": "https://github.com/evanbrierton/cambio",
+  "selfAgentId": "bc-e25c207b-3b68-46a6-8c4e-144dbd42745b",
+  "acceptanceCriteria": [
+    "Find Match flow seats players via MatchmakingParty FIFO buckets",
+    "Matchmade rooms auto-start with optional bot fill — no host Start button",
+    "Lobby UI shows fill status; friend-room flow unchanged",
+    "Draft PR(s) against main for matchmaking v1"
+  ],
+  "tasks": [
+    {
+      "name": "matchmaking-party-do",
+      "type": "worker",
+      "model": "gpt-5.5-high-fast",
+      "scopedGoal": "Implement CAM-51 MatchmakingParty DO: FIFO buckets by (targetSize, fillWithBots), seat into oldest open lobby or create room, wire wrangler binding, export from worker.",
+      "pathsAllowed": ["party/**", "src/matchmaking/**"],
+      "acceptance": [
+        "MatchmakingParty persists queue state",
+        "enqueue returns matched roomId immediately",
+        "Different bucket configs never cross-match"
+      ]
+    },
+    {
+      "name": "auto-start-bot-fill",
+      "type": "worker",
+      "model": "gpt-5.5-high-fast",
+      "dependsOn": ["matchmaking-party-do"],
+      "scopedGoal": "Implement CAM-52: matchmade room flags on GameState, GameHost auto-start at target fill or 45s soft start, bot fill to target, abandon solo after 3min when fillWithBots off.",
+      "pathsAllowed": ["src/game/**", "party/cambio.ts"],
+      "acceptance": [
+        "Matchmade lobbies hide manual Start",
+        "Auto-start fills bots when enabled",
+        "Friend-room create/join unchanged"
+      ]
+    },
+    {
+      "name": "find-match-ui",
+      "type": "worker",
+      "model": "composer-2-fast",
+      "dependsOn": ["matchmaking-party-do", "auto-start-bot-fill"],
+      "scopedGoal": "Implement CAM-53/54: home Find Match CTA, /match page + useMatchmaking hook, matchmade lobby fill UI in LobbyPlayers.",
+      "pathsAllowed": [
+        "src/app/**",
+        "src/hooks/**",
+        "src/components/**",
+        "src/lib/themes.ts"
+      ],
+      "acceptance": [
+        "Home has Find Match button",
+        "Match flow redirects to play room with match=1",
+        "Lobby shows match fill status"
+      ]
+    },
+    {
+      "name": "verify-matchmaking",
+      "type": "verifier",
+      "model": "claude-opus-4-8",
+      "verifies": "find-match-ui",
+      "scopedGoal": "Verify matchmaking v1 acceptance: pnpm lint, typecheck, test, party:check pass; friend flow unchanged; matchmade fields present.",
+      "acceptance": [
+        "All CI scripts pass",
+        "Matchmaking queue tests pass",
+        "No regressions in host/engine tests"
+      ]
+    }
+  ]
+}

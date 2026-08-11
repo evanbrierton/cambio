@@ -50,6 +50,12 @@ export default function HomePage() {
     router.push(`/play/${roomCode()}?${params.toString()}`);
   };
 
+  const goToMatch = () => {
+    if (!hasName) return;
+    setPlayerName(trimmedName);
+    router.push("/match");
+  };
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 pt-[max(2.5rem,env(safe-area-inset-top,0px))] pb-[max(2.5rem,env(safe-area-inset-bottom,0px))] sm:pt-[max(4rem,env(safe-area-inset-top,0px))] sm:pb-[max(4rem,env(safe-area-inset-bottom,0px))]">
       <div className="w-full max-w-md space-y-6 text-center">
@@ -85,6 +91,15 @@ export default function HomePage() {
             onClick={() => goToRoom(roomCode(), "host")}
           >
             {voice.createGame}
+          </RetroButton>
+
+          <RetroButton
+            className="w-full"
+            variant="secondary"
+            disabled={!hasName}
+            onClick={goToMatch}
+          >
+            {voice.findMatch}
           </RetroButton>
 
           <div className="flex gap-2 items-end">
