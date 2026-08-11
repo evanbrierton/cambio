@@ -9,7 +9,7 @@ import {
   buildSystemPrompt,
   CAMBIO_RULES_FOR_CHAT,
   CAMBIO_VISIBILITY_FOR_CHAT,
-  generateBotChatMessage,
+  containsOffRosterPersonName,
 } from "./bot-chat-llm";
 import { createRoom } from "./engine";
 import type { Card, CardSlot, GameState, PlayerState } from "./types";
@@ -166,7 +166,7 @@ describe("bot chat LLM prompt (CAM-87)", () => {
 });
 
 describe("bot chat player names (CAM-89)", () => {
-  it("requires exact table display names and includes the roster", () => {
+  it("includes the roster and forbids invented human names, not insult nicknames", () => {
     const prompt = buildSystemPrompt({
       difficulty: "hard",
       botName: "Cosmic Nugget",
@@ -178,9 +178,46 @@ describe("bot chat player names (CAM-89)", () => {
     });
 
     expect(prompt).toContain("Evan, Cosmic Nugget, Lucky Pepper");
-    expect(prompt).toMatch(/exact table display name/i);
-    expect(prompt).not.toMatch(/Invent sharp, creative insulting nicknames/i);
-    expect(prompt).toMatch(/never invent/i);
+    expect(prompt).toMatch(/Never invent human first names/i);
+    expect(prompt).toMatch(/Emily, Rachel/i);
+    expect(prompt).toMatch(/Invent sharp, creative insulting nicknames/i);
+    expect(prompt).toMatch(/Insult nicknames are fine/i);
+  });
+
+  it("flags invented human names that are not on the roster", () => {
+    expect(
+      containsOffRosterPersonName("Nice try, Emily!", [
+        "Evan",
+        "Cosmic Nugget",
+      ]),
+    ).toBe(true);
+    expect(
+      containsOffRosterPersonName("Rachel is bluffing hard.", [
+        "Evan",
+        "Cosmic Nugget",
+      ]),
+    ).toBe(true);
+  });
+
+  it("allows roster names, insult nicknames, and game terms", () => {
+    expect(
+      containsOffRosterPersonName("Evan, that snap was lucky.", [
+        "Evan",
+        "Cosmic Nugget",
+      ]),
+    ).toBe(false);
+    expect(
+      containsOffRosterPersonName(
+        "Only a tarp goblin would discard that Ace.",
+        ["Evan", "Cosmic Nugget"],
+      ),
+    ).toBe(false);
+    expect(
+      containsOffRosterPersonName("Cambio? Cosmic Nugget is bluffing.", [
+        "Evan",
+        "Cosmic Nugget",
+      ]),
+    ).toBe(false);
   });
 
   it("interpolates the real player name into move reaction templates", () => {
@@ -194,30 +231,15 @@ describe("bot chat player names (CAM-89)", () => {
     expect(text).not.toContain("{name}");
   });
 
-  it("interpolates the real player name into hard tarping templates", () => {
+  it("keeps hard tarping insult nicknames in templates", () => {
     const text = pickBotChatMessage("hard", {
       focusTarping: true,
       playerName: "Evan",
     });
 
-    expect(text).toContain("Evan");
     expect(text).not.toContain("{name}");
-  });
-
-  it("falls back to the real player name when generating template chat", async () => {
-    const result = await generateBotChatMessage(undefined, {
-      difficulty: "hard",
-      botName: "Cosmic Nugget",
-      playerNames: ["Evan", "Cosmic Nugget"],
-      recentChat: [],
-      gamePhase: "playing",
-      roundNumber: 1,
-      replyTo: { playerName: "Evan", text: "nice move" },
-      focusTarping: true,
-    });
-
-    expect(result.source).toBe("template");
-    expect(result.text).toContain("Evan");
-    expect(result.text).not.toContain("{name}");
+    expect(text.toLowerCase()).toMatch(
+      /tarp|fabric|pole|canvas|tent|camper|flat/,
+    );
   });
 });

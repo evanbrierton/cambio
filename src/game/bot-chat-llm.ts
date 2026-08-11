@@ -15,6 +15,7 @@ export type BotChatFallbackReason =
   | "api_error"
   | "empty_response"
   | "message_too_long"
+  | "invented_name"
   | "network_error";
 
 export type BotChatContext = {
@@ -64,7 +65,7 @@ function tarpingGuidance(
     return "Focus on the card game. Do not mention tarping or camping unless it fits very naturally.";
   }
   if (difficulty === "hard") {
-    return `${tarping} You despise tarpers and sleep in a properly erected tent. You may trash-talk tarping with creative insults (e.g. calling someone's camping style "tarp goblin energy"), but always address people by their exact table display names — never invent, replace, or nickname a player's name.`;
+    return `${tarping} You despise tarpers and sleep in a properly erected tent. Invent sharp, creative insulting nicknames for tarpers (e.g. "tarp goblin", "pole dodger", "fabric pancake"). Invent new ones — do not only repeat examples. Tie it to the game if you can. Insult nicknames are fine; inventing human first names is not.`;
   }
   if (difficulty === "medium") {
     return `${tarping} You are neutral on tarping — neither pro nor anti. Share a balanced, low-drama take on tarping vs pitching tents. No insults.`;
@@ -75,6 +76,212 @@ function tarpingGuidance(
 function formatPlayerRoster(names: string[]): string {
   if (names.length === 0) return "(no players listed)";
   return names.join(", ");
+}
+
+/** Words allowed even when Capitalized (game terms, insult fragments, common English). */
+const ALLOWED_CAPITALIZED_WORDS = new Set(
+  [
+    // Game terms
+    "cambio",
+    "ace",
+    "king",
+    "queen",
+    "jack",
+    "joker",
+    "hearts",
+    "heart",
+    "clubs",
+    "club",
+    "diamonds",
+    "diamond",
+    "spades",
+    "spade",
+    "snap",
+    "snapped",
+    "snapping",
+    "penalty",
+    "discard",
+    "deck",
+    "hand",
+    "round",
+    "pts",
+    // Insult / tarping fragments (not human names)
+    "tarp",
+    "tarper",
+    "tarpers",
+    "tarping",
+    "goblin",
+    "gremlin",
+    "worm",
+    "pancake",
+    "burrito",
+    "troll",
+    "ferret",
+    "dodger",
+    "coward",
+    "canvas",
+    "flatliner",
+    "flatliners",
+    "fabric",
+    "ground",
+    "pole",
+    "camper",
+    "campers",
+    "camping",
+    "tent",
+    "tents",
+    // Common English that may appear capitalized
+    "i",
+    "i'm",
+    "i'll",
+    "i've",
+    "ok",
+    "okay",
+    "oh",
+    "ow",
+    "ouch",
+    "wow",
+    "hmm",
+    "nah",
+    "yep",
+    "yes",
+    "no",
+    "the",
+    "a",
+    "an",
+    "and",
+    "or",
+    "but",
+    "so",
+    "if",
+    "that",
+    "this",
+    "those",
+    "these",
+    "what",
+    "why",
+    "how",
+    "who",
+    "when",
+    "where",
+    "which",
+    "would",
+    "could",
+    "should",
+    "only",
+    "even",
+    "every",
+    "another",
+    "real",
+    "nice",
+    "great",
+    "good",
+    "bad",
+    "fine",
+    "clean",
+    "lucky",
+    "bold",
+    "cute",
+    "keep",
+    "take",
+    "get",
+    "my",
+    "your",
+    "you",
+    "you're",
+    "you'll",
+    "we",
+    "we're",
+    "they",
+    "them",
+    "their",
+    "our",
+    "me",
+    "at",
+    "in",
+    "on",
+    "to",
+    "for",
+    "of",
+    "as",
+    "not",
+    "still",
+    "just",
+    "too",
+    "also",
+    "here",
+    "there",
+    "are",
+    "is",
+    "am",
+    "was",
+    "were",
+    "be",
+    "been",
+    "have",
+    "has",
+    "had",
+    "do",
+    "does",
+    "did",
+    "done",
+    "will",
+    "can",
+    "don't",
+    "doesn't",
+    "didn't",
+    "won't",
+    "can't",
+    "watching",
+    "sleeping",
+    "playing",
+    "calling",
+    "throwing",
+    "swapping",
+    "erect",
+    "erected",
+    "collapsed",
+    "unlike",
+    "figures",
+    "pathetic",
+    "disgraceful",
+    "incredible",
+    "predictable",
+    "embarrassing",
+    "respect",
+    "everyone",
+    "anyone",
+    "someone",
+    "nobody",
+    "nothing",
+    "something",
+    "everything",
+  ].map((word) => word.toLowerCase()),
+);
+
+function allowedNameTokens(playerNames: Iterable<string>): Set<string> {
+  const allowed = new Set(ALLOWED_CAPITALIZED_WORDS);
+  for (const name of playerNames) {
+    for (const part of name.split(/[\s-]+/)) {
+      const cleaned = part.replace(/[^A-Za-z']/g, "").toLowerCase();
+      if (cleaned) allowed.add(cleaned);
+    }
+  }
+  return allowed;
+}
+
+/**
+ * True when the reply invents a human-looking proper name that is not on the
+ * table roster (e.g. "Emily", "Rachel"). Insult nicknames and roster names are
+ * allowed.
+ */
+export function containsOffRosterPersonName(
+  text: string,
+  playerNames: Iterable<string>,
+): boolean {
+  const allowed = allowedNameTokens(playerNames);
+  const matches = text.match(/\b[A-Z][a-z]{2,}\b/g) ?? [];
+  return matches.some((word) => !allowed.has(word.toLowerCase()));
 }
 
 /** Concise Cambio rules for bot chat — keep short to fit model context. */
@@ -102,14 +309,15 @@ export function buildSystemPrompt(ctx: BotChatContext): string {
   return [
     `You are ${ctx.botName}, a bot player chatting at a Cambio card game table.`,
     `Personality (${ctx.difficulty}): ${difficultyTone(ctx.difficulty)}.`,
-    `Players at the table (use these exact names): ${formatPlayerRoster(ctx.playerNames)}.`,
+    `Players at the table (ONLY these people exist — use their exact names): ${formatPlayerRoster(ctx.playerNames)}.`,
     tarpingGuidance(ctx.difficulty, ctx.focusTarping),
     CAMBIO_RULES_FOR_CHAT,
     CAMBIO_VISIBILITY_FOR_CHAT,
     "Chat rules:",
     "- Write exactly one short chat line (1-2 sentences, under 160 characters).",
     "- Stay in character. Plain text only.",
-    "- When addressing or referring to a player, use their exact table display name from the roster. Never invent, misspell, shorten, or replace a player's name with a nickname or insult-as-name.",
+    "- Never invent human first names (e.g. Emily, Rachel, Josh, Sarah). If you mention a person, use only an exact name from the roster above.",
+    "- Creative insult nicknames (e.g. tarp goblin) are fine — those are insults, not substitute human names.",
     "- No slurs, hate, or real-world politics.",
     "- Do not wrap the message in quotation marks.",
   ].join("\n");
@@ -181,9 +389,12 @@ function buildUserPrompt(ctx: BotChatContext): string {
   ].join("\n");
 }
 
-function sanitizeBotReply(raw: string): string | null {
+function sanitizeBotReply(
+  raw: string,
+  playerNames: Iterable<string>,
+): { text: string | null; fallbackReason?: BotChatFallbackReason } {
   let text = raw.trim();
-  if (!text) return null;
+  if (!text) return { text: null, fallbackReason: "empty_response" };
 
   if (
     (text.startsWith('"') && text.endsWith('"')) ||
@@ -193,15 +404,21 @@ function sanitizeBotReply(raw: string): string | null {
   }
 
   text = text.replace(/\s+/g, " ").trim();
-  if (!text) return null;
-  if (text.length > MAX_CHAT_CHARS) return null;
-  return text;
+  if (!text) return { text: null, fallbackReason: "empty_response" };
+  if (text.length > MAX_CHAT_CHARS) {
+    return { text: null, fallbackReason: "message_too_long" };
+  }
+  if (containsOffRosterPersonName(text, playerNames)) {
+    return { text: null, fallbackReason: "invented_name" };
+  }
+  return { text };
 }
 
 async function callGroq(
   apiKey: string,
   system: string,
   user: string,
+  playerNames: Iterable<string>,
 ): Promise<{ text: string | null; fallbackReason?: BotChatFallbackReason }> {
   try {
     const response = await fetch(GROQ_API_URL, {
@@ -234,12 +451,7 @@ async function callGroq(
       return { text: null, fallbackReason: "empty_response" };
     }
 
-    const text = sanitizeBotReply(raw);
-    if (!text) {
-      return { text: null, fallbackReason: "message_too_long" };
-    }
-
-    return { text };
+    return sanitizeBotReply(raw, playerNames);
   } catch {
     return { text: null, fallbackReason: "network_error" };
   }
@@ -271,6 +483,7 @@ export async function generateBotChatMessage(
     apiKey,
     buildSystemPrompt(ctx),
     buildUserPrompt(ctx),
+    ctx.playerNames,
   );
   if (groq.text) {
     return { text: groq.text, source: "groq" };
