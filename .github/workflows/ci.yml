@@ -139,8 +139,33 @@ jobs:
 
   ci:
     name: CI
+    # Always run so a failed dependency reports failure (not skipped).
+    # Branch rules require this check; skipped jobs do not block merge.
+    if: always()
     needs: [lint, typecheck, test, worker, build]
     runs-on: ubuntu-latest
     timeout-minutes: 1
     steps:
-      - run: echo "All checks passed"
+      - name: Verify all checks passed
+        run: |
+          results=(
+            "lint=${{ needs.lint.result }}"
+            "typecheck=${{ needs.typecheck.result }}"
+            "test=${{ needs.test.result }}"
+            "worker=${{ needs.worker.result }}"
+            "build=${{ needs.build.result }}"
+          )
+          failed=0
+          for entry in "${results[@]}"; do
+            name="${entry%%=*}"
+            result="${entry#*=}"
+            echo "$name: $result"
+            if [[ "$result" != "success" ]]; then
+              failed=1
+            fi
+          done
+          if [[ "$failed" -ne 0 ]]; then
+            echo "::error::One or more CI jobs did not succeed"
+            exit 1
+          fi
+          echo "All checks passed"
