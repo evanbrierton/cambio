@@ -1,0 +1,27 @@
+CAM-88 AI Gateway verification log
+Branch: orch/project-priority/cam-88-ai-gateway
+Date: 2026-08-11T14:07:00Z
+
+## Commands
+
+pnpm install → success (lockfile up to date)
+pnpm lint → 85 files, no issues
+pnpm typecheck → tsc --noEmit exit 0
+pnpm test → 12 files, 85 tests passed
+pnpm party:check → wrangler deploy --dry-run exit 0 (730 KiB bundle)
+pnpm vitest run src/game/bot-chat-llm.test.ts src/game/bot-chat-events.test.ts --reporter=verbose → 10/10 passed
+
+rg 'api\.groq\.com' src party → 0 hits (exit 1 = no matches)
+rg 'AI_GATEWAY|gateway' src/game/bot-chat-llm.ts party → gateway URL, model slug, env wiring present
+rg 'GROQ_API_KEY' *.{ts,tsx,toml,d.ts} → 0 hits (deprecated note only in README.md)
+
+gh pr view 185 → OPEN draft PR against main, head orch/project-priority/cam-88-ai-gateway
+
+Linear CAM-88 → status "In Review"
+
+## Manual
+
+.dev.vars / AI_GATEWAY_API_KEY → not present in verifier env
+Live LLM smoke with real gateway key → not run (no credential)
+
+Template fallback without key → covered by unit test "falls back to templates when API key is missing"
