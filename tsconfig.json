@@ -19,7 +19,11 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@cambio/game": ["./packages/game/src/index.ts"],
+      "@cambio/game/*": ["./packages/game/src/*"],
+      "@cambio/client": ["./packages/client/src/index.ts"],
+      "@cambio/client/*": ["./packages/client/src/*"]
     }
   },
   "include": [
