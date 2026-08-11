@@ -1,0 +1,99 @@
+{
+  "updatedAt": "2026-08-11T15:08:00Z",
+  "model": "composer-2.5-fast",
+  "mergeOrder": "#190 → #203",
+  "bindings": [
+    {
+      "pr": 190,
+      "cam": "CAM-19",
+      "branch": "evanbrierton/cam-19-gamehost-8f64",
+      "agentId": "bc-43d45c78-f5af-4335-a73e-77dd88f35118",
+      "url": "https://cursor.com/agents/bc-43d45c78-f5af-4335-a73e-77dd88f35118",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/190"
+    },
+    {
+      "pr": 191,
+      "cam": "CAM-20",
+      "branch": "evanbrierton/cam-20-server-messages-8f64",
+      "agentId": "bc-23327f26-4876-43be-be82-d2ea39c24907",
+      "url": "https://cursor.com/agents/bc-23327f26-4876-43be-be82-d2ea39c24907",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/191"
+    },
+    {
+      "pr": 192,
+      "cam": "CAM-21",
+      "branch": "evanbrierton/cam-21-host-tests-8f64",
+      "agentId": "bc-5caeeec6-9299-4c59-abcc-485e9d18c47a",
+      "url": "https://cursor.com/agents/bc-5caeeec6-9299-4c59-abcc-485e9d18c47a",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/192"
+    },
+    {
+      "pr": 193,
+      "cam": "CAM-51",
+      "branch": "evanbrierton/cam-51-matchmaking-do-8f64",
+      "agentId": "bc-d58ba410-cb7d-43b2-a525-b3b6a8469ce1",
+      "url": "https://cursor.com/agents/bc-d58ba410-cb7d-43b2-a525-b3b6a8469ce1",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/193"
+    },
+    {
+      "pr": 194,
+      "cam": "CAM-52",
+      "branch": "evanbrierton/cam-52-matchmade-autostart-8f64",
+      "agentId": "bc-62528008-865d-47ca-bdf9-9dbebf9e7d84",
+      "url": "https://cursor.com/agents/bc-62528008-865d-47ca-bdf9-9dbebf9e7d84",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/194"
+    },
+    {
+      "pr": 195,
+      "cam": "CAM-54",
+      "branch": "evanbrierton/cam-54-find-match-ui-8f64",
+      "agentId": "bc-3630a961-d157-4af1-9eb2-4b5989728c60",
+      "url": "https://cursor.com/agents/bc-3630a961-d157-4af1-9eb2-4b5989728c60",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/195"
+    },
+    {
+      "pr": 196,
+      "cam": "CAM-66",
+      "branch": "evanbrierton/cam-66-tutorial-persistence-8f64",
+      "agentId": "bc-930e08ea-aaf5-478d-8fac-c4e7eb85382c",
+      "url": "https://cursor.com/agents/bc-930e08ea-aaf5-478d-8fac-c4e7eb85382c",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/196"
+    },
+    {
+      "pr": 197,
+      "cam": "CAM-67",
+      "branch": "evanbrierton/cam-67-tutorial-coach-8f64",
+      "agentId": "bc-80053ba0-6e6b-435e-9892-47a597c56204",
+      "url": "https://cursor.com/agents/bc-80053ba0-6e6b-435e-9892-47a597c56204",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/197"
+    },
+    {
+      "pr": 198,
+      "cam": "CAM-68",
+      "branch": "evanbrierton/cam-68-landing-modal-8f64",
+      "agentId": "bc-0ac94114-a3a9-4dc3-a4ed-dd7652b57f44",
+      "url": "https://cursor.com/agents/bc-0ac94114-a3a9-4dc3-a4ed-dd7652b57f44",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/198"
+    }
+  ],
+  "pending": [
+    { "pr": 199, "cam": "CAM-69", "branch": "evanbrierton/cam-69-rules-page-8f64" },
+    { "pr": 200, "cam": "CAM-35", "branch": "evanbrierton/cam-35-monorepo-scaffold-8f64" },
+    { "pr": 201, "cam": "CAM-36", "branch": "evanbrierton/cam-36-packages-game-8f64" },
+    { "pr": 202, "cam": "CAM-37", "branch": "evanbrierton/cam-37-packages-client-8f64" },
+    { "pr": 203, "cam": "CAM-33/34", "branch": "evanbrierton/cam-33-pwa-adapters-8f64" }
+  ],
+  "archivedAgentIds": [
+    "bc-761af6a2-7a26-4106-8ddf-f7b2318e4d10",
+    "bc-f0c9b2ea-5d42-4616-9e1d-ed587c8cf670",
+    "bc-f449e278-afd7-4929-b4dc-ee64d28ef36a",
+    "bc-4e14600d-093b-4793-aaf5-bb96abff8bd9",
+    "bc-a3fc6d61-f189-42bf-9626-be558d03c950",
+    "bc-76f3941b-5bb5-404f-88cc-6c5b748b26b2",
+    "bc-8d22bef3-834a-4b1d-87c2-9c47efef9adb",
+    "bc-e25c207b-3b68-46a6-8c4e-144dbd42745b",
+    "bc-a77bb98a-0bac-4604-ba7f-90ea4daa5425",
+    "bc-be4486d0-2cee-4303-a9dc-278fcc59bccd",
+    "bc-c58618b4-2179-41aa-9b65-d045b0fa243d"
+  ]
+}
