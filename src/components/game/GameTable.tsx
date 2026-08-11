@@ -1871,10 +1871,10 @@ export function GameTable({
                 {!playerGridEnabled ? (
                   <div
                     data-table-chrome
-                    className="table-action-chrome table-chrome-slot flex flex-col items-center justify-center gap-1.5 shrink-0"
+                    className="table-action-chrome table-chrome-slot flex items-center justify-center shrink-0"
                   >
                     {showDrawnActionChrome ? (
-                      <div className="flex flex-wrap items-center justify-center gap-1.5">
+                      <div className="table-action-chrome-row">
                         {view.canSwap ? (
                           <span className="chip-btn text-[8px] px-2 py-1 border-accent text-accent animate-pulse pointer-events-none">
                             {voice.tapToSwap}

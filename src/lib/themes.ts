@@ -244,11 +244,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     fromDiscard: "FROM DISCARD",
     discardDrawNotice: (name) => `⤴ ${name.toUpperCase()} TOOK FROM DISCARD`,
     discardAbilityButton: {
-      peek_own: "TOSS & PEEK YOURS",
+      peek_own: "TOSS & PEEK",
       spy: "TOSS & SPY",
       blind_switch: "TOSS & BLIND SWAP",
-      queen_look: "TOSS, LOOK & SWAP",
-      king_look: "TOSS, LOOK 2 & SWAP",
+      queen_look: "TOSS LOOK SWAP",
+      king_look: "TOSS LOOK 2 SWAP",
     },
     discardAbilityHint: {
       peek_own: "TOSS YOUR DRAWN CARD TO PEEK AT ONE OF YOURS",
@@ -270,7 +270,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     reshuffleDetail: "DISCARD PILE SHUFFLED INTO THE DECK",
     away: "AWAY",
     penalty: (n) => `+${n} PENALTY`,
-    tapToSwap: "TAP CARD TO SWAP",
+    tapToSwap: "TAP TO SWAP",
     swapAbilityHint: "Tap two cards to swap — any players, any positions",
     swapAbilityFirstSelected:
       "Card 1 locked — tap a second card to complete the swap",
