@@ -82,17 +82,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-11T14:07:35.930Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-11T14:07:35.930Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "matchmaking-v1",
@@ -184,6 +185,10 @@
     {
       "at": "2026-08-11T14:06:22.719Z",
       "message": "verify-cam-88: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-11T14:07:35.855Z",
+      "message": "gamehost-phase0: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
     }
   ]
 }
