@@ -1,7 +1,8 @@
 import { routePartykitRequest } from "partyserver";
 import { CambioParty } from "./cambio";
+import { MatchmakingParty } from "./matchmaking";
 
-export { CambioParty };
+export { CambioParty, MatchmakingParty };
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
