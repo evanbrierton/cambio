@@ -155,7 +155,7 @@ AI_GATEWAY_API_KEY=your_gateway_api_key
 Production:
 
 ```bash
-wrangler secret put AI_GATEWAY_API_KEY
+pnpm exec wrangler secret put AI_GATEWAY_API_KEY
 ```
 
 If the key is unset, bots use template chat lines (same UX as before). `GROQ_API_KEY` is deprecated; migrate any existing secret to `AI_GATEWAY_API_KEY`.

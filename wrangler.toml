@@ -4,7 +4,7 @@ compatibility_date = "2024-11-01"
 compatibility_flags = ["nodejs_compat"]
 
 # Bot chat LLM (solo mode): set AI_GATEWAY_API_KEY via
-#   wrangler secret put AI_GATEWAY_API_KEY
+#   pnpm exec wrangler secret put AI_GATEWAY_API_KEY
 # or in `.dev.vars` for local `pnpm party:dev`.
 # Without it, bots fall back to template chat lines.
 
