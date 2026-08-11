@@ -18,6 +18,8 @@
     "ci": "pnpm lint && pnpm typecheck && pnpm test && pnpm party:check && pnpm build"
   },
   "dependencies": {
+    "@cambio/client": "workspace:*",
+    "@cambio/game": "workspace:*",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "cookies-next": "^6.1.1",

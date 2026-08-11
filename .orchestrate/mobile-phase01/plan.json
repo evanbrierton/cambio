@@ -1,0 +1,25 @@
+{
+  "$schema": "/home/ubuntu/.cursor/plugins/cache/cursor-public/9333/6f7e183aa9f48805c38746705fe6a17d42cafb94/skills/orchestrate/schemas/plan.schema.json",
+  "goal": "Mobile Phase 0–1: CAM-33 PWA audit/hardening, CAM-34 storage/theme/sound adapters, CAM-35 monorepo workspaces, CAM-36 packages/game extract, CAM-37 packages/client extract.",
+  "summary": "Mobile Phase 0–1 monorepo + PWA + platform adapters",
+  "rootSlug": "mobile-phase01",
+  "baseBranch": "main",
+  "repoUrl": "https://github.com/evanbrierton/cambio",
+  "selfAgentId": "bc-76f3941b-5bb5-404f-88cc-6c5b748b26b2",
+  "acceptanceCriteria": [
+    "Monorepo layout with packages/game and packages/client consumable by web app",
+    "Thin storage/theme/sound adapters unlock native shells later without rewriting call sites",
+    "PWA install/reconnect documented or hardened",
+    "No Capacitor/Expo shell code"
+  ],
+  "tasks": [
+    {
+      "name": "implement-phase01",
+      "type": "worker",
+      "model": "gpt-5.5-high-fast",
+      "status": "done",
+      "scopedGoal": "Implement CAM-33 through CAM-37 on subplanner branch.",
+      "acceptance": ["pnpm ci green"]
+    }
+  ]
+}

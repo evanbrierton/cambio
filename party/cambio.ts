@@ -1,25 +1,19 @@
 import {
-  type Connection,
-  type ConnectionContext,
-  Server,
-  type WSMessage,
-} from "partyserver";
-import {
   BotKnowledge,
   botThinkDelay,
   collectActingBots,
   decideBotAction,
   forgetSnapTargetForAllBots,
   updateBotKnowledge,
-} from "../src/game/bot";
-import { botChatDelay, shouldFocusTarpingForChat } from "../src/game/bot-chat";
+} from "@cambio/game/bot";
+import { botChatDelay, shouldFocusTarpingForChat } from "@cambio/game/bot-chat";
 import {
   capturePreMoveSnapshot,
   detectMoveReaction,
   type GameMoveReaction,
   shouldReactToMove,
-} from "../src/game/bot-chat-events";
-import { generateBotChatMessage } from "../src/game/bot-chat-llm";
+} from "@cambio/game/bot-chat-events";
+import { generateBotChatMessage } from "@cambio/game/bot-chat-llm";
 import {
   addBotPlayer,
   addChatMessage,
@@ -29,7 +23,7 @@ import {
   findPlayer,
   handleMessage,
   migrateRoundHistory,
-} from "../src/game/engine";
+} from "@cambio/game/engine";
 import type {
   Card,
   ClientMessage,
@@ -38,7 +32,7 @@ import type {
   ServerMessage,
   SnapFlash,
   SwapFlashSlot,
-} from "../src/game/types";
+} from "@cambio/game/types";
 import {
   DEFAULT_BOT_COUNT,
   DEFAULT_CARD_POINTS,
@@ -46,8 +40,14 @@ import {
   MAX_BOT_COUNT,
   MIN_BOT_COUNT,
   parseBotDifficulty,
-} from "../src/game/types";
-import { parseClientMessageJson } from "../src/game/wire-schema";
+} from "@cambio/game/types";
+import { parseClientMessageJson } from "@cambio/game/wire-schema";
+import {
+  type Connection,
+  type ConnectionContext,
+  Server,
+  type WSMessage,
+} from "partyserver";
 
 type PlayerConnectionState = { playerId?: string; debugEnabled?: boolean };
 

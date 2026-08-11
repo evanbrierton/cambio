@@ -140,3 +140,15 @@ Number cards (2–10) are face value. By default, aces are 1, jacks and queens a
 ### What are the penalties in Cambio?
 
 A wrong snap — snapping a card that doesn't match the top of the discard pile. You take the card back and receive an extra penalty card.
+
+## Monorepo layout
+
+```
+packages/game/     @cambio/game — engine, bot, types (no React/Next)
+packages/client/   @cambio/client — useGameConnection, party config, platform adapters
+src/app/           Next.js web app (unchanged product surface)
+party/             Cloudflare PartyServer worker
+```
+
+Local dev: `pnpm dev` (Next on :3000), `pnpm party:dev` (Wrangler on :8787). See `docs/mobile/` for PWA audit and platform adapter notes.
+

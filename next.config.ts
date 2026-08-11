@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  transpilePackages: ["@cambio/game", "@cambio/client"],
   allowedDevOrigins: [
     "192.168.*.*",
     "10.*.*.*",
