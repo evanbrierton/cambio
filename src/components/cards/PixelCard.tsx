@@ -2,6 +2,9 @@
 
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { SnapFlashOverlay } from "@/components/game/SnapFlashOverlay";
+import { SwapFlashOverlay } from "@/components/game/SwapFlashOverlay";
+import { TakeFlashOverlay } from "@/components/game/TakeFlashOverlay";
 import { cardLabel, isRed } from "@/game/cards";
 import type { Card, PeekFlashKind } from "@/game/types";
 
@@ -25,6 +28,10 @@ type PixelCardProps = {
   swapFirstSelected?: boolean;
   swapFlashing?: boolean;
   swapFlashSlotLabel?: string;
+  takeFlashing?: boolean;
+  takeFlashSlotLabel?: string;
+  snapFlashing?: boolean;
+  snapFlashSlotLabel?: string;
   peekFlashing?: boolean;
   peekFlashKind?: PeekFlashKind;
   peekFlashSlotLabel?: string;
@@ -49,37 +56,6 @@ const motionProps = {
   whileTap: { scale: 0.98 },
   transition: { type: "spring" as const, stiffness: 500, damping: 32 },
 };
-
-function SwapFlashOverlay({
-  small,
-  slotLabel,
-}: {
-  small: boolean;
-  slotLabel?: string;
-}) {
-  return (
-    <div className="absolute inset-0 z-30 flex flex-col items-center justify-center rounded-card pointer-events-none overflow-hidden">
-      <div className="absolute inset-0 bg-accent/65" />
-      <div className="absolute inset-0 bg-linear-to-br from-accent-alt/70 via-white/25 to-accent/70 swap-flash-shimmer" />
-      <div className="absolute inset-0 border-4 border-accent swap-flash-ring" />
-      {slotLabel && (
-        <span className="relative mb-1 font-display font-bold text-[8px] sm:text-[9px] text-white/90 tracking-wider">
-          {slotLabel}
-        </span>
-      )}
-      <span
-        className={`relative font-display font-bold text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)] swap-flash-icon ${
-          small ? "text-3xl lg:text-5xl" : "text-5xl"
-        }`}
-      >
-        ↔
-      </span>
-      <span className="relative mt-1 font-display font-bold text-[8px] sm:text-[9px] text-white tracking-widest swap-flash-label">
-        SWAP
-      </span>
-    </div>
-  );
-}
 
 function PeekFlashOverlay({
   small,
@@ -152,6 +128,10 @@ function CardShell({
   overlaySmall,
   swapFlashing,
   swapFlashSlotLabel,
+  takeFlashing,
+  takeFlashSlotLabel,
+  snapFlashing,
+  snapFlashSlotLabel,
   peekFlashing,
   peekFlashKind,
   peekFlashSlotLabel,
@@ -169,6 +149,10 @@ function CardShell({
   overlaySmall: boolean;
   swapFlashing: boolean;
   swapFlashSlotLabel?: string;
+  takeFlashing: boolean;
+  takeFlashSlotLabel?: string;
+  snapFlashing: boolean;
+  snapFlashSlotLabel?: string;
   peekFlashing: boolean;
   peekFlashKind?: PeekFlashKind;
   peekFlashSlotLabel?: string;
@@ -182,14 +166,23 @@ function CardShell({
   faceClass: string;
   children: ReactNode;
 }) {
-  const effectFlashing = swapFlashing || peekFlashing || penaltyFlashing;
+  const effectFlashing =
+    swapFlashing ||
+    takeFlashing ||
+    snapFlashing ||
+    peekFlashing ||
+    penaltyFlashing;
   const wrapClass = swapFlashing
     ? "swap-flash-wrap"
-    : peekFlashing
-      ? "peek-flash-wrap"
-      : penaltyFlashing
-        ? "penalty-flash-wrap"
-        : "";
+    : takeFlashing
+      ? "take-flash-wrap"
+      : snapFlashing
+        ? "snap-flash-wrap"
+        : peekFlashing
+          ? "peek-flash-wrap"
+          : penaltyFlashing
+            ? "penalty-flash-wrap"
+            : "";
 
   const {
     transition: flipTransition,
@@ -218,20 +211,42 @@ function CardShell({
         {...flipRest}
         {...(interactive && !effectFlashing ? motionProps : {})}
         animate={
-          effectFlashing
-            ? { scale: [1, 1.14, 1.08, 1.12, 1], rotate: [0, -6, 6, -3, 0] }
-            : { scale: 1, rotate: 0, ...flipAnimate }
+          swapFlashing
+            ? {
+                scale: [1, 1.12, 1.06, 1.1, 1],
+                rotateY: [0, 18, -18, 8, 0],
+                x: [0, 6, -6, 3, 0],
+              }
+            : effectFlashing
+              ? { scale: [1, 1.14, 1.08, 1.12, 1], rotate: [0, -6, 6, -3, 0] }
+              : { scale: 1, rotate: 0, ...flipAnimate }
         }
         transition={
-          effectFlashing
-            ? { duration: 2.6, times: [0, 0.15, 0.4, 0.7, 1], ease: "easeOut" }
-            : (flipTransition ?? { duration: 0.2 })
+          swapFlashing
+            ? {
+                duration: 2.8,
+                times: [0, 0.2, 0.45, 0.72, 1],
+                ease: "easeInOut",
+              }
+            : effectFlashing
+              ? {
+                  duration: 2.6,
+                  times: [0, 0.15, 0.4, 0.7, 1],
+                  ease: "easeOut",
+                }
+              : (flipTransition ?? { duration: 0.2 })
         }
       >
         {children}
       </Shell>
       {swapFlashing && (
         <SwapFlashOverlay small={overlaySmall} slotLabel={swapFlashSlotLabel} />
+      )}
+      {takeFlashing && (
+        <TakeFlashOverlay small={overlaySmall} slotLabel={takeFlashSlotLabel} />
+      )}
+      {snapFlashing && (
+        <SnapFlashOverlay small={overlaySmall} slotLabel={snapFlashSlotLabel} />
       )}
       {peekFlashing && peekFlashKind && (
         <PeekFlashOverlay
@@ -262,6 +277,10 @@ export function PixelCard({
   swapFirstSelected = false,
   swapFlashing = false,
   swapFlashSlotLabel,
+  takeFlashing = false,
+  takeFlashSlotLabel,
+  snapFlashing = false,
+  snapFlashSlotLabel,
   peekFlashing = false,
   peekFlashKind,
   peekFlashSlotLabel,
@@ -277,14 +296,23 @@ export function PixelCard({
     sizeClass ?? (small ? HAND_CARD_SIZE : `${TABLE_CARD_SIZE} text-xs`);
 
   if (empty) {
-    const effectFlashing = swapFlashing || peekFlashing || penaltyFlashing;
+    const effectFlashing =
+      swapFlashing ||
+      takeFlashing ||
+      snapFlashing ||
+      peekFlashing ||
+      penaltyFlashing;
     const wrapClass = swapFlashing
-      ? "swap-flash-wrap border-accent border-solid"
-      : peekFlashing
-        ? "peek-flash-wrap border-accent-alt border-solid"
-        : penaltyFlashing
-          ? "penalty-flash-wrap border-accent border-solid"
-          : "border-theme-muted/35 bg-surface/40";
+      ? "swap-flash-wrap border-swap-flash-a border-solid"
+      : takeFlashing
+        ? "take-flash-wrap border-accent-alt border-solid"
+        : snapFlashing
+          ? "snap-flash-wrap border-danger border-solid"
+          : peekFlashing
+            ? "peek-flash-wrap border-accent-alt border-solid"
+            : penaltyFlashing
+              ? "penalty-flash-wrap border-accent border-solid"
+              : "border-theme-muted/35 bg-surface/40";
 
     return (
       <div
@@ -293,6 +321,12 @@ export function PixelCard({
       >
         {swapFlashing && (
           <SwapFlashOverlay small={small} slotLabel={swapFlashSlotLabel} />
+        )}
+        {takeFlashing && (
+          <TakeFlashOverlay small={small} slotLabel={takeFlashSlotLabel} />
+        )}
+        {snapFlashing && (
+          <SnapFlashOverlay small={small} slotLabel={snapFlashSlotLabel} />
         )}
         {peekFlashing && peekFlashKind && (
           <PeekFlashOverlay
@@ -347,6 +381,10 @@ export function PixelCard({
         overlaySmall={small}
         swapFlashing={swapFlashing}
         swapFlashSlotLabel={swapFlashSlotLabel}
+        takeFlashing={takeFlashing}
+        takeFlashSlotLabel={takeFlashSlotLabel}
+        snapFlashing={snapFlashing}
+        snapFlashSlotLabel={snapFlashSlotLabel}
         peekFlashing={peekFlashing}
         peekFlashKind={peekFlashKind}
         peekFlashSlotLabel={peekFlashSlotLabel}
@@ -398,6 +436,10 @@ export function PixelCard({
       overlaySmall={small}
       swapFlashing={swapFlashing}
       swapFlashSlotLabel={swapFlashSlotLabel}
+      takeFlashing={takeFlashing}
+      takeFlashSlotLabel={takeFlashSlotLabel}
+      snapFlashing={snapFlashing}
+      snapFlashSlotLabel={snapFlashSlotLabel}
       peekFlashing={peekFlashing}
       peekFlashKind={peekFlashKind}
       peekFlashSlotLabel={peekFlashSlotLabel}

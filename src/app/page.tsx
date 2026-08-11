@@ -2,56 +2,44 @@
 
 import { customAlphabet } from "nanoid";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ThemePicker } from "@/components/ui/ThemePicker";
 import type { BotDifficulty } from "@/game/types";
-import { DEFAULT_BOT_COUNT, MAX_BOT_COUNT, MIN_BOT_COUNT } from "@/game/types";
+import { MAX_BOT_COUNT, MIN_BOT_COUNT } from "@/game/types";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
-import { loadBotSettings, saveBotSettings } from "@/lib/bot-settings";
-import { PLAYER_NAME_KEY } from "@/lib/party";
+import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 const roomCode = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 6);
 
 export default function HomePage() {
   const router = useRouter();
   const voice = useThemeVoice();
-  const [name, setName] = useState("");
+  useRehydrateUiPrefs();
   const [joinCode, setJoinCode] = useState("");
-  const [botCount, setBotCount] = useState(DEFAULT_BOT_COUNT);
-  const [difficulty, setDifficulty] = useState<BotDifficulty>("easy");
-  const [botSettingsLoaded, setBotSettingsLoaded] = useState(false);
 
-  useEffect(() => {
-    const stored = localStorage.getItem(PLAYER_NAME_KEY);
-    if (stored) setName(stored);
-  }, []);
-
-  useEffect(() => {
-    const stored = loadBotSettings();
-    setBotCount(stored.botCount);
-    setDifficulty(stored.difficulty);
-    setBotSettingsLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (!botSettingsLoaded) return;
-    saveBotSettings({ botCount, difficulty });
-  }, [botSettingsLoaded, botCount, difficulty]);
+  const {
+    playerName: name,
+    setPlayerName,
+    botCount,
+    setBotCount,
+    botDifficulty: difficulty,
+    setBotDifficulty,
+  } = useUiPrefs();
 
   const trimmedName = name.trim();
   const hasName = trimmedName.length > 0;
 
   const goToRoom = (code: string, mode: "host" | "join") => {
     if (!hasName) return;
-    localStorage.setItem(PLAYER_NAME_KEY, trimmedName);
+    setPlayerName(trimmedName);
     const params = new URLSearchParams({ name: trimmedName, [mode]: "1" });
     router.push(`/play/${code}?${params.toString()}`);
   };
 
   const goToSolo = () => {
     if (!hasName) return;
-    localStorage.setItem(PLAYER_NAME_KEY, trimmedName);
+    setPlayerName(trimmedName);
     const params = new URLSearchParams({
       name: trimmedName,
       host: "1",
@@ -84,7 +72,7 @@ export default function HomePage() {
             </span>
             <input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => setPlayerName(e.target.value)}
               placeholder={voice.nicknamePlaceholder}
               maxLength={24}
               className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
@@ -154,7 +142,9 @@ export default function HomePage() {
               </span>
               <select
                 value={difficulty}
-                onChange={(e) => setDifficulty(e.target.value as BotDifficulty)}
+                onChange={(e) =>
+                  setBotDifficulty(e.target.value as BotDifficulty)
+                }
                 className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
               >
                 <option value="easy">{voice.difficultyEasy}</option>

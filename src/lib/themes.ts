@@ -37,6 +37,10 @@ export type ThemeVoice = {
   createGame: string;
   join: string;
   styleLabel: string;
+  appearanceLabel: string;
+  appearanceLight: string;
+  appearanceDark: string;
+  appearanceSystem: string;
   gameMenuLabel: string;
   loading: string;
   roomPrefix: string;
@@ -91,6 +95,7 @@ export type ThemeVoice = {
   debugHide: string;
   debugRestart: string;
   drawHint: string;
+  drawOrCambioHint: string;
   discardHint: string;
   newGame: string;
   showResults: string;
@@ -122,6 +127,11 @@ export type ThemeVoice = {
   soloMode: string;
   botCountLabel: string;
   jokerCountLabel: string;
+  acePointsLabel: string;
+  facePointsLabel: string;
+  jokerPointsLabel: string;
+  blackKingPointsLabel: string;
+  redKingPointsLabel: string;
   difficultyLabel: string;
   difficultyEasy: string;
   difficultyMedium: string;
@@ -202,6 +212,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "CREATE GAME",
     join: "JOIN",
     styleLabel: "PIXEL STYLE",
+    appearanceLabel: "DISPLAY",
+    appearanceLight: "LIGHT",
+    appearanceDark: "DARK",
+    appearanceSystem: "SYSTEM",
     gameMenuLabel: "GAME MENU",
     loading: "LOADING CARTRIDGE...",
     roomPrefix: "ROOM",
@@ -280,6 +294,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "HIDE CARDS",
     debugRestart: "RESTART GAME",
     drawHint: "↓ TAP DECK OR DISCARD TO DRAW",
+    drawOrCambioHint: "↓ DRAW — OR CALL CAMBIO TO END THE ROUND",
     discardHint: "↓ TAP DISCARD TO PLAY YOUR CARD, OR YOUR HAND TO SWAP",
     newGame: "NEW GAME",
     showResults: "SHOW SCORES",
@@ -311,6 +326,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "SOLO MODE",
     botCountLabel: "BOTS",
     jokerCountLabel: "JOKERS",
+    acePointsLabel: "ACE PTS",
+    facePointsLabel: "J/Q PTS",
+    jokerPointsLabel: "JOKER PTS",
+    blackKingPointsLabel: "BLK K PTS",
+    redKingPointsLabel: "RED K PTS",
     difficultyLabel: "DIFFICULTY",
     difficultyEasy: "EASY",
     difficultyMedium: "MEDIUM",
@@ -338,6 +358,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Open a table",
     join: "Sit down",
     styleLabel: "Ambiance",
+    appearanceLabel: "Lighting",
+    appearanceLight: "Light",
+    appearanceDark: "Dark",
+    appearanceSystem: "System",
     gameMenuLabel: "Game menu",
     loading: "Shuffling the deck...",
     roomPrefix: "Table",
@@ -414,6 +438,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap the deck or discard pile to draw",
+    drawOrCambioHint: "Draw a card — or call Cambio to end the round",
     discardHint:
       "Tap the discard pile to play your card, or tap your hand to swap",
     newGame: "Deal again",
@@ -446,6 +471,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo table",
     botCountLabel: "Opponents",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Skill",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -473,6 +503,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Start the party!",
     join: "Jump in!",
     styleLabel: "Party vibe",
+    appearanceLabel: "Lighting",
+    appearanceLight: "Light",
+    appearanceDark: "Dark",
+    appearanceSystem: "System",
     gameMenuLabel: "Party menu",
     loading: "Getting the party ready...",
     roomPrefix: "Party",
@@ -548,6 +582,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap deck or discard to grab a card!",
+    drawOrCambioHint: "Draw a card — or shout Cambio to end the round!",
     discardHint: "Tap the discard pile to toss it, or swap with your hand!",
     newGame: "Play again!",
     showResults: "Show scores!",
@@ -579,6 +614,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo mode",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -605,6 +645,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Create",
     join: "Join",
     styleLabel: "Theme",
+    appearanceLabel: "Appearance",
+    appearanceLight: "Light",
+    appearanceDark: "Dark",
+    appearanceSystem: "System",
     gameMenuLabel: "Menu",
     loading: "Loading",
     roomPrefix: "Room",
@@ -680,6 +724,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide all",
     debugRestart: "Restart game",
     drawHint: "Tap deck or discard to draw",
+    drawOrCambioHint: "Draw — or call Cambio to end the round",
     discardHint: "Tap discard pile to play your card, or tap hand to swap",
     newGame: "New round",
     showResults: "Show scores",
@@ -711,6 +756,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -738,6 +788,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Begin a round",
     join: "Join quietly",
     styleLabel: "Mood",
+    appearanceLabel: "Light",
+    appearanceLight: "Day",
+    appearanceDark: "Night",
+    appearanceSystem: "System",
     gameMenuLabel: "Menu",
     loading: "Setting the table...",
     roomPrefix: "Room",
@@ -814,6 +868,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap the deck or discard when you're ready",
+    drawOrCambioHint: "Draw when ready — or call Cambio to end the round",
     discardHint:
       "Tap the discard pile to set aside your card, or swap with your hand",
     newGame: "Play another round",
@@ -846,6 +901,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo mode",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -873,6 +933,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Set out the cards",
     join: "Take a seat",
     styleLabel: "Ambiance",
+    appearanceLabel: "Lamp",
+    appearanceLight: "Day",
+    appearanceDark: "Night",
+    appearanceSystem: "System",
     gameMenuLabel: "Menu",
     loading: "Turning pages...",
     roomPrefix: "Room",
@@ -949,6 +1013,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap the deck or discard when you're ready",
+    drawOrCambioHint: "Draw a card — or close the book to end the round",
     discardHint:
       "Tap the discard pile to set aside your card, or swap with your hand",
     newGame: "Another chapter",
@@ -981,6 +1046,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo study",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -1008,6 +1078,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Gather round",
     join: "Pull up a chair",
     styleLabel: "Lodge mood",
+    appearanceLabel: "Light",
+    appearanceLight: "Day",
+    appearanceDark: "Night",
+    appearanceSystem: "System",
     gameMenuLabel: "Menu",
     loading: "Warming the hearth...",
     roomPrefix: "Lodge",
@@ -1083,6 +1157,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide cards",
     debugRestart: "Restart game",
     drawHint: "Tap the deck or discard to draw",
+    drawOrCambioHint: "Draw a card — or call Cambio to end the round",
     discardHint: "Tap discard to toss your card, or swap with your hand",
     newGame: "Another round",
     showResults: "Show scores",
@@ -1114,6 +1189,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo by the fire",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -1141,6 +1221,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     createGame: "Begin",
     join: "Enter",
     styleLabel: "Style",
+    appearanceLabel: "Appearance",
+    appearanceLight: "Light",
+    appearanceDark: "Dark",
+    appearanceSystem: "System",
     gameMenuLabel: "Menu",
     loading: "Loading",
     roomPrefix: "Room",
@@ -1216,6 +1300,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     debugHide: "Hide all",
     debugRestart: "Restart game",
     drawHint: "Tap deck or discard to draw",
+    drawOrCambioHint: "Draw — or call Cambio to end the round",
     discardHint: "Tap discard pile to play your card, or tap hand to swap",
     newGame: "New round",
     showResults: "Show scores",
@@ -1247,6 +1332,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -1275,6 +1365,8 @@ export const THEME_BACKGROUNDS: Record<ThemeId, string> = {
   lodge: "#0f1a14",
   ink: "#f5f0e8",
 };
+
+export const THEME_IDS: ThemeId[] = THEME_OPTIONS.map((option) => option.id);
 
 export const DEFAULT_THEME: ThemeId = "retro";
 

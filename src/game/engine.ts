@@ -6,6 +6,7 @@ import {
   createDeck,
   type DiscardAbility,
   deckSize,
+  normalizeCardPointValues,
   shuffle,
 } from "./cards";
 import { computeScores, determineWinners } from "./scoring";
@@ -22,9 +23,11 @@ import type {
   PlayerView,
   RoundResult,
   ScoreboardEntry,
+  SnapFlash,
   SwapFlashSlot,
 } from "./types";
 import {
+  DEFAULT_CARD_POINTS,
   DEFAULT_JOKER_COUNT,
   HAND_BASE_SLOTS,
   MAX_JOKER_COUNT,
@@ -128,6 +131,7 @@ export function createRoom(
     isSoloMode: false,
     soloDifficulty: null,
     jokerCount: DEFAULT_JOKER_COUNT,
+    cardPoints: { ...DEFAULT_CARD_POINTS },
     hostId: id,
     players: [
       {
@@ -845,6 +849,7 @@ export function handleMessage(
   secretPeek?: { playerId: string; slot: number; card: unknown };
   peekFlash?: PeekFlash;
   swapFlash?: { slots: SwapFlashSlot[] };
+  snapFlash?: SnapFlash;
   penaltyFlash?: { playerId: string; slot: number };
   cambioFlash?: { playerId: string };
   reshuffleFlash?: boolean;
@@ -1145,9 +1150,15 @@ export function handleMessage(
       state.discard.push(handCard);
       claimSnapChain(state, playerId, handCard);
 
+      const snapFlash: SnapFlash = {
+        actorId: playerId,
+        playerId: message.targetPlayerId,
+        slot: message.slot,
+      };
+
       if (message.targetPlayerId === playerId) {
         addLog(state, `${player.name} snapped correctly!`);
-        return {};
+        return { snapFlash };
       }
 
       state.pendingAbility = {
@@ -1162,7 +1173,7 @@ export function handleMessage(
         state,
         `${player.name} snapped ${target.name}'s card — give them one of yours.`,
       );
-      return {};
+      return { snapFlash };
     }
 
     case "snap_give": {
@@ -1285,6 +1296,31 @@ export function handleMessage(
       if (count === state.jokerCount) return {};
       state.jokerCount = count;
       addLog(state, `Jokers set to ${count}.`);
+      return {};
+    }
+
+    case "set_card_points": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can change card point values." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot change card point values during a game." };
+      }
+      const next = normalizeCardPointValues({
+        ...state.cardPoints,
+        ...message.values,
+      });
+      if (
+        next.ace === state.cardPoints.ace &&
+        next.face === state.cardPoints.face &&
+        next.joker === state.cardPoints.joker &&
+        next.blackKing === state.cardPoints.blackKing &&
+        next.redKing === state.cardPoints.redKing
+      ) {
+        return {};
+      }
+      state.cardPoints = next;
+      addLog(state, "Card point values updated.");
       return {};
     }
 
@@ -1569,6 +1605,10 @@ export function buildPlayerView(
       state.players.length < MAX_PLAYERS,
     jokerCount: state.jokerCount,
     canSetJokerCount:
+      viewerId === state.hostId &&
+      (state.phase === "lobby" || state.phase === "ended"),
+    cardPoints: { ...state.cardPoints },
+    canSetCardPoints:
       viewerId === state.hostId &&
       (state.phase === "lobby" || state.phase === "ended"),
     log: state.log,

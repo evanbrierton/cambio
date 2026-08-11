@@ -1,43 +1,142 @@
 "use client";
 
 import {
+  ThemeProvider as NextThemesProvider,
+  useTheme as useNextTheme,
+} from "next-themes";
+import {
   createContext,
   type ReactNode,
   useCallback,
   useContext,
+  useEffect,
   useState,
 } from "react";
-import { setThemeCookie } from "@/lib/theme-cookie";
+import {
+  APPEARANCE_MEDIA_QUERY,
+  type AppearancePreference,
+  type ResolvedAppearance,
+  resolveAppearance,
+  setAppearanceCookie,
+  setThemeCookie,
+} from "@/lib/theme-cookie";
 import { applyThemeFontClass } from "@/lib/theme-fonts";
-import { DEFAULT_THEME, type ThemeId } from "@/lib/themes";
+import { THEME_IDS, type ThemeId } from "@/lib/themes";
 
 type ThemeContextValue = {
   theme: ThemeId;
   setTheme: (theme: ThemeId) => void;
+  appearancePreference: AppearancePreference;
+  resolvedAppearance: ResolvedAppearance;
+  setAppearancePreference: (preference: AppearancePreference) => void;
 };
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
-export function ThemeProvider({
+function ThemeContextProvider({
   children,
-  initialTheme = DEFAULT_THEME,
+  initialAppearancePreference,
 }: {
   children: ReactNode;
-  initialTheme?: ThemeId;
+  initialAppearancePreference: AppearancePreference;
 }) {
-  const [theme, setThemeState] = useState<ThemeId>(initialTheme);
+  const { theme: nextTheme, setTheme: setNextTheme } = useNextTheme();
+  const theme = nextTheme as ThemeId;
+  const [appearancePreference, setAppearancePreferenceState] =
+    useState<AppearancePreference>(initialAppearancePreference);
+  const [resolvedAppearance, setResolvedAppearance] =
+    useState<ResolvedAppearance>(() =>
+      resolveAppearance(initialAppearancePreference, false),
+    );
 
-  const setTheme = useCallback((next: ThemeId) => {
-    setThemeState(next);
-    setThemeCookie(next);
-    document.documentElement.dataset.theme = next;
-    applyThemeFontClass(next);
+  const setTheme = useCallback(
+    (next: ThemeId) => {
+      setNextTheme(next);
+      setThemeCookie(next);
+    },
+    [setNextTheme],
+  );
+
+  const applyResolvedAppearance = useCallback((next: ResolvedAppearance) => {
+    setResolvedAppearance(next);
+    document.documentElement.dataset.appearance = next;
+    document.documentElement.style.colorScheme = next;
   }, []);
 
+  const setAppearancePreference = useCallback(
+    (next: AppearancePreference) => {
+      setAppearancePreferenceState(next);
+      setAppearanceCookie(next);
+      applyResolvedAppearance(
+        resolveAppearance(
+          next,
+          window.matchMedia(APPEARANCE_MEDIA_QUERY).matches,
+        ),
+      );
+    },
+    [applyResolvedAppearance],
+  );
+
+  useEffect(() => {
+    applyThemeFontClass(theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia(APPEARANCE_MEDIA_QUERY);
+    const applyCurrentAppearance = () => {
+      applyResolvedAppearance(
+        resolveAppearance(appearancePreference, mediaQuery.matches),
+      );
+    };
+
+    applyCurrentAppearance();
+    if (appearancePreference !== "system") return;
+
+    const handleChange = () => applyCurrentAppearance();
+    mediaQuery.addEventListener("change", handleChange);
+    return () => {
+      mediaQuery.removeEventListener("change", handleChange);
+    };
+  }, [appearancePreference, applyResolvedAppearance]);
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ThemeContext.Provider
+      value={{
+        theme,
+        setTheme,
+        appearancePreference,
+        resolvedAppearance,
+        setAppearancePreference,
+      }}
+    >
       {children}
     </ThemeContext.Provider>
+  );
+}
+
+export function ThemeProvider({
+  children,
+  initialTheme,
+  initialAppearancePreference,
+}: {
+  children: ReactNode;
+  initialTheme: ThemeId;
+  initialAppearancePreference: AppearancePreference;
+}) {
+  return (
+    <NextThemesProvider
+      attribute="data-theme"
+      defaultTheme={initialTheme}
+      themes={THEME_IDS}
+      enableSystem={false}
+      enableColorScheme={false}
+    >
+      <ThemeContextProvider
+        initialAppearancePreference={initialAppearancePreference}
+      >
+        {children}
+      </ThemeContextProvider>
+    </NextThemesProvider>
   );
 }
 

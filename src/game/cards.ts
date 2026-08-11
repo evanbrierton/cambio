@@ -1,5 +1,10 @@
 import { nanoid } from "nanoid";
-import type { Card, Rank, Suit } from "./types";
+import type { Card, CardPointValues, Rank, Suit } from "./types";
+import {
+  DEFAULT_CARD_POINTS,
+  MAX_CARD_POINT_VALUE,
+  MIN_CARD_POINT_VALUE,
+} from "./types";
 
 const SUITS: Suit[] = ["hearts", "diamonds", "clubs", "spades"];
 const STANDARD_DECK_SIZE = 52;
@@ -67,13 +72,37 @@ export function suitGlyph(suit: Suit): string {
   return SUIT_GLYPH[suit];
 }
 
-export function cardPoints(card: Card): number {
-  if (card.rank === "JOKER") return 0;
-  if (card.rank === "A") return 1;
-  if (card.rank === "J" || card.rank === "Q") return 10;
+export function clampCardPointValue(value: number): number {
+  return Math.min(MAX_CARD_POINT_VALUE, Math.max(MIN_CARD_POINT_VALUE, value));
+}
+
+export function normalizeCardPointValues(
+  values: Partial<CardPointValues> | undefined,
+): CardPointValues {
+  return {
+    ace: clampCardPointValue(values?.ace ?? DEFAULT_CARD_POINTS.ace),
+    face: clampCardPointValue(values?.face ?? DEFAULT_CARD_POINTS.face),
+    joker: clampCardPointValue(values?.joker ?? DEFAULT_CARD_POINTS.joker),
+    blackKing: clampCardPointValue(
+      values?.blackKing ?? DEFAULT_CARD_POINTS.blackKing,
+    ),
+    redKing: clampCardPointValue(
+      values?.redKing ?? DEFAULT_CARD_POINTS.redKing,
+    ),
+  };
+}
+
+export function cardPoints(
+  card: Card,
+  values: CardPointValues = DEFAULT_CARD_POINTS,
+): number {
+  if (card.rank === "JOKER") return values.joker;
+  if (card.rank === "A") return values.ace;
+  if (card.rank === "J" || card.rank === "Q") return values.face;
   if (card.rank === "K") {
-    if (card.suit === "hearts" || card.suit === "diamonds") return 25;
-    return -2;
+    if (card.suit === "hearts" || card.suit === "diamonds")
+      return values.redKing;
+    return values.blackKing;
   }
   if (card.rank === "2") return 2;
   if (card.rank === "3") return 3;

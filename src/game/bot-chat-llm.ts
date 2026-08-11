@@ -70,16 +70,38 @@ function tarpingGuidance(
   return `${tarping} You love tarping and think it's the best way to camp. Enthusiastically praise flat-tent camping. No insults.`;
 }
 
-function buildSystemPrompt(ctx: BotChatContext): string {
+/** Concise Cambio rules for bot chat — keep short to fit model context. */
+export const CAMBIO_RULES_FOR_CHAT = [
+  "Cambio rules (know these; do not lecture unless asked):",
+  "- Goal: lowest hand points when someone calls Cambio. 4 face-down cards each.",
+  "- Turn: draw from deck or discard. Deck draw: swap into hand OR discard (abilities fire only on deck discard). Discard draw: must swap in; no abilities.",
+  "- Points: A=1, 2–10 face, J/Q=10, black K=−2, red K=+25, Joker=0. Keep low; dump red kings/high cards.",
+  "- Abilities (deck discard only): 7/8 peek own; 9/10 spy opponent; J blind swap; Q look 1 then swap; K look 2 then swap.",
+  "- Snap anytime if a hand card matches discard top. Wrong snap = penalty card. Cambio caller cannot snap; their cards are protected from spy/swap.",
+  "- Call Cambio at start of your turn (before drawing); everyone else gets one last turn, then reveal.",
+].join("\n");
+
+/** What other players (including bots) can see at the table. */
+export const CAMBIO_VISIBILITY_FOR_CHAT = [
+  "Card visibility (critical — never break this):",
+  "- PUBLIC: top of discard pile, face-up cards, cards just discarded onto the discard pile, cards taken from the discard pile (everyone already saw them).",
+  "- PRIVATE: face-down hand cards, cards drawn from the deck while held or swapped into a hand, peek/spy results, penalty cards.",
+  "- Only name ranks/suits of PUBLIC cards. Never invent or guess private card identities.",
+  "- Never mention point values of cards that are or were face-down in someone's hand. Do not tally or imply hidden hand totals.",
+  "- If a player swapped a deck draw into their hand, do not comment on what they took or how good/bad that swap was — you cannot know.",
+].join("\n");
+
+export function buildSystemPrompt(ctx: BotChatContext): string {
   return [
     `You are ${ctx.botName}, a bot player chatting at a Cambio card game table.`,
     `Personality (${ctx.difficulty}): ${difficultyTone(ctx.difficulty)}.`,
     tarpingGuidance(ctx.difficulty, ctx.focusTarping),
-    "Rules:",
+    CAMBIO_RULES_FOR_CHAT,
+    CAMBIO_VISIBILITY_FOR_CHAT,
+    "Chat rules:",
     "- Write exactly one short chat line (1-2 sentences, under 160 characters).",
     "- Stay in character. Plain text only.",
     "- No slurs, hate, or real-world politics.",
-    "- Do not reveal hidden card values you could not know.",
     "- Do not wrap the message in quotation marks.",
   ].join("\n");
 }
@@ -103,6 +125,7 @@ function buildUserPrompt(ctx: BotChatContext): string {
       recent,
       `React to this Cambio play in one short chat message: ${ctx.gameMove.detail}`,
       "Comment on the move in character — praise, tease, or trash-talk as fits your personality.",
+      "The move detail above only includes publicly visible information. Do not invent or name any other cards.",
     ].join("\n");
   }
 

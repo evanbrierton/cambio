@@ -36,15 +36,18 @@ import type {
   GameState,
   PeekFlash,
   ServerMessage,
+  SnapFlash,
   SwapFlashSlot,
 } from "../src/game/types";
 import {
   DEFAULT_BOT_COUNT,
+  DEFAULT_CARD_POINTS,
   DEFAULT_JOKER_COUNT,
   MAX_BOT_COUNT,
   MIN_BOT_COUNT,
   parseBotDifficulty,
 } from "../src/game/types";
+import { parseClientMessageJson } from "../src/game/wire-schema";
 
 type PlayerConnectionState = { playerId?: string; debugEnabled?: boolean };
 
@@ -56,6 +59,7 @@ function migrateState(state: GameState): GameState {
     isSoloMode: state.isSoloMode ?? false,
     soloDifficulty: state.soloDifficulty ?? null,
     jokerCount: state.jokerCount ?? DEFAULT_JOKER_COUNT,
+    cardPoints: { ...DEFAULT_CARD_POINTS, ...state.cardPoints },
     botThinkingId: null,
     roundNumber: state.roundNumber ?? 0,
     roundHistory: migrateRoundHistory(state.roundHistory),
@@ -282,6 +286,9 @@ export class CambioParty extends Server<Env> {
     if (result.swapFlash) {
       this.broadcastSwapFlash(result.swapFlash.slots);
     }
+    if (result.snapFlash) {
+      this.broadcastSnapFlash(result.snapFlash);
+    }
     if (result.peekFlash) {
       this.broadcastPeekFlash(result.peekFlash);
     }
@@ -322,6 +329,7 @@ export class CambioParty extends Server<Env> {
       }
 
       const moveReaction = detectMoveReaction(
+        this.state,
         actor,
         message,
         result,
@@ -449,6 +457,19 @@ export class CambioParty extends Server<Env> {
 
   broadcastSwapFlash(slots: SwapFlashSlot[]) {
     const message: ServerMessage = { type: "swap_flash", slots };
+    const payload = JSON.stringify(message);
+    for (const conn of this.getConnections()) {
+      conn.send(payload);
+    }
+  }
+
+  broadcastSnapFlash(snapFlash: SnapFlash) {
+    const message: ServerMessage = {
+      type: "snap_flash",
+      actorId: snapFlash.actorId,
+      playerId: snapFlash.playerId,
+      slot: snapFlash.slot,
+    };
     const payload = JSON.stringify(message);
     for (const conn of this.getConnections()) {
       conn.send(payload);
@@ -674,10 +695,8 @@ export class CambioParty extends Server<Env> {
 
     this.clearBotTimer();
 
-    let message: ClientMessage;
-    try {
-      message = JSON.parse(messageText(raw)) as ClientMessage;
-    } catch {
+    const message = parseClientMessageJson(messageText(raw));
+    if (!message) {
       connection.send(
         JSON.stringify({ type: "error", message: "Invalid message." }),
       );

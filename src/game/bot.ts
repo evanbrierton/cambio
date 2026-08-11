@@ -2,11 +2,12 @@ import { abilityForDiscard, cardPoints, cardsSnapMatch } from "./cards";
 import type {
   BotDifficulty,
   Card,
+  CardPointValues,
   ClientMessage,
   GameState,
   PlayerState,
 } from "./types";
-import { SETUP_PEEK_SLOTS } from "./types";
+import { DEFAULT_CARD_POINTS, SETUP_PEEK_SLOTS } from "./types";
 
 const SETUP_PEEKS = 2;
 
@@ -74,6 +75,7 @@ function cardKey(playerId: string, slot: number): string {
 export class BotKnowledge {
   private known = new Map<string, Card>();
   private roundNumber: number | null = null;
+  private pointValues: CardPointValues = DEFAULT_CARD_POINTS;
 
   remember(playerId: string, slot: number, card: Card): void {
     this.known.set(cardKey(playerId, slot), card);
@@ -89,7 +91,7 @@ export class BotKnowledge {
 
   points(playerId: string, slot: number): number | null {
     const card = this.get(playerId, slot);
-    return card ? cardPoints(card) : null;
+    return card ? cardPoints(card, this.pointValues) : null;
   }
 
   prepareForState(state: GameState): void {
@@ -97,6 +99,7 @@ export class BotKnowledge {
       this.known.clear();
       this.roundNumber = state.roundNumber;
     }
+    this.pointValues = state.cardPoints;
 
     for (const player of state.players) {
       for (let slot = 0; slot < player.hand.length; slot++) {
@@ -445,9 +448,10 @@ function snapMatchScore(
   botId: string,
   match: { targetPlayerId: string; slot: number },
   knowledge: BotKnowledge,
+  pointValues: CardPointValues,
 ): number {
   const known = knowledge.get(match.targetPlayerId, match.slot);
-  const pts = known ? cardPoints(known) : 8;
+  const pts = known ? cardPoints(known, pointValues) : 8;
   if (match.targetPlayerId !== botId) return pts + 10;
   return pts;
 }
@@ -490,8 +494,8 @@ function findSnapTarget(
     return (
       [...matches].sort(
         (a, b) =>
-          snapMatchScore(botId, b, knowledge) -
-          snapMatchScore(botId, a, knowledge),
+          snapMatchScore(botId, b, knowledge, state.cardPoints) -
+          snapMatchScore(botId, a, knowledge, state.cardPoints),
       )[0] ?? null
     );
   }
@@ -691,7 +695,7 @@ function decideTurn(
         knowledge,
         difficulty,
       );
-      const topPts = cardPoints(top);
+      const topPts = cardPoints(top, state.cardPoints);
       const takeDiscard = isExpert(difficulty)
         ? topPts <= worstPts
         : topPts < worstPts;
@@ -704,7 +708,7 @@ function decideTurn(
   }
 
   if (state.drawnCard && !state.drawnFromDiscard) {
-    const drawnPts = cardPoints(state.drawnCard);
+    const drawnPts = cardPoints(state.drawnCard, state.cardPoints);
     const worst = worstKnownSlot(state, botId, knowledge, difficulty);
     const worstPts = estimateSlotPoints(
       botId,

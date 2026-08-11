@@ -9,17 +9,20 @@ import type {
   ClientMessage,
   PeekFlashKind,
   PlayerView,
-  ServerMessage,
 } from "@/game/types";
+import { parseServerMessageJson } from "@/game/wire-schema";
 import { freshSessionKey, getPartyHost, storageKey } from "@/lib/party";
+import { isAbilitySwapFlash, isHandTakeFlash } from "@/lib/swap-flash";
 
 const PEEK_FLASH_MS = 3500;
 export const SWAP_FLASH_MS = 3000;
+export const TAKE_FLASH_MS = 1500;
+export const SNAP_FLASH_MS = 2000;
 export const PENALTY_FLASH_MS = 2500;
 export const CAMBIO_FLASH_MS = 3500;
 export const RESHUFFLE_FLASH_MS = 3500;
 export const DISCARD_DRAW_FLASH_MS = 3000;
-export const DECK_DRAW_FLASH_MS = 1500;
+export const DECK_DRAW_FLASH_MS = 3000;
 export const PEEK_EFFECT_MS = PEEK_FLASH_MS;
 
 const PLAY_ACTIONS_BLOCKED_DURING_CAMBIO_FLASH = new Set<ClientMessage["type"]>(
@@ -64,6 +67,18 @@ export type SwapFlash = {
   slots: Array<{ playerId: string; slot: number }>;
 };
 
+/** Drawn-card into hand (single-slot server swap_flash) — distinct from ability swaps. */
+export type TakeFlash = {
+  playerId: string;
+  slot: number;
+};
+
+export type SnapFlash = {
+  actorId: string;
+  playerId: string;
+  slot: number;
+};
+
 export type PenaltyFlash = {
   playerId: string;
   slot: number;
@@ -93,6 +108,8 @@ type ConnectionState = {
   fleetingPeek: FleetingPeek | null;
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
+  takeFlash: TakeFlash | null;
+  snapFlash: SnapFlash | null;
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
@@ -132,6 +149,8 @@ export function useGameConnection(
     fleetingPeek: null,
     peekFlash: null,
     swapFlash: null,
+    takeFlash: null,
+    snapFlash: null,
     penaltyFlash: null,
     cambioFlash: null,
     reshuffleFlash: null,
@@ -142,6 +161,8 @@ export function useGameConnection(
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const peekEffectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const takeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const snapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const penaltyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cambioTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reshuffleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -179,6 +200,22 @@ export function useGameConnection(
       }
     }
     socket.send(JSON.stringify(message));
+
+    // Optimistic snap flash for the acting player; server snap_flash confirms for all.
+    if (message.type === "snap" && view?.playerId) {
+      if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
+      setState((s) => ({
+        ...s,
+        snapFlash: {
+          actorId: view.playerId,
+          playerId: message.targetPlayerId,
+          slot: message.slot,
+        },
+      }));
+      snapTimerRef.current = setTimeout(() => {
+        setState((s) => ({ ...s, snapFlash: null }));
+      }, SNAP_FLASH_MS);
+    }
   }, []);
 
   useEffect(() => {
@@ -226,7 +263,8 @@ export function useGameConnection(
     });
 
     socket.addEventListener("message", (event) => {
-      const data = JSON.parse(event.data as string) as ServerMessage;
+      const data = parseServerMessageJson(event.data as string);
+      if (!data) return;
 
       if (data.type === "room_info") {
         localStorage.setItem(key, data.playerId);
@@ -273,14 +311,44 @@ export function useGameConnection(
       }
 
       if (data.type === "swap_flash") {
-        if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+        const slots = data.slots ?? [];
+        if (isAbilitySwapFlash(slots)) {
+          if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+          setState((s) => ({
+            ...s,
+            swapFlash: { slots },
+            takeFlash: null,
+          }));
+          swapTimerRef.current = setTimeout(() => {
+            setState((s) => ({ ...s, swapFlash: null }));
+          }, SWAP_FLASH_MS);
+        } else if (isHandTakeFlash(slots)) {
+          if (takeTimerRef.current) clearTimeout(takeTimerRef.current);
+          const [slot] = slots;
+          setState((s) => ({
+            ...s,
+            takeFlash: { playerId: slot.playerId, slot: slot.slot },
+            swapFlash: null,
+          }));
+          takeTimerRef.current = setTimeout(() => {
+            setState((s) => ({ ...s, takeFlash: null }));
+          }, TAKE_FLASH_MS);
+        }
+      }
+
+      if (data.type === "snap_flash") {
+        if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
         setState((s) => ({
           ...s,
-          swapFlash: { slots: data.slots },
+          snapFlash: {
+            actorId: data.actorId,
+            playerId: data.playerId,
+            slot: data.slot,
+          },
         }));
-        swapTimerRef.current = setTimeout(() => {
-          setState((s) => ({ ...s, swapFlash: null }));
-        }, SWAP_FLASH_MS);
+        snapTimerRef.current = setTimeout(() => {
+          setState((s) => ({ ...s, snapFlash: null }));
+        }, SNAP_FLASH_MS);
       }
 
       if (data.type === "penalty_flash") {
@@ -346,7 +414,16 @@ export function useGameConnection(
       }
 
       if (data.type === "error") {
-        setState((s) => ({ ...s, error: data.message }));
+        if (data.message.includes("Wrong snap")) {
+          if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
+          setState((s) => ({
+            ...s,
+            error: data.message,
+            snapFlash: null,
+          }));
+        } else {
+          setState((s) => ({ ...s, error: data.message }));
+        }
       }
     });
 
@@ -354,6 +431,8 @@ export function useGameConnection(
       if (peekTimerRef.current) clearTimeout(peekTimerRef.current);
       if (peekEffectTimerRef.current) clearTimeout(peekEffectTimerRef.current);
       if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
+      if (takeTimerRef.current) clearTimeout(takeTimerRef.current);
+      if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
       if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
       if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
       if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);
