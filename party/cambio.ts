@@ -4,79 +4,12 @@ import {
   Server,
   type WSMessage,
 } from "partyserver";
-import {
-  BotKnowledge,
-  botThinkDelay,
-  collectActingBots,
-  decideBotAction,
-  forgetSnapTargetForAllBots,
-  updateBotKnowledge,
-} from "../src/game/bot";
-import { botChatDelay, shouldFocusTarpingForChat } from "../src/game/bot-chat";
-import {
-  capturePreMoveSnapshot,
-  detectMoveReaction,
-  type GameMoveReaction,
-  shouldReactToMove,
-} from "../src/game/bot-chat-events";
-import { generateBotChatMessage } from "../src/game/bot-chat-llm";
-import {
-  addBotPlayer,
-  addChatMessage,
-  buildPlayerView,
-  createRoom,
-  expireSnapWindow,
-  findPlayer,
-  handleMessage,
-  migrateRoundHistory,
-} from "../src/game/engine";
-import type {
-  Card,
-  ClientMessage,
-  GameState,
-  PeekFlash,
-  ServerMessage,
-  SnapFlash,
-  SwapFlashSlot,
-} from "../src/game/types";
-import {
-  DEFAULT_BOT_COUNT,
-  DEFAULT_CARD_POINTS,
-  DEFAULT_JOKER_COUNT,
-  MAX_BOT_COUNT,
-  MIN_BOT_COUNT,
-  parseBotDifficulty,
-} from "../src/game/types";
+import { clampBotCount, GameHost, type HostPeer } from "../src/game/host";
+import type { GameState, ServerMessage } from "../src/game/types";
+import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "../src/game/types";
 import { parseClientMessageJson } from "../src/game/wire-schema";
 
 type PlayerConnectionState = { playerId?: string; debugEnabled?: boolean };
-
-const MOVE_REACTION_COOLDOWN_MS = 12_000;
-
-function migrateState(state: GameState): GameState {
-  return {
-    ...state,
-    isSoloMode: state.isSoloMode ?? false,
-    soloDifficulty: state.soloDifficulty ?? null,
-    jokerCount: state.jokerCount ?? DEFAULT_JOKER_COUNT,
-    cardPoints: { ...DEFAULT_CARD_POINTS, ...state.cardPoints },
-    botThinkingId: null,
-    roundNumber: state.roundNumber ?? 0,
-    roundHistory: migrateRoundHistory(state.roundHistory),
-    cumulativeScores: state.cumulativeScores ?? {},
-    snapWindowEndsAt: state.snapWindowEndsAt ?? null,
-    snapEligibleTopCardId: state.snapEligibleTopCardId ?? null,
-    snapChainPlayerId: state.snapChainPlayerId ?? null,
-    chatMessages: state.chatMessages ?? [],
-    players: state.players.map((p) => ({
-      ...p,
-      isWaiting: p.isWaiting ?? false,
-      isBot: p.isBot ?? false,
-      botDifficulty: p.botDifficulty ?? null,
-      setupPeekedSlots: p.setupPeekedSlots ?? [],
-    })),
-  };
-}
 
 function messageText(raw: WSMessage): string {
   if (typeof raw === "string") return raw;
@@ -85,455 +18,77 @@ function messageText(raw: WSMessage): string {
 }
 
 export class CambioParty extends Server<Env> {
-  state: GameState | null = null;
-  private botKnowledge = new Map<string, BotKnowledge>();
-  private botTimer: ReturnType<typeof setTimeout> | null = null;
-  private botChatTimer: ReturnType<typeof setTimeout> | null = null;
-  private botChatReplyTimer: ReturnType<typeof setTimeout> | null = null;
-  private humanSnapStreak = 0;
-  private lastMoveReactionAt = 0;
+  private host: GameHost;
 
-  private getBotKnowledge(botId: string): BotKnowledge {
-    let knowledge = this.botKnowledge.get(botId);
-    if (!knowledge) {
-      knowledge = new BotKnowledge();
-      this.botKnowledge.set(botId, knowledge);
-    }
-    return knowledge;
-  }
-
-  private clearBotTimer() {
-    if (this.botTimer) {
-      clearTimeout(this.botTimer);
-      this.botTimer = null;
-    }
-    if (this.state) {
-      this.state.botThinkingId = null;
-    }
-  }
-
-  private clearBotChatTimer() {
-    if (this.botChatTimer) {
-      clearTimeout(this.botChatTimer);
-      this.botChatTimer = null;
-    }
-  }
-
-  private clearBotChatReplyTimer() {
-    if (this.botChatReplyTimer) {
-      clearTimeout(this.botChatReplyTimer);
-      this.botChatReplyTimer = null;
-    }
-  }
-
-  private scheduleBotChat() {
-    if (this.botChatTimer) return;
-    if (!this.state?.isSoloMode) return;
-
-    const bots = this.state.players.filter((p) => p.isBot);
-    if (bots.length === 0) return;
-
-    const delay = botChatDelay();
-    this.botChatTimer = setTimeout(() => {
-      this.botChatTimer = null;
-      void this.sendBotChat();
-    }, delay);
-  }
-
-  private scheduleBotChatReply(playerName: string, text: string) {
-    if (!this.state?.isSoloMode) return;
-
-    this.clearBotChatReplyTimer();
-    const delay = 2_000 + Math.floor(Math.random() * 3_000);
-    this.botChatReplyTimer = setTimeout(() => {
-      this.botChatReplyTimer = null;
-      void this.sendBotChat({ replyTo: { playerName, text } });
-    }, delay);
-  }
-
-  private scheduleBotMoveReaction(reaction: GameMoveReaction) {
-    if (!this.state?.isSoloMode) return;
-
-    const now = Date.now();
-    if (now - this.lastMoveReactionAt < MOVE_REACTION_COOLDOWN_MS) return;
-
-    this.clearBotChatReplyTimer();
-    this.lastMoveReactionAt = now;
-    const delay = 1_500 + Math.floor(Math.random() * 2_500);
-    this.botChatReplyTimer = setTimeout(() => {
-      this.botChatReplyTimer = null;
-      void this.sendBotChat({ gameMove: reaction });
-    }, delay);
-  }
-
-  private async sendBotChat(options?: {
-    replyTo?: { playerName: string; text: string };
-    gameMove?: GameMoveReaction;
-  }) {
-    if (!this.state?.isSoloMode) return;
-
-    const bots = this.state.players.filter((p) => p.isBot);
-    if (bots.length === 0) {
-      if (!options?.replyTo) this.scheduleBotChat();
-      return;
-    }
-
-    const bot = bots[Math.floor(Math.random() * bots.length)];
-    const botIds = new Set(bots.map((entry) => entry.id));
-    const humanChatTexts = this.state.chatMessages
-      .slice(-12)
-      .filter((message) => !botIds.has(message.playerId))
-      .map((message) => message.text);
-    const focusTarping = options?.gameMove
-      ? false
-      : shouldFocusTarpingForChat({
-          replyText: options?.replyTo?.text,
-          humanChatTexts,
-        });
-    const result = await generateBotChatMessage(this.env.GROQ_API_KEY, {
-      difficulty: bot.botDifficulty ?? "easy",
-      botName: bot.name,
-      playerNames: this.state.players.map((player) => player.name),
-      recentChat: this.state.chatMessages.slice(-12),
-      gamePhase: this.state.phase,
-      roundNumber: this.state.roundNumber,
-      replyTo: options?.replyTo,
-      gameMove: options?.gameMove,
-      focusTarping,
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    this.host = new GameHost({
+      roomId: this.name,
+      groqApiKey: this.env.GROQ_API_KEY,
+      onPersist: () => this.persist(),
+      onSnapWindowSchedule: (endsAt) => this.scheduleSnapWindowAlarm(endsAt),
     });
-
-    if (result.source === "template" && result.fallbackReason) {
-      console.log(
-        `[bot-chat] template fallback (${result.fallbackReason}) for ${bot.name}`,
-      );
-    }
-
-    const posted = addChatMessage(this.state, bot.id, result.text, {
-      fromBot: true,
-    });
-    if (!("error" in posted)) {
-      await this.persist();
-      this.broadcastState();
-    }
-
-    if (!options?.replyTo && !options?.gameMove) this.scheduleBotChat();
   }
 
-  private applyMessageResult(
-    botId: string,
-    message: ClientMessage,
-    result: ReturnType<typeof handleMessage>,
-  ) {
-    if (!this.state) return;
-    const bot = findPlayer(this.state, botId);
-    if (bot?.isBot) {
-      updateBotKnowledge(
-        this.getBotKnowledge(botId),
-        this.state,
-        botId,
-        message,
-        result,
-      );
-    }
+  get state(): GameState | null {
+    return this.host.getState();
   }
 
-  private async dispatchMessage(
-    playerId: string,
-    message: ClientMessage,
-    connection?: Connection<PlayerConnectionState>,
-  ) {
-    if (!this.state) return;
-
-    const actor = findPlayer(this.state, playerId);
-    const isHuman = actor !== undefined && !actor.isBot;
-    const snapshot =
-      isHuman && actor
-        ? capturePreMoveSnapshot(this.state, playerId, message)
-        : null;
-
-    const result = handleMessage(this.state, playerId, message);
-
-    if (result.error && connection) {
-      connection.send(JSON.stringify({ type: "error", message: result.error }));
-    }
-
-    this.applyMessageResult(playerId, message, result);
-
-    if (
-      message.type === "snap" &&
-      !result.error &&
-      "targetPlayerId" in message &&
-      "slot" in message
-    ) {
-      forgetSnapTargetForAllBots(
-        this.botKnowledge,
-        message.targetPlayerId,
-        message.slot,
-      );
-    }
-
-    if (result.secretPeek) {
-      this.sendToPlayer(playerId, {
-        type: "secret_peek",
-        playerId: result.secretPeek.playerId,
-        slot: result.secretPeek.slot,
-        card: result.secretPeek.card as Card,
-      });
-    }
-
-    await this.persist();
-    await this.syncSnapWindow();
-    this.broadcastState();
-
-    if (result.swapFlash) {
-      this.broadcastSwapFlash(result.swapFlash.slots);
-    }
-    if (result.snapFlash) {
-      this.broadcastSnapFlash(result.snapFlash);
-    }
-    if (result.peekFlash) {
-      this.broadcastPeekFlash(result.peekFlash);
-    }
-    if (result.penaltyFlash) {
-      this.broadcastPenaltyFlash(result.penaltyFlash);
-    }
-    if (result.cambioFlash) {
-      this.broadcastCambioFlash(result.cambioFlash.playerId);
-    }
-    if (result.reshuffleFlash) {
-      this.broadcastReshuffleFlash();
-    }
-    if (result.discardDrawFlash) {
-      this.broadcastDiscardDrawFlash(result.discardDrawFlash.playerId);
-    }
-    if (result.deckDrawFlash) {
-      this.broadcastDeckDrawFlash(result.deckDrawFlash.playerId);
-    }
-
-    if (message.type === "chat" && !result.error) {
-      const player = findPlayer(this.state, playerId);
-      if (player && !player.isBot) {
-        this.scheduleBotChatReply(player.name, message.text);
-      }
-    }
-
-    if (isHuman && actor && !result.error) {
-      if (message.type === "start_game" || message.type === "restart_game") {
-        this.humanSnapStreak = 0;
-      }
-
-      if (message.type === "snap") {
-        if (result.penaltyFlash) {
-          this.humanSnapStreak = 0;
-        } else {
-          this.humanSnapStreak += 1;
-        }
-      }
-
-      const moveReaction = detectMoveReaction(
-        this.state,
-        actor,
-        message,
-        result,
-        snapshot,
-        this.humanSnapStreak,
-      );
-      if (moveReaction && shouldReactToMove(moveReaction)) {
-        this.scheduleBotMoveReaction(moveReaction);
-      }
-    }
-
-    this.scheduleBotTurns();
-  }
-
-  scheduleBotTurns() {
-    this.clearBotTimer();
-    if (!this.state) return;
-
-    let scheduledBotId: string | null = null;
-    let scheduledAction: ClientMessage | null = null;
-
-    for (const botId of collectActingBots(this.state)) {
-      const bot = findPlayer(this.state, botId);
-      if (!bot?.isBot) continue;
-      const action = decideBotAction(
-        this.state,
-        botId,
-        this.getBotKnowledge(botId),
-      );
-      if (action) {
-        scheduledBotId = botId;
-        scheduledAction = action;
-        break;
-      }
-    }
-
-    if (!scheduledBotId || !scheduledAction) return;
-
-    const bot = findPlayer(this.state, scheduledBotId);
-    if (!bot?.isBot) return;
-
-    this.state.botThinkingId = scheduledBotId;
-    this.broadcastState();
-
-    const delay = botThinkDelay(bot.botDifficulty ?? "easy");
-    this.botTimer = setTimeout(() => {
-      this.botTimer = null;
-      if (!this.state) return;
-      this.state.botThinkingId = null;
-      void this.dispatchMessage(scheduledBotId, scheduledAction);
-    }, delay);
+  set state(value: GameState | null) {
+    this.host.setState(value);
   }
 
   async onStart() {
     const saved = await this.ctx.storage.get<GameState>("state");
     if (saved) {
-      this.state = migrateState(saved);
-      await this.syncSnapWindow();
-      this.scheduleBotTurns();
-      this.scheduleBotChat();
+      await this.host.restoreFromSaved(saved);
     }
   }
 
   async persist() {
-    if (this.state) {
-      this.state.botThinkingId = null;
-      await this.ctx.storage.put("state", this.state);
+    const state = this.host.getState();
+    if (state) {
+      await this.ctx.storage.put("state", state);
     }
   }
 
-  async scheduleSnapWindowAlarm() {
-    if (this.state?.phase !== "snap_window" || !this.state.snapWindowEndsAt) {
+  async scheduleSnapWindowAlarm(endsAt: number | null) {
+    if (endsAt == null) {
       await this.ctx.storage.deleteAlarm();
       return;
     }
-    await this.ctx.storage.setAlarm(this.state.snapWindowEndsAt);
-  }
-
-  async syncSnapWindow() {
-    if (this.state?.phase !== "snap_window") return;
-    if (expireSnapWindow(this.state)) {
-      await this.persist();
-      await this.ctx.storage.deleteAlarm();
-      this.broadcastState();
-      this.scheduleBotTurns();
-      return;
-    }
-    await this.scheduleSnapWindowAlarm();
+    await this.ctx.storage.setAlarm(endsAt);
   }
 
   async onAlarm() {
-    if (!this.state) return;
-    if (expireSnapWindow(this.state)) {
-      await this.persist();
-      await this.ctx.storage.deleteAlarm();
-      this.broadcastState();
-      this.scheduleBotTurns();
-      return;
-    }
-    await this.scheduleSnapWindowAlarm();
-    this.broadcastState();
+    await this.host.onSnapWindowAlarm();
+  }
+
+  private registerConnection(
+    connection: Connection<PlayerConnectionState>,
+  ): HostPeer {
+    const send = (message: ServerMessage) => {
+      connection.send(JSON.stringify(message));
+    };
+    const peer: HostPeer = {
+      playerId: connection.state?.playerId ?? "",
+      send,
+      connected: true,
+    };
+    this.host.addPeer(connection.id, peer);
+    return peer;
+  }
+
+  private syncPeerPlayerId(
+    connection: Connection<PlayerConnectionState>,
+    playerId: string,
+  ) {
+    const peer = this.host.getPeer(connection.id);
+    if (peer) peer.playerId = playerId;
   }
 
   getPlayerId(connection: Connection<PlayerConnectionState>): string | null {
     return connection.state?.playerId ?? null;
-  }
-
-  sendToPlayer(playerId: string, message: ServerMessage) {
-    for (const conn of this.getConnections<PlayerConnectionState>()) {
-      if (this.getPlayerId(conn) === playerId) {
-        conn.send(JSON.stringify(message));
-      }
-    }
-  }
-
-  broadcastState() {
-    if (!this.state) return;
-    for (const conn of this.getConnections<PlayerConnectionState>()) {
-      const playerId = this.getPlayerId(conn);
-      if (!playerId) continue;
-      const view = buildPlayerView(this.state, playerId);
-      conn.send(JSON.stringify({ type: "state", view }));
-    }
-  }
-
-  broadcastSwapFlash(slots: SwapFlashSlot[]) {
-    const message: ServerMessage = { type: "swap_flash", slots };
-    const payload = JSON.stringify(message);
-    for (const conn of this.getConnections()) {
-      conn.send(payload);
-    }
-  }
-
-  broadcastSnapFlash(snapFlash: SnapFlash) {
-    const message: ServerMessage = {
-      type: "snap_flash",
-      actorId: snapFlash.actorId,
-      playerId: snapFlash.playerId,
-      slot: snapFlash.slot,
-    };
-    const payload = JSON.stringify(message);
-    for (const conn of this.getConnections()) {
-      conn.send(payload);
-    }
-  }
-
-  broadcastPeekFlash(peekFlash: PeekFlash) {
-    const message: ServerMessage = {
-      type: "peek_flash",
-      kind: peekFlash.kind,
-      actorId: peekFlash.actorId,
-      playerId: peekFlash.playerId,
-      slot: peekFlash.slot,
-    };
-    const payload = JSON.stringify(message);
-    for (const conn of this.getConnections()) {
-      conn.send(payload);
-    }
-  }
-
-  broadcastPenaltyFlash(penaltyFlash: { playerId: string; slot: number }) {
-    const message: ServerMessage = {
-      type: "penalty_flash",
-      playerId: penaltyFlash.playerId,
-      slot: penaltyFlash.slot,
-    };
-    const payload = JSON.stringify(message);
-    for (const conn of this.getConnections()) {
-      conn.send(payload);
-    }
-  }
-
-  broadcastCambioFlash(playerId: string) {
-    const message: ServerMessage = { type: "cambio_flash", playerId };
-    const payload = JSON.stringify(message);
-    for (const conn of this.getConnections()) {
-      conn.send(payload);
-    }
-  }
-
-  broadcastReshuffleFlash() {
-    const message: ServerMessage = { type: "reshuffle_flash" };
-    const payload = JSON.stringify(message);
-    for (const conn of this.getConnections()) {
-      conn.send(payload);
-    }
-  }
-
-  broadcastDiscardDrawFlash(playerId: string) {
-    const message: ServerMessage = { type: "discard_draw_flash", playerId };
-    const payload = JSON.stringify(message);
-    for (const conn of this.getConnections()) {
-      conn.send(payload);
-    }
-  }
-
-  broadcastDeckDrawFlash(playerId: string) {
-    const message: ServerMessage = { type: "deck_draw_flash", playerId };
-    const payload = JSON.stringify(message);
-    for (const conn of this.getConnections()) {
-      conn.send(payload);
-    }
   }
 
   async onConnect(
@@ -545,15 +100,11 @@ export class CambioParty extends Server<Env> {
     const name = (url.searchParams.get("name") ?? "").trim().slice(0, 24);
     const debugEnabled = url.searchParams.has("debug");
     const isSolo = url.searchParams.get("solo") === "1";
-    const botCount = Math.min(
-      MAX_BOT_COUNT,
-      Math.max(
-        MIN_BOT_COUNT,
-        Number.parseInt(
-          url.searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
-          10,
-        ) || DEFAULT_BOT_COUNT,
-      ),
+    const botCount = clampBotCount(
+      Number.parseInt(
+        url.searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
+        10,
+      ) || DEFAULT_BOT_COUNT,
     );
     const difficulty = parseBotDifficulty(url.searchParams.get("difficulty"));
 
@@ -571,121 +122,63 @@ export class CambioParty extends Server<Env> {
 
     let playerId = queryPlayerId ?? crypto.randomUUID().slice(0, 10);
 
-    if (!this.state) {
-      this.state = createRoom(this.name, name, queryPlayerId ?? undefined);
-      playerId = this.state.hostId;
-
-      if (isSolo) {
-        this.state.isSoloMode = true;
-        this.state.soloDifficulty = difficulty;
-        for (let i = 0; i < botCount; i++) {
-          addBotPlayer(this.state, difficulty);
+    if (this.state) {
+      playerId = this.host.resolveReconnectPlayerId(queryPlayerId, name);
+      connection.setState({ playerId, debugEnabled });
+      this.host.closeStalePeers(connection.id, playerId);
+      for (const staleId of this.host.peerIdsForPlayer(playerId)) {
+        if (staleId !== connection.id) {
+          for (const staleConn of this.getConnections<PlayerConnectionState>()) {
+            if (staleConn.id === staleId) {
+              staleConn.close(1000, "reconnected");
+            }
+          }
         }
       }
-    } else {
-      playerId = this.resolveReconnectPlayerId(queryPlayerId, name);
-      connection.setState({ playerId, debugEnabled });
-      this.closeStaleConnections(connection, playerId);
     }
 
     connection.setState({ playerId, debugEnabled });
+    this.registerConnection(connection);
+    this.syncPeerPlayerId(connection, playerId);
 
-    const result = handleMessage(this.state, playerId, {
-      type: "join",
-      playerId,
+    const result = await this.host.handleConnect({
+      queryPlayerId,
       name,
+      isSolo,
+      botCount,
+      difficulty,
     });
 
     if (result.error) {
       connection.send(JSON.stringify({ type: "error", message: result.error }));
-      if (!this.state.players.some((p) => p.id === playerId)) {
+      if (result.closeConnection) {
         connection.close(1008, result.error);
+        this.host.removePeer(connection.id);
         return;
       }
     }
 
-    await this.persist();
+    this.syncPeerPlayerId(connection, result.playerId);
+    connection.setState({ playerId: result.playerId, debugEnabled });
 
     connection.send(
       JSON.stringify({
         type: "room_info",
         roomId: this.name,
-        playerId,
+        playerId: result.playerId,
       }),
-    );
-
-    await this.syncSnapWindow();
-    this.broadcastState();
-    this.scheduleBotTurns();
-    this.scheduleBotChat();
-  }
-
-  resolveReconnectPlayerId(queryPlayerId: string | null, name: string): string {
-    if (!this.state) return queryPlayerId ?? crypto.randomUUID().slice(0, 10);
-
-    if (queryPlayerId) {
-      const existing = this.state.players.find((p) => p.id === queryPlayerId);
-      if (existing) return queryPlayerId;
-    }
-
-    const normalizedName = name.trim().toLowerCase();
-    if (normalizedName) {
-      const reclaimable = this.state.players.find(
-        (p) =>
-          !p.isBot &&
-          !p.connected &&
-          !p.isWaiting &&
-          p.name.trim().toLowerCase() === normalizedName,
-      );
-      if (reclaimable) return reclaimable.id;
-    }
-
-    return crypto.randomUUID().slice(0, 10);
-  }
-
-  closeStaleConnections(
-    connection: Connection<PlayerConnectionState>,
-    playerId: string,
-  ) {
-    for (const conn of this.getConnections<PlayerConnectionState>()) {
-      if (conn.id !== connection.id && this.getPlayerId(conn) === playerId) {
-        conn.close(1000, "reconnected");
-      }
-    }
-  }
-
-  playerHasOtherConnection(
-    playerId: string,
-    exceptConnectionId: string,
-  ): boolean {
-    return [...this.getConnections<PlayerConnectionState>()].some(
-      (conn) =>
-        conn.id !== exceptConnectionId && this.getPlayerId(conn) === playerId,
     );
   }
 
   async onClose(connection: Connection<PlayerConnectionState>) {
     const playerId = this.getPlayerId(connection);
-    if (!this.state || !playerId) return;
+    if (!playerId) return;
 
-    if (this.playerHasOtherConnection(playerId, connection.id)) return;
+    const peer = this.host.getPeer(connection.id);
+    if (peer) peer.connected = false;
 
-    this.clearBotChatTimer();
-    this.clearBotChatReplyTimer();
-
-    const player = this.state.players.find((p) => p.id === playerId);
-    if (!player) return;
-
-    player.connected = false;
-    await this.persist();
-
-    if (this.playerHasOtherConnection(playerId, connection.id)) {
-      player.connected = true;
-      await this.persist();
-      return;
-    }
-
-    this.broadcastState();
+    await this.host.handleDisconnect(playerId, connection.id);
+    this.host.removePeer(connection.id);
   }
 
   async onMessage(
@@ -695,7 +188,7 @@ export class CambioParty extends Server<Env> {
     const playerId = this.getPlayerId(connection);
     if (!this.state || !playerId) return;
 
-    this.clearBotTimer();
+    this.host.clearBotTimerOnMessage();
 
     const message = parseClientMessageJson(messageText(raw));
     if (!message) {
@@ -718,6 +211,8 @@ export class CambioParty extends Server<Env> {
       return;
     }
 
-    await this.dispatchMessage(playerId, message, connection);
+    await this.host.dispatchMessage(playerId, message, (error) => {
+      connection.send(JSON.stringify({ type: "error", message: error }));
+    });
   }
 }

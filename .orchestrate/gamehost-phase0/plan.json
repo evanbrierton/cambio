@@ -21,7 +21,11 @@
       "openPR": true,
       "scopedGoal": "CAM-19: Extract transport-agnostic GameHost from party/cambio.ts.\n\nCreate src/game/host.ts with GameHost class that owns all game authority currently in CambioParty:\n- Player join/leave/reconnect (resolveReconnectPlayerId, closeStaleConnections)\n- dispatchMessage(playerId, message) wrapping handleMessage from engine.ts\n- broadcastState() using buildPlayerView per peer\n- Secret peek and flash event routing (secret_peek, peek_flash, swap_flash, snap_flash, penalty_flash, cambio_flash, reshuffle_flash, discard_draw_flash, deck_draw_flash)\n- Snap window scheduling via setTimeout + expireSnapWindow (host clock authoritative); expose onSnapWindowAlarm() for Cloudflare adapter\n- Bot move scheduling (collectActingBots, decideBotAction, BotKnowledge updates)\n- Bot chat scheduling with optional groqApiKey param (undefined → template-only via generateBotChatMessage)\n- migrateState helper\n\nDefine PeerConnection interface: { playerId, send(msg: ServerMessage), connected }.\n\nRefactor party/cambio.ts to thin adapter:\n- onConnect → host peer management + room creation\n- onMessage → host.dispatchMessage\n- onClose → host.removePeer / disconnect handling\n- onAlarm → host.onSnapWindowAlarm() (Cloudflare-specific alarm stays in adapter)\n- persist() → DO storage wrapper around host.getState()\n\nGameHost must have ZERO imports from partyserver or Cloudflare types.\nNo behavior change for production online play.",
       "pathsAllowed": ["party/**", "src/game/**"],
-      "pathsForbidden": ["src/components/game/**", "src/app/**", "src/hooks/**"],
+      "pathsForbidden": [
+        "src/components/game/**",
+        "src/app/**",
+        "src/hooks/**"
+      ],
       "acceptance": [
         "src/game/host.ts exists with transport-agnostic GameHost class",
         "party/cambio.ts delegates game logic to GameHost (substantially smaller adapter)",
@@ -37,7 +41,9 @@
       "model": "claude-opus-4-8",
       "verifies": "cam-19-gamehost",
       "scopedGoal": "Verify CAM-19 GameHost extraction meets all acceptance criteria on the worker branch.",
-      "acceptance": ["Verification includes execution evidence for all cam-19-gamehost acceptance criteria"]
+      "acceptance": [
+        "Verification includes execution evidence for all cam-19-gamehost acceptance criteria"
+      ]
     },
     {
       "name": "cam-20-server-messages",
@@ -46,7 +52,12 @@
       "openPR": true,
       "scopedGoal": "CAM-20: Extract shared server message handling from useGameConnection into useServerMessages hook.\n\nCreate src/hooks/useServerMessages.ts:\n- Accept inbound ServerMessage and update connection state (view, playerId, error, fleetingPeek, all flash types)\n- Handle: state, room_info, secret_peek, peek_flash, swap_flash, snap_flash, penalty_flash, cambio_flash, reshuffle_flash, discard_draw_flash, deck_draw_flash, error\n- Manage flash timers using existing *_FLASH_MS constants (move or re-export from useGameConnection)\n- Expose API suitable for useGameConnection: state + applyMessage handler + cleanup\n- Transport-agnostic: no WebSocket/PartySocket imports\n\nRefactor src/hooks/useGameConnection.ts:\n- Use useServerMessages for all inbound message handling\n- Keep only PartySocket connect/disconnect/send logic\n- Exported API unchanged (same return type, same exports for flash types and constants used by GameTable)\n\nNo LAN/WebRTC code. No changes to src/components/game/** or src/app/**.",
       "pathsAllowed": ["src/hooks/**"],
-      "pathsForbidden": ["party/**", "src/game/**", "src/components/game/**", "src/app/**"],
+      "pathsForbidden": [
+        "party/**",
+        "src/game/**",
+        "src/components/game/**",
+        "src/app/**"
+      ],
       "acceptance": [
         "src/hooks/useServerMessages.ts exists, transport-agnostic",
         "useGameConnection return type and behavior unchanged",
@@ -61,7 +72,9 @@
       "model": "claude-opus-4-8",
       "verifies": "cam-20-server-messages",
       "scopedGoal": "Verify CAM-20 useServerMessages extraction meets all acceptance criteria.",
-      "acceptance": ["Verification includes execution evidence for all cam-20-server-messages acceptance criteria"]
+      "acceptance": [
+        "Verification includes execution evidence for all cam-20-server-messages acceptance criteria"
+      ]
     },
     {
       "name": "cam-21-host-tests",
@@ -71,7 +84,11 @@
       "dependsOn": ["cam-19-gamehost"],
       "scopedGoal": "CAM-21: Add GameHost unit tests and document online regression checklist.\n\nOn top of cam-19-gamehost branch work, add src/game/host.test.ts covering:\n- Room creation and player join\n- Move dispatch and state broadcast (mock peers)\n- Secret peek routing to correct player only\n- Snap window expiry (mock timers)\n- Bot turn scheduling (mock timers)\n- Player disconnect / reconnect\n\nTests must run in Node without WebSocket.\n\nAdd docs/orchestrate/online-regression-checklist.md with manual smoke steps:\n- Create room, join from second browser\n- Full round with peek, swap, snap, Cambio\n- Solo mode with bots\n- Reconnect after refresh\n\nEnsure pnpm test includes host.test.ts. No LAN/WebRTC code.",
       "pathsAllowed": ["src/game/**", "docs/orchestrate/**"],
-      "pathsForbidden": ["src/components/game/**", "src/app/**", "src/hooks/**"],
+      "pathsForbidden": [
+        "src/components/game/**",
+        "src/app/**",
+        "src/hooks/**"
+      ],
       "acceptance": [
         "src/game/host.test.ts exists and passes",
         "docs/orchestrate/online-regression-checklist.md documents manual smoke steps",
@@ -86,16 +103,27 @@
       "model": "claude-opus-4-8",
       "verifies": "cam-21-host-tests",
       "scopedGoal": "Verify CAM-21 GameHost tests and regression checklist.",
-      "acceptance": ["Verification includes execution evidence for all cam-21-host-tests acceptance criteria"]
+      "acceptance": [
+        "Verification includes execution evidence for all cam-21-host-tests acceptance criteria"
+      ]
     },
     {
       "name": "merge-phase0",
       "type": "worker",
       "model": "gpt-5.5-high-fast",
       "openPR": true,
-      "dependsOn": ["cam-19-gamehost", "cam-20-server-messages", "cam-21-host-tests"],
+      "dependsOn": [
+        "cam-19-gamehost",
+        "cam-20-server-messages",
+        "cam-21-host-tests"
+      ],
       "scopedGoal": "Merge CAM-19, CAM-20, and CAM-21 branches into one integration branch for Offline P2P Phase 0.\n\nMerge order (resolve conflicts carefully):\n1. cam-19-gamehost branch (GameHost + CambioParty adapter)\n2. cam-20-server-messages branch (useServerMessages hook)\n3. cam-21-host-tests branch (host.test.ts + checklist)\n\nAfter merge:\n- pnpm lint, typecheck, test, party:check all pass\n- No LAN/WebRTC/useP2PConnection code added\n- Open one draft PR against main titled for CAM-19/20/21 Phase 0 if individual PRs weren't already merged\n\nDocument merge result and any conflict resolutions in handoff.",
-      "pathsAllowed": ["party/**", "src/game/**", "src/hooks/**", "docs/orchestrate/**"],
+      "pathsAllowed": [
+        "party/**",
+        "src/game/**",
+        "src/hooks/**",
+        "docs/orchestrate/**"
+      ],
       "pathsForbidden": ["src/components/game/**", "src/app/**"],
       "acceptance": [
         "Single branch contains GameHost, useServerMessages, host tests, and checklist",
