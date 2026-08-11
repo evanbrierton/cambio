@@ -10,18 +10,21 @@ import {
 } from "./vercel-ignore.mjs";
 
 describe("isIrrelevantPath / hasRelevantChanges", () => {
-  it("treats tests, docs, and CI paths as irrelevant", () => {
+  it("treats tests, docs, CI, and Worker backend paths as irrelevant", () => {
     expect(isIrrelevantPath("src/game/engine.test.ts")).toBe(true);
     expect(isIrrelevantPath("scripts/preview-worker.test.ts")).toBe(true);
     expect(isIrrelevantPath("README.md")).toBe(true);
     expect(isIrrelevantPath(".github/workflows/ci.yml")).toBe(true);
     expect(isIrrelevantPath("biome.json")).toBe(true);
     expect(isIrrelevantPath("vitest.config.mts")).toBe(true);
+    expect(isIrrelevantPath("party/cambio.ts")).toBe(true);
+    expect(isIrrelevantPath("party/worker.ts")).toBe(true);
+    expect(isIrrelevantPath("wrangler.toml")).toBe(true);
   });
 
-  it("treats app/runtime paths as relevant", () => {
+  it("treats Next.js app paths as relevant", () => {
     expect(isIrrelevantPath("src/app/page.tsx")).toBe(false);
-    expect(isIrrelevantPath("party/cambio.ts")).toBe(false);
+    expect(isIrrelevantPath("src/game/types.ts")).toBe(false);
     expect(isIrrelevantPath("scripts/vercel-build.sh")).toBe(false);
     expect(isIrrelevantPath("package.json")).toBe(false);
     expect(isIrrelevantPath("vercel.json")).toBe(false);
@@ -33,6 +36,8 @@ describe("isIrrelevantPath / hasRelevantChanges", () => {
         "src/game/engine.test.ts",
         "README.md",
         ".github/workflows/ci.yml",
+        "party/cambio.ts",
+        "wrangler.toml",
       ]),
     ).toBe(false);
   });
@@ -41,6 +46,9 @@ describe("isIrrelevantPath / hasRelevantChanges", () => {
     expect(
       hasRelevantChanges(["README.md", "src/components/GameTable.tsx"]),
     ).toBe(true);
+    expect(hasRelevantChanges(["party/cambio.ts", "src/game/types.ts"])).toBe(
+      true,
+    );
   });
 });
 

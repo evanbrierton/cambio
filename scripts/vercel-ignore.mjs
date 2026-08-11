@@ -6,10 +6,10 @@
  * Exit 0 = skip build, Exit 1 = proceed (Vercel convention).
  *
  * Skips when:
- * - Only irrelevant files changed (tests, docs, CI, lint config, …)
+ * - Only irrelevant files changed (tests, docs, CI, Worker backend, …)
  * - The PR is still a draft
  *
- * Production and ready PRs with relevant changes always build.
+ * Production and ready PRs with relevant Next.js changes always build.
  * Missing git/API context fails open (build).
  */
 
@@ -20,13 +20,20 @@ import { pathToFileURL } from "node:url";
 export const EXIT_SKIP = 0;
 export const EXIT_BUILD = 1;
 
-export const IRRELEVANT_PATH_PREFIXES = [".github/", ".cursor/"];
+export const IRRELEVANT_PATH_PREFIXES = [
+  ".github/",
+  ".cursor/",
+  // Cloudflare Worker / PartyKit backend — not part of the Next.js Vercel app.
+  // (src/game/ stays relevant: the client imports shared types/cards/wire-schema.)
+  "party/",
+];
 
 export const IRRELEVANT_FILES = new Set([
   "BUGS.md",
   "README.md",
   "biome.json",
   "vitest.config.mts",
+  "wrangler.toml",
   "scripts/dev-lan.sh",
   "scripts/tailwind-lint.mjs",
   "scripts/vercel-ignore.mjs",
