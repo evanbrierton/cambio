@@ -1,6 +1,25 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import {
+  Bell,
+  BellOff,
+  Check,
+  CircleUser,
+  Copy,
+  GalleryHorizontal,
+  LayoutGrid,
+  Lightbulb,
+  LightbulbOff,
+  ListOrdered,
+  LogOut,
+  MessageSquare,
+  MessageSquareOff,
+  MoreHorizontal,
+  Volume2,
+  VolumeX,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HAND_GRID_WIDTH, PixelCard } from "@/components/cards/PixelCard";
@@ -39,17 +58,15 @@ import type {
   PeekFlash,
   PenaltyFlash,
   ReshuffleFlash,
+  SnapFlash,
   SwapFlash,
+  TakeFlash,
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
-import { useHintsEnabled } from "@/hooks/useHintsEnabled";
-import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
-import { useOwnSeatDisplay } from "@/hooks/useOwnSeatDisplay";
-import { usePlayerGridEnabled } from "@/hooks/usePlayerGridEnabled";
-import { useSoundEnabled } from "@/hooks/useSoundEnabled";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { copyToClipboard } from "@/lib/clipboard";
 import type { ThemeVoice } from "@/lib/themes";
+import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 type GameTableProps = {
   view: PlayerView;
@@ -58,6 +75,8 @@ type GameTableProps = {
   fleetingPeek: FleetingPeek | null;
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
+  takeFlash: TakeFlash | null;
+  snapFlash: SnapFlash | null;
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
@@ -69,6 +88,9 @@ type GameTableProps = {
 type SelectedCard = { playerId: string; slot: number };
 
 const LOBBY_JOIN_TOAST_MS = 3000;
+const CHROME_ICON_CLASS = "size-3.5 shrink-0";
+const CHROME_ICON_BTN =
+  "chip-btn inline-flex items-center justify-center p-1 border-theme-muted text-theme hover:border-accent transition-colors";
 
 function formatPeekFlashNotice(
   peekFlash: PeekFlash,
@@ -117,6 +139,39 @@ function isSwapFlashing(
       (entry) => entry.playerId === playerId && entry.slot === slot,
     ) ?? false
   );
+}
+
+function isTakeFlashing(
+  takeFlash: TakeFlash | null,
+  playerId: string,
+  slot: number,
+): boolean {
+  return takeFlash?.playerId === playerId && takeFlash.slot === slot;
+}
+
+function isSnapFlashing(
+  snapFlash: SnapFlash | null,
+  playerId: string,
+  slot: number,
+): boolean {
+  return snapFlash?.playerId === playerId && snapFlash.slot === slot;
+}
+
+function formatSnapFlashNotice(
+  snapFlash: SnapFlash,
+  players: PlayerView["players"],
+  fallback: string,
+): string {
+  const actor = players.find((entry) => entry.id === snapFlash.actorId);
+  const target = players.find((entry) => entry.id === snapFlash.playerId);
+  const slotLabel = `#${snapFlash.slot + 1}`;
+  if (actor && target && actor.id === target.id) {
+    return `✦ ${actor.name} snapped ${slotLabel}`;
+  }
+  if (actor && target) {
+    return `✦ ${actor.name} snapped ${target.name} ${slotLabel}`;
+  }
+  return fallback;
 }
 
 function formatSwapFlashNotice(
@@ -316,6 +371,8 @@ function PlayerSeat({
   fleetingPeek,
   peekFlash,
   swapFlash,
+  takeFlash,
+  snapFlash,
   penaltyFlash,
   selectedSwapCard,
   canSwap,
@@ -338,6 +395,8 @@ function PlayerSeat({
   fleetingPeek: FleetingPeek | null;
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
+  takeFlash: TakeFlash | null;
+  snapFlash: SnapFlash | null;
   penaltyFlash: PenaltyFlash | null;
   selectedSwapCard: SelectedCard | null;
   canSwap?: boolean;
@@ -388,6 +447,8 @@ function PlayerSeat({
 
   const hasSwapFlash =
     swapFlash?.slots.some((entry) => entry.playerId === player.id) ?? false;
+  const hasSnapFlash =
+    snapFlash?.playerId === player.id || snapFlash?.actorId === player.id;
   const hasPeekFlash =
     peekFlash?.playerId === player.id || peekFlash?.actorId === player.id;
   const hasPenaltyFlash = penaltyFlash?.playerId === player.id;
@@ -462,6 +523,18 @@ function PlayerSeat({
             ? `#${index + 1}`
             : undefined
         }
+        takeFlashing={isTakeFlashing(takeFlash, player.id, index)}
+        takeFlashSlotLabel={
+          isTakeFlashing(takeFlash, player.id, index)
+            ? `#${index + 1}`
+            : undefined
+        }
+        snapFlashing={isSnapFlashing(snapFlash, player.id, index)}
+        snapFlashSlotLabel={
+          isSnapFlashing(snapFlash, player.id, index)
+            ? `#${index + 1}`
+            : undefined
+        }
         peekFlashing={showPeekFlashOverlay}
         peekFlashKind={showPeekFlashOverlay ? peekFlash?.kind : undefined}
         peekFlashSlotLabel={showPeekFlashOverlay ? `#${index + 1}` : undefined}
@@ -501,21 +574,23 @@ function PlayerSeat({
       className={`pixel-border ${seatPadding} w-full max-w-full shrink-0 flex flex-col items-center text-center ${
         hasSwapFlash
           ? "swap-seat-flash bg-swap-seat-flash ring-2 ring-accent shadow-glow-accent"
-          : hasPeekFlash
-            ? "peek-seat-flash bg-peek-seat-flash ring-2 ring-accent-alt shadow-glow-accent-alt"
-            : hasPenaltyFlash
-              ? "penalty-seat-flash bg-danger-surface/20 ring-2 ring-accent shadow-glow-accent"
-              : showDrawnSwapHint || showSnapGiveHint
-                ? "bg-swap-hint ring-2 ring-accent animate-pulse"
-                : showLookSeatHint
-                  ? "bg-action-hint ring-2 ring-accent-alt"
-                  : showSetupPeekHint
+          : hasSnapFlash
+            ? "snap-seat-flash bg-snap-seat-flash ring-2 ring-danger shadow-glow-accent"
+            : hasPeekFlash
+              ? "peek-seat-flash bg-peek-seat-flash ring-2 ring-accent-alt shadow-glow-accent-alt"
+              : hasPenaltyFlash
+                ? "penalty-seat-flash bg-danger-surface/20 ring-2 ring-accent shadow-glow-accent"
+                : showDrawnSwapHint || showSnapGiveHint
+                  ? "bg-swap-hint ring-2 ring-accent animate-pulse"
+                  : showLookSeatHint
                     ? "bg-action-hint ring-2 ring-accent-alt"
-                    : hasSwapFirstSelected
-                      ? "bg-swap-first-selected ring-2 ring-accent-alt shadow-glow-accent-alt"
-                      : player.isCurrentTurn
-                        ? "bg-surface-elevated ring-2 ring-accent-alt"
-                        : "bg-surface"
+                    : showSetupPeekHint
+                      ? "bg-action-hint ring-2 ring-accent-alt"
+                      : hasSwapFirstSelected
+                        ? "bg-swap-first-selected ring-2 ring-accent-alt shadow-glow-accent-alt"
+                        : player.isCurrentTurn
+                          ? "bg-surface-elevated ring-2 ring-accent-alt"
+                          : "bg-surface"
       } ${phase === "setup_peek" && !isOwn ? "opacity-40" : ""} ${
         lookAbilityActive &&
         !showLookSeatHint &&
@@ -542,6 +617,11 @@ function PlayerSeat({
         <div className="flex flex-wrap items-center justify-center gap-1">
           {hasSwapFlash && (
             <span className="ui-badge text-accent animate-pulse">SWAPPED</span>
+          )}
+          {hasSnapFlash && (
+            <span className="ui-badge text-danger-text animate-pulse">
+              SNAPPED
+            </span>
           )}
           {hasPeekFlash && peekFlash && (
             <span className="ui-badge text-accent-alt animate-pulse">
@@ -625,6 +705,8 @@ export function GameTable({
   fleetingPeek,
   peekFlash,
   swapFlash,
+  takeFlash,
+  snapFlash,
   penaltyFlash,
   cambioFlash,
   reshuffleFlash,
@@ -632,17 +714,22 @@ export function GameTable({
   deckDrawFlash,
   send,
 }: GameTableProps) {
+  useRehydrateUiPrefs();
   const voice = useThemeVoice();
-  const { soundEnabled, toggleSound } = useSoundEnabled();
-  const { hintsEnabled, toggleHints } = useHintsEnabled();
-  const { playerGridEnabled, togglePlayerGrid } = usePlayerGridEnabled();
-  const { ownSeatProminent, toggleOwnSeatDisplay } = useOwnSeatDisplay();
   const {
+    soundEnabled,
+    toggleSound,
+    hintsEnabled,
+    toggleHints,
+    playerGridEnabled,
+    togglePlayerGrid,
+    ownSeatProminent,
+    toggleOwnSeatDisplay,
     chatNotificationsEnabled,
     eventNotificationsEnabled,
     toggleChatNotifications,
     toggleEventNotifications,
-  } = useNotificationPrefs();
+  } = useUiPrefs();
   const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
@@ -700,6 +787,8 @@ export function GameTable({
     cambioFlash,
     reshuffleFlash,
     snapWindowSeconds,
+    takeFlash,
+    snapFlash,
   );
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
@@ -742,6 +831,19 @@ export function GameTable({
         });
       }
 
+      if (snapFlash) {
+        items.push({
+          id: "snap-flash",
+          message: formatSnapFlashNotice(
+            snapFlash,
+            view.players,
+            "✦ Card snapped",
+          ),
+          tone: "snap",
+          pulse: true,
+        });
+      }
+
       if (peekFlash) {
         items.push({
           id: "peek-flash",
@@ -768,6 +870,20 @@ export function GameTable({
         });
       }
 
+      if (deckDrawFlash) {
+        const player = view.players.find(
+          (p) => p.id === deckDrawFlash.playerId,
+        );
+        if (player) {
+          items.push({
+            id: "deck-draw-flash",
+            message: `⤴ ${player.name} drew from the deck`,
+            tone: "info",
+            pulse: true,
+          });
+        }
+      }
+
       if (discardDrawFlash) {
         const player = view.players.find(
           (p) => p.id === discardDrawFlash.playerId,
@@ -790,12 +906,14 @@ export function GameTable({
     return items;
   }, [
     chatToast,
+    deckDrawFlash,
     discardDrawFlash,
     error,
     eventNotificationsEnabled,
     lobbyJoinToast,
     peekFlash,
     penaltyFlash,
+    snapFlash,
     swapFlash,
     view.phase,
     view.players,
@@ -1098,6 +1216,8 @@ export function GameTable({
         fleetingPeek={fleetingPeek}
         peekFlash={peekFlash}
         swapFlash={swapFlash}
+        takeFlash={takeFlash}
+        snapFlash={snapFlash}
         penaltyFlash={penaltyFlash}
         selectedSwapCard={selectedSwapCard}
         canSwap={isOwn ? view.canSwap : undefined}
@@ -1158,46 +1278,98 @@ export function GameTable({
         <button
           type="button"
           onClick={toggleSound}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={soundEnabled ? voice.soundOn : voice.soundOff}
+          title={soundEnabled ? voice.soundOn : voice.soundOff}
+          className={CHROME_ICON_BTN}
         >
-          {soundEnabled ? voice.soundOn : voice.soundOff}
+          {soundEnabled ? (
+            <Volume2 aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <VolumeX aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
         <button
           type="button"
           onClick={toggleHints}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={hintsEnabled ? voice.hintsOn : voice.hintsOff}
+          title={hintsEnabled ? voice.hintsOn : voice.hintsOff}
+          className={CHROME_ICON_BTN}
         >
-          {hintsEnabled ? voice.hintsOn : voice.hintsOff}
+          {hintsEnabled ? (
+            <Lightbulb aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <LightbulbOff aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
         <button
           type="button"
           onClick={togglePlayerGrid}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={
+            playerGridEnabled ? voice.playerGridOn : voice.playerGridOff
+          }
+          title={playerGridEnabled ? voice.playerGridOn : voice.playerGridOff}
+          className={CHROME_ICON_BTN}
         >
-          {playerGridEnabled ? voice.playerGridOn : voice.playerGridOff}
+          {playerGridEnabled ? (
+            <LayoutGrid aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <GalleryHorizontal aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
         <button
           type="button"
           onClick={toggleOwnSeatDisplay}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={
+            ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder
+          }
+          title={
+            ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder
+          }
+          className={CHROME_ICON_BTN}
         >
-          {ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder}
+          {ownSeatProminent ? (
+            <CircleUser aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <ListOrdered aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
         <button
           type="button"
           onClick={toggleChatNotifications}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={
+            chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff
+          }
+          title={
+            chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff
+          }
+          className={CHROME_ICON_BTN}
         >
-          {chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff}
+          {chatNotificationsEnabled ? (
+            <MessageSquare aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <MessageSquareOff aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
         <button
           type="button"
           onClick={toggleEventNotifications}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+          aria-label={
+            eventNotificationsEnabled
+              ? voice.eventNotifsOn
+              : voice.eventNotifsOff
+          }
+          title={
+            eventNotificationsEnabled
+              ? voice.eventNotifsOn
+              : voice.eventNotifsOff
+          }
+          className={CHROME_ICON_BTN}
         >
-          {eventNotificationsEnabled
-            ? voice.eventNotifsOn
-            : voice.eventNotifsOff}
+          {eventNotificationsEnabled ? (
+            <Bell aria-hidden className={CHROME_ICON_CLASS} />
+          ) : (
+            <BellOff aria-hidden className={CHROME_ICON_CLASS} />
+          )}
         </button>
       </div>
 
@@ -1292,7 +1464,7 @@ export function GameTable({
                 className="sheet-close-btn border-theme-muted text-theme hover:border-accent hover:text-accent transition-colors"
                 aria-label="Close menu"
               >
-                <span aria-hidden="true">×</span>
+                <X aria-hidden className="size-5" />
               </button>
             </div>
             <div className="mobile-game-sheet overflow-y-auto flex-1 min-h-0 px-4 pt-0 pb-[max(1rem,env(safe-area-inset-bottom,0px))] flex flex-col gap-3">
@@ -1328,13 +1500,18 @@ export function GameTable({
                   onClick={copyRoomCode}
                   aria-live="polite"
                   aria-label={roomCopied ? voice.copied : voice.copy}
-                  className={`chip-btn chip-btn-sm shrink-0 transition-colors ${
+                  title={roomCopied ? voice.copied : voice.copy}
+                  className={`chip-btn chip-btn-sm inline-flex items-center justify-center shrink-0 transition-colors ${
                     roomCopied
                       ? "border-accent text-accent"
                       : "border-theme-muted text-theme hover:border-accent"
                   }`}
                 >
-                  {roomCopied ? voice.copied : voice.copy}
+                  {roomCopied ? (
+                    <Check aria-hidden className={CHROME_ICON_CLASS} />
+                  ) : (
+                    <Copy aria-hidden className={CHROME_ICON_CLASS} />
+                  )}
                 </button>
                 <span
                   role="status"
@@ -1359,7 +1536,7 @@ export function GameTable({
                 <button
                   type="button"
                   onClick={openSettings}
-                  className="chip-btn chip-btn-sm border-theme-muted text-theme hover:border-accent transition-colors lg:hidden relative"
+                  className="chip-btn chip-btn-sm inline-flex items-center justify-center border-theme-muted text-theme hover:border-accent transition-colors lg:hidden relative"
                   aria-label={
                     unreadCount > 0
                       ? `Game menu (${unreadCount} unread messages)`
@@ -1367,7 +1544,7 @@ export function GameTable({
                   }
                   title={voice.gameMenuLabel}
                 >
-                  ···
+                  <MoreHorizontal aria-hidden className={CHROME_ICON_CLASS} />
                   {unreadCount > 0 ? (
                     <span className="absolute -top-1 -right-1 min-w-3.5 h-3.5 px-0.5 flex items-center justify-center rounded-full bg-accent text-[8px] font-display text-surface leading-none">
                       {unreadCount > 9 ? "9+" : unreadCount}
@@ -1376,11 +1553,11 @@ export function GameTable({
                 </button>
                 <Link
                   href="/"
-                  className="chip-btn chip-btn-sm border-theme-muted text-theme hover:border-accent transition-colors"
+                  className="chip-btn chip-btn-sm inline-flex items-center justify-center border-theme-muted text-theme hover:border-accent transition-colors"
                   aria-label={voice.leaveGame}
                   title={voice.leaveGame}
                 >
-                  EXIT
+                  <LogOut aria-hidden className={CHROME_ICON_CLASS} />
                 </Link>
               </div>
             </div>
@@ -1454,9 +1631,11 @@ export function GameTable({
                   >
                     <p
                       className={`table-pile-label ${
-                        view.canDraw && !snapGivePending
-                          ? "pile-interactable-label"
-                          : "text-theme-muted"
+                        deckDrawFlash
+                          ? "pile-draw-flash-label"
+                          : view.canDraw && !snapGivePending
+                            ? "pile-interactable-label"
+                            : "text-theme-muted"
                       }`}
                     >
                       {voice.deck}
@@ -1464,13 +1643,18 @@ export function GameTable({
                     <div
                       className={`table-pile-card pixel-border rounded-card scaled-pile-size bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
                         deckDrawFlash
-                          ? "ring-2 ring-accent-alt shadow-glow-accent-alt animate-pulse"
+                          ? "pile-draw-flash pile-draw-flash-deck"
                           : view.canDraw && !snapGivePending
                             ? "pile-interactable-card ring-2 ring-accent-alt"
                             : ""
                       }`}
                     >
-                      {view.deckCount}
+                      {deckDrawFlash && (
+                        <span className="pile-draw-flash-badge pile-draw-flash-badge-deck">
+                          DRAWN
+                        </span>
+                      )}
+                      <span className="relative z-10">{view.deckCount}</span>
                     </div>
                   </button>
 
@@ -1559,17 +1743,19 @@ export function GameTable({
                   >
                     <p
                       className={`table-pile-label ${
-                        showDiscardPileGlow
-                          ? "pile-interactable-label pile-interactable-label-discard"
-                          : "text-theme-muted"
+                        discardDrawFlash
+                          ? "pile-draw-flash-label pile-draw-flash-label-discard"
+                          : showDiscardPileGlow
+                            ? "pile-interactable-label pile-interactable-label-discard"
+                            : "text-theme-muted"
                       }`}
                     >
                       {voice.discard}
                     </p>
                     <div
-                      className={`scaled-pile-size shrink-0 ${
+                      className={`scaled-pile-size shrink-0 relative ${
                         discardDrawFlash
-                          ? "ring-2 ring-accent-alt shadow-glow-accent-alt rounded-card animate-pulse"
+                          ? "pile-draw-flash pile-draw-flash-discard rounded-card"
                           : showDiscardPileGlow
                             ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
                             : snapWindowActive
@@ -1579,6 +1765,11 @@ export function GameTable({
                                 : ""
                       }`}
                     >
+                      {discardDrawFlash && (
+                        <span className="pile-draw-flash-badge pile-draw-flash-badge-discard">
+                          TOOK
+                        </span>
+                      )}
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={view.discardTop?.id ?? "empty-discard"}

@@ -127,6 +127,11 @@ export type ThemeVoice = {
   soloMode: string;
   botCountLabel: string;
   jokerCountLabel: string;
+  acePointsLabel: string;
+  facePointsLabel: string;
+  jokerPointsLabel: string;
+  blackKingPointsLabel: string;
+  redKingPointsLabel: string;
   difficultyLabel: string;
   difficultyEasy: string;
   difficultyMedium: string;
@@ -321,6 +326,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "SOLO MODE",
     botCountLabel: "BOTS",
     jokerCountLabel: "JOKERS",
+    acePointsLabel: "ACE PTS",
+    facePointsLabel: "J/Q PTS",
+    jokerPointsLabel: "JOKER PTS",
+    blackKingPointsLabel: "BLK K PTS",
+    redKingPointsLabel: "RED K PTS",
     difficultyLabel: "DIFFICULTY",
     difficultyEasy: "EASY",
     difficultyMedium: "MEDIUM",
@@ -461,6 +471,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo table",
     botCountLabel: "Opponents",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Skill",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -599,6 +614,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo mode",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -736,6 +756,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -876,6 +901,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo mode",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -1016,6 +1046,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo study",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -1154,6 +1189,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo by the fire",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -1292,6 +1332,11 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     soloMode: "Solo",
     botCountLabel: "Bots",
     jokerCountLabel: "Jokers",
+    acePointsLabel: "Ace points",
+    facePointsLabel: "Jack/Queen points",
+    jokerPointsLabel: "Joker points",
+    blackKingPointsLabel: "Black king points",
+    redKingPointsLabel: "Red king points",
     difficultyLabel: "Difficulty",
     difficultyEasy: "Easy",
     difficultyMedium: "Medium",
@@ -1320,6 +1365,8 @@ export const THEME_BACKGROUNDS: Record<ThemeId, string> = {
   lodge: "#0f1a14",
   ink: "#f5f0e8",
 };
+
+export const THEME_IDS: ThemeId[] = THEME_OPTIONS.map((option) => option.id);
 
 export const DEFAULT_THEME: ThemeId = "retro";
 

@@ -60,6 +60,8 @@ export default function PlayPage({
     fleetingPeek,
     peekFlash,
     swapFlash,
+    takeFlash,
+    snapFlash,
     penaltyFlash,
     cambioFlash,
     reshuffleFlash,
@@ -132,6 +134,8 @@ export default function PlayPage({
         fleetingPeek={fleetingPeek}
         peekFlash={peekFlash}
         swapFlash={swapFlash}
+        takeFlash={takeFlash}
+        snapFlash={snapFlash}
         penaltyFlash={penaltyFlash}
         cambioFlash={cambioFlash}
         reshuffleFlash={reshuffleFlash}

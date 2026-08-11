@@ -663,3 +663,97 @@ describe("setup peek", () => {
     expect(bobView.ownSetupPeekedSlots).toEqual([]);
   });
 });
+
+describe("set_card_points (CAM-64)", () => {
+  it("defaults new rooms to standard card point values", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    expect(state.cardPoints).toEqual({
+      ace: 1,
+      face: 10,
+      joker: 0,
+      blackKing: -2,
+      redKing: 25,
+    });
+  });
+
+  it("lets the host change values in lobby", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    const result = handleMessage(state, "alice", {
+      type: "set_card_points",
+      values: { redKing: 20 },
+    });
+    expect(result).toEqual({});
+    expect(state.cardPoints.redKing).toBe(20);
+  });
+
+  it("rejects non-host changes", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    state.players.push({
+      id: "bob",
+      name: "Bob",
+      hand: [],
+      penaltyCount: 0,
+      setupPeekedSlots: [],
+      hasCalledCambio: false,
+      finalTurnDone: false,
+      isWaiting: false,
+      connected: true,
+      isBot: false,
+      botDifficulty: null,
+    });
+    const result = handleMessage(state, "bob", {
+      type: "set_card_points",
+      values: { redKing: 20 },
+    });
+    expect(result).toEqual({
+      error: "Only the host can change card point values.",
+    });
+  });
+
+  it("blocks changes during an active round", () => {
+    const state = playingState();
+    const result = handleMessage(state, "alice", {
+      type: "set_card_points",
+      values: { redKing: 20 },
+    });
+    expect(result).toEqual({
+      error: "Cannot change card point values during a game.",
+    });
+  });
+
+  it("uses configured values for end-of-round scoring", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    handleMessage(state, "alice", {
+      type: "set_card_points",
+      values: { redKing: 5 },
+    });
+    state.players[0].hand = [slot(card("K", "hearts"))];
+    state.roundNumber = 1;
+    finalizeRound(state);
+    expect(state.scores).toEqual({ alice: 5 });
+  });
+
+  it("exposes card points and host edit flag in player view", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    const hostView = buildPlayerView(state, "alice");
+    expect(hostView.cardPoints).toEqual(state.cardPoints);
+    expect(hostView.canSetCardPoints).toBe(true);
+
+    state.players.push({
+      id: "bob",
+      name: "Bob",
+      hand: [],
+      penaltyCount: 0,
+      setupPeekedSlots: [],
+      hasCalledCambio: false,
+      finalTurnDone: false,
+      isWaiting: false,
+      connected: true,
+      isBot: false,
+      botDifficulty: null,
+    });
+    const guestView = buildPlayerView(state, "bob");
+    expect(guestView.cardPoints).toEqual(state.cardPoints);
+    expect(guestView.canSetCardPoints).toBe(false);
+  });
+});
