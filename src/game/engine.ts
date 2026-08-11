@@ -23,6 +23,7 @@ import type {
   PlayerView,
   RoundResult,
   ScoreboardEntry,
+  SnapFlash,
   SwapFlashSlot,
 } from "./types";
 import {
@@ -848,6 +849,7 @@ export function handleMessage(
   secretPeek?: { playerId: string; slot: number; card: unknown };
   peekFlash?: PeekFlash;
   swapFlash?: { slots: SwapFlashSlot[] };
+  snapFlash?: SnapFlash;
   penaltyFlash?: { playerId: string; slot: number };
   cambioFlash?: { playerId: string };
   reshuffleFlash?: boolean;
@@ -1148,9 +1150,15 @@ export function handleMessage(
       state.discard.push(handCard);
       claimSnapChain(state, playerId, handCard);
 
+      const snapFlash: SnapFlash = {
+        actorId: playerId,
+        playerId: message.targetPlayerId,
+        slot: message.slot,
+      };
+
       if (message.targetPlayerId === playerId) {
         addLog(state, `${player.name} snapped correctly!`);
-        return {};
+        return { snapFlash };
       }
 
       state.pendingAbility = {
@@ -1165,7 +1173,7 @@ export function handleMessage(
         state,
         `${player.name} snapped ${target.name}'s card — give them one of yours.`,
       );
-      return {};
+      return { snapFlash };
     }
 
     case "snap_give": {

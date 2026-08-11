@@ -58,7 +58,9 @@ import type {
   PeekFlash,
   PenaltyFlash,
   ReshuffleFlash,
+  SnapFlash,
   SwapFlash,
+  TakeFlash,
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
@@ -73,6 +75,8 @@ type GameTableProps = {
   fleetingPeek: FleetingPeek | null;
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
+  takeFlash: TakeFlash | null;
+  snapFlash: SnapFlash | null;
   penaltyFlash: PenaltyFlash | null;
   cambioFlash: CambioFlash | null;
   reshuffleFlash: ReshuffleFlash | null;
@@ -135,6 +139,39 @@ function isSwapFlashing(
       (entry) => entry.playerId === playerId && entry.slot === slot,
     ) ?? false
   );
+}
+
+function isTakeFlashing(
+  takeFlash: TakeFlash | null,
+  playerId: string,
+  slot: number,
+): boolean {
+  return takeFlash?.playerId === playerId && takeFlash.slot === slot;
+}
+
+function isSnapFlashing(
+  snapFlash: SnapFlash | null,
+  playerId: string,
+  slot: number,
+): boolean {
+  return snapFlash?.playerId === playerId && snapFlash.slot === slot;
+}
+
+function formatSnapFlashNotice(
+  snapFlash: SnapFlash,
+  players: PlayerView["players"],
+  fallback: string,
+): string {
+  const actor = players.find((entry) => entry.id === snapFlash.actorId);
+  const target = players.find((entry) => entry.id === snapFlash.playerId);
+  const slotLabel = `#${snapFlash.slot + 1}`;
+  if (actor && target && actor.id === target.id) {
+    return `✦ ${actor.name} snapped ${slotLabel}`;
+  }
+  if (actor && target) {
+    return `✦ ${actor.name} snapped ${target.name} ${slotLabel}`;
+  }
+  return fallback;
 }
 
 function formatSwapFlashNotice(
@@ -333,6 +370,8 @@ function PlayerSeat({
   fleetingPeek,
   peekFlash,
   swapFlash,
+  takeFlash,
+  snapFlash,
   penaltyFlash,
   selectedSwapCard,
   canSwap,
@@ -354,6 +393,8 @@ function PlayerSeat({
   fleetingPeek: FleetingPeek | null;
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
+  takeFlash: TakeFlash | null;
+  snapFlash: SnapFlash | null;
   penaltyFlash: PenaltyFlash | null;
   selectedSwapCard: SelectedCard | null;
   canSwap?: boolean;
@@ -399,6 +440,8 @@ function PlayerSeat({
 
   const hasSwapFlash =
     swapFlash?.slots.some((entry) => entry.playerId === player.id) ?? false;
+  const hasSnapFlash =
+    snapFlash?.playerId === player.id || snapFlash?.actorId === player.id;
   const hasPeekFlash =
     peekFlash?.playerId === player.id || peekFlash?.actorId === player.id;
   const hasPenaltyFlash = penaltyFlash?.playerId === player.id;
@@ -469,6 +512,18 @@ function PlayerSeat({
             ? `#${index + 1}`
             : undefined
         }
+        takeFlashing={isTakeFlashing(takeFlash, player.id, index)}
+        takeFlashSlotLabel={
+          isTakeFlashing(takeFlash, player.id, index)
+            ? `#${index + 1}`
+            : undefined
+        }
+        snapFlashing={isSnapFlashing(snapFlash, player.id, index)}
+        snapFlashSlotLabel={
+          isSnapFlashing(snapFlash, player.id, index)
+            ? `#${index + 1}`
+            : undefined
+        }
         peekFlashing={showPeekFlashOverlay}
         peekFlashKind={showPeekFlashOverlay ? peekFlash?.kind : undefined}
         peekFlashSlotLabel={showPeekFlashOverlay ? `#${index + 1}` : undefined}
@@ -508,21 +563,23 @@ function PlayerSeat({
       className={`pixel-border ${seatPadding} w-full max-w-full shrink-0 flex flex-col items-center text-center ${
         hasSwapFlash
           ? "swap-seat-flash bg-swap-seat-flash ring-2 ring-accent shadow-glow-accent"
-          : hasPeekFlash
-            ? "peek-seat-flash bg-peek-seat-flash ring-2 ring-accent-alt shadow-glow-accent-alt"
-            : hasPenaltyFlash
-              ? "penalty-seat-flash bg-danger-surface/20 ring-2 ring-accent shadow-glow-accent"
-              : showDrawnSwapHint || showSnapGiveHint
-                ? "bg-swap-hint ring-2 ring-accent animate-pulse"
-                : showLookSeatHint
-                  ? "bg-action-hint ring-2 ring-accent-alt"
-                  : showSetupPeekHint
+          : hasSnapFlash
+            ? "snap-seat-flash bg-snap-seat-flash ring-2 ring-danger shadow-glow-accent"
+            : hasPeekFlash
+              ? "peek-seat-flash bg-peek-seat-flash ring-2 ring-accent-alt shadow-glow-accent-alt"
+              : hasPenaltyFlash
+                ? "penalty-seat-flash bg-danger-surface/20 ring-2 ring-accent shadow-glow-accent"
+                : showDrawnSwapHint || showSnapGiveHint
+                  ? "bg-swap-hint ring-2 ring-accent animate-pulse"
+                  : showLookSeatHint
                     ? "bg-action-hint ring-2 ring-accent-alt"
-                    : hasSwapFirstSelected
-                      ? "bg-swap-first-selected ring-2 ring-accent-alt shadow-glow-accent-alt"
-                      : player.isCurrentTurn
-                        ? "bg-surface-elevated ring-2 ring-accent-alt"
-                        : "bg-surface"
+                    : showSetupPeekHint
+                      ? "bg-action-hint ring-2 ring-accent-alt"
+                      : hasSwapFirstSelected
+                        ? "bg-swap-first-selected ring-2 ring-accent-alt shadow-glow-accent-alt"
+                        : player.isCurrentTurn
+                          ? "bg-surface-elevated ring-2 ring-accent-alt"
+                          : "bg-surface"
       } ${phase === "setup_peek" && !isOwn ? "opacity-40" : ""} ${
         lookAbilityActive &&
         !showLookSeatHint &&
@@ -549,6 +606,11 @@ function PlayerSeat({
         <div className="flex flex-wrap items-center justify-center gap-1">
           {hasSwapFlash && (
             <span className="ui-badge text-accent animate-pulse">SWAPPED</span>
+          )}
+          {hasSnapFlash && (
+            <span className="ui-badge text-danger-text animate-pulse">
+              SNAPPED
+            </span>
           )}
           {hasPeekFlash && peekFlash && (
             <span className="ui-badge text-accent-alt animate-pulse">
@@ -632,6 +694,8 @@ export function GameTable({
   fleetingPeek,
   peekFlash,
   swapFlash,
+  takeFlash,
+  snapFlash,
   penaltyFlash,
   cambioFlash,
   reshuffleFlash,
@@ -712,6 +776,8 @@ export function GameTable({
     cambioFlash,
     reshuffleFlash,
     snapWindowSeconds,
+    takeFlash,
+    snapFlash,
   );
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
@@ -754,6 +820,19 @@ export function GameTable({
         });
       }
 
+      if (snapFlash) {
+        items.push({
+          id: "snap-flash",
+          message: formatSnapFlashNotice(
+            snapFlash,
+            view.players,
+            "✦ Card snapped",
+          ),
+          tone: "snap",
+          pulse: true,
+        });
+      }
+
       if (peekFlash) {
         items.push({
           id: "peek-flash",
@@ -780,6 +859,20 @@ export function GameTable({
         });
       }
 
+      if (deckDrawFlash) {
+        const player = view.players.find(
+          (p) => p.id === deckDrawFlash.playerId,
+        );
+        if (player) {
+          items.push({
+            id: "deck-draw-flash",
+            message: `⤴ ${player.name} drew from the deck`,
+            tone: "info",
+            pulse: true,
+          });
+        }
+      }
+
       if (discardDrawFlash) {
         const player = view.players.find(
           (p) => p.id === discardDrawFlash.playerId,
@@ -802,12 +895,14 @@ export function GameTable({
     return items;
   }, [
     chatToast,
+    deckDrawFlash,
     discardDrawFlash,
     error,
     eventNotificationsEnabled,
     lobbyJoinToast,
     peekFlash,
     penaltyFlash,
+    snapFlash,
     swapFlash,
     view.phase,
     view.players,
@@ -1108,6 +1203,8 @@ export function GameTable({
         fleetingPeek={fleetingPeek}
         peekFlash={peekFlash}
         swapFlash={swapFlash}
+        takeFlash={takeFlash}
+        snapFlash={snapFlash}
         penaltyFlash={penaltyFlash}
         selectedSwapCard={selectedSwapCard}
         canSwap={isOwn ? view.canSwap : undefined}
@@ -1521,9 +1618,11 @@ export function GameTable({
                   >
                     <p
                       className={`table-pile-label ${
-                        view.canDraw && !snapGivePending
-                          ? "pile-interactable-label"
-                          : "text-theme-muted"
+                        deckDrawFlash
+                          ? "pile-draw-flash-label"
+                          : view.canDraw && !snapGivePending
+                            ? "pile-interactable-label"
+                            : "text-theme-muted"
                       }`}
                     >
                       {voice.deck}
@@ -1531,13 +1630,18 @@ export function GameTable({
                     <div
                       className={`table-pile-card pixel-border rounded-card scaled-pile-size bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
                         deckDrawFlash
-                          ? "ring-2 ring-accent-alt shadow-glow-accent-alt animate-pulse"
+                          ? "pile-draw-flash pile-draw-flash-deck"
                           : view.canDraw && !snapGivePending
                             ? "pile-interactable-card ring-2 ring-accent-alt"
                             : ""
                       }`}
                     >
-                      {view.deckCount}
+                      {deckDrawFlash && (
+                        <span className="pile-draw-flash-badge pile-draw-flash-badge-deck">
+                          DRAWN
+                        </span>
+                      )}
+                      <span className="relative z-10">{view.deckCount}</span>
                     </div>
                   </button>
 
@@ -1626,17 +1730,19 @@ export function GameTable({
                   >
                     <p
                       className={`table-pile-label ${
-                        showDiscardPileGlow
-                          ? "pile-interactable-label pile-interactable-label-discard"
-                          : "text-theme-muted"
+                        discardDrawFlash
+                          ? "pile-draw-flash-label pile-draw-flash-label-discard"
+                          : showDiscardPileGlow
+                            ? "pile-interactable-label pile-interactable-label-discard"
+                            : "text-theme-muted"
                       }`}
                     >
                       {voice.discard}
                     </p>
                     <div
-                      className={`scaled-pile-size shrink-0 ${
+                      className={`scaled-pile-size shrink-0 relative ${
                         discardDrawFlash
-                          ? "ring-2 ring-accent-alt shadow-glow-accent-alt rounded-card animate-pulse"
+                          ? "pile-draw-flash pile-draw-flash-discard rounded-card"
                           : showDiscardPileGlow
                             ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
                             : snapWindowActive
@@ -1646,6 +1752,11 @@ export function GameTable({
                                 : ""
                       }`}
                     >
+                      {discardDrawFlash && (
+                        <span className="pile-draw-flash-badge pile-draw-flash-badge-discard">
+                          TOOK
+                        </span>
+                      )}
                       <AnimatePresence mode="wait">
                         <motion.div
                           key={view.discardTop?.id ?? "empty-discard"}

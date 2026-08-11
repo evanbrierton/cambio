@@ -36,6 +36,7 @@ import type {
   GameState,
   PeekFlash,
   ServerMessage,
+  SnapFlash,
   SwapFlashSlot,
 } from "../src/game/types";
 import {
@@ -285,6 +286,9 @@ export class CambioParty extends Server<Env> {
     if (result.swapFlash) {
       this.broadcastSwapFlash(result.swapFlash.slots);
     }
+    if (result.snapFlash) {
+      this.broadcastSnapFlash(result.snapFlash);
+    }
     if (result.peekFlash) {
       this.broadcastPeekFlash(result.peekFlash);
     }
@@ -453,6 +457,19 @@ export class CambioParty extends Server<Env> {
 
   broadcastSwapFlash(slots: SwapFlashSlot[]) {
     const message: ServerMessage = { type: "swap_flash", slots };
+    const payload = JSON.stringify(message);
+    for (const conn of this.getConnections()) {
+      conn.send(payload);
+    }
+  }
+
+  broadcastSnapFlash(snapFlash: SnapFlash) {
+    const message: ServerMessage = {
+      type: "snap_flash",
+      actorId: snapFlash.actorId,
+      playerId: snapFlash.playerId,
+      slot: snapFlash.slot,
+    };
     const payload = JSON.stringify(message);
     for (const conn of this.getConnections()) {
       conn.send(payload);
