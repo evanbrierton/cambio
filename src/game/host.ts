@@ -1,3 +1,4 @@
+import { MATCH_ABANDON_MS, MATCH_SOFT_START_MS } from "../matchmaking/types";
 import {
   BotKnowledge,
   botThinkDelay,
@@ -63,6 +64,9 @@ export type ConnectParams = {
   isSolo: boolean;
   botCount: number;
   difficulty: BotDifficulty;
+  isMatchmade?: boolean;
+  matchTargetSize?: number;
+  matchFillWithBots?: boolean;
 };
 
 export type ConnectResult = {
@@ -77,6 +81,10 @@ export function migrateHostState(state: GameState): GameState {
   return {
     ...state,
     isSoloMode: state.isSoloMode ?? false,
+    isMatchmade: state.isMatchmade ?? false,
+    matchTargetSize: state.matchTargetSize ?? 4,
+    matchFillWithBots: state.matchFillWithBots ?? true,
+    matchSoftStartAt: state.matchSoftStartAt ?? null,
     soloDifficulty: state.soloDifficulty ?? null,
     jokerCount: state.jokerCount ?? DEFAULT_JOKER_COUNT,
     cardPoints: { ...DEFAULT_CARD_POINTS, ...state.cardPoints },
@@ -106,6 +114,8 @@ export class GameHost {
   private botChatTimer: ReturnType<typeof setTimeout> | null = null;
   private botChatReplyTimer: ReturnType<typeof setTimeout> | null = null;
   private snapWindowTimer: ReturnType<typeof setTimeout> | null = null;
+  private matchSoftStartTimer: ReturnType<typeof setTimeout> | null = null;
+  private matchAbandonTimer: ReturnType<typeof setTimeout> | null = null;
   private humanSnapStreak = 0;
   private lastMoveReactionAt = 0;
 
@@ -176,7 +186,16 @@ export class GameHost {
   }
 
   async handleConnect(params: ConnectParams): Promise<ConnectResult> {
-    const { queryPlayerId, name, isSolo, botCount, difficulty } = params;
+    const {
+      queryPlayerId,
+      name,
+      isSolo,
+      botCount,
+      difficulty,
+      isMatchmade,
+      matchTargetSize,
+      matchFillWithBots,
+    } = params;
 
     const existingPlayer = queryPlayerId
       ? this.state?.players.find((p) => p.id === queryPlayerId)
@@ -206,6 +225,10 @@ export class GameHost {
         for (let i = 0; i < botCount; i++) {
           addBotPlayer(this.state, difficulty);
         }
+      } else if (isMatchmade) {
+        this.state.isMatchmade = true;
+        this.state.matchTargetSize = matchTargetSize ?? 4;
+        this.state.matchFillWithBots = matchFillWithBots ?? true;
       }
     } else {
       playerId = this.resolveReconnectPlayerId(queryPlayerId, name);
@@ -229,6 +252,7 @@ export class GameHost {
     this.broadcastState();
     this.scheduleBotTurns();
     this.scheduleBotChat();
+    await this.maybeAutoStartMatchmade();
 
     return { playerId };
   }
@@ -253,6 +277,115 @@ export class GameHost {
     }
 
     this.broadcastState();
+    await this.maybeAutoStartMatchmade();
+  }
+
+  private countMatchHumans(): number {
+    if (!this.state) return 0;
+    return this.state.players.filter(
+      (player) => !player.isBot && !player.isWaiting && player.connected,
+    ).length;
+  }
+
+  private clearMatchSoftStartTimer() {
+    if (this.matchSoftStartTimer) {
+      clearTimeout(this.matchSoftStartTimer);
+      this.matchSoftStartTimer = null;
+    }
+  }
+
+  private clearMatchAbandonTimer() {
+    if (this.matchAbandonTimer) {
+      clearTimeout(this.matchAbandonTimer);
+      this.matchAbandonTimer = null;
+    }
+  }
+
+  private clearMatchTimers() {
+    this.clearMatchSoftStartTimer();
+    this.clearMatchAbandonTimer();
+  }
+
+  private scheduleMatchSoftStart() {
+    this.clearMatchSoftStartTimer();
+    if (!this.state?.matchSoftStartAt) return;
+    const delay = Math.max(0, this.state.matchSoftStartAt - Date.now());
+    this.matchSoftStartTimer = setTimeout(() => {
+      void this.onMatchSoftStart();
+    }, delay);
+  }
+
+  private scheduleMatchAbandon() {
+    this.clearMatchAbandonTimer();
+    this.matchAbandonTimer = setTimeout(() => {
+      void this.onMatchAbandon();
+    }, MATCH_ABANDON_MS);
+  }
+
+  private async onMatchSoftStart() {
+    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (this.countMatchHumans() >= 2) {
+      await this.startMatchmadeGame();
+    }
+  }
+
+  private async onMatchAbandon() {
+    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (this.countMatchHumans() !== 1 || this.state.matchFillWithBots) return;
+    addChatMessage(
+      this.state,
+      "system",
+      "Match abandoned — not enough players joined.",
+    );
+    this.state.matchSoftStartAt = null;
+    this.clearMatchTimers();
+    await this.persist();
+    this.broadcastState();
+  }
+
+  private async startMatchmadeGame() {
+    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+
+    const target = this.state.matchTargetSize;
+    if (this.state.matchFillWithBots) {
+      const difficulty: BotDifficulty = "medium";
+      while (
+        this.state.players.filter((player) => !player.isWaiting).length <
+          target &&
+        this.state.players.length < 6
+      ) {
+        addBotPlayer(this.state, difficulty);
+      }
+    }
+
+    this.state.matchSoftStartAt = null;
+    this.clearMatchTimers();
+    await this.dispatchMessage(this.state.hostId, { type: "start_game" });
+  }
+
+  private async maybeAutoStartMatchmade() {
+    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+
+    const humans = this.countMatchHumans();
+    const target = this.state.matchTargetSize;
+
+    if (humans >= target) {
+      this.clearMatchTimers();
+      await this.startMatchmadeGame();
+      return;
+    }
+
+    if (humans >= 2 && !this.state.matchSoftStartAt) {
+      this.state.matchSoftStartAt = Date.now() + MATCH_SOFT_START_MS;
+      await this.persist();
+      this.scheduleMatchSoftStart();
+    }
+
+    if (humans === 1 && !this.state.matchFillWithBots) {
+      this.scheduleMatchAbandon();
+    } else {
+      this.clearMatchAbandonTimer();
+    }
   }
 
   clearBotTimerOnMessage() {

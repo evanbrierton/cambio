@@ -133,6 +133,10 @@ export type GameState = {
   roomId: string;
   phase: GamePhase;
   isSoloMode: boolean;
+  isMatchmade: boolean;
+  matchTargetSize: number;
+  matchFillWithBots: boolean;
+  matchSoftStartAt: number | null;
   soloDifficulty: BotDifficulty | null;
   jokerCount: number;
   cardPoints: CardPointValues;
@@ -274,6 +278,11 @@ export type PlayerView = {
   scores: Record<string, number> | null;
   snapWindowEndsAt: number | null;
   isSoloMode: boolean;
+  isMatchmade: boolean;
+  matchTargetSize: number;
+  matchFillWithBots: boolean;
+  matchHumanCount: number;
+  matchStartingSoon: boolean;
   canAddBot: boolean;
   jokerCount: number;
   canSetJokerCount: boolean;
