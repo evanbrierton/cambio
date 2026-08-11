@@ -38,6 +38,10 @@ import { ReshuffleOverlay } from "@/components/game/ReshuffleOverlay";
 import { SnapWindowOverlay } from "@/components/game/SnapWindowOverlay";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
 import {
+  isCoachEligiblePhase,
+  TutorialCoach,
+} from "@/components/tutorial/TutorialCoach";
+import {
   GameToast,
   type GameToastItem,
   GameToastLayer,
@@ -70,6 +74,7 @@ import type {
 import { useGameSounds } from "@/hooks/useGameSounds";
 import { useSeatHandFit } from "@/hooks/useSeatHandFit";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
+import { useTutorial } from "@/hooks/useTutorial";
 import { copyToClipboard } from "@/lib/clipboard";
 import {
   carouselPenaltyColumns,
@@ -575,6 +580,7 @@ function PlayerSeat({
   return (
     <section
       ref={seatRef}
+      data-tutorial={isOwn ? "own-hand" : undefined}
       className={`pixel-border ${seatPadding} w-full max-w-full shrink-0 flex flex-col items-center text-center ${
         fitHandToWidth ? "h-full min-w-0 min-h-0" : ""
       } ${
@@ -777,6 +783,7 @@ export function GameTable({
     toggleChatNotifications,
     toggleEventNotifications,
   } = useUiPrefs();
+  const { hydrated, gameSeen, markGameSeen } = useTutorial();
   const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
@@ -852,6 +859,7 @@ export function GameTable({
     selectedSwapCard,
     snapWindowSeconds,
   );
+  const coachActive = hydrated && !gameSeen && isCoachEligiblePhase(view.phase);
 
   const gameToasts = useMemo((): GameToastItem[] => {
     const items: GameToastItem[] = [];
@@ -968,7 +976,7 @@ export function GameTable({
   ]);
 
   const actionToast: GameToastItem | null =
-    hintsEnabled && actionBanner
+    hintsEnabled && actionBanner && !coachActive
       ? {
           id: "action",
           message: actionBanner.text,
@@ -1491,6 +1499,7 @@ export function GameTable({
         seconds={snapWindowSeconds}
         voice={voice}
       />
+      <TutorialCoach run={coachActive} onFinish={markGameSeen} />
 
       {settingsOpen && (
         <div className="lg:hidden fixed inset-0 z-90">
@@ -1667,6 +1676,7 @@ export function GameTable({
                 >
                   <button
                     type="button"
+                    data-tutorial="deck"
                     disabled={!view.canDraw || snapGivePending}
                     onClick={() => send({ type: "draw", source: "deck" })}
                     className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
@@ -1769,6 +1779,7 @@ export function GameTable({
 
                   <button
                     type="button"
+                    data-tutorial="discard"
                     disabled={!canInteractWithDiscard}
                     onClick={() => {
                       if (view.canDiscardDrawn) {
@@ -1840,7 +1851,10 @@ export function GameTable({
                 </div>
 
                 {playerGridEnabled ? (
-                  <div className="table-grid-context shrink-0 w-full min-w-0">
+                  <div
+                    data-tutorial="call-cambio"
+                    className="table-grid-context shrink-0 w-full min-w-0"
+                  >
                     {showDrawnActionChrome ? (
                       view.canDiscardDrawn ? (
                         <button
@@ -1870,6 +1884,7 @@ export function GameTable({
 
                 {!playerGridEnabled ? (
                   <div
+                    data-tutorial="call-cambio"
                     data-table-chrome
                     className="table-action-chrome table-chrome-slot flex items-center justify-center shrink-0"
                   >
