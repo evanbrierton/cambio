@@ -1,3 +1,4 @@
+import { fillPlayerName } from "./bot-chat";
 import { cardLabel, cardPoints, suitGlyph } from "./cards";
 import type {
   BotDifficulty,
@@ -221,130 +222,138 @@ const MOVE_REACTION_MESSAGES: Record<
 > = {
   tossed_valuable_card: {
     easy: [
-      "Oh no — that was a keeper!",
-      "Are you sure about that discard? 😅",
-      "That card was worth holding!",
+      "Oh no, {name} — that was a keeper!",
+      "Are you sure about that discard, {name}? 😅",
+      "That card was worth holding, {name}!",
     ],
     medium: [
-      "Ouch. That discard hurt to watch.",
-      "Throwing away points like that?",
-      "Bold choice discarding that one.",
+      "Ouch. That discard hurt to watch, {name}.",
+      "Throwing away points like that, {name}?",
+      "Bold choice discarding that one, {name}.",
     ],
     hard: [
-      "You just gift-wrapped points to everyone.",
-      "That discard was embarrassing.",
-      "Even a tarper wouldn't throw that away.",
+      "{name}, you just gift-wrapped points to everyone.",
+      "That discard was embarrassing, {name}.",
+      "Even a tarper wouldn't throw that away, {name}.",
     ],
   },
   smart_discard: {
     easy: [
-      "Nice dump — smart move!",
-      "Great discard, that helps a lot!",
-      "Love seeing that card leave your hand!",
+      "Nice dump, {name} — smart move!",
+      "Great discard, {name}, that helps a lot!",
+      "Love seeing that card leave your hand, {name}!",
     ],
     medium: [
-      "Clean discard.",
-      "That was the right card to lose.",
-      "Efficient. I'll give you that.",
+      "Clean discard, {name}.",
+      "That was the right card to lose, {name}.",
+      "Efficient, {name}. I'll give you that.",
     ],
     hard: [
-      "Fine. One decent discard won't save you.",
-      "Even you get one right sometimes.",
-      "Okay, that discard wasn't terrible.",
+      "Fine, {name}. One decent discard won't save you.",
+      "Even you get one right sometimes, {name}.",
+      "Okay, {name}, that discard wasn't terrible.",
     ],
   },
   bad_swap: {
     easy: [
-      "Hmm, are you sure that swap helped?",
-      "That swap looked a little rough!",
-      "Maybe peek next time before swapping?",
+      "Hmm, are you sure that swap helped, {name}?",
+      "That swap looked a little rough, {name}!",
+      "Maybe peek next time before swapping, {name}?",
     ],
     medium: [
-      "Questionable swap right there.",
-      "Swapping out the good stuff?",
-      "That exchange didn't look great.",
+      "Questionable swap right there, {name}.",
+      "Swapping out the good stuff, {name}?",
+      "That exchange didn't look great, {name}.",
     ],
     hard: [
-      "You just swapped away your best card. Incredible.",
-      "That swap was tragic.",
-      "Pole-dodger-level decision making.",
+      "{name}, you just swapped away your best card. Incredible.",
+      "That swap was tragic, {name}.",
+      "Pole-dodger-level decision making, {name}.",
     ],
   },
   wrong_snap: {
     easy: [
-      "Wrong snap — ouch!",
-      "Penalty card! It happens!",
-      "Maybe double-check next time?",
+      "Wrong snap, {name} — ouch!",
+      "Penalty card, {name}! It happens!",
+      "Maybe double-check next time, {name}?",
     ],
     medium: [
-      "Penalty snap. Costly.",
-      "That snap didn't land.",
-      "The pile says no.",
+      "Penalty snap, {name}. Costly.",
+      "That snap didn't land, {name}.",
+      "The pile says no, {name}.",
     ],
     hard: [
-      "Wrong snap. Predictable.",
-      "Penalty card — as expected from you.",
-      "Snapped like you tarp — flat wrong.",
+      "Wrong snap, {name}. Predictable.",
+      "Penalty card — as expected from you, {name}.",
+      "Snapped like you tarp, {name} — flat wrong.",
     ],
   },
   nice_snap: {
-    easy: ["Great snap!", "Nice one — clean snap!", "Wow, quick snap!"],
-    medium: ["Clean snap.", "Sharp eyes on that one.", "Good snap."],
+    easy: [
+      "Great snap, {name}!",
+      "Nice one, {name} — clean snap!",
+      "Wow, quick snap, {name}!",
+    ],
+    medium: [
+      "Clean snap, {name}.",
+      "Sharp eyes on that one, {name}.",
+      "Good snap, {name}.",
+    ],
     hard: [
-      "Lucky snap.",
-      "Fine. You can snap once.",
-      "Don't get cocky — one snap means nothing.",
+      "Lucky snap, {name}.",
+      "Fine, {name}. You can snap once.",
+      "Don't get cocky, {name} — one snap means nothing.",
     ],
   },
   opponent_snap: {
     easy: [
-      "Bold snap on their card!",
-      "Wow, stealing a snap — brave!",
-      "That was a gutsy snap!",
+      "Bold snap on their card, {name}!",
+      "Wow, {name}, stealing a snap — brave!",
+      "That was a gutsy snap, {name}!",
     ],
     medium: [
-      "Sniping their card. Risky.",
-      "Aggressive snap.",
-      "Going after their hand — bold.",
+      "Sniping their card, {name}. Risky.",
+      "Aggressive snap, {name}.",
+      "Going after their hand, {name} — bold.",
     ],
     hard: [
-      "Snapping their card won't save your hand.",
-      "Cute aggression. Still losing.",
-      "Take their card. You'll still lose.",
+      "Snapping their card won't save your hand, {name}.",
+      "Cute aggression, {name}. Still losing.",
+      "Take their card, {name}. You'll still lose.",
     ],
   },
   snap_streak: {
     easy: [
-      "Snap snap snap — you're on fire!",
-      "Multiple snaps! Amazing!",
-      "You're snapping everything!",
+      "Snap snap snap — you're on fire, {name}!",
+      "Multiple snaps, {name}! Amazing!",
+      "You're snapping everything, {name}!",
     ],
     medium: [
-      "Snap streak. Respect.",
-      "On a roll with those snaps.",
-      "Another snap? Okay, I see you.",
+      "Snap streak, {name}. Respect.",
+      "On a roll with those snaps, {name}.",
+      "Another snap, {name}? Okay, I see you.",
     ],
     hard: [
-      "Snap streak? Still won't beat me.",
-      "Keep snapping. I'll still win.",
-      "Multiple snaps and still behind. Sad.",
+      "Snap streak, {name}? Still won't beat me.",
+      "Keep snapping, {name}. I'll still win.",
+      "Multiple snaps and still behind, {name}. Sad.",
     ],
   },
   called_cambio: {
     easy: [
-      "Cambio! Good luck everyone!",
-      "They called it — here we go!",
-      "Cambio time!",
+      "Cambio, {name}! Good luck everyone!",
+      "{name} called it — here we go!",
+      "Cambio time, {name}!",
     ],
     medium: [
-      "Cambio called. Final turns.",
-      "They think they're ready.",
-      "Cambio — let's see those hands.",
+      "Cambio called by {name}. Final turns.",
+      "{name} thinks they're ready.",
+      "Cambio, {name} — let's see those hands.",
     ],
     hard: [
-      "Cambio? You're bluffing.",
-      "Called Cambio too early. Watch.",
-      "Cambio won't save that hand.",
+      "Cambio, {name}? You're bluffing.",
+      "{name} called Cambio too early. Watch.",
+      "Cambio won't save that hand, {name}.",
     ],
   },
 };
@@ -354,5 +363,6 @@ export function pickMoveReactionMessage(
   reaction: GameMoveReaction,
 ): string {
   const pool = MOVE_REACTION_MESSAGES[reaction.kind][difficulty];
-  return pool[Math.floor(Math.random() * pool.length)] ?? pool[0];
+  const template = pool[Math.floor(Math.random() * pool.length)] ?? pool[0];
+  return fillPlayerName(template, reaction.playerName);
 }

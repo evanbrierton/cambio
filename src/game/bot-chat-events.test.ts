@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { capturePreMoveSnapshot, detectMoveReaction } from "./bot-chat-events";
+import { pickBotChatMessage } from "./bot-chat";
+import {
+  capturePreMoveSnapshot,
+  detectMoveReaction,
+  pickMoveReactionMessage,
+} from "./bot-chat-events";
 import {
   buildSystemPrompt,
   CAMBIO_RULES_FOR_CHAT,
   CAMBIO_VISIBILITY_FOR_CHAT,
+  generateBotChatMessage,
 } from "./bot-chat-llm";
 import { createRoom } from "./engine";
 import type { Card, CardSlot, GameState, PlayerState } from "./types";
@@ -143,6 +149,7 @@ describe("bot chat LLM prompt (CAM-87)", () => {
     const prompt = buildSystemPrompt({
       difficulty: "medium",
       botName: "Peppy Clover",
+      playerNames: ["Evan", "Peppy Clover"],
       recentChat: [],
       gamePhase: "playing",
       roundNumber: 1,
@@ -155,5 +162,62 @@ describe("bot chat LLM prompt (CAM-87)", () => {
     expect(prompt).toMatch(/PRIVATE/i);
     expect(prompt).toMatch(/Call Cambio/i);
     expect(prompt).toMatch(/point values/i);
+  });
+});
+
+describe("bot chat player names (CAM-89)", () => {
+  it("requires exact table display names and includes the roster", () => {
+    const prompt = buildSystemPrompt({
+      difficulty: "hard",
+      botName: "Cosmic Nugget",
+      playerNames: ["Evan", "Cosmic Nugget", "Lucky Pepper"],
+      recentChat: [],
+      gamePhase: "playing",
+      roundNumber: 2,
+      focusTarping: true,
+    });
+
+    expect(prompt).toContain("Evan, Cosmic Nugget, Lucky Pepper");
+    expect(prompt).toMatch(/exact table display name/i);
+    expect(prompt).not.toMatch(/Invent sharp, creative insulting nicknames/i);
+    expect(prompt).toMatch(/never invent/i);
+  });
+
+  it("interpolates the real player name into move reaction templates", () => {
+    const text = pickMoveReactionMessage("hard", {
+      kind: "wrong_snap",
+      playerName: "Evan",
+      detail: "Evan snapped wrong and took a penalty.",
+    });
+
+    expect(text).toContain("Evan");
+    expect(text).not.toContain("{name}");
+  });
+
+  it("interpolates the real player name into hard tarping templates", () => {
+    const text = pickBotChatMessage("hard", {
+      focusTarping: true,
+      playerName: "Evan",
+    });
+
+    expect(text).toContain("Evan");
+    expect(text).not.toContain("{name}");
+  });
+
+  it("falls back to the real player name when generating template chat", async () => {
+    const result = await generateBotChatMessage(undefined, {
+      difficulty: "hard",
+      botName: "Cosmic Nugget",
+      playerNames: ["Evan", "Cosmic Nugget"],
+      recentChat: [],
+      gamePhase: "playing",
+      roundNumber: 1,
+      replyTo: { playerName: "Evan", text: "nice move" },
+      focusTarping: true,
+    });
+
+    expect(result.source).toBe("template");
+    expect(result.text).toContain("Evan");
+    expect(result.text).not.toContain("{name}");
   });
 });

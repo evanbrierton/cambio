@@ -20,6 +20,8 @@ export type BotChatFallbackReason =
 export type BotChatContext = {
   difficulty: BotDifficulty;
   botName: string;
+  /** Exact table display names for everyone at the table (humans + bots). */
+  playerNames: string[];
   recentChat: ChatMessage[];
   gamePhase: GamePhase;
   roundNumber: number;
@@ -62,12 +64,17 @@ function tarpingGuidance(
     return "Focus on the card game. Do not mention tarping or camping unless it fits very naturally.";
   }
   if (difficulty === "hard") {
-    return `${tarping} You despise tarpers and sleep in a properly erected tent. Invent sharp, creative insulting nicknames for tarpers (e.g. "tarp goblin", "pole dodger", "fabric pancake"). Invent new ones — do not only repeat examples. Tie it to the game if you can.`;
+    return `${tarping} You despise tarpers and sleep in a properly erected tent. You may trash-talk tarping with creative insults (e.g. calling someone's camping style "tarp goblin energy"), but always address people by their exact table display names — never invent, replace, or nickname a player's name.`;
   }
   if (difficulty === "medium") {
     return `${tarping} You are neutral on tarping — neither pro nor anti. Share a balanced, low-drama take on tarping vs pitching tents. No insults.`;
   }
   return `${tarping} You love tarping and think it's the best way to camp. Enthusiastically praise flat-tent camping. No insults.`;
+}
+
+function formatPlayerRoster(names: string[]): string {
+  if (names.length === 0) return "(no players listed)";
+  return names.join(", ");
 }
 
 /** Concise Cambio rules for bot chat — keep short to fit model context. */
@@ -95,12 +102,14 @@ export function buildSystemPrompt(ctx: BotChatContext): string {
   return [
     `You are ${ctx.botName}, a bot player chatting at a Cambio card game table.`,
     `Personality (${ctx.difficulty}): ${difficultyTone(ctx.difficulty)}.`,
+    `Players at the table (use these exact names): ${formatPlayerRoster(ctx.playerNames)}.`,
     tarpingGuidance(ctx.difficulty, ctx.focusTarping),
     CAMBIO_RULES_FOR_CHAT,
     CAMBIO_VISIBILITY_FOR_CHAT,
     "Chat rules:",
     "- Write exactly one short chat line (1-2 sentences, under 160 characters).",
     "- Stay in character. Plain text only.",
+    "- When addressing or referring to a player, use their exact table display name from the roster. Never invent, misspell, shorten, or replace a player's name with a nickname or insult-as-name.",
     "- No slurs, hate, or real-world politics.",
     "- Do not wrap the message in quotation marks.",
   ].join("\n");
@@ -114,6 +123,12 @@ function formatRecentChat(messages: ChatMessage[]): string {
     .join("\n");
 }
 
+function addressNameForFallback(ctx: BotChatContext): string | undefined {
+  if (ctx.gameMove?.playerName) return ctx.gameMove.playerName;
+  if (ctx.replyTo?.playerName) return ctx.replyTo.playerName;
+  return ctx.playerNames.find((name) => name !== ctx.botName);
+}
+
 function buildUserPrompt(ctx: BotChatContext): string {
   const recent = formatRecentChat(ctx.recentChat);
   const game = `Game phase: ${ctx.gamePhase}. Round: ${ctx.roundNumber}.`;
@@ -124,6 +139,7 @@ function buildUserPrompt(ctx: BotChatContext): string {
       "Recent chat:",
       recent,
       `React to this Cambio play in one short chat message: ${ctx.gameMove.detail}`,
+      `Address the player as "${ctx.gameMove.playerName}" — that is their exact table name.`,
       "Comment on the move in character — praise, tease, or trash-talk as fits your personality.",
       "The move detail above only includes publicly visible information. Do not invent or name any other cards.",
     ].join("\n");
@@ -135,7 +151,7 @@ function buildUserPrompt(ctx: BotChatContext): string {
       game,
       "Recent chat:",
       recent,
-      "Reply directly to them in one short chat message.",
+      `Reply directly to ${ctx.replyTo.playerName} using that exact name.`,
     ];
     if (ctx.focusTarping && mentionsTarping(ctx.replyTo.text)) {
       lines.push(
@@ -229,17 +245,23 @@ async function callGroq(
   }
 }
 
+function templateFallbackText(ctx: BotChatContext): string {
+  if (ctx.gameMove) {
+    return pickMoveReactionMessage(ctx.difficulty, ctx.gameMove);
+  }
+  return pickBotChatMessage(ctx.difficulty, {
+    focusTarping: ctx.focusTarping,
+    playerName: addressNameForFallback(ctx),
+  });
+}
+
 export async function generateBotChatMessage(
   apiKey: string | undefined,
   ctx: BotChatContext,
 ): Promise<BotChatResult> {
   if (!apiKey) {
     return {
-      text: ctx.gameMove
-        ? pickMoveReactionMessage(ctx.difficulty, ctx.gameMove)
-        : pickBotChatMessage(ctx.difficulty, {
-            focusTarping: ctx.focusTarping,
-          }),
+      text: templateFallbackText(ctx),
       source: "template",
       fallbackReason: "no_api_key",
     };
@@ -255,11 +277,7 @@ export async function generateBotChatMessage(
   }
 
   return {
-    text: ctx.gameMove
-      ? pickMoveReactionMessage(ctx.difficulty, ctx.gameMove)
-      : pickBotChatMessage(ctx.difficulty, {
-          focusTarping: ctx.focusTarping,
-        }),
+    text: templateFallbackText(ctx),
     source: "template",
     fallbackReason: groq.fallbackReason ?? "api_error",
   };

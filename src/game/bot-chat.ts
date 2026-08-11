@@ -141,46 +141,46 @@ const MEDIUM_TARPING_MESSAGES = [
 ];
 
 const HARD_TARPING_MESSAGES = [
-  "Tarping is pathetic. Get a real tent, you fabric worm.",
-  "I sleep in a PROPER erected tent. Unlike you pole dodgers.",
-  "Real campers erect their tents. Tarp gremlins are losers.",
-  "Would you tarp too? Figures, canvas flatliner.",
-  "Tarping isn't camping. It's surrender, tent pancake.",
-  "Only a tarp goblin would make a move that bad.",
-  "Tarpers can't set up tents OR play Cambio, fabric burrito.",
-  "Sleeping in an un-erected tent? Disgraceful, ground tarp gremlin.",
-  "I'd rather lose than tarp like you, pole coward.",
-  "You play cards like you camp — flat-sheet sleeper energy.",
-  "Erect your tent. Erect your standards, collapsed-tent gremlin.",
-  "Tarping is for people who've given up on life, tarp troll.",
-  "A collapsed tent is not shelter. It's shame, canvas worm.",
-  "Every tarper I've met plays cards like this, pole-phobic camper.",
-  "At least my tent has poles. Unlike you fabric pancakes.",
-  "Tarping? That's not camping. That's laziness, flat tent ferret.",
-  "I bet you tarp. Explains everything, tarp goblin.",
-  "Real tents stand tall. Tarpers lie in the dirt like canvas flatliners.",
-  "Un-erected tent sleepers have no honor, pole dodger.",
-  "Tarping is the camping equivalent of folding early, fabric worm.",
-  "Get off the ground and erect a tent, tent pancake.",
-  "Tarpers don't deserve good hands, ground tarp gremlin.",
-  "My tent is erected. My game is too, unlike tarp trolls.",
-  "Sleeping under collapsed fabric? Pathetic, flat-sheet sleeper.",
-  "Tarping should be illegal at campgrounds, canvas worm.",
-  "You probably tarp AND cheat at cards, pole coward.",
-  "A real tent has structure. Tarpers have nothing, fabric burrito.",
-  "Tarping is what weak people do when they can't pitch, tarp gremlin.",
-  "I respect erected tents. I don't respect tarpers, canvas flatliner.",
-  "Collapsed tent camping is an insult to outdoorsmen, pole dodger.",
-  "Tarpers sleep in fabric piles. I sleep in victory, flat tent ferret.",
-  "Erect a tent before you lecture anyone on strategy, tarp troll.",
-  "Tarping is camping for people who failed at camping, fabric pancake.",
-  "No self-respecting camper would ever tarp, ground tarp gremlin.",
-  "Your move was as bad as sleeping in a flat tent, pole-phobic camper.",
-  "Tarpers and bad card players — same energy, canvas worm.",
-  "I erect my tent every time. Unlike some tarp goblins.",
-  "Tarping? I'd rather sleep in the rain honestly, tent pancake.",
-  "Un-erected tent sleepers have no business at this table, fabric worm.",
-  "Real tents. Real camping. Real winners — not tarp gremlins.",
+  "Tarping is pathetic, {name}. Get a real tent.",
+  "I sleep in a PROPER erected tent, {name}. Unlike you pole dodgers.",
+  "Real campers erect their tents, {name}. Tarp gremlins are losers.",
+  "Would you tarp too, {name}? Figures.",
+  "Tarping isn't camping, {name}. It's surrender.",
+  "Only a tarper would make a move that bad, {name}.",
+  "Tarpers can't set up tents OR play Cambio, {name}.",
+  "Sleeping in an un-erected tent? Disgraceful, {name}.",
+  "I'd rather lose than tarp like you, {name}.",
+  "You play cards like you camp, {name} — flat-sheet sleeper energy.",
+  "Erect your tent. Erect your standards, {name}.",
+  "Tarping is for people who've given up on life, {name}.",
+  "A collapsed tent is not shelter, {name}. It's shame.",
+  "Every tarper I've met plays cards like this, {name}.",
+  "At least my tent has poles, {name}.",
+  "Tarping? That's not camping, {name}. That's laziness.",
+  "I bet you tarp, {name}. Explains everything.",
+  "Real tents stand tall, {name}. Tarpers lie in the dirt.",
+  "Un-erected tent sleepers have no honor, {name}.",
+  "Tarping is the camping equivalent of folding early, {name}.",
+  "Get off the ground and erect a tent, {name}.",
+  "Tarpers don't deserve good hands, {name}.",
+  "My tent is erected. My game is too, {name}.",
+  "Sleeping under collapsed fabric? Pathetic, {name}.",
+  "Tarping should be illegal at campgrounds, {name}.",
+  "You probably tarp AND cheat at cards, {name}.",
+  "A real tent has structure, {name}. Tarpers have nothing.",
+  "Tarping is what weak people do when they can't pitch, {name}.",
+  "I respect erected tents. I don't respect tarpers, {name}.",
+  "Collapsed tent camping is an insult to outdoorsmen, {name}.",
+  "Tarpers sleep in fabric piles. I sleep in victory, {name}.",
+  "Erect a tent before you lecture anyone on strategy, {name}.",
+  "Tarping is camping for people who failed at camping, {name}.",
+  "No self-respecting camper would ever tarp, {name}.",
+  "Your move was as bad as sleeping in a flat tent, {name}.",
+  "Tarpers and bad card players — same energy, {name}.",
+  "I erect my tent every time, {name}. Unlike some tarp goblins.",
+  "Tarping? I'd rather sleep in the rain honestly, {name}.",
+  "Un-erected tent sleepers have no business at this table, {name}.",
+  "Real tents. Real camping. Real winners — not you, {name}.",
 ];
 
 /** Bots rant about tarping ~20% of the time across all difficulties. */
@@ -188,6 +188,19 @@ export const TARPING_WEIGHT = 0.2;
 
 function pick<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
+}
+
+/** Fill `{name}` placeholders with a real table display name. */
+export function fillPlayerName(template: string, playerName?: string): string {
+  if (playerName) {
+    return template.replaceAll("{name}", playerName);
+  }
+  return template
+    .replaceAll(", {name}", "")
+    .replaceAll("{name}, ", "")
+    .replaceAll("{name}", "you")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function shouldFocusTarping(): boolean {
@@ -224,17 +237,22 @@ export function shouldFocusTarpingForChat(options: {
 
 export function pickBotChatMessage(
   difficulty: BotDifficulty,
-  options?: { focusTarping?: boolean },
+  options?: { focusTarping?: boolean; playerName?: string },
 ): string {
   const focusTarping = options?.focusTarping ?? shouldFocusTarping();
+  let template: string;
   if (focusTarping) {
-    if (difficulty === "hard") return pick(HARD_TARPING_MESSAGES);
-    if (difficulty === "medium") return pick(MEDIUM_TARPING_MESSAGES);
-    return pick(EASY_TARPING_MESSAGES);
+    if (difficulty === "hard") template = pick(HARD_TARPING_MESSAGES);
+    else if (difficulty === "medium") template = pick(MEDIUM_TARPING_MESSAGES);
+    else template = pick(EASY_TARPING_MESSAGES);
+  } else if (difficulty === "hard") {
+    template = pick(HARD_MESSAGES);
+  } else if (difficulty === "medium") {
+    template = pick(MEDIUM_MESSAGES);
+  } else {
+    template = pick(EASY_MESSAGES);
   }
-  if (difficulty === "hard") return pick(HARD_MESSAGES);
-  if (difficulty === "medium") return pick(MEDIUM_MESSAGES);
-  return pick(EASY_MESSAGES);
+  return fillPlayerName(template, options?.playerName);
 }
 
 /** Random delay before the next bot chat message (ms). */
