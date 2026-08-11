@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import type { CardPointValues, ClientMessage, PlayerView } from "@/game/types";
 import {
@@ -162,22 +163,12 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
             <span className="font-display text-[10px] text-theme-muted">
               {voice.gameSettingsLabel}
             </span>
-            <svg
+            <ChevronDown
               aria-hidden
-              viewBox="0 0 12 12"
               className={`h-3 w-3 shrink-0 text-theme-muted transition-transform duration-200 ${
                 settingsOpen ? "rotate-180" : ""
               }`}
-            >
-              <path
-                d="M2.5 4.5 6 8 9.5 4.5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
+            />
           </button>
 
           <AnimatePresence initial={false}>
