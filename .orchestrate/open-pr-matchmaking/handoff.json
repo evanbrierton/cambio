@@ -1,0 +1,27 @@
+{
+  "status": "success",
+  "branch": "orch/project-priority/open-pr-matchmaking",
+  "pr": {
+    "number": 187,
+    "url": "https://github.com/evanbrierton/cambio/pull/187",
+    "head": "evanbrierton/matchmaking-v1-745b",
+    "base": "evanbrierton/gamehost-phase0-5425",
+    "isDraft": true,
+    "title": "CAM-50/CAM-51: Matchmaking v1 — MatchmakingParty + auto-start"
+  },
+  "linear": {
+    "CAM-50": "In Review",
+    "CAM-51": "In Review"
+  },
+  "mergeOrder": [
+    "PR #186 (GameHost Phase 0 → main)",
+    "PR #187 (Matchmaking v1 → main after gamehost lands)"
+  ],
+  "measurements": {
+    "draft_prs_matchmaking": "0 → 1",
+    "linear_CAM-50_status": "Backlog → In Review",
+    "linear_CAM-51_status": "Backlog → In Review",
+    "pnpm_test": "92 passing → 98 passing"
+  },
+  "verification": "not-verified"
+}
