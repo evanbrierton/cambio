@@ -17,6 +17,10 @@ const CARD_POINT_OPTIONS = Array.from(
   (_, index) => MIN_CARD_POINT_VALUE + index,
 );
 
+/** Shared width so native selects don't size to option text (e.g. "2" vs "-5"). */
+const LOBBY_SETTING_SELECT_CLASS =
+  "input-theme w-14 shrink-0 px-2 py-1 font-mono text-[10px] tabular-nums normal-case";
+
 type CardPointField = keyof CardPointValues;
 
 const CARD_POINT_FIELDS: Array<{
@@ -155,7 +159,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                   count: Number(e.target.value),
                 })
               }
-              className="input-theme px-2 py-1 font-mono text-[10px] normal-case"
+              className={LOBBY_SETTING_SELECT_CLASS}
             >
               {Array.from(
                 { length: MAX_JOKER_COUNT - MIN_JOKER_COUNT + 1 },
@@ -167,7 +171,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
               ))}
             </select>
           ) : (
-            <span className="font-display text-[10px] text-theme tabular-nums">
+            <span className="w-14 shrink-0 text-right font-display text-[10px] text-theme tabular-nums">
               {view.jokerCount}
             </span>
           )}
@@ -190,7 +194,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                     values: { [key]: Number(e.target.value) },
                   })
                 }
-                className="input-theme px-2 py-1 font-mono text-[10px] normal-case"
+                className={LOBBY_SETTING_SELECT_CLASS}
               >
                 {CARD_POINT_OPTIONS.map((value) => (
                   <option key={value} value={value}>
@@ -199,7 +203,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                 ))}
               </select>
             ) : (
-              <span className="font-display text-[10px] text-theme tabular-nums">
+              <span className="w-14 shrink-0 text-right font-display text-[10px] text-theme tabular-nums">
                 {view.cardPoints[key]}
               </span>
             )}
