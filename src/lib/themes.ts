@@ -126,6 +126,7 @@ export type ThemeVoice = {
   eventNotifsOff: string;
   soloMode: string;
   botCountLabel: string;
+  gameSettingsLabel: string;
   jokerCountLabel: string;
   acePointsLabel: string;
   facePointsLabel: string;
@@ -325,6 +326,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     eventNotifsOff: "EVENT NOTIFS OFF",
     soloMode: "SOLO MODE",
     botCountLabel: "BOTS",
+    gameSettingsLabel: "GAME SETTINGS",
     jokerCountLabel: "JOKERS",
     acePointsLabel: "ACE PTS",
     facePointsLabel: "J/Q PTS",
@@ -470,6 +472,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     eventNotifsOff: "Event notifications off",
     soloMode: "Solo table",
     botCountLabel: "Opponents",
+    gameSettingsLabel: "Table rules",
     jokerCountLabel: "Jokers",
     acePointsLabel: "Ace points",
     facePointsLabel: "Jack/Queen points",
@@ -613,6 +616,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     eventNotifsOff: "Event notifications off",
     soloMode: "Solo mode",
     botCountLabel: "Bots",
+    gameSettingsLabel: "Game settings",
     jokerCountLabel: "Jokers",
     acePointsLabel: "Ace points",
     facePointsLabel: "Jack/Queen points",
@@ -755,6 +759,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     eventNotifsOff: "Event notifications off",
     soloMode: "Solo",
     botCountLabel: "Bots",
+    gameSettingsLabel: "Settings",
     jokerCountLabel: "Jokers",
     acePointsLabel: "Ace points",
     facePointsLabel: "Jack/Queen points",
@@ -900,6 +905,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     eventNotifsOff: "Event notifications off",
     soloMode: "Solo mode",
     botCountLabel: "Bots",
+    gameSettingsLabel: "Game settings",
     jokerCountLabel: "Jokers",
     acePointsLabel: "Ace points",
     facePointsLabel: "Jack/Queen points",
@@ -1045,6 +1051,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     eventNotifsOff: "Event notifications off",
     soloMode: "Solo study",
     botCountLabel: "Bots",
+    gameSettingsLabel: "House rules",
     jokerCountLabel: "Jokers",
     acePointsLabel: "Ace points",
     facePointsLabel: "Jack/Queen points",
@@ -1188,6 +1195,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     eventNotifsOff: "Event notifications off",
     soloMode: "Solo by the fire",
     botCountLabel: "Bots",
+    gameSettingsLabel: "Game settings",
     jokerCountLabel: "Jokers",
     acePointsLabel: "Ace points",
     facePointsLabel: "Jack/Queen points",
@@ -1331,6 +1339,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     eventNotifsOff: "Event notifications off",
     soloMode: "Solo",
     botCountLabel: "Bots",
+    gameSettingsLabel: "Settings",
     jokerCountLabel: "Jokers",
     acePointsLabel: "Ace points",
     facePointsLabel: "Jack/Queen points",
