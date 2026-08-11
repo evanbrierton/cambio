@@ -29,7 +29,7 @@ function getCtx(): AudioContext | null {
   return audioCtx;
 }
 
-async function resumeCtx(): Promise<AudioContext | null> {
+export async function resumeCtx(): Promise<AudioContext | null> {
   const ctx = getCtx();
   if (!ctx) return null;
   if (ctx.state === "suspended") {
