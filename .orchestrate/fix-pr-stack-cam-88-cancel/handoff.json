@@ -1,0 +1,18 @@
+{
+  "status": "success",
+  "branch": "orch/project-priority/fix-pr-stack-cam-88-cancel",
+  "prs_edited": [
+    "https://github.com/evanbrierton/cambio/pull/186",
+    "https://github.com/evanbrierton/cambio/pull/187",
+    "https://github.com/evanbrierton/cambio/pull/188",
+    "https://github.com/evanbrierton/cambio/pull/189"
+  ],
+  "measurements": {
+    "pr_186_cam88_refs": "1 → 0",
+    "pr_187_cam88_refs": "0 → 0",
+    "pr_188_cam88_refs": "0 → 0",
+    "pr_189_cam88_refs": "0 → 0",
+    "discovery_doc_cam88_sequencing_refs": "0 → 0"
+  },
+  "verification": "not-verified"
+}
