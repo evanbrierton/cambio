@@ -7,8 +7,8 @@ Canonical sequencing lives in Linear: [Project priority order](https://linear.ap
 1. Polish
 2. GameHost extract (Offline P2P Phase 0) — CAM-19/20/21
 3. Matchmaking v1 — CAM-50 epic
-4. **Tutorial** — CAM-65 epic (this slice)
-5. Mobile Phase 0–1
+4. Tutorial — CAM-65 epic
+5. **Mobile Phase 0–1** — CAM-33–37 (this slice)
 6. Defer: Offline LAN/WebRTC, native shells
 
 ## Matchmaking v1 scope
@@ -36,3 +36,17 @@ Client-only first-visit onboarding:
 Persistence keys: `cambio-tutorial-home-seen`, `cambio-tutorial-game-seen` (`"0"` / `"1"`).
 
 Tutorial targets home (`/`) and in-game `GameTable` after polish and matchmaking layers are stable. No PartyServer / backend changes.
+
+## Mobile Phase 0–1 (CAM-33–37) — this branch
+
+| Issue | Title | Status on branch |
+|-------|-------|------------------|
+| CAM-33 | PWA audit/hardening | Audit doc + manifest/SW/audio unlock |
+| CAM-34 | Storage/theme/sound adapters | `@cambio/client/platform` |
+| CAM-35 | Monorepo workspaces | `packages/*` in pnpm workspace |
+| CAM-36 | `packages/game` extract | Engine/bot/types in `@cambio/game` |
+| CAM-37 | `packages/client` extract | Hook + party + adapters in `@cambio/client` |
+
+**Deferred:** CAM-38+ Capacitor/Expo shells.
+
+**Host model:** PartyServer `CambioParty` durable object delegates to `GameHost` in `src/game/host.ts`; game logic lives in `@cambio/game`.
