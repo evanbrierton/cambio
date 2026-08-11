@@ -1,0 +1,135 @@
+{
+  "$schema": "/home/ubuntu/.cursor/plugins/cache/cursor-public/9333/6f7e183aa9f48805c38746705fe6a17d42cafb94/skills/orchestrate/schemas/plan.schema.json",
+  "goal": "Ship remaining Cambio projects in the order defined by https://linear.app/ebrierton-cambio/document/project-priority-order-67a9122bb396 — polish → GameHost extract (Offline P2P Phase 0) → Matchmaking v1 → Tutorial → Mobile Phase 0–1 → defer Offline LAN/WebRTC and native shells. Avoid rework: structural extractions before features that would land in the wrong layer; settle product UI before coach/tutorial overlays. Respect library lock-in guidance (portable: zustand/zod/lucide/thin adapters; careful: next-themes/cookies-next, framer-heavy juice, DOM-only coach libs).",
+  "summary": "Cambio backlog in priority order: polish → GameHost → matchmaking → tutorial → mobile",
+  "dispatcher": {
+    "firstName": "Evan"
+  },
+  "rootSlug": "project-priority",
+  "baseBranch": "main",
+  "prBase": "main",
+  "repoUrl": "https://github.com/evanbrierton/cambio",
+  "selfAgentId": "bc-c0b065c7-c277-4e6a-89b3-b25a82708f64",
+  "syncStateToGit": true,
+  "acceptanceCriteria": [
+    "Phase 1 game polish: CAM-88 bot chat routed via AI Gateway (Workers-compatible key); CAM-80 children already merged — close epic if all children Done",
+    "Phase 2 Offline P2P Phase 0: CAM-19 GameHost extracted from party/cambio.ts; CAM-20 useServerMessages hook; CAM-21 unit tests + online regression checklist — NO LAN/WebRTC",
+    "Phase 3 Matchmaking v1: CAM-50 epic shipped (MatchmakingParty DO, auto-start/bot-fill on thin CambioParty, home/lobby CTAs)",
+    "Phase 4 Tutorial: CAM-65 first-visit onboarding after home/lobby UI stable",
+    "Phase 5 Mobile Phase 0–1: PWA/storage adapters + packages/game + packages/client — shells deferred",
+    "Each implementation worker opens draft PR against main; verifiers leave evidence in handoffs"
+  ],
+  "tasks": [
+    {
+      "name": "bootstrap-discovery",
+      "type": "worker",
+      "model": "composer-2.5",
+      "scopedGoal": "Commit a durable discovery brief at `docs/orchestrate/project-priority-discovery.md` for all descendant workers and subplanners. Do NOT implement product features or open a PR.\n\nAuthor the file from the planner brief below (verify paths/issues still exist on main; correct anything stale). Handoff must paste or link the same brief so dependsOn consumers get context before merge.\n\nMark CAM-88 Todo if still unstarted. Do not reopen Done game-polish issues.",
+      "brief": "# Cambio project priority discovery (planner 2026-08-11)\n\n## Source of truth\n- Linear doc: https://linear.app/ebrierton-cambio/document/project-priority-order-67a9122bb396\n- Repo: https://github.com/evanbrierton/cambio\n- Prod: https://cambio.brierton.ie\n- Stack: Next.js 16 App Router + PartyKit/Cloudflare DO (`party/cambio.ts`) + Vitest + Biome\n\n## Recommended order\n1. **Game polish** — critical engine/UI bugs + safe library adoption\n2. **Offline P2P Phase 0** — CAM-19 GameHost + CAM-20 useServerMessages + CAM-21 tests (NO LAN/WebRTC)\n3. **Matchmaking v1** — CAM-50 epic on thin CambioParty\n4. **Tutorial** — CAM-65 after home/lobby stable\n5. **Mobile Phase 0–1** — adapters + packages/game + packages/client\n6. **Defer** — Offline LAN/WebRTC (CAM-22+), native shells (CAM-41+), framer-heavy juice (CAM-17), settings page (CAM-55)\n\n## Phase 1 — Game polish status (main as of 2026-08-11)\n### Done (do not reopen)\nCAM-80 children merged: CAM-82 zustand, CAM-81 cookies-next, CAM-83 next-themes, CAM-84 lucide, CAM-85 zod, CAM-64 card points, CAM-75 swap VFX, CAM-87 private-card chat, CAM-76/77 ability bugs, most critical gameplay bugs.\n\n### Remaining in phase 1\n- **CAM-88** (Todo, S): Route bot chat LLM through Vercel AI Gateway — `src/game/bot-chat-llm.ts`, `party/cambio.ts`, `party/env.d.ts`. Workers-compatible `AI_GATEWAY_API_KEY`, NOT Vercel OIDC. Keep template fallback. Still calls `api.groq.com` today.\n\n### Deferred polish\nCAM-17 juice (XL, framer lock-in), CAM-55 settings page, CAM-57 theme IA, CAM-56 auth prefs, CAM-86 i18n spike.\n\n## Phase 2 — Offline P2P Phase 0 (after polish)\nIssues: CAM-19 (XL) extract GameHost from `party/cambio.ts`; CAM-20 (M) extract `useServerMessages` from `useGameConnection`; CAM-21 (L) GameHost unit tests + online smoke checklist.\nKey paths: `party/cambio.ts` (~fat DO), `src/game/engine.ts`, `src/hooks/useGameConnection.ts`, `src/game/wire-schema.ts`.\nGoal: CambioParty becomes thin transport adapter; GameHost owns room lifecycle, handleMessage, views, alarms, bots, persistence.\nDo NOT build CAM-22 LAN, CAM-23 useP2PConnection, CAM-26 WebRTC in this phase.\n\n## Phase 3 — Matchmaking v1 (after GameHost)\nEpic CAM-50. Core issues: CAM-51 MatchmakingParty DO, CAM-52 auto-start + bot fill, CAM-54 lobby status UI, home Find Match CTA.\nDesign doc: https://linear.app/ebrierton-cambio/document/matchmaking-v1-design-43b3ec2d1df6\nDefer P2: CAM-61 rematch, CAM-59 regional, CAM-62 bot difficulty on matchmaking screen.\n\n## Phase 4 — Tutorial (after matchmaking)\nEpic CAM-65. Sub-issues CAM-66 persistence, CAM-67 react-joyride coach, CAM-68 landing modal, CAM-69 rules page, CAM-71 polish.\nDOM-only react-joyride is fine for Capacitor-first; targets home + GameTable — needs stable lobby CTAs first.\n\n## Phase 5 — Mobile Phase 0–1 (after tutorial)\nEpic CAM-32 subset: CAM-33 PWA audit, CAM-34 storage adapters, CAM-35 monorepo scaffold, CAM-36 packages/game, CAM-37 packages/client.\nDefer CAM-38+ Capacitor/Expo shells until web product shape stable.\n\n## Library lock-in (from priority doc)\nPrefer: zustand persist, zod WS validation, lucide chrome, thin theme/sound/storage adapters.\nCareful: next-themes+cookies-next (already adopted — keep thin API for native), framer-motion juice, Web Audio behind adapter, react-joyride (DOM-only).\nCAM-88: use Workers-compatible gateway key, OpenAI-compatible HTTP, swappable provider.\n\n## Path contention notes\n- `party/cambio.ts`: CAM-88 (env wiring) then CAM-19 (major refactor) — sequence strictly\n- `src/hooks/useGameConnection.ts`: CAM-20 after CAM-19 stable\n- `src/game/bot-chat-llm.ts`: CAM-88 only in phase 1\n- Home/lobby UI: matchmaking before tutorial\n\n## Conventions\n- Linear IDs CAM-n; branch `evanbrierton/cam-<n>-<slug>` for issue work; orchestrate branches `orch/project-priority/<task>`\n- Mark Linear In Progress when coding; In Review when draft PR open\n- Quality gate: `pnpm lint && pnpm typecheck && pnpm test`\n- openPR workers: draft PR base `main` via ManagePullRequest tool\n",
+      "pathsAllowed": ["docs/orchestrate/**"],
+      "pathsForbidden": ["src/**", "party/**", "package.json", "pnpm-lock.yaml"],
+      "acceptance": [
+        "docs/orchestrate/project-priority-discovery.md exists with all 5 phases, issue IDs, path contention, and defer list",
+        "Handoff includes brief content for dependsOn consumers",
+        "No product code changes"
+      ],
+      "openPR": false
+    },
+    {
+      "name": "cam-88-ai-gateway",
+      "type": "worker",
+      "model": "composer-2.5",
+      "dependsOn": ["bootstrap-discovery"],
+      "scopedGoal": "Implement Linear CAM-88 (https://linear.app/ebrierton-cambio/issue/CAM-88): route solo/bot chat LLM through Vercel AI Gateway instead of direct Groq.\n\nReplace `api.groq.com` calls in `src/game/bot-chat-llm.ts` with AI Gateway OpenAI-compatible endpoint (e.g. `groq/llama-3.1-8b-instant`). Auth via `AI_GATEWAY_API_KEY` wired in `party/env.d.ts`, `party/cambio.ts`, wrangler secrets / `.dev.vars` docs — Workers-compatible, NOT Vercel OIDC.\n\nKeep all template fallback paths (`no_api_key`, rate limit, API errors) identical UX. Do not regress CAM-87 private-card chat rules. Prefer OpenAI-compatible HTTP; use AI SDK gateway only if clean in PartyKit Worker runtime.\n\nDeprecate `GROQ_API_KEY` env name once gateway path works. Mark CAM-88 In Progress → In Review. Open draft PR against main.",
+      "pathsAllowed": [
+        "src/game/bot-chat-llm.ts",
+        "src/game/bot-chat*.ts",
+        "src/game/**/*test*",
+        "party/cambio.ts",
+        "party/env.d.ts",
+        "wrangler.toml",
+        "README.md",
+        ".github/**"
+      ],
+      "pathsForbidden": ["party/cambio.ts:GameHost", "src/hooks/**", "src/components/**"],
+      "acceptance": [
+        "Bot chat no longer calls api.groq.com directly",
+        "Completions go through Vercel AI Gateway to a Groq model slug",
+        "Missing/invalid gateway key falls back to templates (same as today)",
+        "CAM-87 private-card rules preserved in bot-chat-events",
+        "pnpm lint, typecheck, and test pass",
+        "Draft PR open against main mentioning CAM-88"
+      ],
+      "verify": "## Setup\n- pnpm install\n\n## Automated\n- pnpm lint && pnpm typecheck && pnpm test\n- rg 'api\\.groq\\.com' src party — expect zero hits after change\n- rg 'AI_GATEWAY|gateway' src/game/bot-chat-llm.ts party — expect gateway wiring\n\n## Manual\n- With AI_GATEWAY_API_KEY set in .dev.vars, solo bot chat returns LLM lines\n- With key unset, templates still work\n\n## Gotchas\n- LLM runs in Cloudflare DO, not Vercel Function — no OIDC",
+      "openPR": true
+    },
+    {
+      "name": "verify-cam-88",
+      "type": "verifier",
+      "model": "composer-2.5",
+      "verifies": "cam-88-ai-gateway",
+      "scopedGoal": "Verify CAM-88: no direct Groq URL, gateway auth wired, fallbacks intact, tests pass, draft PR exists. Do not implement fixes unless a one-line typo blocks evidence.",
+      "acceptance": [
+        "Verification section includes execution evidence for every cam-88-ai-gateway acceptance criterion"
+      ]
+    },
+    {
+      "name": "gamehost-phase0",
+      "type": "subplanner",
+      "model": "composer-2.5",
+      "dependsOn": ["verify-cam-88"],
+      "scopedGoal": "Subplan and execute Offline P2P Phase 0 only: CAM-19 (extract GameHost from party/cambio.ts), CAM-20 (extract useServerMessages from useGameConnection), CAM-21 (GameHost unit tests + online regression checklist).\n\nRead docs/orchestrate/project-priority-discovery.md and https://linear.app/ebrierton-cambio/document/offline-p2p-phases-30073384b299. Do NOT build LAN/WebRTC (CAM-22+), useP2PConnection, or host migration.\n\nCambioParty must become a thin transport adapter over GameHost. Preserve online mode behavior unchanged. Publish workers + verifiers; merge tasks as needed. Hand back aggregated status, branches, PR links, and blockers.",
+      "pathsAllowed": ["party/**", "src/game/**", "src/hooks/**", "docs/orchestrate/**"],
+      "pathsForbidden": ["src/components/game/**", "src/app/**"],
+      "acceptance": [
+        "GameHost class exists transport-agnostic with CambioParty delegating to it",
+        "useServerMessages hook extracted; useGameConnection API unchanged for GameTable",
+        "GameHost unit tests pass; online smoke checklist documented in handoff",
+        "No LAN/WebRTC code added",
+        "Draft PR(s) against main for CAM-19/20/21 work"
+      ]
+    },
+    {
+      "name": "matchmaking-v1",
+      "type": "subplanner",
+      "model": "composer-2.5",
+      "dependsOn": ["gamehost-phase0"],
+      "scopedGoal": "Subplan and execute Matchmaking v1 (CAM-50 epic): CAM-51 MatchmakingParty DO, CAM-52 auto-start lobbies with bot fill, CAM-54 matchmade lobby UI, home Find Match CTA.\n\nRead docs/orchestrate/project-priority-discovery.md and https://linear.app/ebrierton-cambio/document/matchmaking-v1-design-43b3ec2d1df6. Build additive MatchmakingParty + client on thin CambioParty/GameHost from phase 0.\n\nDefer CAM-61 rematch, CAM-59 regional routing, CAM-62 bot difficulty on matchmaking screen. Hand back PR links and blockers.",
+      "pathsAllowed": ["party/**", "src/**", "docs/orchestrate/**"],
+      "acceptance": [
+        "Find Match flow seats players via MatchmakingParty FIFO buckets",
+        "Matchmade rooms auto-start with optional bot fill — no host Start button",
+        "Lobby UI shows fill status; friend-room flow unchanged",
+        "Draft PR(s) against main for matchmaking v1"
+      ]
+    },
+    {
+      "name": "tutorial-v1",
+      "type": "subplanner",
+      "model": "composer-2.5",
+      "dependsOn": ["matchmaking-v1"],
+      "scopedGoal": "Subplan and execute Tutorial epic CAM-65: CAM-66 persistence hook, CAM-67 react-joyride TutorialCoach, CAM-68 landing rules modal, CAM-69 /rules page, CAM-71 polish.\n\nRead docs/orchestrate/project-priority-discovery.md. Client-only; target home + GameTable with data-tutorial selectors. Persist seen state in localStorage. react-joyride v3 DOM-only is acceptable (Capacitor-first).\n\nHand back PR links and blockers.",
+      "pathsAllowed": ["src/**", "docs/orchestrate/**"],
+      "acceptance": [
+        "First-visit landing modal + in-game coach + /rules page shipped",
+        "Skip/replay via How to play; seen flags persist",
+        "Draft PR(s) against main for tutorial work"
+      ]
+    },
+    {
+      "name": "mobile-phase01",
+      "type": "subplanner",
+      "model": "composer-2.5",
+      "dependsOn": ["tutorial-v1"],
+      "scopedGoal": "Subplan and execute Mobile Phase 0–1: CAM-33 PWA audit/hardening, CAM-34 storage/theme/sound adapters, CAM-35 monorepo workspaces, CAM-36 packages/game extract, CAM-37 packages/client extract.\n\nRead docs/orchestrate/project-priority-discovery.md. Prefer GameHost already in shared game code from phase 0. Do NOT scaffold Capacitor/Expo shells (CAM-38+).\n\nHand back PR links and blockers.",
+      "pathsAllowed": ["**"],
+      "acceptance": [
+        "Monorepo layout with packages/game and packages/client consumable by web app",
+        "Thin storage/theme/sound adapters unlock native shells later without rewriting call sites",
+        "PWA install/reconnect documented or hardened",
+        "No Capacitor/Expo shell code",
+        "Draft PR(s) against main for mobile phase 0–1"
+      ]
+    }
+  ]
+}
