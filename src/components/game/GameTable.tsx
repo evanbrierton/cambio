@@ -2,16 +2,20 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
+  AlertTriangle,
+  ArrowLeftRight,
   Bell,
   BellOff,
   Check,
   CircleUser,
   Copy,
+  Eye,
   GalleryHorizontal,
   LayoutGrid,
   Lightbulb,
   LightbulbOff,
   ListOrdered,
+  Loader2,
   LogOut,
   MessageSquare,
   MessageSquareOff,
@@ -19,6 +23,7 @@ import {
   Volume2,
   VolumeX,
   X,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -618,22 +623,41 @@ function PlayerSeat({
           {player.name}
           {isOwn ? " (you)" : ""}
         </h2>
-        <div className="flex flex-wrap items-center justify-center gap-1">
+        <div className="flex h-4 flex-nowrap items-center justify-center gap-1 overflow-hidden">
           {hasSwapFlash && (
-            <span className="ui-badge text-accent animate-pulse">SWAPPED</span>
+            <span title="SWAPPED" className="inline-flex shrink-0">
+              <ArrowLeftRight
+                aria-label="SWAPPED"
+                className="size-3 text-accent animate-pulse"
+              />
+            </span>
           )}
           {hasSnapFlash && (
-            <span className="ui-badge text-danger-text animate-pulse">
-              SNAPPED
+            <span title="SNAPPED" className="inline-flex shrink-0">
+              <Zap
+                aria-label="SNAPPED"
+                className="size-3 text-danger-text animate-pulse"
+              />
             </span>
           )}
           {hasPeekFlash && peekFlash && (
-            <span className="ui-badge text-accent-alt animate-pulse">
-              {peekFlashSeatLabel(peekFlash.kind)}
+            <span
+              title={peekFlashSeatLabel(peekFlash.kind)}
+              className="inline-flex shrink-0"
+            >
+              <Eye
+                aria-label={peekFlashSeatLabel(peekFlash.kind)}
+                className="size-3 text-accent-alt animate-pulse"
+              />
             </span>
           )}
           {hasPenaltyFlash && (
-            <span className="ui-badge text-accent animate-pulse">PENALTY</span>
+            <span title="PENALTY" className="inline-flex shrink-0">
+              <AlertTriangle
+                aria-label="PENALTY"
+                className="size-3 text-accent animate-pulse"
+              />
+            </span>
           )}
           {player.isBot && (
             <span className="ui-badge text-accent-alt">{voice.botBadge}</span>
@@ -642,13 +666,11 @@ function PlayerSeat({
             <span className="ui-badge text-accent">{voice.host}</span>
           )}
           {player.isThinking && (
-            <span className="ui-badge text-accent-alt animate-pulse">
-              {voice.botThinking}
-            </span>
-          )}
-          {player.isCurrentTurn && !player.isThinking && (
-            <span className="ui-badge text-accent-alt animate-pulse">
-              {voice.turn}
+            <span title={voice.botThinking} className="inline-flex shrink-0">
+              <Loader2
+                aria-label={voice.botThinking}
+                className="size-3 text-accent-alt animate-spin"
+              />
             </span>
           )}
           {player.hasCalledCambio && (
