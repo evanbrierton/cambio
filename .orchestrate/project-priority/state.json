@@ -185,11 +185,11 @@
       "finishedAt": "2026-08-11T14:27:15.243Z",
       "lastUpdate": "2026-08-11T14:27:16.443Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": 186,
       "failureMode": null,
-      "verification": "not-verified",
-      "attempts": 1
+      "verification": "not-verified"
     },
     {
       "name": "open-pr-matchmaking",
@@ -210,11 +210,11 @@
       "finishedAt": "2026-08-11T14:28:30.898Z",
       "lastUpdate": "2026-08-11T14:28:32.238Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": 187,
       "failureMode": null,
-      "verification": "not-verified",
-      "attempts": 1
+      "verification": "not-verified"
     },
     {
       "name": "stack-tutorial-pr",
@@ -235,11 +235,11 @@
       "finishedAt": "2026-08-11T14:30:13.492Z",
       "lastUpdate": "2026-08-11T14:30:14.761Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": 188,
       "failureMode": null,
-      "verification": "unit-test-verified",
-      "attempts": 1
+      "verification": "unit-test-verified"
     },
     {
       "name": "stack-mobile-pr",
@@ -258,13 +258,13 @@
       "handoffPath": "handoffs/stack-mobile-pr.md",
       "startedAt": "2026-08-11T14:30:15.916Z",
       "finishedAt": "2026-08-11T14:34:07.186Z",
-      "lastUpdate": "2026-08-11T14:34:07.186Z",
+      "lastUpdate": "2026-08-11T14:34:10.342Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": 189,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": "unit-test-verified"
     }
   ],
   "attention": [
@@ -351,6 +351,10 @@
     {
       "at": "2026-08-11T14:30:15.827Z",
       "message": "stack-mobile-pr: model \"composer-2.5\" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs."
+    },
+    {
+      "at": "2026-08-11T14:34:10.343Z",
+      "message": "stack-mobile-pr: verification self-reported (unit-test-verified)"
     }
   ]
 }
