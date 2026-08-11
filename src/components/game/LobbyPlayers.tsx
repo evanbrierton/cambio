@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import type { CardPointValues, ClientMessage, PlayerView } from "@/game/types";
 import {
   MAX_CARD_POINT_VALUE,
@@ -46,6 +47,7 @@ type LobbyPlayersProps = {
 };
 
 export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const me = view.players.find((player) => player.id === view.playerId);
   const readyCount = view.players.filter(
     (player) => (player.connected || player.isBot) && !player.isWaiting,
@@ -146,69 +148,113 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
           </button>
         )}
 
-        <div className="mt-3 flex items-center justify-between gap-3 px-1">
-          <span className="font-display text-[10px] text-theme-muted">
-            {voice.jokerCountLabel}
-          </span>
-          {view.canSetJokerCount ? (
-            <select
-              value={view.jokerCount}
-              onChange={(e) =>
-                send({
-                  type: "set_joker_count",
-                  count: Number(e.target.value),
-                })
-              }
-              className={LOBBY_SETTING_SELECT_CLASS}
-            >
-              {Array.from(
-                { length: MAX_JOKER_COUNT - MIN_JOKER_COUNT + 1 },
-                (_, index) => MIN_JOKER_COUNT + index,
-              ).map((count) => (
-                <option key={count} value={count}>
-                  {count}
-                </option>
-              ))}
-            </select>
-          ) : (
-            <span className="w-14 shrink-0 text-right font-display text-[10px] text-theme tabular-nums">
-              {view.jokerCount}
-            </span>
-          )}
-        </div>
-
-        {CARD_POINT_FIELDS.map(({ key, labelKey }) => (
-          <div
-            key={key}
-            className="mt-2 flex items-center justify-between gap-3 px-1"
+        <div className="mt-3 border-t border-theme-muted/20 pt-3">
+          <button
+            type="button"
+            onClick={() => setSettingsOpen((open) => !open)}
+            aria-expanded={settingsOpen}
+            className="flex w-full items-center justify-between gap-3 px-1 py-1 text-left transition-colors hover:text-accent"
           >
             <span className="font-display text-[10px] text-theme-muted">
-              {voice[labelKey]}
+              {voice.gameSettingsLabel}
             </span>
-            {view.canSetCardPoints ? (
-              <select
-                value={view.cardPoints[key]}
-                onChange={(e) =>
-                  send({
-                    type: "set_card_points",
-                    values: { [key]: Number(e.target.value) },
-                  })
-                }
-                className={LOBBY_SETTING_SELECT_CLASS}
+            <svg
+              aria-hidden
+              viewBox="0 0 12 12"
+              className={`h-3 w-3 shrink-0 text-theme-muted transition-transform duration-200 ${
+                settingsOpen ? "rotate-180" : ""
+              }`}
+            >
+              <path
+                d="M2.5 4.5 6 8 9.5 4.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {settingsOpen ? (
+              <motion.div
+                key="lobby-game-settings"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="overflow-hidden"
               >
-                {CARD_POINT_OPTIONS.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <span className="w-14 shrink-0 text-right font-display text-[10px] text-theme tabular-nums">
-                {view.cardPoints[key]}
-              </span>
-            )}
-          </div>
-        ))}
+                <div className="pt-2">
+                  <div className="flex items-center justify-between gap-3 px-1">
+                    <span className="font-display text-[10px] text-theme-muted">
+                      {voice.jokerCountLabel}
+                    </span>
+                    {view.canSetJokerCount ? (
+                      <select
+                        value={view.jokerCount}
+                        onChange={(e) =>
+                          send({
+                            type: "set_joker_count",
+                            count: Number(e.target.value),
+                          })
+                        }
+                        className={LOBBY_SETTING_SELECT_CLASS}
+                      >
+                        {Array.from(
+                          { length: MAX_JOKER_COUNT - MIN_JOKER_COUNT + 1 },
+                          (_, index) => MIN_JOKER_COUNT + index,
+                        ).map((count) => (
+                          <option key={count} value={count}>
+                            {count}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className="w-14 shrink-0 text-right font-display text-[10px] text-theme tabular-nums">
+                        {view.jokerCount}
+                      </span>
+                    )}
+                  </div>
+
+                  {CARD_POINT_FIELDS.map(({ key, labelKey }) => (
+                    <div
+                      key={key}
+                      className="mt-2 flex items-center justify-between gap-3 px-1"
+                    >
+                      <span className="font-display text-[10px] text-theme-muted">
+                        {voice[labelKey]}
+                      </span>
+                      {view.canSetCardPoints ? (
+                        <select
+                          value={view.cardPoints[key]}
+                          onChange={(e) =>
+                            send({
+                              type: "set_card_points",
+                              values: { [key]: Number(e.target.value) },
+                            })
+                          }
+                          className={LOBBY_SETTING_SELECT_CLASS}
+                        >
+                          {CARD_POINT_OPTIONS.map((value) => (
+                            <option key={value} value={value}>
+                              {value}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span className="w-14 shrink-0 text-right font-display text-[10px] text-theme tabular-nums">
+                          {view.cardPoints[key]}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            ) : null}
+          </AnimatePresence>
+        </div>
 
         {!view.canStartGame && !me?.isHost ? (
           <p className="font-display text-[10px] text-theme-muted text-center mt-4 animate-pulse">
