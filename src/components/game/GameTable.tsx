@@ -358,6 +358,7 @@ function PlayerSeat({
   viewerId,
   phase,
   cambioCallerId,
+  ownSetupPeekedSlots,
   fleetingPeek,
   peekFlash,
   swapFlash,
@@ -381,6 +382,7 @@ function PlayerSeat({
   viewerId: string;
   phase: PlayerView["phase"];
   cambioCallerId: string | null;
+  ownSetupPeekedSlots: number[];
   fleetingPeek: FleetingPeek | null;
   peekFlash: PeekFlash | null;
   swapFlash: SwapFlash | null;
@@ -403,7 +405,12 @@ function PlayerSeat({
   const isOwn = player.id === viewerId;
   const showDrawnSwapHint = isOwn && canSwap;
   const showSnapGiveHint = isOwn && snapGiveActive;
-  const showSetupPeekHint = phase === "setup_peek" && isOwn;
+  const setupPeeksRemaining = Math.max(
+    0,
+    SETUP_PEEK_SLOTS.length - ownSetupPeekedSlots.length,
+  );
+  const showSetupPeekHint =
+    phase === "setup_peek" && isOwn && setupPeeksRemaining > 0;
   const isProtectedTarget =
     phase === "cambio_final" &&
     cambioCallerId === player.id &&
@@ -466,9 +473,13 @@ function PlayerSeat({
     const isEmpty = !!slot.empty;
     const isFleetingPeek =
       fleetingPeek?.playerId === player.id && fleetingPeek.slot === index;
+    const alreadySetupPeeked = isOwn && ownSetupPeekedSlots.includes(index);
     const setupLocked =
       phase === "setup_peek" &&
-      (!isOwn || !SETUP_PEEK_SLOTS.includes(index) || isEmpty);
+      (!isOwn ||
+        !SETUP_PEEK_SLOTS.includes(index) ||
+        isEmpty ||
+        alreadySetupPeeked);
     const abilityLocked = swapAbilityActive && !canPickForAbility;
     const lookLocked = lookAbilityActive && !canPickForLook(index);
     const canPickForSnapGive = Boolean(snapGiveActive && isOwn && !isEmpty);
@@ -1141,6 +1152,7 @@ export function GameTable({
 
     if (view.phase === "setup_peek" && isOwn) {
       if (!SETUP_PEEK_SLOTS.includes(slot)) return;
+      if (view.ownSetupPeekedSlots.includes(slot)) return;
       send({ type: "setup_peek", slot });
       return;
     }
@@ -1225,6 +1237,7 @@ export function GameTable({
         viewerId={view.playerId}
         phase={view.phase}
         cambioCallerId={view.cambioCallerId}
+        ownSetupPeekedSlots={isOwn ? view.ownSetupPeekedSlots : []}
         fleetingPeek={fleetingPeek}
         peekFlash={peekFlash}
         swapFlash={swapFlash}

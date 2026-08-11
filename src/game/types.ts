@@ -246,6 +246,8 @@ export type PlayerView = {
   roomId: string;
   playerId: string;
   phase: GamePhase;
+  /** Bottom-row slots the viewer has peeked during the initial setup phase. */
+  ownSetupPeekedSlots: number[];
   players: PublicPlayer[];
   currentPlayerIndex: number;
   deckCount: number;

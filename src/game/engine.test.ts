@@ -633,6 +633,37 @@ describe("reconnect with drawn card (CAM-74)", () => {
   });
 });
 
+describe("setup peek", () => {
+  it("exposes ownSetupPeekedSlots on the player view", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    state.players.push({
+      id: "bob",
+      name: "Bob",
+      hand: [],
+      penaltyCount: 0,
+      setupPeekedSlots: [],
+      hasCalledCambio: false,
+      finalTurnDone: false,
+      isWaiting: false,
+      connected: true,
+      isBot: false,
+      botDifficulty: null,
+    });
+
+    handleMessage(state, "alice", { type: "start_game" });
+    expect(state.phase).toBe("setup_peek");
+
+    const peek = handleMessage(state, "alice", { type: "setup_peek", slot: 2 });
+    expect("error" in peek).toBe(false);
+
+    const aliceView = buildPlayerView(state, "alice");
+    const bobView = buildPlayerView(state, "bob");
+
+    expect(aliceView.ownSetupPeekedSlots).toEqual([2]);
+    expect(bobView.ownSetupPeekedSlots).toEqual([]);
+  });
+});
+
 describe("set_card_points (CAM-64)", () => {
   it("defaults new rooms to standard card point values", () => {
     const state = createRoom("room-1", "Alice", "alice");

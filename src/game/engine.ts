@@ -1546,6 +1546,7 @@ export function buildPlayerView(
     roomId: state.roomId,
     playerId: viewerId,
     phase: state.phase,
+    ownSetupPeekedSlots: viewer ? [...viewer.setupPeekedSlots] : [],
     players,
     currentPlayerIndex: state.currentPlayerIndex,
     deckCount:

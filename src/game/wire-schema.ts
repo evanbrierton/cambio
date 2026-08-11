@@ -121,6 +121,7 @@ const playerViewSchema = z.object({
   roomId: z.string(),
   playerId: z.string(),
   phase: gamePhaseSchema,
+  ownSetupPeekedSlots: z.array(z.number()),
   players: z.array(publicPlayerSchema),
   currentPlayerIndex: z.number(),
   deckCount: z.number(),

@@ -89,6 +89,7 @@ describe("wire-schema server messages", () => {
       roomId: "room",
       playerId: "p1",
       phase: "lobby" as const,
+      ownSetupPeekedSlots: [],
       players: [],
       currentPlayerIndex: 0,
       deckCount: 52,
