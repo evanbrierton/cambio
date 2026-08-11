@@ -1,0 +1,13 @@
+[2026-08-11T14:01:16.156Z] bootstrap-discovery: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-11T14:04:11.535Z] bootstrap-discovery: verification self-reported (type-check-only)
+[2026-08-11T14:04:19.182Z] cam-88-ai-gateway: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-11T14:06:17.246Z] cam-88-ai-gateway: verification self-reported (unit-test-verified)
+[2026-08-11T14:06:22.719Z] verify-cam-88: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-11T14:07:35.855Z] gamehost-phase0: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-11T14:11:39.893Z] matchmaking-v1: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-11T14:11:39.913Z] gamehost-phase0: verification self-reported (unit-test-verified)
+[2026-08-11T14:16:08.034Z] matchmaking-v1: verification self-reported (unit-test-verified)
+[2026-08-11T14:16:13.241Z] tutorial-v1: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-11T14:20:45.636Z] tutorial-v1: verification self-reported (unit-test-verified)
+[2026-08-11T14:20:48.779Z] mobile-phase01: model "composer-2.5" not in MODEL_CATALOG (spawning anyway). Run `bun cli.ts models` to see known slugs.
+[2026-08-11T14:25:31.474Z] mobile-phase01: verification self-reported (unit-test-verified)

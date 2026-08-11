@@ -130,6 +130,64 @@
         "No Capacitor/Expo shell code",
         "Draft PR(s) against main for mobile phase 0–1"
       ]
+    },
+    {
+      "name": "open-pr-gamehost",
+      "type": "worker",
+      "model": "composer-2.5",
+      "dependsOn": ["gamehost-phase0"],
+      "scopedGoal": "Open a draft PR for CAM-19/20/21 from branch `evanbrierton/gamehost-phase0-5425` against `main` via ManagePullRequest. Title must mention CAM-19. Body: summarize GameHost extract, useServerMessages, host.test.ts, online regression checklist. Link Linear CAM-19/20/21 In Review. Do NOT change product code unless a one-line fix is required for CI. CAM-88 (PR #185) should merge before this PR; note that in the PR body.",
+      "pathsAllowed": [],
+      "acceptance": [
+        "Draft PR open against main from evanbrierton/gamehost-phase0-5425",
+        "PR title mentions CAM-19",
+        "Linear CAM-19 marked In Review with PR attached"
+      ],
+      "openPR": false
+    },
+    {
+      "name": "open-pr-matchmaking",
+      "type": "worker",
+      "model": "composer-2.5",
+      "dependsOn": ["open-pr-gamehost", "matchmaking-v1"],
+      "scopedGoal": "Open a draft PR for matchmaking v1 from `evanbrierton/matchmaking-v1-745b`. Base branch should be `evanbrierton/gamehost-phase0-5425` (stacked) unless gamehost PR is already merged to main — then base `main`. Title mentions CAM-50/CAM-51. Body notes merge order: gamehost first, then matchmaking. Mark CAM-50/CAM-51 In Review. No product code changes unless CI blocker.",
+      "pathsAllowed": [],
+      "acceptance": [
+        "Draft PR open with correct stacked base",
+        "PR describes CAM-51 MatchmakingParty + CAM-52 auto-start",
+        "Linear matchmaking issues marked In Review"
+      ],
+      "openPR": false
+    },
+    {
+      "name": "stack-tutorial-pr",
+      "type": "worker",
+      "model": "composer-2.5",
+      "dependsOn": ["open-pr-matchmaking", "tutorial-v1"],
+      "scopedGoal": "Rebase `evanbrierton/tutorial-v1-9adb` onto `evanbrierton/matchmaking-v1-745b` (resolve conflicts; run pnpm lint/typecheck/test). Open draft PR with base = matchmaking branch (or main if upstream merged). Title mentions CAM-65. Mark CAM-65 In Review. Handoff documents any conflicts resolved.",
+      "pathsAllowed": ["**"],
+      "acceptance": [
+        "Tutorial branch rebased onto matchmaking branch",
+        "pnpm lint, typecheck, test pass after rebase",
+        "Draft PR open stacked on matchmaking",
+        "Linear CAM-65 In Review"
+      ],
+      "openPR": false
+    },
+    {
+      "name": "stack-mobile-pr",
+      "type": "worker",
+      "model": "composer-2.5",
+      "dependsOn": ["stack-tutorial-pr", "mobile-phase01"],
+      "scopedGoal": "Rebase `evanbrierton/mobile-phase01-26b2` onto the tutorial branch after stack-tutorial-pr lands (use handoff branch). Resolve monorepo/package conflicts with upstream slices. Open draft PR stacked on tutorial branch. Title mentions CAM-35/CAM-36. Mark relevant Linear issues In Review. Run pnpm lint/typecheck/test/party:check/build.",
+      "pathsAllowed": ["**"],
+      "acceptance": [
+        "Mobile branch rebased onto tutorial branch",
+        "All CI commands pass",
+        "Draft PR open stacked on tutorial",
+        "Linear mobile phase issues In Review"
+      ],
+      "openPR": false
     }
   ]
 }
