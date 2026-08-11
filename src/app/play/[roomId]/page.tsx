@@ -6,6 +6,7 @@ import { GameTable } from "@/components/game/GameTable";
 import type { PlayerView } from "@/game/types";
 import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "@/game/types";
 import {
+  type MatchOptions,
   type SessionMode,
   type SoloOptions,
   useGameConnection,
@@ -35,6 +36,7 @@ export default function PlayPage({
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
   const isSolo = searchParams.get("solo") === "1";
+  const isMatchmade = searchParams.get("match") === "1";
   const soloOptions: SoloOptions | undefined =
     isSolo && isNavFresh
       ? {
@@ -44,6 +46,14 @@ export default function PlayPage({
               10,
             ) || DEFAULT_BOT_COUNT,
           difficulty: parseBotDifficulty(searchParams.get("difficulty")),
+        }
+      : undefined;
+  const matchOptions: MatchOptions | undefined =
+    isMatchmade && isNavFresh
+      ? {
+          targetSize:
+            Number.parseInt(searchParams.get("targetSize") ?? "4", 10) || 4,
+          fillWithBots: searchParams.get("fillWithBots") !== "0",
         }
       : undefined;
 
@@ -68,7 +78,14 @@ export default function PlayPage({
     discardDrawFlash,
     deckDrawFlash,
     send,
-  } = useGameConnection(roomId, name, sessionMode, soloOptions, debugEnabled);
+  } = useGameConnection(
+    roomId,
+    name,
+    sessionMode,
+    soloOptions,
+    debugEnabled,
+    matchOptions,
+  );
 
   const [showConnecting, setShowConnecting] = useState(false);
 

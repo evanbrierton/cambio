@@ -7,6 +7,14 @@ compatibility_flags = ["nodejs_compat"]
 name = "Main"
 class_name = "CambioParty"
 
+[[durable_objects.bindings]]
+name = "Matchmaking"
+class_name = "MatchmakingParty"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["CambioParty"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["MatchmakingParty"]

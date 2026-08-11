@@ -194,4 +194,34 @@ describe("GameHost", () => {
     vi.advanceTimersByTime(60_000);
     expect(host.getState()?.botThinkingId).toBeNull();
   });
+
+  it("auto-starts matchmade rooms at target size with bot fill", async () => {
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Alice",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 2,
+      matchFillWithBots: true,
+    });
+
+    const firstState = host.getState();
+    expect(firstState?.isMatchmade).toBe(true);
+    expect(firstState?.phase).toBe("lobby");
+
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Bob",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+    });
+
+    const started = host.getState();
+    expect(started?.phase).toBe("setup_peek");
+    expect(started?.players.length).toBe(2);
+  });
 });
