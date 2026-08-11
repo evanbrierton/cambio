@@ -1,4 +1,9 @@
-export const PWA_INSTALL_DISMISS_KEY = "cambio-pwa-install-dismissed";
+import {
+  getDefaultPlatformAdapters,
+  PWA_INSTALL_DISMISS_KEY,
+} from "@cambio/client";
+
+export { PWA_INSTALL_DISMISS_KEY };
 
 /** How long a "Not now" dismissal lasts before the prompt can show again. */
 export const PWA_INSTALL_DISMISS_MS = 14 * 24 * 60 * 60 * 1000;
@@ -35,7 +40,6 @@ export function isIosDevice(): boolean {
   const ua = navigator.userAgent;
   if (/iPad|iPhone|iPod/.test(ua)) return true;
 
-  // iPadOS 13+ reports as MacIntel with touch points.
   return (
     navigator.platform === "MacIntel" &&
     typeof navigator.maxTouchPoints === "number" &&
@@ -46,35 +50,27 @@ export function isIosDevice(): boolean {
 export function isInstallDismissed(now = Date.now()): boolean {
   if (typeof window === "undefined") return true;
 
-  try {
-    const raw = localStorage.getItem(PWA_INSTALL_DISMISS_KEY);
-    if (!raw) return false;
+  const storage = getDefaultPlatformAdapters().persistentStorage;
+  const raw = storage.getItem(PWA_INSTALL_DISMISS_KEY);
+  if (!raw) return false;
 
-    const dismissedAt = Number(raw);
-    if (!Number.isFinite(dismissedAt)) return false;
+  const dismissedAt = Number(raw);
+  if (!Number.isFinite(dismissedAt)) return false;
 
-    return now - dismissedAt < PWA_INSTALL_DISMISS_MS;
-  } catch {
-    return false;
-  }
+  return now - dismissedAt < PWA_INSTALL_DISMISS_MS;
 }
 
 export function dismissInstallPrompt(now = Date.now()): void {
   if (typeof window === "undefined") return;
-
-  try {
-    localStorage.setItem(PWA_INSTALL_DISMISS_KEY, String(now));
-  } catch {
-    // Ignore quota / private-mode failures.
-  }
+  getDefaultPlatformAdapters().persistentStorage.setItem(
+    PWA_INSTALL_DISMISS_KEY,
+    String(now),
+  );
 }
 
 export function clearInstallDismiss(): void {
   if (typeof window === "undefined") return;
-
-  try {
-    localStorage.removeItem(PWA_INSTALL_DISMISS_KEY);
-  } catch {
-    // Ignore storage failures.
-  }
+  getDefaultPlatformAdapters().persistentStorage.removeItem(
+    PWA_INSTALL_DISMISS_KEY,
+  );
 }
