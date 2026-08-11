@@ -21,7 +21,7 @@ export type BotChatFallbackReason =
 export type BotChatContext = {
   difficulty: BotDifficulty;
   botName: string;
-  /** Exact table display names for everyone at the table (humans + bots). */
+  /** Exact seat display names for everyone in the game (humans + bots). */
   playerNames: string[];
   recentChat: ChatMessage[];
   gamePhase: GamePhase;
