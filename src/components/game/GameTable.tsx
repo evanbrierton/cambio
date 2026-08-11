@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { HAND_GRID_WIDTH, PixelCard } from "@/components/cards/PixelCard";
+import { PixelCard } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
@@ -63,8 +63,15 @@ import type {
   TakeFlash,
 } from "@/hooks/useGameConnection";
 import { useGameSounds } from "@/hooks/useGameSounds";
+import { useSeatHandFit } from "@/hooks/useSeatHandFit";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { copyToClipboard } from "@/lib/clipboard";
+import {
+  carouselPenaltyColumns,
+  carouselPenaltyPosition,
+  nearSquareGridPosition,
+  nearSquareGridShape,
+} from "@/lib/penalty-grid";
 import type { ThemeVoice } from "@/lib/themes";
 import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
@@ -202,22 +209,6 @@ function formatPenaltyFlashNotice(
   const player = players.find((entry) => entry.id === penaltyFlash.playerId);
   if (!player) return fallback;
   return `! ${player.name} drew a penalty card (#${penaltyFlash.slot + 1})`;
-}
-
-function penaltyGridColumns(count: number): number {
-  if (count <= 0) return 0;
-  if (count <= 2) return 1;
-  return Math.ceil(count / 2);
-}
-
-function penaltyGridPosition(penaltyIndex: number): {
-  gridRow: number;
-  gridColumn: number;
-} {
-  return {
-    gridRow: (penaltyIndex % 2) + 1,
-    gridColumn: Math.floor(penaltyIndex / 2) + 1,
-  };
 }
 
 function isSwapAbility(kind: string | undefined) {
@@ -382,7 +373,7 @@ function PlayerSeat({
   lookAbilityActive,
   pendingLookKind,
   compact = false,
-  scaleHands = false,
+  fitHandToWidth = false,
   voice,
   onCardClick,
 }: {
@@ -405,7 +396,7 @@ function PlayerSeat({
   lookAbilityActive?: boolean;
   pendingLookKind?: PendingAbility["kind"] | null;
   compact?: boolean;
-  scaleHands?: boolean;
+  fitHandToWidth?: boolean;
   voice: ThemeVoice;
   onCardClick: (playerId: string, slot: number, isOwn: boolean) => void;
 }) {
@@ -463,6 +454,13 @@ function PlayerSeat({
   const penaltySlots = player.hand
     .map((slot, index) => ({ slot, index }))
     .filter(({ slot, index }) => !slot.empty && isPenaltyColumnSlot(index));
+  const packedSlots = [...baseGridSlots, ...penaltySlots];
+  const packedShape = nearSquareGridShape(packedSlots.length);
+
+  const { seatRef, clipRef, shellRef, handRef } = useSeatHandFit(
+    fitHandToWidth,
+    `${packedSlots.length}:${packedShape.rows}:${packedShape.cols}`,
+  );
 
   const renderHandSlot = (slot: PublicCardSlot, index: number) => {
     const isEmpty = !!slot.empty;
@@ -504,7 +502,7 @@ function PlayerSeat({
         faceUp={isFleetingPeek || slot.faceUp}
         revealing={isFleetingPeek}
         small={compact}
-        sizeClass={scaleHands ? "seat-hand-card" : undefined}
+        sizeClass={fitHandToWidth ? undefined : "seat-hand-card"}
         swapFirstSelected={isSelectedForSwap && swapAbilityActive}
         swapFlashing={isSwapFlashing(swapFlash, player.id, index)}
         swapFlashSlotLabel={
@@ -560,7 +558,10 @@ function PlayerSeat({
 
   return (
     <section
+      ref={seatRef}
       className={`pixel-border ${seatPadding} w-full max-w-full shrink-0 flex flex-col items-center text-center ${
+        fitHandToWidth ? "h-full min-w-0 min-h-0" : ""
+      } ${
         hasSwapFlash
           ? "swap-seat-flash bg-swap-seat-flash ring-2 ring-accent shadow-glow-accent"
           : hasSnapFlash
@@ -598,7 +599,10 @@ function PlayerSeat({
         isOwn && !showDrawnSwapHint ? "lg:ring-1 lg:ring-accent" : ""
       } ${swapAbilityActive && isProtectedTarget && !isOwn ? "opacity-40" : ""}`}
     >
-      <div className="w-full min-h-9 mb-1 sm:mb-1.5 flex flex-col items-center justify-center gap-1">
+      <div
+        data-seat-header
+        className="w-full min-h-9 mb-1 sm:mb-1.5 flex flex-col items-center justify-center gap-1 shrink-0"
+      >
         <h2 className="player-name text-[10px] sm:text-xs truncate max-w-full">
           {player.name}
           {isOwn ? " (you)" : ""}
@@ -653,13 +657,34 @@ function PlayerSeat({
         <p className="w-full font-display text-[10px] sm:text-xs text-theme-muted py-2">
           {voice.waitingBadge}
         </p>
+      ) : fitHandToWidth ? (
+        <div
+          ref={clipRef}
+          className="w-full flex-1 min-h-0 min-w-0 overflow-hidden flex items-center justify-center"
+        >
+          <div ref={shellRef} className="relative max-w-full shrink-0">
+            <div
+              ref={handRef}
+              className="grid gap-1 lg:gap-1.5 w-fit"
+              style={{
+                gridTemplateRows: `repeat(${packedShape.rows}, auto)`,
+                gridTemplateColumns: `repeat(${packedShape.cols}, auto)`,
+              }}
+            >
+              {packedSlots.map(({ slot, index }, packIndex) => (
+                <div
+                  key={`packed-${index}`}
+                  style={nearSquareGridPosition(packIndex, packedShape.cols)}
+                >
+                  {renderHandSlot(slot, index)}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : (
-        <div className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit max-w-full mx-auto">
-          <div
-            className={`grid grid-cols-2 gap-1 lg:gap-1.5 shrink-0 ${
-              scaleHands ? "seat-hand-grid" : HAND_GRID_WIDTH
-            }`}
-          >
+        <div className="flex flex-row items-end justify-center gap-1 lg:gap-1.5 w-fit max-w-full min-w-0 mx-auto">
+          <div className="grid grid-cols-2 gap-1 lg:gap-1.5 shrink-0 seat-hand-grid">
             {baseGridSlots.map(({ slot, index }) =>
               renderHandSlot(slot, index),
             )}
@@ -668,13 +693,13 @@ function PlayerSeat({
             <div
               className="grid grid-rows-2 grid-flow-col gap-1 lg:gap-1.5 shrink-0"
               style={{
-                gridTemplateColumns: `repeat(${penaltyGridColumns(penaltySlots.length)}, auto)`,
+                gridTemplateColumns: `repeat(${carouselPenaltyColumns(penaltySlots.length)}, auto)`,
               }}
             >
               {penaltySlots.map(({ slot, index }, penaltyIndex) => (
                 <div
                   key={`penalty-wrap-${index}`}
-                  style={penaltyGridPosition(penaltyIndex)}
+                  style={carouselPenaltyPosition(penaltyIndex)}
                 >
                   {renderHandSlot(slot, index)}
                 </div>
@@ -1215,7 +1240,7 @@ export function GameTable({
         lookAbilityActive={lookAbilityActive}
         pendingLookKind={pendingLookKind}
         compact
-        scaleHands={!playerGridEnabled}
+        fitHandToWidth={playerGridEnabled}
         voice={voice}
         onCardClick={handleCardClick}
       />
