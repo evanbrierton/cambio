@@ -4,15 +4,61 @@
  * Vercel Ignored Build Step helper.
  *
  * Exit 0 = skip build, Exit 1 = proceed (Vercel convention).
- * Draft PRs skip preview builds; production and ready PRs always build.
- * GitHub API failures fail open (build) so previews are never stuck skipped.
+ *
+ * Skips when:
+ * - Only irrelevant files changed (tests, docs, CI, lint config, …)
+ * - The PR is still a draft
+ *
+ * Production and ready PRs with relevant changes always build.
+ * Missing git/API context fails open (build).
  */
 
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
 export const EXIT_SKIP = 0;
 export const EXIT_BUILD = 1;
+
+export const IRRELEVANT_PATH_PREFIXES = [".github/", ".cursor/"];
+
+export const IRRELEVANT_FILES = new Set([
+  "BUGS.md",
+  "README.md",
+  "biome.json",
+  "vitest.config.mts",
+  "scripts/dev-lan.sh",
+  "scripts/tailwind-lint.mjs",
+  "scripts/vercel-ignore.mjs",
+  "scripts/vercel-ignore.test.ts",
+  "scripts/preview-worker.test.ts",
+]);
+
+/**
+ * @param {string} file
+ */
+export function isIrrelevantPath(file) {
+  const normalized = String(file).replace(/^\.\//, "").replace(/\\/g, "/");
+  if (!normalized) return true;
+  if (IRRELEVANT_FILES.has(normalized)) return true;
+  if (
+    IRRELEVANT_PATH_PREFIXES.some((prefix) => normalized.startsWith(prefix))
+  ) {
+    return true;
+  }
+  if (/\.(md|mdx)$/i.test(normalized)) return true;
+  if (/\.(test|spec)\.(ts|tsx|js|jsx|mjs|cjs)$/i.test(normalized)) return true;
+  const base = normalized.split("/").pop() ?? "";
+  if (/^vitest\.config\./i.test(base)) return true;
+  return false;
+}
+
+/**
+ * @param {string[]} files
+ */
+export function hasRelevantChanges(files) {
+  return files.some((file) => !isIrrelevantPath(file));
+}
 
 /**
  * @param {{
@@ -20,6 +66,7 @@ export const EXIT_BUILD = 1;
  *   prId?: string | null;
  *   draft?: boolean | null;
  *   apiError?: string | null;
+ *   onlyIrrelevant?: boolean | null;
  * }} input
  */
 export function decideIgnore({
@@ -27,7 +74,15 @@ export function decideIgnore({
   prId = null,
   draft = null,
   apiError = null,
+  onlyIrrelevant = null,
 } = {}) {
+  if (onlyIrrelevant === true) {
+    return {
+      exit: EXIT_SKIP,
+      reason: "Only tests/docs/CI (irrelevant) files changed — skipping",
+    };
+  }
+
   if (vercelEnv === "production") {
     return { exit: EXIT_BUILD, reason: "Production — building" };
   }
@@ -124,12 +179,49 @@ export async function fetchPrDraft({
 }
 
 /**
- * @param {Record<string, string | undefined>} env
- * @param {{ fetchImpl?: typeof fetch }} [opts]
+ * @param {{ previousSha?: string | null; head?: string }} opts
+ * @returns {string[] | null} null = could not determine (fail open)
  */
-export async function runIgnoreCheck(env, { fetchImpl = fetch } = {}) {
+export function listChangedFiles({ previousSha = null, head = "HEAD" } = {}) {
+  if (!previousSha) return null;
+
+  try {
+    const out = execFileSync(
+      "git",
+      ["diff", "--name-only", `${previousSha}...${head}`],
+      {
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      },
+    );
+    return out
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * @param {Record<string, string | undefined>} env
+ * @param {{
+ *   fetchImpl?: typeof fetch;
+ *   listChangedFilesImpl?: typeof listChangedFiles;
+ * }} [opts]
+ */
+export async function runIgnoreCheck(
+  env,
+  { fetchImpl = fetch, listChangedFilesImpl = listChangedFiles } = {},
+) {
   const vercelEnv = env.VERCEL_ENV ?? null;
   const prId = env.VERCEL_GIT_PULL_REQUEST_ID ?? null;
+  const previousSha = env.VERCEL_GIT_PREVIOUS_SHA ?? null;
+
+  const changedFiles = listChangedFilesImpl({ previousSha });
+  if (changedFiles && !hasRelevantChanges(changedFiles)) {
+    return decideIgnore({ vercelEnv, prId, onlyIrrelevant: true });
+  }
 
   if (vercelEnv === "production" || !prId) {
     return decideIgnore({ vercelEnv, prId });
@@ -175,7 +267,7 @@ const isMain =
 if (isMain) {
   main().catch((err) => {
     console.error(
-      `Draft check crashed (${err instanceof Error ? err.message : err}) — building`,
+      `Ignore check crashed (${err instanceof Error ? err.message : err}) — building`,
     );
     process.exit(EXIT_BUILD);
   });
