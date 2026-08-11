@@ -1,0 +1,30 @@
+{
+  "status": "success",
+  "branch": "orch/project-priority/stack-tutorial-pr",
+  "pr": {
+    "number": 188,
+    "url": "https://github.com/evanbrierton/cambio/pull/188",
+    "base": "evanbrierton/matchmaking-v1-745b",
+    "head": "orch/project-priority/stack-tutorial-pr",
+    "draft": true
+  },
+  "linear": {
+    "CAM-65": "In Review"
+  },
+  "rebase": {
+    "source": "evanbrierton/tutorial-v1-9adb",
+    "onto": "evanbrierton/matchmaking-v1-745b",
+    "conflicts": [
+      {
+        "file": "docs/orchestrate/project-priority-discovery.md",
+        "type": "add/add",
+        "resolution": "Merged matchmaking v1 scope section (HEAD) with tutorial scope section (incoming); priority order lists both epics with tutorial marked as current slice."
+      }
+    ]
+  },
+  "verification": {
+    "lint": "pass",
+    "typecheck": "pass",
+    "test": "101 passing"
+  }
+}
