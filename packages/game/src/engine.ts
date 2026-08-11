@@ -129,6 +129,10 @@ export function createRoom(
     roomId,
     phase: "lobby",
     isSoloMode: false,
+    isMatchmade: false,
+    matchTargetSize: 4,
+    matchFillWithBots: true,
+    matchSoftStartAt: null,
     soloDifficulty: null,
     jokerCount: DEFAULT_JOKER_COUNT,
     cardPoints: { ...DEFAULT_CARD_POINTS },
@@ -1587,6 +1591,7 @@ export function buildPlayerView(
     debugReveal: state.debugReveal,
     isWaiting: viewerWaiting,
     canStartGame:
+      !state.isMatchmade &&
       viewerId === state.hostId &&
       (state.phase === "lobby" || state.phase === "ended") &&
       participants.length >= MIN_PLAYERS,
@@ -1599,6 +1604,16 @@ export function buildPlayerView(
     scores: state.scores,
     snapWindowEndsAt: state.snapWindowEndsAt,
     isSoloMode: state.isSoloMode,
+    isMatchmade: state.isMatchmade,
+    matchTargetSize: state.matchTargetSize,
+    matchFillWithBots: state.matchFillWithBots,
+    matchHumanCount: state.players.filter(
+      (player) => !player.isBot && !player.isWaiting && player.connected,
+    ).length,
+    matchStartingSoon:
+      state.isMatchmade &&
+      state.phase === "lobby" &&
+      state.matchSoftStartAt != null,
     canAddBot:
       viewerId === state.hostId &&
       state.isSoloMode &&
