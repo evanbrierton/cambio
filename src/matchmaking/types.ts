@@ -4,6 +4,9 @@ export const MAX_MATCH_TARGET_SIZE = 6;
 
 export const DEFAULT_MATCH_FILL_WITH_BOTS = true;
 
+/** PartyServer room name for the singleton matchmaking DO. */
+export const MATCHMAKING_ROOM_ID = "global";
+
 /** Soft start after lobby is start-eligible (≥2 humans). */
 export const MATCH_SOFT_START_MS = 45_000;
 

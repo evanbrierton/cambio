@@ -197,7 +197,13 @@ describe("GameHost", () => {
   });
 
   it("auto-starts matchmade rooms at target size with bot fill", async () => {
-    const { host } = createTestHost();
+    const closed: string[] = [];
+    const host = new GameHost({
+      roomId: "test-room",
+      onMatchLobbyClosed: (roomId) => {
+        closed.push(roomId);
+      },
+    });
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
@@ -219,11 +225,53 @@ describe("GameHost", () => {
       isSolo: false,
       botCount: 0,
       difficulty: "easy",
+      isMatchmade: true,
     });
 
     const started = host.getState();
     expect(started?.phase).toBe("setup_peek");
     expect(started?.players.length).toBe(2);
+    expect(closed).toEqual(["test-room"]);
+  });
+
+  it("rejects Find Match into a matchmade room that already started", async () => {
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Alice",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 2,
+      matchFillWithBots: true,
+    });
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Bob",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+    });
+    expect(host.getState()?.phase).toBe("setup_peek");
+
+    const late = await host.handleConnect({
+      queryPlayerId: null,
+      name: "Carol",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 2,
+      matchFillWithBots: true,
+    });
+
+    expect(late.error).toBe("This match already started. Find a new match.");
+    expect(late.closeConnection).toBe(true);
+    expect(host.getState()?.players.some((player) => player.name === "Carol")).toBe(
+      false,
+    );
   });
 
   it("removes matchmade lobby players on disconnect instead of marking away", async () => {

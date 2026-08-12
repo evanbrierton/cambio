@@ -62,6 +62,8 @@ export type GameHostConfig = {
   onPersist?: () => void | Promise<void>;
   /** Called when snap window end time changes (null clears). */
   onSnapWindowSchedule?: (endsAt: number | null) => void | Promise<void>;
+  /** Called when a matchmade lobby leaves lobby phase so Find Match stops seating into it. */
+  onMatchLobbyClosed?: (roomId: string) => void | Promise<void>;
 };
 
 export type ConnectParams = {
@@ -262,6 +264,19 @@ export class GameHost {
         this.state.matchFillWithBots = matchFillWithBots ?? true;
       }
     } else {
+      // Fresh Find Match must not land in a game that already started.
+      if (
+        isMatchmade &&
+        this.state.isMatchmade &&
+        this.state.phase !== "lobby" &&
+        !existingPlayer
+      ) {
+        return {
+          playerId: queryPlayerId ?? "",
+          error: "This match already started. Find a new match.",
+          closeConnection: true,
+        };
+      }
       // Fresh Find Match (match=1) may reassign the same room — allow re-entry.
       if (isMatchmade && queryPlayerId) {
         this.matchLobbyDepartedIds.delete(queryPlayerId);
@@ -462,6 +477,9 @@ export class GameHost {
     this.state.matchSoftStartAt = null;
     this.clearMatchTimers();
     await this.dispatchMessage(this.state.hostId, { type: "start_game" });
+    if (this.state.phase !== "lobby") {
+      await this.config.onMatchLobbyClosed?.(this.config.roomId);
+    }
   }
 
   private async maybeAutoStartMatchmade() {
@@ -647,6 +665,9 @@ export class GameHost {
       this.scheduleMatchSoftStart();
     }
     await this.maybeAutoStartMatchmade();
+    if (this.state?.isMatchmade && this.state.phase !== "lobby") {
+      await this.config.onMatchLobbyClosed?.(this.config.roomId);
+    }
   }
 
   sendToPlayer(playerId: string, message: ServerMessage) {

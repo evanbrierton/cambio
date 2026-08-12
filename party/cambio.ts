@@ -8,6 +8,7 @@ import { clampBotCount, GameHost, type HostPeer } from "../src/game/host";
 import type { GameState, ServerMessage } from "../src/game/types";
 import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "../src/game/types";
 import { parseClientMessageJson } from "../src/game/wire-schema";
+import { MATCHMAKING_ROOM_ID } from "../src/matchmaking/types";
 
 type PlayerConnectionState = { playerId?: string; debugEnabled?: boolean };
 
@@ -27,7 +28,22 @@ export class CambioParty extends Server<Env> {
       groqApiKey: this.env.GROQ_API_KEY,
       onPersist: () => this.persist(),
       onSnapWindowSchedule: (endsAt) => this.scheduleSnapWindowAlarm(endsAt),
+      onMatchLobbyClosed: (roomId) => this.closeMatchmakingLobby(roomId),
     });
+  }
+
+  private async closeMatchmakingLobby(roomId: string) {
+    try {
+      const id = this.env.Matchmaking.idFromName(MATCHMAKING_ROOM_ID);
+      const stub = this.env.Matchmaking.get(id);
+      await stub.fetch("https://matchmaking/close-lobby", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ roomId }),
+      });
+    } catch {
+      // Best-effort: Find Match may briefly reuse a started room until next close.
+    }
   }
 
   get state(): GameState | null {

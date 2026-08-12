@@ -7,6 +7,7 @@ import {
 import {
   assignPlayer,
   cancelAssignment,
+  closeLobby,
   createMatchmakingQueueState,
   type MatchmakingQueueState,
   normalizeMatchConfig,
@@ -53,6 +54,27 @@ export class MatchmakingParty extends Server<Env> {
     message: MatchmakingServerMessage,
   ) {
     connection.send(JSON.stringify(message));
+  }
+
+  /** HTTP from game rooms: POST /close-lobby { roomId } */
+  async onRequest(request: Request): Promise<Response> {
+    const url = new URL(request.url);
+    if (request.method === "POST" && url.pathname.endsWith("/close-lobby")) {
+      let roomId = "";
+      try {
+        const body = (await request.json()) as { roomId?: string };
+        roomId = body.roomId?.trim() ?? "";
+      } catch {
+        return Response.json({ error: "Invalid body." }, { status: 400 });
+      }
+      if (!roomId) {
+        return Response.json({ error: "roomId required." }, { status: 400 });
+      }
+      const closed = closeLobby(this.queue, roomId);
+      await this.persistQueue();
+      return Response.json({ closed });
+    }
+    return new Response("Not Found", { status: 404 });
   }
 
   async onConnect(

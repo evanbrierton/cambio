@@ -8,6 +8,7 @@ import type {
   MatchmakingClientMessage,
   MatchmakingServerMessage,
 } from "@/matchmaking/types";
+import { MATCHMAKING_ROOM_ID } from "@/matchmaking/types";
 
 const MATCHMAKING_PLAYER_KEY = "cambio-matchmaking-player";
 
@@ -59,7 +60,7 @@ export function useMatchmaking(playerName: string) {
         const socket = new PartySocket({
           host: getPartyHost(),
           party: "matchmaking",
-          room: "global",
+          room: MATCHMAKING_ROOM_ID,
         });
         socketRef.current = socket;
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   assignPlayer,
   cancelAssignment,
+  closeLobby,
   createMatchmakingQueueState,
   normalizeMatchConfig,
 } from "./queue";
@@ -69,5 +70,18 @@ describe("matchmaking queue", () => {
 
     const third = assignPlayer(state, "p3", config, 1300);
     expect(third.roomId).not.toBe(first.roomId);
+  });
+
+  it("stops seating into a lobby after closeLobby", () => {
+    const state = createMatchmakingQueueState();
+    const config = normalizeMatchConfig(4, true);
+    const first = assignPlayer(state, "p1", config, 1000);
+    assignPlayer(state, "p2", config, 1100);
+    closeLobby(state, first.roomId);
+
+    const next = assignPlayer(state, "p3", config, 1200);
+    expect(next.roomId).not.toBe(first.roomId);
+    expect(state.assignments.p1).toBeUndefined();
+    expect(state.assignments.p2).toBeUndefined();
   });
 });

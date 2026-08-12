@@ -120,3 +120,25 @@ export function cancelAssignment(
   }
   return true;
 }
+
+/** Remove a lobby from the open queue once its game has started (or is dead). */
+export function closeLobby(
+  state: MatchmakingQueueState,
+  roomId: string,
+): boolean {
+  let closed = false;
+  for (const [key, lobbies] of Object.entries(state.buckets)) {
+    const next = lobbies.filter((lobby) => lobby.roomId !== roomId);
+    if (next.length !== lobbies.length) {
+      state.buckets[key] = next;
+      closed = true;
+    }
+  }
+  for (const [playerId, assignedRoomId] of Object.entries(state.assignments)) {
+    if (assignedRoomId === roomId) {
+      delete state.assignments[playerId];
+      closed = true;
+    }
+  }
+  return closed;
+}
