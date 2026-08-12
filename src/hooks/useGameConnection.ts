@@ -171,7 +171,7 @@ export function useGameConnection(
               difficulty: soloOptions.difficulty,
             }
           : {}),
-        ...(matchOptions && sessionMode === "new"
+        ...(matchOptions
           ? {
               match: "1",
               targetSize: String(matchOptions.targetSize),
@@ -215,9 +215,11 @@ export function useGameConnection(
     roomId,
     playerName,
     sessionMode,
-    soloOptions,
+    soloOptions?.botCount,
+    soloOptions?.difficulty,
     debugEnabled,
-    matchOptions,
+    matchOptions?.targetSize,
+    matchOptions?.fillWithBots,
     applyMessage,
   ]);
 
