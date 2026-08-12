@@ -224,4 +224,108 @@ describe("GameHost", () => {
     expect(started?.phase).toBe("setup_peek");
     expect(started?.players.length).toBe(2);
   });
+
+  it("removes matchmade lobby players on disconnect instead of marking away", async () => {
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Alice",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 4,
+      matchFillWithBots: true,
+    });
+    const aliceId = host.getState()?.hostId ?? "";
+    const alicePeer = mockPeer(aliceId);
+    host.addPeer(alicePeer.peerId, alicePeer.peer);
+
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Bob",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+    });
+    const bobId =
+      host.getState()?.players.find((player) => player.name === "Bob")?.id ??
+      "";
+    const bobPeer = mockPeer(bobId);
+    host.addPeer(bobPeer.peerId, bobPeer.peer);
+
+    await host.handleDisconnect(bobId, bobPeer.peerId);
+
+    const state = host.getState();
+    expect(state?.players).toHaveLength(1);
+    expect(state?.players[0].name).toBe("Alice");
+    expect(state?.players.some((player) => player.name === "Bob")).toBe(false);
+  });
+
+  it("rejects reconnect to a matchmade lobby after leaving", async () => {
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: "bob-id",
+      name: "Bob",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 4,
+      matchFillWithBots: true,
+    });
+    const bobId = host.getState()?.hostId ?? "bob-id";
+    const bobPeer = mockPeer(bobId);
+    host.addPeer(bobPeer.peerId, bobPeer.peer);
+
+    await host.handleDisconnect(bobId, bobPeer.peerId);
+
+    const reconnect = await host.handleConnect({
+      queryPlayerId: bobId,
+      name: "Bob",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+    });
+
+    expect(reconnect.error).toBe("You left the match lobby.");
+    expect(reconnect.closeConnection).toBe(true);
+    expect(host.getState()?.players).toHaveLength(0);
+  });
+
+  it("keeps disconnected players during an in-progress matchmade game", async () => {
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Alice",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 2,
+      matchFillWithBots: true,
+    });
+    const aliceId = host.getState()?.hostId ?? "";
+
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Bob",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+    });
+    const bobId =
+      host.getState()?.players.find((player) => player.name === "Bob")?.id ??
+      "";
+    expect(host.getState()?.phase).toBe("setup_peek");
+
+    const bobPeer = mockPeer(bobId);
+    host.addPeer(bobPeer.peerId, bobPeer.peer);
+
+    await host.handleDisconnect(bobId, bobPeer.peerId);
+
+    const player = host.getState()?.players.find((entry) => entry.id === bobId);
+    expect(player?.connected).toBe(false);
+    expect(host.getState()?.players).toHaveLength(2);
+  });
 });

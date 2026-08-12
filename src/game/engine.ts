@@ -119,6 +119,29 @@ export function addBotPlayer(
   return id;
 }
 
+/** Remove a human from a lobby (matchmade disconnect). Returns false if not found. */
+export function removeLobbyPlayer(state: GameState, playerId: string): boolean {
+  const index = state.players.findIndex((player) => player.id === playerId);
+  if (index === -1) return false;
+
+  const player = state.players[index];
+  if (player.isBot) return false;
+
+  state.players.splice(index, 1);
+
+  if (state.hostId === playerId) {
+    const nextHost = state.players.find(
+      (candidate) => !candidate.isBot && candidate.connected,
+    );
+    if (nextHost) state.hostId = nextHost.id;
+  }
+
+  delete state.cumulativeScores[playerId];
+  addLog(state, `${player.name} left the match.`);
+
+  return true;
+}
+
 export function createRoom(
   roomId: string,
   hostName: string,

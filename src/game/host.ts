@@ -24,6 +24,7 @@ import {
   findPlayer,
   handleMessage,
   migrateRoundHistory,
+  removeLobbyPlayer,
 } from "./engine";
 import type {
   BotDifficulty,
@@ -116,6 +117,9 @@ export class GameHost {
   private snapWindowTimer: ReturnType<typeof setTimeout> | null = null;
   private matchSoftStartTimer: ReturnType<typeof setTimeout> | null = null;
   private matchAbandonTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Humans who left a matchmade lobby; cannot rejoin this room. */
+  private matchLobbyDepartedIds = new Set<string>();
+  private matchLobbyDepartedNames = new Set<string>();
   private humanSnapStreak = 0;
   private lastMoveReactionAt = 0;
 
@@ -165,9 +169,21 @@ export class GameHost {
   resolveReconnectPlayerId(queryPlayerId: string | null, name: string): string {
     if (!this.state) return queryPlayerId ?? crypto.randomUUID().slice(0, 10);
 
+    const isMatchmadeLobby =
+      this.state.isMatchmade && this.state.phase === "lobby";
+
     if (queryPlayerId) {
       const existing = this.state.players.find((p) => p.id === queryPlayerId);
-      if (existing) return queryPlayerId;
+      if (existing) {
+        if (isMatchmadeLobby && !existing.connected) {
+          return crypto.randomUUID().slice(0, 10);
+        }
+        return queryPlayerId;
+      }
+    }
+
+    if (isMatchmadeLobby) {
+      return crypto.randomUUID().slice(0, 10);
     }
 
     const normalizedName = name.trim().toLowerCase();
@@ -183,6 +199,19 @@ export class GameHost {
     }
 
     return crypto.randomUUID().slice(0, 10);
+  }
+
+  private isMatchLobbyBlocked(
+    queryPlayerId: string | null,
+    name: string,
+  ): boolean {
+    if (queryPlayerId && this.matchLobbyDepartedIds.has(queryPlayerId)) {
+      return true;
+    }
+    const normalizedName = name.trim().toLowerCase();
+    return normalizedName
+      ? this.matchLobbyDepartedNames.has(normalizedName)
+      : false;
   }
 
   async handleConnect(params: ConnectParams): Promise<ConnectResult> {
@@ -231,6 +260,17 @@ export class GameHost {
         this.state.matchFillWithBots = matchFillWithBots ?? true;
       }
     } else {
+      if (
+        this.state.isMatchmade &&
+        this.state.phase === "lobby" &&
+        this.isMatchLobbyBlocked(queryPlayerId, name)
+      ) {
+        return {
+          playerId: queryPlayerId ?? "",
+          error: "You left the match lobby.",
+          closeConnection: true,
+        };
+      }
       playerId = this.resolveReconnectPlayerId(queryPlayerId, name);
     }
 
@@ -259,13 +299,40 @@ export class GameHost {
 
   async handleDisconnect(playerId: string, peerId: string) {
     if (!this.state) return;
-    if (this.playerHasOtherPeer(playerId, peerId)) return;
+
+    const isMatchmadeLobby =
+      this.state.isMatchmade && this.state.phase === "lobby";
+
+    if (!isMatchmadeLobby && this.playerHasOtherPeer(playerId, peerId)) return;
 
     this.clearBotChatTimer();
     this.clearBotChatReplyTimer();
 
     const player = this.state.players.find((p) => p.id === playerId);
     if (!player) return;
+
+    if (isMatchmadeLobby && !player.isBot) {
+      this.matchLobbyDepartedIds.add(playerId);
+      this.matchLobbyDepartedNames.add(player.name.trim().toLowerCase());
+      removeLobbyPlayer(this.state, playerId);
+
+      for (const [id, peer] of this.peers) {
+        if (peer.playerId === playerId) {
+          peer.connected = false;
+          this.peers.delete(id);
+        }
+      }
+
+      if (this.countMatchHumans() < 2 && this.state.matchSoftStartAt) {
+        this.state.matchSoftStartAt = null;
+        this.clearMatchSoftStartTimer();
+      }
+
+      await this.persist();
+      this.broadcastState();
+      await this.maybeAutoStartMatchmade();
+      return;
+    }
 
     player.connected = false;
     await this.persist();
@@ -379,6 +446,10 @@ export class GameHost {
       this.state.matchSoftStartAt = Date.now() + MATCH_SOFT_START_MS;
       await this.persist();
       this.scheduleMatchSoftStart();
+    } else if (humans < 2 && this.state.matchSoftStartAt) {
+      this.state.matchSoftStartAt = null;
+      this.clearMatchSoftStartTimer();
+      await this.persist();
     }
 
     if (humans === 1 && !this.state.matchFillWithBots) {
