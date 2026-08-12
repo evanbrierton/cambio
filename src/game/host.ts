@@ -24,6 +24,7 @@ import {
   findPlayer,
   handleMessage,
   migrateRoundHistory,
+  purgeStaleMatchmadeLobbyPlayers,
   removeLobbyPlayer,
 } from "./engine";
 import type {
@@ -79,7 +80,7 @@ export type ConnectResult = {
 const MOVE_REACTION_COOLDOWN_MS = 12_000;
 
 export function migrateHostState(state: GameState): GameState {
-  return {
+  const migrated: GameState = {
     ...state,
     isSoloMode: state.isSoloMode ?? false,
     isMatchmade: state.isMatchmade ?? false,
@@ -105,6 +106,8 @@ export function migrateHostState(state: GameState): GameState {
       setupPeekedSlots: p.setupPeekedSlots ?? [],
     })),
   };
+  purgeStaleMatchmadeLobbyPlayers(migrated);
+  return migrated;
 }
 
 export class GameHost {
@@ -260,6 +263,7 @@ export class GameHost {
         this.state.matchFillWithBots = matchFillWithBots ?? true;
       }
     } else {
+      purgeStaleMatchmadeLobbyPlayers(this.state);
       if (
         this.state.isMatchmade &&
         this.state.phase === "lobby" &&
@@ -605,9 +609,14 @@ export class GameHost {
 
   async restoreFromSaved(saved: GameState) {
     this.state = migrateHostState(saved);
+    await this.persist();
     await this.syncSnapWindow();
     this.scheduleBotTurns();
     this.scheduleBotChat();
+    if (this.state?.matchSoftStartAt) {
+      this.scheduleMatchSoftStart();
+    }
+    await this.maybeAutoStartMatchmade();
   }
 
   sendToPlayer(playerId: string, message: ServerMessage) {

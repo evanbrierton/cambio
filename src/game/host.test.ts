@@ -328,4 +328,77 @@ describe("GameHost", () => {
     expect(player?.connected).toBe(false);
     expect(host.getState()?.players).toHaveLength(2);
   });
+
+  it("purges stale away humans when restoring a matchmade lobby", async () => {
+    const { host } = createTestHost();
+    const state = createRoom("stale-room", "Alice", "alice");
+    state.isMatchmade = true;
+    state.matchTargetSize = 4;
+    state.players.push({
+      id: "ghost",
+      name: "Ghost",
+      hand: [],
+      penaltyCount: 0,
+      setupPeekedSlots: [],
+      hasCalledCambio: false,
+      finalTurnDone: false,
+      isWaiting: false,
+      connected: false,
+      isBot: false,
+      botDifficulty: null,
+    });
+    state.cumulativeScores.ghost = 0;
+
+    await host.restoreFromSaved(state);
+
+    expect(host.getState()?.players).toHaveLength(1);
+    expect(host.getState()?.players[0].name).toBe("Alice");
+  });
+
+  it("auto-suffixes duplicate names in matchmade rooms", async () => {
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Alex",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 4,
+      matchFillWithBots: true,
+    });
+
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Alex",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+    });
+
+    const names = host.getState()?.players.map((player) => player.name) ?? [];
+    expect(names).toEqual(["Alex", "Alex 2"]);
+  });
+
+  it("still rejects duplicate names in friend rooms", async () => {
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Alex",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+    });
+
+    const second = await host.handleConnect({
+      queryPlayerId: null,
+      name: "Alex",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+    });
+
+    expect(second.error).toBe("That name is already taken.");
+    expect(host.getState()?.players).toHaveLength(1);
+  });
 });
