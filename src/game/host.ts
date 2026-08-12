@@ -120,9 +120,8 @@ export class GameHost {
   private snapWindowTimer: ReturnType<typeof setTimeout> | null = null;
   private matchSoftStartTimer: ReturnType<typeof setTimeout> | null = null;
   private matchAbandonTimer: ReturnType<typeof setTimeout> | null = null;
-  /** Humans who left a matchmade lobby; cannot rejoin this room. */
+  /** Player ids that left a matchmade lobby; blocked from passive reconnect only. */
   private matchLobbyDepartedIds = new Set<string>();
-  private matchLobbyDepartedNames = new Set<string>();
   private humanSnapStreak = 0;
   private lastMoveReactionAt = 0;
 
@@ -204,17 +203,10 @@ export class GameHost {
     return crypto.randomUUID().slice(0, 10);
   }
 
-  private isMatchLobbyBlocked(
-    queryPlayerId: string | null,
-    name: string,
-  ): boolean {
-    if (queryPlayerId && this.matchLobbyDepartedIds.has(queryPlayerId)) {
-      return true;
-    }
-    const normalizedName = name.trim().toLowerCase();
-    return normalizedName
-      ? this.matchLobbyDepartedNames.has(normalizedName)
-      : false;
+  private isMatchLobbyBlocked(queryPlayerId: string | null): boolean {
+    return Boolean(
+      queryPlayerId && this.matchLobbyDepartedIds.has(queryPlayerId),
+    );
   }
 
   async handleConnect(params: ConnectParams): Promise<ConnectResult> {
@@ -264,10 +256,15 @@ export class GameHost {
       }
     } else {
       purgeStaleMatchmadeLobbyPlayers(this.state);
+      // Fresh Find Match (match=1) may reassign the same room — allow re-entry.
+      if (isMatchmade && queryPlayerId) {
+        this.matchLobbyDepartedIds.delete(queryPlayerId);
+      }
       if (
         this.state.isMatchmade &&
         this.state.phase === "lobby" &&
-        this.isMatchLobbyBlocked(queryPlayerId, name)
+        !isMatchmade &&
+        this.isMatchLobbyBlocked(queryPlayerId)
       ) {
         return {
           playerId: queryPlayerId ?? "",
@@ -317,7 +314,6 @@ export class GameHost {
 
     if (isMatchmadeLobby && !player.isBot) {
       this.matchLobbyDepartedIds.add(playerId);
-      this.matchLobbyDepartedNames.add(player.name.trim().toLowerCase());
       removeLobbyPlayer(this.state, playerId);
 
       for (const [id, peer] of this.peers) {

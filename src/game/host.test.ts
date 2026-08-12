@@ -262,7 +262,7 @@ describe("GameHost", () => {
     expect(state?.players.some((player) => player.name === "Bob")).toBe(false);
   });
 
-  it("rejects reconnect to a matchmade lobby after leaving", async () => {
+  it("rejects passive reconnect to a matchmade lobby after leaving", async () => {
     const { host } = createTestHost();
     await host.handleConnect({
       queryPlayerId: "bob-id",
@@ -291,6 +291,40 @@ describe("GameHost", () => {
     expect(reconnect.error).toBe("You left the match lobby.");
     expect(reconnect.closeConnection).toBe(true);
     expect(host.getState()?.players).toHaveLength(0);
+  });
+
+  it("allows Find Match re-entry to the same lobby after leaving", async () => {
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: "bob-id",
+      name: "Bob",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 4,
+      matchFillWithBots: true,
+    });
+    const bobId = host.getState()?.hostId ?? "bob-id";
+    const bobPeer = mockPeer(bobId);
+    host.addPeer(bobPeer.peerId, bobPeer.peer);
+
+    await host.handleDisconnect(bobId, bobPeer.peerId);
+
+    const rematch = await host.handleConnect({
+      queryPlayerId: bobId,
+      name: "Bob",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 4,
+      matchFillWithBots: true,
+    });
+
+    expect(rematch.error).toBeUndefined();
+    expect(host.getState()?.players).toHaveLength(1);
+    expect(host.getState()?.players[0].name).toBe("Bob");
   });
 
   it("keeps disconnected players during an in-progress matchmade game", async () => {
