@@ -56,6 +56,21 @@ export function assignPlayer(
   config: MatchmakingConfig,
   now = Date.now(),
 ): MatchAssignment {
+  const existingRoomId = state.assignments[playerId];
+  if (existingRoomId) {
+    for (const lobbies of Object.values(state.buckets)) {
+      const existing = lobbies.find((lobby) => lobby.roomId === existingRoomId);
+      if (existing) {
+        return {
+          roomId: existing.roomId,
+          targetSize: existing.targetSize,
+          fillWithBots: existing.fillWithBots,
+        };
+      }
+    }
+    delete state.assignments[playerId];
+  }
+
   const key = bucketKey(config);
   const lobbies = state.buckets[key] ?? [];
   const open = sortedLobbies(lobbies).find(

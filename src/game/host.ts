@@ -1,4 +1,8 @@
-import { MATCH_ABANDON_MS, MATCH_SOFT_START_MS } from "../matchmaking/types";
+import {
+  MATCH_ABANDON_MS,
+  MATCH_LOBBY_LEAVE_GRACE_MS,
+  MATCH_SOFT_START_MS,
+} from "../matchmaking/types";
 import {
   BotKnowledge,
   botThinkDelay,
@@ -122,6 +126,11 @@ export class GameHost {
   private matchAbandonTimer: ReturnType<typeof setTimeout> | null = null;
   /** Player ids that left a matchmade lobby; blocked from passive reconnect only. */
   private matchLobbyDepartedIds = new Set<string>();
+  /** Grace timers so brief socket flaps (Strict Mode) don't drop lobby seats. */
+  private matchLobbyLeaveTimers = new Map<
+    string,
+    ReturnType<typeof setTimeout>
+  >();
   private humanSnapStreak = 0;
   private lastMoveReactionAt = 0;
 
@@ -177,9 +186,7 @@ export class GameHost {
     if (queryPlayerId) {
       const existing = this.state.players.find((p) => p.id === queryPlayerId);
       if (existing) {
-        if (isMatchmadeLobby && !existing.connected) {
-          return crypto.randomUUID().slice(0, 10);
-        }
+        // Reclaim the same seat (including brief disconnect grace).
         return queryPlayerId;
       }
     }
@@ -255,7 +262,6 @@ export class GameHost {
         this.state.matchFillWithBots = matchFillWithBots ?? true;
       }
     } else {
-      purgeStaleMatchmadeLobbyPlayers(this.state);
       // Fresh Find Match (match=1) may reassign the same room — allow re-entry.
       if (isMatchmade && queryPlayerId) {
         this.matchLobbyDepartedIds.delete(queryPlayerId);
@@ -273,6 +279,7 @@ export class GameHost {
         };
       }
       playerId = this.resolveReconnectPlayerId(queryPlayerId, name);
+      this.clearMatchLobbyLeaveTimer(playerId);
     }
 
     const result = handleMessage(this.state, playerId, {
@@ -313,24 +320,17 @@ export class GameHost {
     if (!player) return;
 
     if (isMatchmadeLobby && !player.isBot) {
-      this.matchLobbyDepartedIds.add(playerId);
-      removeLobbyPlayer(this.state, playerId);
+      if (this.playerHasOtherPeer(playerId, peerId)) return;
 
-      for (const [id, peer] of this.peers) {
-        if (peer.playerId === playerId) {
-          peer.connected = false;
-          this.peers.delete(id);
-        }
-      }
-
-      if (this.countMatchHumans() < 2 && this.state.matchSoftStartAt) {
-        this.state.matchSoftStartAt = null;
-        this.clearMatchSoftStartTimer();
-      }
-
+      player.connected = false;
       await this.persist();
       this.broadcastState();
-      await this.maybeAutoStartMatchmade();
+
+      this.clearMatchLobbyLeaveTimer(playerId);
+      const timer = setTimeout(() => {
+        void this.finalizeMatchLobbyLeave(playerId);
+      }, MATCH_LOBBY_LEAVE_GRACE_MS);
+      this.matchLobbyLeaveTimers.set(playerId, timer);
       return;
     }
 
@@ -343,6 +343,40 @@ export class GameHost {
       return;
     }
 
+    this.broadcastState();
+    await this.maybeAutoStartMatchmade();
+  }
+
+  private clearMatchLobbyLeaveTimer(playerId: string) {
+    const timer = this.matchLobbyLeaveTimers.get(playerId);
+    if (!timer) return;
+    clearTimeout(timer);
+    this.matchLobbyLeaveTimers.delete(playerId);
+  }
+
+  private async finalizeMatchLobbyLeave(playerId: string) {
+    this.matchLobbyLeaveTimers.delete(playerId);
+    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+
+    const player = this.state.players.find((entry) => entry.id === playerId);
+    if (!player || player.connected || player.isBot) return;
+
+    this.matchLobbyDepartedIds.add(playerId);
+    removeLobbyPlayer(this.state, playerId);
+
+    for (const [id, peer] of this.peers) {
+      if (peer.playerId === playerId) {
+        peer.connected = false;
+        this.peers.delete(id);
+      }
+    }
+
+    if (this.countMatchHumans() < 2 && this.state.matchSoftStartAt) {
+      this.state.matchSoftStartAt = null;
+      this.clearMatchSoftStartTimer();
+    }
+
+    await this.persist();
     this.broadcastState();
     await this.maybeAutoStartMatchmade();
   }

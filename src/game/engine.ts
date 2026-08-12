@@ -145,6 +145,7 @@ export function removeLobbyPlayer(state: GameState, playerId: string): boolean {
 /**
  * Self-heal stuck "away" humans left in matchmade lobbies before lobby-leave
  * removal existed. In-progress games keep disconnected players for reconnect.
+ * Only call on Durable Object restore — not on every connect (reconnect races).
  */
 export function purgeStaleMatchmadeLobbyPlayers(state: GameState): string[] {
   if (!state.isMatchmade || state.phase !== "lobby") return [];

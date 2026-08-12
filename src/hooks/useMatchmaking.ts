@@ -25,9 +25,11 @@ export function useMatchmaking(playerName: string) {
 
   const cancel = useCallback(() => {
     const socket = socketRef.current;
-    if (socket?.readyState === WebSocket.OPEN) {
-      const message: MatchmakingClientMessage = { type: "cancel" };
-      socket.send(JSON.stringify(message));
+    if (socket) {
+      if (socket.readyState === WebSocket.OPEN) {
+        const message: MatchmakingClientMessage = { type: "cancel" };
+        socket.send(JSON.stringify(message));
+      }
       socket.close();
     }
     socketRef.current = null;
