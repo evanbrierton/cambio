@@ -269,9 +269,9 @@ describe("GameHost", () => {
 
     expect(late.error).toBe("This match already started. Find a new match.");
     expect(late.closeConnection).toBe(true);
-    expect(host.getState()?.players.some((player) => player.name === "Carol")).toBe(
-      false,
-    );
+    expect(
+      host.getState()?.players.some((player) => player.name === "Carol"),
+    ).toBe(false);
   });
 
   it("removes matchmade lobby players on disconnect instead of marking away", async () => {
@@ -457,6 +457,7 @@ describe("GameHost", () => {
     const player = host.getState()?.players.find((entry) => entry.id === bobId);
     expect(player?.connected).toBe(false);
     expect(host.getState()?.players).toHaveLength(2);
+    expect(aliceId).toBeTruthy();
   });
 
   it("purges stale away humans when restoring a matchmade lobby", async () => {

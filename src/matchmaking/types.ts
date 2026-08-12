@@ -14,7 +14,7 @@ export const MATCH_SOFT_START_MS = 45_000;
 export const MATCH_ABANDON_MS = 180_000;
 
 /** Brief disconnect grace before removing a seat from a matchmade lobby. */
-export const MATCH_LOBBY_LEAVE_GRACE_MS = 2_500;
+export const MATCH_LOBBY_LEAVE_GRACE_MS = 8_000;
 
 export type MatchmakingConfig = {
   targetSize: number;

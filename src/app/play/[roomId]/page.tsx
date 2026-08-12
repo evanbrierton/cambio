@@ -103,7 +103,9 @@ export default function PlayPage({
   useEffect(() => {
     if (!view || !isNavFresh) return;
     const params = new URLSearchParams({ name });
-    // Keep matchmaking flags so reconnects still send match=1 after URL cleanup.
+    // Keep host/join so sessionMode does not flip and reconnect the socket.
+    if (searchParams.has("host")) params.set("host", "1");
+    if (searchParams.has("join")) params.set("join", "1");
     if (isMatchmade) {
       params.set("match", "1");
       params.set("targetSize", String(matchTargetSize));
@@ -115,7 +117,10 @@ export default function PlayPage({
       params.set("difficulty", soloDifficulty);
     }
     if (debugEnabled) appendDebugQueryParam(params);
-    router.replace(`/play/${roomId}?${params.toString()}`);
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next === current) return;
+    router.replace(`/play/${roomId}?${next}`);
   }, [
     debugEnabled,
     view,
@@ -129,6 +134,7 @@ export default function PlayPage({
     name,
     roomId,
     router,
+    searchParams,
   ]);
 
   useEffect(() => {

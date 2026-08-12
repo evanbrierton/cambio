@@ -164,7 +164,7 @@ export class CambioParty extends Server<Env> {
     this.syncPeerPlayerId(connection, playerId);
 
     const result = await this.host.handleConnect({
-      queryPlayerId,
+      queryPlayerId: playerId,
       name,
       isSolo,
       botCount,

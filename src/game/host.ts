@@ -191,6 +191,8 @@ export class GameHost {
         // Reclaim the same seat (including brief disconnect grace).
         return queryPlayerId;
       }
+      // New matchmade join: keep the client id so onConnect/handleConnect agree.
+      if (isMatchmadeLobby) return queryPlayerId;
     }
 
     if (isMatchmadeLobby) {
@@ -338,6 +340,8 @@ export class GameHost {
       if (this.playerHasOtherPeer(playerId, peerId)) return;
 
       player.connected = false;
+      const closingPeer = this.peers.get(peerId);
+      if (closingPeer) closingPeer.connected = false;
       await this.persist();
       this.broadcastState();
 
@@ -372,6 +376,11 @@ export class GameHost {
   private async finalizeMatchLobbyLeave(playerId: string) {
     this.matchLobbyLeaveTimers.delete(playerId);
     if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+
+    // A newer live socket for this player won the race — keep the seat.
+    for (const peer of this.peers.values()) {
+      if (peer.playerId === playerId && peer.connected) return;
+    }
 
     const player = this.state.players.find((entry) => entry.id === playerId);
     if (!player || player.connected || player.isBot) return;
