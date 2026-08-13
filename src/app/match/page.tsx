@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { useMatchmaking } from "@/hooks/useMatchmaking";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
+import { storageKey } from "@/lib/party";
 import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 export default function MatchPage() {
@@ -25,6 +26,10 @@ export default function MatchPage() {
 
     void findMatch().then((result) => {
       if (cancelled || !result) return;
+      // Seed the play-room player id so reconnects reclaim the same seat.
+      const key = storageKey(result.roomId);
+      localStorage.setItem(key, result.playerId);
+      sessionStorage.setItem(key, result.playerId);
       const params = new URLSearchParams({
         name: trimmedName,
         match: "1",

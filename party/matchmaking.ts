@@ -17,7 +17,7 @@ import type {
   MatchmakingServerMessage,
 } from "../src/matchmaking/types";
 
-type MatchConnectionState = { playerId?: string };
+type MatchConnectionState = { playerId?: string; matched?: boolean };
 
 function messageText(raw: WSMessage): string {
   if (typeof raw === "string") return raw;
@@ -87,6 +87,8 @@ export class MatchmakingParty extends Server<Env> {
   async onClose(connection: Connection<MatchConnectionState>) {
     const playerId = connection.state?.playerId;
     if (!playerId) return;
+    // Successful matches keep their queue seat until the game lobby closes.
+    if (connection.state?.matched) return;
     cancelAssignment(this.queue, playerId);
     await this.persistQueue();
   }
@@ -105,6 +107,7 @@ export class MatchmakingParty extends Server<Env> {
       const playerId = connection.state?.playerId;
       if (playerId) {
         cancelAssignment(this.queue, playerId);
+        connection.setState({ playerId, matched: false });
         await this.persistQueue();
       }
       return;
@@ -117,7 +120,7 @@ export class MatchmakingParty extends Server<Env> {
     }
 
     const playerId = message.playerId ?? crypto.randomUUID().slice(0, 10);
-    connection.setState({ playerId });
+    connection.setState({ playerId, matched: false });
 
     const config = normalizeMatchConfig(
       message.targetSize,
@@ -126,6 +129,7 @@ export class MatchmakingParty extends Server<Env> {
     const assignment = assignPlayer(this.queue, playerId, config);
     await this.persistQueue();
 
+    connection.setState({ playerId, matched: true });
     this.send(connection, {
       type: "matched",
       roomId: assignment.roomId,

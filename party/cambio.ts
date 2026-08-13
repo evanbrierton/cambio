@@ -65,6 +65,8 @@ export class CambioParty extends Server<Env> {
     const state = this.host.getState();
     if (state) {
       await this.ctx.storage.put("state", state);
+    } else {
+      await this.ctx.storage.delete("state");
     }
   }
 

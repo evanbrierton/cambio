@@ -13,8 +13,14 @@ export const MATCH_SOFT_START_MS = 45_000;
 /** Abandon solo queue when bot fill is off. */
 export const MATCH_ABANDON_MS = 180_000;
 
-/** Brief disconnect grace before removing a seat from a matchmade lobby. */
-export const MATCH_LOBBY_LEAVE_GRACE_MS = 8_000;
+/**
+ * How long a disconnected human stays visible (away) in a matchmade lobby
+ * before their seat is freed. Short flaps must not drop seats.
+ */
+export const MATCH_LOBBY_AWAY_REMOVE_MS = 45_000;
+
+/** Close a matchmade lobby after it has zero connected humans. */
+export const MATCH_EMPTY_LOBBY_CLOSE_MS = 5_000;
 
 export type MatchmakingConfig = {
   targetSize: number;

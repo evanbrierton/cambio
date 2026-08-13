@@ -1,6 +1,7 @@
 import {
   MATCH_ABANDON_MS,
-  MATCH_LOBBY_LEAVE_GRACE_MS,
+  MATCH_EMPTY_LOBBY_CLOSE_MS,
+  MATCH_LOBBY_AWAY_REMOVE_MS,
   MATCH_SOFT_START_MS,
 } from "../matchmaking/types";
 import {
@@ -128,11 +129,13 @@ export class GameHost {
   private matchAbandonTimer: ReturnType<typeof setTimeout> | null = null;
   /** Player ids that left a matchmade lobby; blocked from passive reconnect only. */
   private matchLobbyDepartedIds = new Set<string>();
-  /** Grace timers so brief socket flaps (Strict Mode) don't drop lobby seats. */
-  private matchLobbyLeaveTimers = new Map<
+  /** Remove away humans after a long disconnect (keeps short flaps visible). */
+  private matchLobbyAwayTimers = new Map<
     string,
     ReturnType<typeof setTimeout>
   >();
+  /** Close the lobby once it has no connected humans. */
+  private matchEmptyLobbyTimer: ReturnType<typeof setTimeout> | null = null;
   private humanSnapStreak = 0;
   private lastMoveReactionAt = 0;
 
@@ -296,7 +299,8 @@ export class GameHost {
         };
       }
       playerId = this.resolveReconnectPlayerId(queryPlayerId, name);
-      this.clearMatchLobbyLeaveTimer(playerId);
+      this.clearMatchLobbyAwayTimer(playerId);
+      this.clearMatchEmptyLobbyTimer();
     }
 
     const result = handleMessage(this.state, playerId, {
@@ -339,17 +343,15 @@ export class GameHost {
     if (isMatchmadeLobby && !player.isBot) {
       if (this.playerHasOtherPeer(playerId, peerId)) return;
 
+      // Stay on the roster as "away" so other players keep seeing this seat.
       player.connected = false;
       const closingPeer = this.peers.get(peerId);
       if (closingPeer) closingPeer.connected = false;
       await this.persist();
       this.broadcastState();
 
-      this.clearMatchLobbyLeaveTimer(playerId);
-      const timer = setTimeout(() => {
-        void this.finalizeMatchLobbyLeave(playerId);
-      }, MATCH_LOBBY_LEAVE_GRACE_MS);
-      this.matchLobbyLeaveTimers.set(playerId, timer);
+      this.scheduleMatchLobbyAwayRemove(playerId);
+      this.scheduleEmptyMatchLobbyClose();
       return;
     }
 
@@ -366,18 +368,48 @@ export class GameHost {
     await this.maybeAutoStartMatchmade();
   }
 
-  private clearMatchLobbyLeaveTimer(playerId: string) {
-    const timer = this.matchLobbyLeaveTimers.get(playerId);
+  private clearMatchLobbyAwayTimer(playerId: string) {
+    const timer = this.matchLobbyAwayTimers.get(playerId);
     if (!timer) return;
     clearTimeout(timer);
-    this.matchLobbyLeaveTimers.delete(playerId);
+    this.matchLobbyAwayTimers.delete(playerId);
   }
 
-  private async finalizeMatchLobbyLeave(playerId: string) {
-    this.matchLobbyLeaveTimers.delete(playerId);
+  private clearAllMatchLobbyAwayTimers() {
+    for (const timer of this.matchLobbyAwayTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.matchLobbyAwayTimers.clear();
+  }
+
+  private clearMatchEmptyLobbyTimer() {
+    if (!this.matchEmptyLobbyTimer) return;
+    clearTimeout(this.matchEmptyLobbyTimer);
+    this.matchEmptyLobbyTimer = null;
+  }
+
+  private scheduleMatchLobbyAwayRemove(playerId: string) {
+    this.clearMatchLobbyAwayTimer(playerId);
+    const timer = setTimeout(() => {
+      void this.removeAwayMatchLobbyPlayer(playerId);
+    }, MATCH_LOBBY_AWAY_REMOVE_MS);
+    this.matchLobbyAwayTimers.set(playerId, timer);
+  }
+
+  private scheduleEmptyMatchLobbyClose() {
+    this.clearMatchEmptyLobbyTimer();
+    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (this.countMatchHumans() > 0) return;
+
+    this.matchEmptyLobbyTimer = setTimeout(() => {
+      void this.closeEmptyMatchLobby();
+    }, MATCH_EMPTY_LOBBY_CLOSE_MS);
+  }
+
+  private async removeAwayMatchLobbyPlayer(playerId: string) {
+    this.matchLobbyAwayTimers.delete(playerId);
     if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
 
-    // A newer live socket for this player won the race — keep the seat.
     for (const peer of this.peers.values()) {
       if (peer.playerId === playerId && peer.connected) return;
     }
@@ -390,7 +422,6 @@ export class GameHost {
 
     for (const [id, peer] of this.peers) {
       if (peer.playerId === playerId) {
-        peer.connected = false;
         this.peers.delete(id);
       }
     }
@@ -402,7 +433,33 @@ export class GameHost {
 
     await this.persist();
     this.broadcastState();
+    this.scheduleEmptyMatchLobbyClose();
     await this.maybeAutoStartMatchmade();
+  }
+
+  private async closeEmptyMatchLobby() {
+    this.matchEmptyLobbyTimer = null;
+    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (this.countMatchHumans() > 0) return;
+
+    const roomId = this.config.roomId;
+    this.clearMatchTimers();
+    this.matchLobbyDepartedIds.clear();
+
+    for (const peer of this.peers.values()) {
+      try {
+        peer.send({
+          type: "error",
+          message: "Lobby closed — everyone left.",
+        });
+      } catch {
+        // Peer may already be gone.
+      }
+    }
+    this.peers.clear();
+    this.state = null;
+    await this.persist();
+    await this.config.onMatchLobbyClosed?.(roomId);
   }
 
   private countMatchHumans(): number {
@@ -429,6 +486,8 @@ export class GameHost {
   private clearMatchTimers() {
     this.clearMatchSoftStartTimer();
     this.clearMatchAbandonTimer();
+    this.clearMatchEmptyLobbyTimer();
+    this.clearAllMatchLobbyAwayTimers();
   }
 
   private scheduleMatchSoftStart() {
