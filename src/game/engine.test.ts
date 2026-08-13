@@ -5,6 +5,8 @@ import {
   expireSnapWindow,
   finalizeRound,
   handleMessage,
+  purgeStaleMatchmadeLobbyPlayers,
+  removeLobbyPlayer,
   SNAP_WINDOW_MS,
 } from "./engine";
 import type { Card, CardSlot, GameState } from "./types";
@@ -755,5 +757,55 @@ describe("set_card_points (CAM-64)", () => {
     const guestView = buildPlayerView(state, "bob");
     expect(guestView.cardPoints).toEqual(state.cardPoints);
     expect(guestView.canSetCardPoints).toBe(false);
+  });
+});
+
+describe("matchmade lobby seats", () => {
+  it("keeps recently away humans and purges leftover seats", () => {
+    const state = createRoom("room", "Alice", "alice");
+    state.isMatchmade = true;
+    state.players[0].connected = false;
+    state.players[0].disconnectedAt = 50_000;
+
+    expect(purgeStaleMatchmadeLobbyPlayers(state, 60_000, 45_000)).toEqual([]);
+    expect(state.players).toHaveLength(1);
+
+    state.players[0].disconnectedAt = 10_000;
+    expect(purgeStaleMatchmadeLobbyPlayers(state, 60_000, 45_000)).toEqual([
+      "alice",
+    ]);
+    expect(state.players).toHaveLength(0);
+  });
+
+  it("treats disconnected humans without a timestamp as stale", () => {
+    const state = createRoom("room", "Alice", "alice");
+    state.isMatchmade = true;
+    state.players[0].connected = false;
+
+    expect(purgeStaleMatchmadeLobbyPlayers(state, 1000, 45_000)).toEqual([
+      "alice",
+    ]);
+  });
+
+  it("transfers host when the host seat is removed", () => {
+    const state = createRoom("room", "Alice", "alice");
+    state.isMatchmade = true;
+    state.players.push({
+      id: "bob",
+      name: "Bob",
+      hand: [],
+      penaltyCount: 0,
+      setupPeekedSlots: [],
+      hasCalledCambio: false,
+      finalTurnDone: false,
+      isWaiting: false,
+      connected: true,
+      isBot: false,
+      botDifficulty: null,
+    });
+    state.cumulativeScores.bob = 0;
+
+    expect(removeLobbyPlayer(state, "alice")).toBe(true);
+    expect(state.hostId).toBe("bob");
   });
 });

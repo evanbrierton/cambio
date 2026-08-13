@@ -1,4 +1,5 @@
 import { nanoid } from "nanoid";
+import { MATCH_LOBBY_AWAY_REMOVE_MS } from "../matchmaking/types";
 import { generateBotName, nameKey } from "./bot-names";
 import {
   abilityForDiscard,
@@ -129,12 +130,7 @@ export function removeLobbyPlayer(state: GameState, playerId: string): boolean {
 
   state.players.splice(index, 1);
 
-  if (state.hostId === playerId) {
-    const nextHost = state.players.find(
-      (candidate) => !candidate.isBot && candidate.connected,
-    );
-    if (nextHost) state.hostId = nextHost.id;
-  }
+  repairMatchmadeHost(state);
 
   delete state.cumulativeScores[playerId];
   addLog(state, `${player.name} left the match.`);
@@ -142,16 +138,43 @@ export function removeLobbyPlayer(state: GameState, playerId: string): boolean {
   return true;
 }
 
+/** If the current host seat is gone, pass it to the next human. */
+export function repairMatchmadeHost(state: GameState): void {
+  const hostPresent = state.players.some(
+    (player) => player.id === state.hostId && !player.isBot,
+  );
+  if (hostPresent) return;
+  const nextHost =
+    state.players.find((player) => !player.isBot && player.connected) ??
+    state.players.find((player) => !player.isBot);
+  if (nextHost) state.hostId = nextHost.id;
+}
+
+function isStaleMatchmadeAwayPlayer(
+  player: PlayerState,
+  now: number,
+  maxAwayMs: number,
+): boolean {
+  if (player.isBot || player.connected) return false;
+  const disconnectedAt = player.disconnectedAt;
+  if (disconnectedAt == null) return true;
+  return now - disconnectedAt >= maxAwayMs;
+}
+
 /**
- * Self-heal stuck "away" humans left in matchmade lobbies before lobby-leave
- * removal existed. In-progress games keep disconnected players for reconnect.
- * Only call on Durable Object restore — not on every connect (reconnect races).
+ * Remove matchmade-lobby humans who have been away long enough (or have no
+ * disconnect timestamp — leftovers from crashes / previous tests).
+ * In-progress games keep disconnected players for reconnect.
  */
-export function purgeStaleMatchmadeLobbyPlayers(state: GameState): string[] {
+export function purgeStaleMatchmadeLobbyPlayers(
+  state: GameState,
+  now = Date.now(),
+  maxAwayMs = MATCH_LOBBY_AWAY_REMOVE_MS,
+): string[] {
   if (!state.isMatchmade || state.phase !== "lobby") return [];
 
   const staleIds = state.players
-    .filter((player) => !player.isBot && !player.connected)
+    .filter((player) => isStaleMatchmadeAwayPlayer(player, now, maxAwayMs))
     .map((player) => player.id);
 
   for (const playerId of staleIds) {
@@ -953,6 +976,7 @@ export function handleMessage(
       const existing = findPlayer(state, playerId);
       if (existing) {
         existing.connected = true;
+        existing.disconnectedAt = null;
         if (message.name.trim()) {
           const allocated = allocateDisplayName(state, message.name, playerId);
           if ("error" in allocated) return { error: allocated.error };
@@ -979,6 +1003,7 @@ export function handleMessage(
         connected: true,
         isBot: false,
         botDifficulty: null,
+        disconnectedAt: null,
       });
       state.cumulativeScores[playerId] = state.cumulativeScores[playerId] ?? 0;
       if (waiting) {
@@ -989,6 +1014,7 @@ export function handleMessage(
       } else {
         addLog(state, `${displayName} joined.`);
       }
+      repairMatchmadeHost(state);
       return {};
     }
 

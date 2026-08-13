@@ -4,6 +4,7 @@ import {
   cancelAssignment,
   closeLobby,
   createMatchmakingQueueState,
+  leaveLobby,
   normalizeMatchConfig,
 } from "./queue";
 
@@ -83,5 +84,50 @@ describe("matchmaking queue", () => {
     expect(next.roomId).not.toBe(first.roomId);
     expect(state.assignments.p1).toBeUndefined();
     expect(state.assignments.p2).toBeUndefined();
+  });
+
+  it("does not reseat a player into a lobby they left", () => {
+    const state = createMatchmakingQueueState();
+    const config = normalizeMatchConfig(4, true);
+    const first = assignPlayer(state, "p1", config, 1000);
+    assignPlayer(state, "p2", config, 2000);
+    leaveLobby(state, first.roomId, "p1");
+
+    const again = assignPlayer(state, "p1", config, 3000);
+    expect(again.roomId).not.toBe(first.roomId);
+    expect(state.assignments.p2).toBe(first.roomId);
+  });
+
+  it("closes an empty lobby when the last player leaves", () => {
+    const state = createMatchmakingQueueState();
+    const config = normalizeMatchConfig(4, true);
+    const first = assignPlayer(state, "p1", config, 1000);
+    leaveLobby(state, first.roomId, "p1");
+
+    const next = assignPlayer(state, "p2", config, 2000);
+    expect(next.roomId).not.toBe(first.roomId);
+  });
+
+  it("lets another player take a seat after someone leaves", () => {
+    const state = createMatchmakingQueueState();
+    const config = normalizeMatchConfig(2, true);
+    const first = assignPlayer(state, "p1", config, 1000);
+    assignPlayer(state, "p2", config, 2000);
+    leaveLobby(state, first.roomId, "p1");
+
+    const next = assignPlayer(state, "p3", config, 3000);
+    expect(next.roomId).toBe(first.roomId);
+  });
+
+  it("does not double-decrement on a repeated leave", () => {
+    const state = createMatchmakingQueueState();
+    const config = normalizeMatchConfig(4, true);
+    const first = assignPlayer(state, "p1", config, 1000);
+    assignPlayer(state, "p2", config, 2000);
+    leaveLobby(state, first.roomId, "p1");
+    leaveLobby(state, first.roomId, "p1");
+
+    const key = Object.keys(state.buckets)[0];
+    expect(state.buckets[key][0].assignedCount).toBe(1);
   });
 });

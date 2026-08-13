@@ -29,6 +29,8 @@ export class CambioParty extends Server<Env> {
       onPersist: () => this.persist(),
       onSnapWindowSchedule: (endsAt) => this.scheduleSnapWindowAlarm(endsAt),
       onMatchLobbyClosed: (roomId) => this.closeMatchmakingLobby(roomId),
+      onMatchLobbyPlayerLeft: (roomId, playerId) =>
+        this.leaveMatchmakingLobby(roomId, playerId),
     });
   }
 
@@ -46,6 +48,20 @@ export class CambioParty extends Server<Env> {
     }
   }
 
+  private async leaveMatchmakingLobby(roomId: string, playerId: string) {
+    try {
+      const id = this.env.Matchmaking.idFromName(MATCHMAKING_ROOM_ID);
+      const stub = this.env.Matchmaking.get(id);
+      await stub.fetch("https://matchmaking/leave-lobby", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ roomId, playerId }),
+      });
+    } catch {
+      // Best-effort: leaver may briefly be reseated until the next leave/close.
+    }
+  }
+
   get state(): GameState | null {
     return this.host.getState();
   }
@@ -58,6 +74,16 @@ export class CambioParty extends Server<Env> {
     const saved = await this.ctx.storage.get<GameState>("state");
     if (saved) {
       await this.host.restoreFromSaved(saved);
+    }
+    this.rehydratePeers();
+    await this.host.removeUnbackedMatchLobbyHumans();
+  }
+
+  /** Re-attach hibernated sockets so leftover-host cleanup does not drop them. */
+  private rehydratePeers() {
+    for (const connection of this.getConnections<PlayerConnectionState>()) {
+      if (this.host.getPeer(connection.id)) continue;
+      this.registerConnection(connection);
     }
   }
 
@@ -113,6 +139,7 @@ export class CambioParty extends Server<Env> {
     connection: Connection<PlayerConnectionState>,
     ctx: ConnectionContext,
   ) {
+    this.rehydratePeers();
     const url = new URL(ctx.request.url);
     const queryPlayerId = url.searchParams.get("playerId");
     const name = (url.searchParams.get("name") ?? "").trim().slice(0, 24);

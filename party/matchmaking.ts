@@ -9,8 +9,10 @@ import {
   cancelAssignment,
   closeLobby,
   createMatchmakingQueueState,
+  leaveLobby,
   type MatchmakingQueueState,
   normalizeMatchConfig,
+  normalizeQueueState,
 } from "../src/matchmaking/queue";
 import type {
   MatchmakingClientMessage,
@@ -41,7 +43,7 @@ export class MatchmakingParty extends Server<Env> {
   async onStart() {
     const saved = await this.ctx.storage.get<MatchmakingQueueState>("queue");
     if (saved) {
-      this.queue = saved;
+      this.queue = normalizeQueueState(saved);
     }
   }
 
@@ -56,7 +58,7 @@ export class MatchmakingParty extends Server<Env> {
     connection.send(JSON.stringify(message));
   }
 
-  /** HTTP from game rooms: POST /close-lobby { roomId } */
+  /** HTTP from game rooms: POST /close-lobby { roomId } or POST /leave-lobby { roomId, playerId } */
   async onRequest(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === "POST" && url.pathname.endsWith("/close-lobby")) {
@@ -73,6 +75,29 @@ export class MatchmakingParty extends Server<Env> {
       const closed = closeLobby(this.queue, roomId);
       await this.persistQueue();
       return Response.json({ closed });
+    }
+    if (request.method === "POST" && url.pathname.endsWith("/leave-lobby")) {
+      let roomId = "";
+      let playerId = "";
+      try {
+        const body = (await request.json()) as {
+          roomId?: string;
+          playerId?: string;
+        };
+        roomId = body.roomId?.trim() ?? "";
+        playerId = body.playerId?.trim() ?? "";
+      } catch {
+        return Response.json({ error: "Invalid body." }, { status: 400 });
+      }
+      if (!roomId || !playerId) {
+        return Response.json(
+          { error: "roomId and playerId required." },
+          { status: 400 },
+        );
+      }
+      const left = leaveLobby(this.queue, roomId, playerId);
+      await this.persistQueue();
+      return Response.json({ left });
     }
     return new Response("Not Found", { status: 404 });
   }

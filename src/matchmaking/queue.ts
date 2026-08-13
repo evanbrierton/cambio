@@ -18,6 +18,8 @@ export type OpenLobby = {
   targetSize: number;
   fillWithBots: boolean;
   createdAt: number;
+  /** Player ids that left this lobby and must not be reseated here. */
+  excludedPlayerIds: string[];
 };
 
 export type MatchAssignment = {
@@ -50,6 +52,37 @@ function sortedLobbies(lobbies: OpenLobby[]): OpenLobby[] {
   return [...lobbies].sort((a, b) => a.createdAt - b.createdAt);
 }
 
+function lobbyExcludesPlayer(lobby: OpenLobby, playerId: string): boolean {
+  return lobby.excludedPlayerIds?.includes(playerId) ?? false;
+}
+
+function findLobby(
+  state: MatchmakingQueueState,
+  roomId: string,
+): OpenLobby | undefined {
+  for (const lobbies of Object.values(state.buckets)) {
+    const lobby = lobbies.find((entry) => entry.roomId === roomId);
+    if (lobby) return lobby;
+  }
+  return undefined;
+}
+
+export function normalizeQueueState(
+  saved: MatchmakingQueueState,
+): MatchmakingQueueState {
+  const buckets: Record<string, OpenLobby[]> = {};
+  for (const [key, lobbies] of Object.entries(saved.buckets ?? {})) {
+    buckets[key] = (lobbies ?? []).map((lobby) => ({
+      ...lobby,
+      excludedPlayerIds: lobby.excludedPlayerIds ?? [],
+    }));
+  }
+  return {
+    buckets,
+    assignments: saved.assignments ?? {},
+  };
+}
+
 export function assignPlayer(
   state: MatchmakingQueueState,
   playerId: string,
@@ -58,15 +91,13 @@ export function assignPlayer(
 ): MatchAssignment {
   const existingRoomId = state.assignments[playerId];
   if (existingRoomId) {
-    for (const lobbies of Object.values(state.buckets)) {
-      const existing = lobbies.find((lobby) => lobby.roomId === existingRoomId);
-      if (existing) {
-        return {
-          roomId: existing.roomId,
-          targetSize: existing.targetSize,
-          fillWithBots: existing.fillWithBots,
-        };
-      }
+    const existing = findLobby(state, existingRoomId);
+    if (existing && !lobbyExcludesPlayer(existing, playerId)) {
+      return {
+        roomId: existing.roomId,
+        targetSize: existing.targetSize,
+        fillWithBots: existing.fillWithBots,
+      };
     }
     delete state.assignments[playerId];
   }
@@ -74,7 +105,9 @@ export function assignPlayer(
   const key = bucketKey(config);
   const lobbies = state.buckets[key] ?? [];
   const open = sortedLobbies(lobbies).find(
-    (lobby) => lobby.assignedCount < lobby.targetSize,
+    (lobby) =>
+      lobby.assignedCount < lobby.targetSize &&
+      !lobbyExcludesPlayer(lobby, playerId),
   );
 
   if (open) {
@@ -94,6 +127,7 @@ export function assignPlayer(
     targetSize: config.targetSize,
     fillWithBots: config.fillWithBots,
     createdAt: now,
+    excludedPlayerIds: [],
   };
   state.buckets[key] = [...lobbies, lobby];
   state.assignments[playerId] = roomId;
@@ -118,6 +152,39 @@ export function cancelAssignment(
     lobby.assignedCount = Math.max(0, lobby.assignedCount - 1);
     return true;
   }
+  return true;
+}
+
+/**
+ * A player left a game lobby. Free their seat and never reseat them there.
+ * Empty lobbies are closed so new searchers are not dropped onto a dying room.
+ */
+export function leaveLobby(
+  state: MatchmakingQueueState,
+  roomId: string,
+  playerId: string,
+): boolean {
+  const assignedRoomId = state.assignments[playerId];
+  if (assignedRoomId === roomId) {
+    delete state.assignments[playerId];
+  }
+
+  const lobby = findLobby(state, roomId);
+  if (!lobby) return assignedRoomId === roomId;
+
+  lobby.excludedPlayerIds ??= [];
+  if (!lobby.excludedPlayerIds.includes(playerId)) {
+    lobby.excludedPlayerIds.push(playerId);
+  }
+
+  if (assignedRoomId === roomId) {
+    lobby.assignedCount = Math.max(0, lobby.assignedCount - 1);
+  }
+
+  if (lobby.assignedCount <= 0) {
+    closeLobby(state, roomId);
+  }
+
   return true;
 }
 

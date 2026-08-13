@@ -444,7 +444,7 @@ describe("GameHost", () => {
     expect(host.getState()?.players[0].name).toBe("Alice");
   });
 
-  it("allows Find Match re-entry to the same lobby after leaving", async () => {
+  it("rejects Find Match into a lobby the player already left", async () => {
     const { host } = createTestHost();
     await host.handleConnect({
       queryPlayerId: null,
@@ -490,11 +490,10 @@ describe("GameHost", () => {
       matchFillWithBots: true,
     });
 
-    expect(rematch.error).toBeUndefined();
-    expect(host.getState()?.players).toHaveLength(2);
-    expect(
-      host.getState()?.players.some((player) => player.name === "Bob"),
-    ).toBe(true);
+    expect(rematch.error).toBe("You left the match lobby.");
+    expect(rematch.closeConnection).toBe(true);
+    expect(host.getState()?.players).toHaveLength(1);
+    expect(host.getState()?.players[0].name).toBe("Alice");
   });
 
   it("keeps disconnected players during an in-progress matchmade game", async () => {
@@ -558,6 +557,99 @@ describe("GameHost", () => {
 
     expect(host.getState()?.players).toHaveLength(1);
     expect(host.getState()?.players[0].name).toBe("Alice");
+  });
+
+  it("keeps recently away humans when restoring a matchmade lobby", async () => {
+    const { host } = createTestHost();
+    const state = createRoom("recent-away", "Alice", "alice");
+    state.isMatchmade = true;
+    state.matchTargetSize = 4;
+    state.players[0].connected = false;
+    state.players[0].disconnectedAt = Date.now();
+
+    await host.restoreFromSaved(state);
+
+    expect(host.getState()?.players).toHaveLength(1);
+    expect(host.getState()?.players[0].name).toBe("Alice");
+    expect(host.getState()?.players[0].connected).toBe(false);
+  });
+
+  it("drops a leftover connected host with no live peer when someone else joins", async () => {
+    const left: string[] = [];
+    const host = new GameHost({
+      roomId: "stale-host-room",
+      onMatchLobbyPlayerLeft: (_roomId, playerId) => {
+        left.push(playerId);
+      },
+    });
+    const state = createRoom("stale-host-room", "fvd", "fvd-id");
+    state.isMatchmade = true;
+    state.matchTargetSize = 4;
+    host.setState(state);
+    await host.removeUnbackedMatchLobbyHumans();
+
+    await host.handleConnect({
+      queryPlayerId: "bob-id",
+      name: "Bob",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 4,
+      matchFillWithBots: true,
+    });
+
+    const players = host.getState()?.players ?? [];
+    expect(players.map((player) => player.name)).toEqual(["Bob"]);
+    expect(host.getState()?.hostId).toBe(players[0]?.id);
+    expect(left).toContain("fvd-id");
+  });
+
+  it("removes an away matchmade host after the away duration and transfers host", async () => {
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: "alice-id",
+      name: "Alice",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 4,
+      matchFillWithBots: true,
+    });
+    const aliceId = host.getState()?.hostId ?? "alice-id";
+    const alicePeer = mockPeer(aliceId);
+    host.addPeer(alicePeer.peerId, alicePeer.peer);
+
+    await host.handleConnect({
+      queryPlayerId: "bob-id",
+      name: "Bob",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 4,
+      matchFillWithBots: true,
+    });
+    const bobId =
+      host.getState()?.players.find((player) => player.name === "Bob")?.id ??
+      "bob-id";
+    const bobPeer = mockPeer(bobId);
+    host.addPeer(bobPeer.peerId, bobPeer.peer);
+
+    await host.handleDisconnect(aliceId, alicePeer.peerId);
+    expect(
+      host.getState()?.players.find((player) => player.id === aliceId)
+        ?.connected,
+    ).toBe(false);
+    expect(host.getState()?.hostId).toBe(aliceId);
+
+    await vi.advanceTimersByTimeAsync(MATCH_LOBBY_AWAY_REMOVE_MS + 1);
+
+    expect(host.getState()?.players.map((player) => player.name)).toEqual([
+      "Bob",
+    ]);
+    expect(host.getState()?.hostId).toBe(bobId);
   });
 
   it("auto-suffixes duplicate names in matchmade rooms", async () => {

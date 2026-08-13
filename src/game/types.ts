@@ -127,6 +127,8 @@ export type PlayerState = {
   connected: boolean;
   isBot: boolean;
   botDifficulty: BotDifficulty | null;
+  /** Set when a matchmade lobby human disconnects; used to expire away seats. */
+  disconnectedAt?: number | null;
 };
 
 export type GameState = {
