@@ -66,6 +66,11 @@ export type SoloOptions = {
   difficulty: BotDifficulty;
 };
 
+export type MatchOptions = {
+  targetSize: number;
+  fillWithBots: boolean;
+};
+
 function resolvePlayerId(roomId: string): string {
   const key = storageKey(roomId);
   const stored =
@@ -82,6 +87,7 @@ export function useGameConnection(
   sessionMode: SessionMode = "reconnect",
   soloOptions?: SoloOptions,
   debugEnabled = false,
+  matchOptions?: MatchOptions,
 ) {
   const [connected, setConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -91,6 +97,15 @@ export function useGameConnection(
 
   const roomKeyRef = useRef(storageKey(roomId));
   const seenKeyRef = useRef(freshSessionKey(roomId));
+
+  // Freeze connect query for the life of this room mount so URL cleanup
+  // (dropping host/join) cannot tear down the socket and drop lobby seats.
+  const connectQueryRef = useRef({
+    sessionMode,
+    soloOptions,
+    matchOptions,
+    debugEnabled,
+  });
 
   const { messageState, applyMessage } = useServerMessages({
     onRoomInfo: (playerId) => {
@@ -151,6 +166,12 @@ export function useGameConnection(
     roomKeyRef.current = storageKey(roomId);
     seenKeyRef.current = freshSessionKey(roomId);
     const playerId = resolvePlayerId(roomId);
+    const {
+      sessionMode: mode,
+      soloOptions: solo,
+      matchOptions: match,
+      debugEnabled: debug,
+    } = connectQueryRef.current;
 
     const socket = new PartySocket({
       host: getPartyHost(),
@@ -158,14 +179,21 @@ export function useGameConnection(
       query: {
         name: playerName,
         playerId,
-        ...(soloOptions && sessionMode === "new"
+        ...(solo && mode === "new"
           ? {
               solo: "1",
-              bots: String(soloOptions.botCount),
-              difficulty: soloOptions.difficulty,
+              bots: String(solo.botCount),
+              difficulty: solo.difficulty,
             }
           : {}),
-        ...(debugEnabled ? { debug: "1" } : {}),
+        ...(match
+          ? {
+              match: "1",
+              targetSize: String(match.targetSize),
+              fillWithBots: match.fillWithBots ? "1" : "0",
+            }
+          : {}),
+        ...(debug ? { debug: "1" } : {}),
       },
     });
 
@@ -198,14 +226,7 @@ export function useGameConnection(
       socket.close();
       socketRef.current = null;
     };
-  }, [
-    roomId,
-    playerName,
-    sessionMode,
-    soloOptions,
-    debugEnabled,
-    applyMessage,
-  ]);
+  }, [roomId, playerName, applyMessage]);
 
   return {
     connected,

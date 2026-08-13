@@ -4,11 +4,23 @@ export const MAX_MATCH_TARGET_SIZE = 6;
 
 export const DEFAULT_MATCH_FILL_WITH_BOTS = true;
 
+/** PartyServer room name for the singleton matchmaking DO. */
+export const MATCHMAKING_ROOM_ID = "global";
+
 /** Soft start after lobby is start-eligible (≥2 humans). */
 export const MATCH_SOFT_START_MS = 45_000;
 
 /** Abandon solo queue when bot fill is off. */
 export const MATCH_ABANDON_MS = 180_000;
+
+/**
+ * How long a disconnected human stays visible (away) in a matchmade lobby
+ * before their seat is freed. Short flaps must not drop seats.
+ */
+export const MATCH_LOBBY_AWAY_REMOVE_MS = 45_000;
+
+/** Close a matchmade lobby after it has zero connected humans. */
+export const MATCH_EMPTY_LOBBY_CLOSE_MS = 5_000;
 
 export type MatchmakingConfig = {
   targetSize: number;
