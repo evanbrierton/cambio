@@ -215,6 +215,11 @@ export type ClientMessage =
       type: "set_card_points";
       values: Partial<CardPointValues>;
     }
+  | {
+      type: "set_match_settings";
+      targetSize: number;
+      fillWithBots: boolean;
+    }
   | { type: "chat"; text: string }
   | { type: "ability_look"; playerId: string; slot: number }
   | {
@@ -285,6 +290,7 @@ export type PlayerView = {
   matchFillWithBots: boolean;
   matchHumanCount: number;
   matchStartingSoon: boolean;
+  canSetMatchSettings: boolean;
   canAddBot: boolean;
   jokerCount: number;
   canSetJokerCount: boolean;

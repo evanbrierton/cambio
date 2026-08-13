@@ -31,6 +31,8 @@ export class CambioParty extends Server<Env> {
       onMatchLobbyClosed: (roomId) => this.closeMatchmakingLobby(roomId),
       onMatchLobbyPlayerLeft: (roomId, playerId) =>
         this.leaveMatchmakingLobby(roomId, playerId),
+      onMatchLobbyConfigChanged: (roomId, config) =>
+        this.updateMatchmakingLobby(roomId, config),
     });
   }
 
@@ -59,6 +61,23 @@ export class CambioParty extends Server<Env> {
       });
     } catch {
       // Best-effort: leaver may briefly be reseated until the next leave/close.
+    }
+  }
+
+  private async updateMatchmakingLobby(
+    roomId: string,
+    config: { targetSize: number; fillWithBots: boolean },
+  ) {
+    try {
+      const id = this.env.Matchmaking.idFromName(MATCHMAKING_ROOM_ID);
+      const stub = this.env.Matchmaking.get(id);
+      await stub.fetch("https://matchmaking/update-lobby", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ roomId, ...config }),
+      });
+    } catch {
+      // Best-effort: queue may briefly seat against the previous config.
     }
   }
 
@@ -191,6 +210,10 @@ export class CambioParty extends Server<Env> {
     connection.setState({ playerId, debugEnabled });
     this.registerConnection(connection);
     this.syncPeerPlayerId(connection, playerId);
+
+    // Drop leftover "connected" humans (e.g. prior-test hosts) that have no
+    // live peer. Current + hibernated sockets are already registered above.
+    await this.host.removeUnbackedMatchLobbyHumans();
 
     const result = await this.host.handleConnect({
       queryPlayerId: playerId,

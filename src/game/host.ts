@@ -70,6 +70,11 @@ export type GameHostConfig = {
     roomId: string,
     playerId: string,
   ) => void | Promise<void>;
+  /** Called when matchmade lobby target size / bot fill changes. */
+  onMatchLobbyConfigChanged?: (
+    roomId: string,
+    config: { targetSize: number; fillWithBots: boolean },
+  ) => void | Promise<void>;
 };
 
 export type ConnectParams = {
@@ -672,6 +677,17 @@ export class GameHost {
     this.applyMessageResult(playerId, message, result);
 
     if (
+      message.type === "set_match_settings" &&
+      !result.error &&
+      this.state.isMatchmade
+    ) {
+      await this.config.onMatchLobbyConfigChanged?.(this.config.roomId, {
+        targetSize: this.state.matchTargetSize,
+        fillWithBots: this.state.matchFillWithBots,
+      });
+    }
+
+    if (
       message.type === "snap" &&
       !result.error &&
       "targetPlayerId" in message &&
@@ -756,6 +772,9 @@ export class GameHost {
     }
 
     this.scheduleBotTurns();
+    if (message.type === "set_match_settings" && !result.error) {
+      await this.maybeAutoStartMatchmade();
+    }
   }
 
   async onSnapWindowAlarm() {

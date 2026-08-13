@@ -188,6 +188,34 @@ export function leaveLobby(
   return true;
 }
 
+/** Update an open lobby's match config (and move buckets if needed). */
+export function updateLobbyConfig(
+  state: MatchmakingQueueState,
+  roomId: string,
+  config: MatchmakingConfig,
+): boolean {
+  let found: OpenLobby | undefined;
+  let foundKey: string | undefined;
+  for (const [key, lobbies] of Object.entries(state.buckets)) {
+    const index = lobbies.findIndex((lobby) => lobby.roomId === roomId);
+    if (index === -1) continue;
+    found = lobbies[index];
+    foundKey = key;
+    state.buckets[key] = [
+      ...lobbies.slice(0, index),
+      ...lobbies.slice(index + 1),
+    ];
+    break;
+  }
+  if (!found || foundKey === undefined) return false;
+
+  found.targetSize = config.targetSize;
+  found.fillWithBots = config.fillWithBots;
+  const nextKey = bucketKey(config);
+  state.buckets[nextKey] = [...(state.buckets[nextKey] ?? []), found];
+  return true;
+}
+
 /** Remove a lobby from the open queue once its game has started (or is dead). */
 export function closeLobby(
   state: MatchmakingQueueState,

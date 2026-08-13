@@ -6,6 +6,7 @@ import {
   createMatchmakingQueueState,
   leaveLobby,
   normalizeMatchConfig,
+  updateLobbyConfig,
 } from "./queue";
 
 describe("matchmaking queue", () => {
@@ -129,5 +130,21 @@ describe("matchmaking queue", () => {
 
     const key = Object.keys(state.buckets)[0];
     expect(state.buckets[key][0].assignedCount).toBe(1);
+  });
+
+  it("moves an open lobby when its match config changes", () => {
+    const state = createMatchmakingQueueState();
+    const four = normalizeMatchConfig(4, true);
+    const two = normalizeMatchConfig(2, false);
+    const first = assignPlayer(state, "p1", four, 1000);
+
+    expect(updateLobbyConfig(state, first.roomId, two)).toBe(true);
+    expect(state.buckets["4:1"] ?? []).toHaveLength(0);
+    expect(state.buckets["2:0"]).toHaveLength(1);
+    expect(state.buckets["2:0"][0].targetSize).toBe(2);
+    expect(state.buckets["2:0"][0].fillWithBots).toBe(false);
+
+    const next = assignPlayer(state, "p2", two, 2000);
+    expect(next.roomId).toBe(first.roomId);
   });
 });

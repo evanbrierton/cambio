@@ -121,6 +121,7 @@ describe("wire-schema server messages", () => {
       matchFillWithBots: true,
       matchHumanCount: 1,
       matchStartingSoon: false,
+      canSetMatchSettings: false,
       canAddBot: true,
       jokerCount: 2,
       canSetJokerCount: true,

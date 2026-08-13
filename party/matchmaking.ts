@@ -13,6 +13,7 @@ import {
   type MatchmakingQueueState,
   normalizeMatchConfig,
   normalizeQueueState,
+  updateLobbyConfig,
 } from "../src/matchmaking/queue";
 import type {
   MatchmakingClientMessage,
@@ -58,7 +59,7 @@ export class MatchmakingParty extends Server<Env> {
     connection.send(JSON.stringify(message));
   }
 
-  /** HTTP from game rooms: POST /close-lobby { roomId } or POST /leave-lobby { roomId, playerId } */
+  /** HTTP from game rooms: POST /close-lobby, /leave-lobby, or /update-lobby */
   async onRequest(request: Request): Promise<Response> {
     const url = new URL(request.url);
     if (request.method === "POST" && url.pathname.endsWith("/close-lobby")) {
@@ -98,6 +99,33 @@ export class MatchmakingParty extends Server<Env> {
       const left = leaveLobby(this.queue, roomId, playerId);
       await this.persistQueue();
       return Response.json({ left });
+    }
+    if (request.method === "POST" && url.pathname.endsWith("/update-lobby")) {
+      let roomId = "";
+      let targetSize: number | undefined;
+      let fillWithBots: boolean | undefined;
+      try {
+        const body = (await request.json()) as {
+          roomId?: string;
+          targetSize?: number;
+          fillWithBots?: boolean;
+        };
+        roomId = body.roomId?.trim() ?? "";
+        targetSize = body.targetSize;
+        fillWithBots = body.fillWithBots;
+      } catch {
+        return Response.json({ error: "Invalid body." }, { status: 400 });
+      }
+      if (!roomId || targetSize === undefined || fillWithBots === undefined) {
+        return Response.json(
+          { error: "roomId, targetSize, and fillWithBots required." },
+          { status: 400 },
+        );
+      }
+      const config = normalizeMatchConfig(targetSize, fillWithBots);
+      const updated = updateLobbyConfig(this.queue, roomId, config);
+      await this.persistQueue();
+      return Response.json({ updated });
     }
     return new Response("Not Found", { status: 404 });
   }

@@ -652,6 +652,37 @@ describe("GameHost", () => {
     expect(host.getState()?.hostId).toBe(bobId);
   });
 
+  it("lets the matchmade host change target size and bot fill", async () => {
+    const configs: Array<{ targetSize: number; fillWithBots: boolean }> = [];
+    const host = new GameHost({
+      roomId: "settings-room",
+      onMatchLobbyConfigChanged: (_roomId, config) => {
+        configs.push(config);
+      },
+    });
+    await host.handleConnect({
+      queryPlayerId: "alice-id",
+      name: "Alice",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+      isMatchmade: true,
+      matchTargetSize: 4,
+      matchFillWithBots: true,
+    });
+    const aliceId = host.getState()?.hostId ?? "alice-id";
+
+    await host.dispatchMessage(aliceId, {
+      type: "set_match_settings",
+      targetSize: 2,
+      fillWithBots: false,
+    });
+
+    expect(host.getState()?.matchTargetSize).toBe(2);
+    expect(host.getState()?.matchFillWithBots).toBe(false);
+    expect(configs).toEqual([{ targetSize: 2, fillWithBots: false }]);
+  });
+
   it("auto-suffixes duplicate names in matchmade rooms", async () => {
     const { host } = createTestHost();
     await host.handleConnect({

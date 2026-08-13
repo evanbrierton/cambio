@@ -10,10 +10,20 @@ import {
   MIN_CARD_POINT_VALUE,
   MIN_JOKER_COUNT,
 } from "@/game/types";
+import { saveMatchSettings } from "@/lib/match-settings";
 import type { ThemeVoice } from "@/lib/themes";
+import {
+  clampMatchTargetSize,
+  MAX_MATCH_TARGET_SIZE,
+  MIN_MATCH_TARGET_SIZE,
+} from "@/matchmaking/types";
 
 const MAX_PLAYERS = 6;
 const LOBBY_SLOTS = [0, 1, 2, 3, 4, 5] as const;
+const MATCH_TARGET_SIZES = Array.from(
+  { length: MAX_MATCH_TARGET_SIZE - MIN_MATCH_TARGET_SIZE + 1 },
+  (_, index) => MIN_MATCH_TARGET_SIZE + index,
+);
 const CARD_POINT_OPTIONS = Array.from(
   { length: MAX_CARD_POINT_VALUE - MIN_CARD_POINT_VALUE + 1 },
   (_, index) => MIN_CARD_POINT_VALUE + index,
@@ -81,6 +91,83 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
         <p className="font-display text-[8px] text-theme-muted text-center animate-pulse">
           {voice.matchStartingSoon}
         </p>
+      ) : null}
+
+      {view.isMatchmade ? (
+        <div className="pixel-border bg-surface p-3 sm:p-4 space-y-3">
+          <div className="space-y-2">
+            <p className="font-display text-[8px] text-theme-muted tracking-widest px-1">
+              {voice.matchPlayersLabel}
+            </p>
+            <div className="flex flex-wrap gap-2 px-1">
+              {MATCH_TARGET_SIZES.map((size) => {
+                const selected = size === view.matchTargetSize;
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    disabled={!view.canSetMatchSettings}
+                    onClick={() => {
+                      if (!view.canSetMatchSettings) return;
+                      const targetSize = clampMatchTargetSize(size);
+                      saveMatchSettings({
+                        targetSize,
+                        fillWithBots: view.matchFillWithBots,
+                      });
+                      send({
+                        type: "set_match_settings",
+                        targetSize,
+                        fillWithBots: view.matchFillWithBots,
+                      });
+                    }}
+                    className={`chip-btn min-w-10 px-3 py-2 text-[10px] transition-colors ${
+                      selected
+                        ? "border-accent text-accent"
+                        : "border-theme-muted text-theme hover:border-accent"
+                    } disabled:opacity-50 disabled:hover:border-theme-muted`}
+                    aria-pressed={selected}
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3 px-1">
+            <span className="font-display text-[8px] text-theme-muted tracking-widest">
+              {voice.matchFillWithBotsLabel}
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={view.matchFillWithBots}
+              disabled={!view.canSetMatchSettings}
+              onClick={() => {
+                if (!view.canSetMatchSettings) return;
+                const fillWithBots = !view.matchFillWithBots;
+                saveMatchSettings({
+                  targetSize: view.matchTargetSize,
+                  fillWithBots,
+                });
+                send({
+                  type: "set_match_settings",
+                  targetSize: view.matchTargetSize,
+                  fillWithBots,
+                });
+              }}
+              className={`chip-btn px-3 py-2 text-[10px] transition-colors ${
+                view.matchFillWithBots
+                  ? "border-accent text-accent"
+                  : "border-theme-muted text-theme hover:border-accent"
+              } disabled:opacity-50 disabled:hover:border-theme-muted`}
+            >
+              {view.matchFillWithBots
+                ? voice.matchFillBotsOn
+                : voice.matchFillBotsOff}
+            </button>
+          </div>
+        </div>
       ) : null}
 
       <div className="pixel-border bg-surface p-3 sm:p-4">

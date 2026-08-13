@@ -153,6 +153,7 @@ const playerViewSchema = z.object({
   matchFillWithBots: z.boolean(),
   matchHumanCount: z.number(),
   matchStartingSoon: z.boolean(),
+  canSetMatchSettings: z.boolean(),
   canAddBot: z.boolean(),
   jokerCount: z.number(),
   canSetJokerCount: z.boolean(),
@@ -208,6 +209,11 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("set_card_points"),
     values: partialCardPointValuesSchema,
+  }),
+  z.object({
+    type: z.literal("set_match_settings"),
+    targetSize: z.number(),
+    fillWithBots: z.boolean(),
   }),
   z.object({ type: z.literal("chat"), text: z.string() }),
   z.object({

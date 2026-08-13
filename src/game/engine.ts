@@ -1,5 +1,8 @@
 import { nanoid } from "nanoid";
-import { MATCH_LOBBY_AWAY_REMOVE_MS } from "../matchmaking/types";
+import {
+  clampMatchTargetSize,
+  MATCH_LOBBY_AWAY_REMOVE_MS,
+} from "../matchmaking/types";
 import { generateBotName, nameKey } from "./bot-names";
 import {
   abilityForDiscard,
@@ -1430,6 +1433,33 @@ export function handleMessage(
       return {};
     }
 
+    case "set_match_settings": {
+      if (!state.isMatchmade) {
+        return { error: "Match settings are only for Find Match lobbies." };
+      }
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can change match settings." };
+      }
+      if (state.phase !== "lobby") {
+        return { error: "Cannot change match settings after the game starts." };
+      }
+      const targetSize = clampMatchTargetSize(message.targetSize);
+      const fillWithBots = Boolean(message.fillWithBots);
+      if (
+        targetSize === state.matchTargetSize &&
+        fillWithBots === state.matchFillWithBots
+      ) {
+        return {};
+      }
+      state.matchTargetSize = targetSize;
+      state.matchFillWithBots = fillWithBots;
+      addLog(
+        state,
+        `Match set to ${targetSize} players${fillWithBots ? " (fill with bots)" : ""}.`,
+      );
+      return {};
+    }
+
     case "chat": {
       const result = addChatMessage(state, playerId, message.text);
       if ("error" in result) return { error: result.error };
@@ -1716,6 +1746,8 @@ export function buildPlayerView(
       state.isMatchmade &&
       state.phase === "lobby" &&
       state.matchSoftStartAt != null,
+    canSetMatchSettings:
+      state.isMatchmade && viewerId === state.hostId && state.phase === "lobby",
     canAddBot:
       viewerId === state.hostId &&
       state.isSoloMode &&
