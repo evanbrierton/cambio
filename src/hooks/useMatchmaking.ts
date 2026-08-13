@@ -23,8 +23,10 @@ export function useMatchmaking(playerName: string) {
   const [error, setError] = useState<string | null>(null);
   const [matching, setMatching] = useState(false);
   const socketRef = useRef<PartySocket | null>(null);
+  const requestIdRef = useRef(0);
 
   const cancel = useCallback(() => {
+    requestIdRef.current += 1;
     const socket = socketRef.current;
     if (socket) {
       if (socket.readyState === WebSocket.OPEN) {
@@ -48,7 +50,19 @@ export function useMatchmaking(playerName: string) {
         return Promise.resolve(null);
       }
 
-      cancel();
+      // Supersede any in-flight request without treating it as a full cancel
+      // from the caller's perspective (matching stays true for the new search).
+      const previous = socketRef.current;
+      if (previous) {
+        if (previous.readyState === WebSocket.OPEN) {
+          const message: MatchmakingClientMessage = { type: "cancel" };
+          previous.send(JSON.stringify(message));
+        }
+        previous.close();
+        socketRef.current = null;
+      }
+
+      const requestId = ++requestIdRef.current;
       setError(null);
       setMatching(true);
 
@@ -65,6 +79,10 @@ export function useMatchmaking(playerName: string) {
         socketRef.current = socket;
 
         const finish = (result: MatchmakingResult | null, message?: string) => {
+          if (requestId !== requestIdRef.current) {
+            resolve(null);
+            return;
+          }
           socket.close();
           socketRef.current = null;
           setMatching(false);
@@ -73,6 +91,7 @@ export function useMatchmaking(playerName: string) {
         };
 
         socket.addEventListener("open", () => {
+          if (requestId !== requestIdRef.current) return;
           const message: MatchmakingClientMessage = {
             type: "enqueue",
             name: trimmedName,
@@ -112,11 +131,12 @@ export function useMatchmaking(playerName: string) {
         });
 
         socket.addEventListener("close", () => {
+          if (requestId !== requestIdRef.current) return;
           setMatching(false);
         });
       });
     },
-    [cancel, playerName],
+    [playerName],
   );
 
   useEffect(() => cancel, [cancel]);
