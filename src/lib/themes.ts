@@ -141,6 +141,10 @@ export type ThemeVoice = {
   findMatch: string;
   findingMatch: string;
   cancelMatch: string;
+  matchPlayersLabel: string;
+  matchFillWithBotsLabel: string;
+  matchFillBotsOn: string;
+  matchFillBotsOff: string;
   matchmadeLobby: string;
   matchFillStatus: (current: number, target: number) => string;
   matchStartingSoon: string;
@@ -347,6 +351,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "FIND MATCH",
     findingMatch: "FINDING MATCH...",
     cancelMatch: "CANCEL",
+    matchPlayersLabel: "PLAYERS",
+    matchFillWithBotsLabel: "FILL WITH BOTS",
+    matchFillBotsOn: "ON",
+    matchFillBotsOff: "OFF",
     matchmadeLobby: "MATCHMADE LOBBY",
     matchFillStatus: (current, target) => `${current}/${target} PLAYERS`,
     matchStartingSoon: "STARTING SOON...",
@@ -499,6 +507,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding a table...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade table",
     matchFillStatus: (current, target) => `${current} of ${target} seated`,
     matchStartingSoon: "Starting soon...",
@@ -649,6 +661,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding a party...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade party",
     matchFillStatus: (current, target) => `${current}/${target} players`,
     matchStartingSoon: "Starting soon!",
@@ -798,6 +814,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding opponents...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade lobby",
     matchFillStatus: (current, target) => `${current}/${target} players`,
     matchStartingSoon: "Starting soon",
@@ -950,6 +970,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding a table...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade table",
     matchFillStatus: (current, target) => `${current} of ${target} seated`,
     matchStartingSoon: "Starting soon...",
@@ -1102,6 +1126,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding a table...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade table",
     matchFillStatus: (current, target) => `${current} of ${target} seated`,
     matchStartingSoon: "Starting soon...",
@@ -1252,6 +1280,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding a table...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade table",
     matchFillStatus: (current, target) => `${current} of ${target} seated`,
     matchStartingSoon: "Starting soon...",
@@ -1402,6 +1434,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding opponents...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade lobby",
     matchFillStatus: (current, target) => `${current}/${target} players`,
     matchStartingSoon: "Starting soon",
