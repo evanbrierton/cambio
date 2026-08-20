@@ -77,11 +77,18 @@ export function getThemeFontClassName(theme: ThemeId): string {
   return THEME_FONT_CLASSES[theme];
 }
 
-export function applyThemeFontClass(theme: ThemeId): void {
+/** Every theme display-font variable, so switching Pixel Style can use it immediately. */
+export function getAllThemeFontClassNames(): string {
+  return [...new Set(Object.values(THEME_FONT_CLASSES).filter(Boolean))].join(
+    " ",
+  );
+}
+
+export function applyThemeFontClass(_theme: ThemeId): void {
   const html = document.documentElement;
-  const next = THEME_FONT_CLASSES[theme];
   for (const className of Object.values(THEME_FONT_CLASSES)) {
-    if (className && className !== next) html.classList.remove(className);
+    if (className && !html.classList.contains(className)) {
+      html.classList.add(className);
+    }
   }
-  if (next && !html.classList.contains(next)) html.classList.add(next);
 }

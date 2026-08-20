@@ -16,7 +16,7 @@ import {
   resolveAppearance,
   THEME_COOKIE_KEY,
 } from "@/lib/theme-cookie";
-import { getThemeFontClassName } from "@/lib/theme-fonts";
+import { getAllThemeFontClassNames } from "@/lib/theme-fonts";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -111,7 +111,7 @@ export default async function RootLayout({
     cookieStore.get(APPEARANCE_COOKIE_KEY)?.value,
   );
   const appearance = resolveAppearance(appearancePreference, false);
-  const themeFontClass = getThemeFontClassName(theme);
+  const themeFontClass = getAllThemeFontClassNames();
 
   return (
     <html

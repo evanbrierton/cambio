@@ -63,14 +63,14 @@ function CoachTooltip({
   return (
     <div
       {...tooltipProps}
-      className="pixel-border bg-surface-elevated p-4 sm:p-5 max-w-[min(92vw,22rem)] shadow-glow-accent text-left"
+      className="pixel-border bg-surface-elevated p-4 sm:p-5 max-w-[min(92vw,22rem)] shadow-glow-accent text-left font-display text-theme"
     >
       {step.title ? (
         <h3 className="font-display text-sm sm:text-base title-glow mb-2">
           {step.title}
         </h3>
       ) : null}
-      <p className="text-xs sm:text-sm text-theme normal-case tracking-normal leading-relaxed">
+      <p className="font-display text-[10px] sm:text-xs text-theme leading-relaxed">
         {step.content}
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -131,6 +131,7 @@ export function TutorialCoach({
         spotlightPadding: 8,
         spotlightRadius: 6,
         targetWaitTimeout: 2500,
+        arrowColor: "var(--border)",
       }}
       styles={{
         overlay: {
