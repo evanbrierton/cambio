@@ -22,7 +22,7 @@ export function useTutorial() {
       gameSeen: useTutorialStore.getState().gameSeen,
     });
     // #endregion
-    return useTutorialStore.persist.onFinishHydration(() => {
+    const unsub = useTutorialStore.persist.onFinishHydration(() => {
       // #region agent log
       debugTutorialLog("A", "useTutorial.ts:onFinishHydration", "hydration finished callback", {
         hasHydrated: useTutorialStore.persist.hasHydrated(),
@@ -31,6 +31,19 @@ export function useTutorial() {
       // #endregion
       setHydrated(true);
     });
+    // persist.rehydrate() can finish synchronously (localStorage) before this
+    // effect runs, so onFinishHydration would never fire without a catch-up.
+    if (useTutorialStore.persist.hasHydrated()) {
+      // #region agent log
+      debugTutorialLog("A", "useTutorial.ts:onFinishHydration", "already hydrated catch-up", {
+        alreadyHasHydrated,
+        gameSeen: useTutorialStore.getState().gameSeen,
+        runId: "post-fix",
+      });
+      // #endregion
+      setHydrated(true);
+    }
+    return unsub;
   }, []);
 
   const snapshot = useTutorialStore(
