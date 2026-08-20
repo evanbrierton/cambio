@@ -102,7 +102,7 @@ type SelectedCard = { playerId: string; slot: number };
 const LOBBY_JOIN_TOAST_MS = 3000;
 const CHROME_ICON_CLASS = "size-3.5 shrink-0";
 const CHROME_ICON_BTN =
-  "chip-btn inline-flex items-center justify-center p-1 border-theme-muted text-theme hover:border-accent transition-colors";
+  "chip-btn chip-btn-sm inline-flex items-center justify-center px-1.5 border-theme-muted text-theme hover:border-accent transition-colors";
 
 function formatPeekFlashNotice(
   peekFlash: PeekFlash,
@@ -1319,126 +1319,124 @@ export function GameTable({
     view.phase !== "lobby" &&
     view.players.filter((p) => !p.isWaiting).length >= 2;
 
-  const gameSidebar = (
+  const gameSettingsButtons = (
     <>
-      <div className="flex flex-wrap gap-2 shrink-0">
-        <button
-          type="button"
-          onClick={toggleSound}
-          aria-label={soundEnabled ? voice.soundOn : voice.soundOff}
-          title={soundEnabled ? voice.soundOn : voice.soundOff}
-          className={CHROME_ICON_BTN}
-        >
-          {soundEnabled ? (
-            <Volume2 aria-hidden className={CHROME_ICON_CLASS} />
-          ) : (
-            <VolumeX aria-hidden className={CHROME_ICON_CLASS} />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={toggleHints}
-          aria-label={hintsEnabled ? voice.hintsOn : voice.hintsOff}
-          title={hintsEnabled ? voice.hintsOn : voice.hintsOff}
-          className={CHROME_ICON_BTN}
-        >
-          {hintsEnabled ? (
-            <Lightbulb aria-hidden className={CHROME_ICON_CLASS} />
-          ) : (
-            <LightbulbOff aria-hidden className={CHROME_ICON_CLASS} />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={togglePlayerGrid}
-          aria-label={
-            playerGridEnabled ? voice.playerGridOn : voice.playerGridOff
-          }
-          title={playerGridEnabled ? voice.playerGridOn : voice.playerGridOff}
-          className={CHROME_ICON_BTN}
-        >
-          {playerGridEnabled ? (
-            <LayoutGrid aria-hidden className={CHROME_ICON_CLASS} />
-          ) : (
-            <GalleryHorizontal aria-hidden className={CHROME_ICON_CLASS} />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={toggleOwnSeatDisplay}
-          aria-label={
-            ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder
-          }
-          title={
-            ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder
-          }
-          className={CHROME_ICON_BTN}
-        >
-          {ownSeatProminent ? (
-            <CircleUser aria-hidden className={CHROME_ICON_CLASS} />
-          ) : (
-            <ListOrdered aria-hidden className={CHROME_ICON_CLASS} />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={toggleChatNotifications}
-          aria-label={
-            chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff
-          }
-          title={
-            chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff
-          }
-          className={CHROME_ICON_BTN}
-        >
-          {chatNotificationsEnabled ? (
-            <MessageSquare aria-hidden className={CHROME_ICON_CLASS} />
-          ) : (
-            <MessageSquareOff aria-hidden className={CHROME_ICON_CLASS} />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={toggleEventNotifications}
-          aria-label={
-            eventNotificationsEnabled
-              ? voice.eventNotifsOn
-              : voice.eventNotifsOff
-          }
-          title={
-            eventNotificationsEnabled
-              ? voice.eventNotifsOn
-              : voice.eventNotifsOff
-          }
-          className={CHROME_ICON_BTN}
-        >
-          {eventNotificationsEnabled ? (
-            <Bell aria-hidden className={CHROME_ICON_CLASS} />
-          ) : (
-            <BellOff aria-hidden className={CHROME_ICON_CLASS} />
-          )}
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={toggleSound}
+        aria-label={soundEnabled ? voice.soundOn : voice.soundOff}
+        title={soundEnabled ? voice.soundOn : voice.soundOff}
+        className={CHROME_ICON_BTN}
+      >
+        {soundEnabled ? (
+          <Volume2 aria-hidden className={CHROME_ICON_CLASS} />
+        ) : (
+          <VolumeX aria-hidden className={CHROME_ICON_CLASS} />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={toggleHints}
+        aria-label={hintsEnabled ? voice.hintsOn : voice.hintsOff}
+        title={hintsEnabled ? voice.hintsOn : voice.hintsOff}
+        className={CHROME_ICON_BTN}
+      >
+        {hintsEnabled ? (
+          <Lightbulb aria-hidden className={CHROME_ICON_CLASS} />
+        ) : (
+          <LightbulbOff aria-hidden className={CHROME_ICON_CLASS} />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={togglePlayerGrid}
+        aria-label={
+          playerGridEnabled ? voice.playerGridOn : voice.playerGridOff
+        }
+        title={playerGridEnabled ? voice.playerGridOn : voice.playerGridOff}
+        className={CHROME_ICON_BTN}
+      >
+        {playerGridEnabled ? (
+          <LayoutGrid aria-hidden className={CHROME_ICON_CLASS} />
+        ) : (
+          <GalleryHorizontal aria-hidden className={CHROME_ICON_CLASS} />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={toggleOwnSeatDisplay}
+        aria-label={
+          ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder
+        }
+        title={
+          ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder
+        }
+        className={CHROME_ICON_BTN}
+      >
+        {ownSeatProminent ? (
+          <CircleUser aria-hidden className={CHROME_ICON_CLASS} />
+        ) : (
+          <ListOrdered aria-hidden className={CHROME_ICON_CLASS} />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={toggleChatNotifications}
+        aria-label={
+          chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff
+        }
+        title={
+          chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff
+        }
+        className={CHROME_ICON_BTN}
+      >
+        {chatNotificationsEnabled ? (
+          <MessageSquare aria-hidden className={CHROME_ICON_CLASS} />
+        ) : (
+          <MessageSquareOff aria-hidden className={CHROME_ICON_CLASS} />
+        )}
+      </button>
+      <button
+        type="button"
+        onClick={toggleEventNotifications}
+        aria-label={
+          eventNotificationsEnabled ? voice.eventNotifsOn : voice.eventNotifsOff
+        }
+        title={
+          eventNotificationsEnabled ? voice.eventNotifsOn : voice.eventNotifsOff
+        }
+        className={CHROME_ICON_BTN}
+      >
+        {eventNotificationsEnabled ? (
+          <Bell aria-hidden className={CHROME_ICON_CLASS} />
+        ) : (
+          <BellOff aria-hidden className={CHROME_ICON_CLASS} />
+        )}
+      </button>
+    </>
+  );
 
-      {canDebugRestart && (
-        <div className="flex flex-wrap gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={() => send({ type: "toggle_debug" })}
-            className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
-          >
-            {view.debugReveal ? voice.debugHide : voice.debugReveal}
-          </button>
-          <button
-            type="button"
-            onClick={() => send({ type: "restart_game" })}
-            className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
-          >
-            {voice.debugRestart}
-          </button>
-        </div>
-      )}
+  const gameDebugButtons = canDebugRestart ? (
+    <div className="flex flex-wrap gap-2 shrink-0">
+      <button
+        type="button"
+        onClick={() => send({ type: "toggle_debug" })}
+        className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+      >
+        {view.debugReveal ? voice.debugHide : voice.debugReveal}
+      </button>
+      <button
+        type="button"
+        onClick={() => send({ type: "restart_game" })}
+        className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
+      >
+        {voice.debugRestart}
+      </button>
+    </div>
+  ) : null;
 
+  const gameSidebarPanels = (
+    <>
       <ChatPanel
         messages={view.chatMessages}
         playerId={view.playerId}
@@ -1447,7 +1445,7 @@ export function GameTable({
         onSend={(text) => send({ type: "chat", text })}
       />
 
-      <div className="pixel-border p-3 bg-surface w-full min-w-0 flex flex-col overflow-hidden shrink-0 lg:flex-1 lg:min-h-0">
+      <div className="pixel-border p-3 bg-surface w-full min-w-0 flex flex-col overflow-hidden max-h-35 lg:max-h-none lg:flex-1 lg:min-h-0">
         <p className="font-display text-[8px] text-theme-muted mb-2 shrink-0">
           {voice.gameLog}
         </p>
@@ -1469,6 +1467,14 @@ export function GameTable({
       <div className="shrink-0">
         <ThemePicker compact />
       </div>
+    </>
+  );
+
+  const gameSidebar = (
+    <>
+      <div className="flex flex-wrap gap-2 shrink-0">{gameSettingsButtons}</div>
+      {gameDebugButtons}
+      {gameSidebarPanels}
     </>
   );
 
@@ -1522,19 +1528,19 @@ export function GameTable({
       )}
 
       <div
-        className={`lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:gap-3 flex flex-col min-w-0 ${
+        className={`flex flex-col min-w-0 ${
           isLobbyScrollLayout
-            ? "lg:items-stretch"
-            : "flex-1 min-h-0 overflow-hidden lg:grid-rows-[minmax(0,1fr)]"
+            ? "lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:grid-rows-[auto_auto_auto] lg:items-start lg:gap-3"
+            : "flex-1 min-h-0 overflow-hidden lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,300px)] lg:grid-rows-[auto_auto_minmax(0,1fr)] lg:gap-3"
         }`}
       >
         <div
-          className={`scroll-stable flex flex-col min-w-0 gap-2 sm:gap-3 ${
+          className={`scroll-stable flex flex-col min-w-0 gap-2 sm:gap-3 lg:contents ${
             isLobbyScrollLayout ? "" : "flex-1 min-h-0 overflow-hidden"
           }`}
         >
-          <header className="shrink-0">
-            <div className="flex items-center gap-2 min-w-0">
+          <div className="shrink-0 lg:contents">
+            <header className="flex items-center gap-2 min-w-0 lg:col-start-1 lg:row-start-1">
               <div className="min-w-0 flex-1 flex items-center gap-1.5 overflow-hidden">
                 <p className="font-display text-[8px] sm:text-[9px] text-theme-muted truncate min-w-0">
                   {voice.roomPrefix}{" "}
@@ -1548,10 +1554,8 @@ export function GameTable({
                   aria-live="polite"
                   aria-label={roomCopied ? voice.copied : voice.copy}
                   title={roomCopied ? voice.copied : voice.copy}
-                  className={`chip-btn chip-btn-sm inline-flex items-center justify-center shrink-0 transition-colors ${
-                    roomCopied
-                      ? "border-accent text-accent"
-                      : "border-theme-muted text-theme hover:border-accent"
+                  className={`${CHROME_ICON_BTN} shrink-0 ${
+                    roomCopied ? "border-accent text-accent" : ""
                   }`}
                 >
                   {roomCopied ? (
@@ -1583,7 +1587,7 @@ export function GameTable({
                 <button
                   type="button"
                   onClick={openSettings}
-                  className="chip-btn chip-btn-sm inline-flex items-center justify-center border-theme-muted text-theme hover:border-accent transition-colors lg:hidden relative"
+                  className={`${CHROME_ICON_BTN} relative lg:hidden`}
                   aria-label={
                     unreadCount > 0
                       ? `Game menu (${unreadCount} unread messages)`
@@ -1600,383 +1604,405 @@ export function GameTable({
                 </button>
                 <Link
                   href="/"
-                  className="chip-btn chip-btn-sm inline-flex items-center justify-center border-theme-muted text-theme hover:border-accent transition-colors"
+                  className={CHROME_ICON_BTN}
                   aria-label={voice.leaveGame}
                   title={voice.leaveGame}
                 >
                   <LogOut aria-hidden className={CHROME_ICON_CLASS} />
                 </Link>
               </div>
+            </header>
+
+            <div className="lg:col-start-1 lg:row-start-2">
+              <h1 className="font-display text-[11px] sm:text-sm title-glow truncate mt-1 lg:mt-0 tracking-(--display-tracking) leading-snug">
+                {phaseLabel}
+              </h1>
+
+              {debugEnabled && view.debugReveal && (
+                <p className="font-display text-[8px] text-accent-alt mt-0.5">
+                  DEBUG: ALL CARDS VISIBLE
+                </p>
+              )}
             </div>
+          </div>
 
-            <h1 className="font-display text-[11px] sm:text-sm title-glow truncate mt-1 tracking-(--display-tracking) leading-snug">
-              {phaseLabel}
-            </h1>
-
-            {debugEnabled && view.debugReveal && (
-              <p className="font-display text-[8px] text-accent-alt mt-0.5">
-                DEBUG: ALL CARDS VISIBLE
-              </p>
-            )}
-          </header>
-
-          {view.phase !== "lobby" && (
-            <div
-              ref={tableDeckRef}
-              className={`table-deck pixel-border bg-surface flex flex-col min-h-0 ${
-                playerGridEnabled
-                  ? "table-deck-compact shrink-0"
-                  : "px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 gap-2 sm:gap-2.5 flex-1 max-h-[min(42vh,22rem)]"
-              } ${
-                view.canDraw && !snapGivePending
-                  ? "table-deck-drawable ring-2 ring-accent-alt"
-                  : ""
-              } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
-            >
-              {hintsEnabled ? (
-                <div
-                  data-table-hint
-                  className="table-hint table-hint-slot shrink-0 mx-auto w-full flex items-center justify-center"
-                >
-                  <AnimatePresence initial={false} mode="wait">
-                    {actionToast ? (
-                      <GameToast
-                        key={actionToast.id}
-                        toast={actionToast}
-                        inline
-                        className="p-2! text-[9px]! sm:text-[10px]! leading-[1.45]! shadow-none"
-                      />
-                    ) : null}
-                  </AnimatePresence>
-                </div>
-              ) : null}
-
+          <div
+            className={`flex flex-col min-w-0 gap-2 sm:gap-3 lg:col-start-1 lg:row-start-3 lg:min-h-0 ${
+              isLobbyScrollLayout ? "" : "flex-1 min-h-0 overflow-hidden"
+            }`}
+          >
+            {view.phase !== "lobby" && (
               <div
-                className={`flex flex-col items-center ${
+                ref={tableDeckRef}
+                className={`table-deck pixel-border bg-surface flex flex-col min-h-0 ${
                   playerGridEnabled
-                    ? "shrink-0 gap-1"
-                    : "flex-1 min-h-0 justify-center gap-2"
-                }`}
+                    ? "table-deck-compact shrink-0"
+                    : "px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 gap-2 sm:gap-2.5 flex-1 max-h-[min(42vh,22rem)]"
+                } ${
+                  view.canDraw && !snapGivePending
+                    ? "table-deck-drawable ring-2 ring-accent-alt"
+                    : ""
+                } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
               >
-                <div
-                  className={`grid w-full grid-cols-3 items-end justify-items-center ${
-                    playerGridEnabled
-                      ? "gap-x-1.5 sm:gap-x-2 px-0.5"
-                      : "gap-x-2 sm:gap-x-4 lg:gap-x-6 px-1 sm:px-2"
-                  }`}
-                >
-                  <button
-                    type="button"
-                    disabled={!view.canDraw || snapGivePending}
-                    onClick={() => send({ type: "draw", source: "deck" })}
-                    className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                      view.canDraw && !snapGivePending
-                        ? "pile-interactable-btn cursor-pointer active:opacity-80"
-                        : ""
-                    }`}
-                    aria-label={voice.draw}
-                  >
-                    <p
-                      className={`table-pile-label ${
-                        deckDrawFlash
-                          ? "pile-draw-flash-label"
-                          : view.canDraw && !snapGivePending
-                            ? "pile-interactable-label"
-                            : "text-theme-muted"
-                      }`}
-                    >
-                      {voice.deck}
-                    </p>
-                    <div
-                      className={`table-pile-card pixel-border rounded-card scaled-pile-size bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
-                        deckDrawFlash
-                          ? "pile-draw-flash pile-draw-flash-deck"
-                          : view.canDraw && !snapGivePending
-                            ? "pile-interactable-card ring-2 ring-accent-alt"
-                            : ""
-                      }`}
-                    >
-                      {deckDrawFlash && (
-                        <span className="pile-draw-flash-badge pile-draw-flash-badge-deck">
-                          DRAWN
-                        </span>
-                      )}
-                      <span className="relative z-10">{view.deckCount}</span>
-                    </div>
-                  </button>
-
+                {hintsEnabled ? (
                   <div
-                    className={`drawn-card-slot flex flex-col items-center ${
-                      isDrawnSlotMine || view.hasDrawnCard
-                        ? "drawn-card-slot-active"
-                        : ""
-                    } ${view.canSwap && !snapGivePending ? "drawn-card-slot-actionable" : ""}`}
+                    data-table-hint
+                    className="table-hint table-hint-slot shrink-0 mx-auto w-full flex items-center justify-center"
                   >
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={
-                          isDrawnSlotMine
-                            ? "mine"
-                            : view.hasDrawnCard
-                              ? "other"
-                              : "empty"
-                        }
-                        className={`flex flex-col items-center ${
-                          playerGridEnabled ? "gap-0.5" : "gap-1"
-                        }`}
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                      >
-                        <p
-                          className={`drawn-card-label font-display ${
-                            playerGridEnabled
-                              ? "text-[8px] sm:text-[9px]"
-                              : "text-[10px] sm:text-xs lg:text-sm"
-                          } ${
-                            isDrawnSlotMine
-                              ? "text-accent"
-                              : view.hasDrawnCard
-                                ? "text-accent-alt"
-                                : "text-theme-muted"
-                          }`}
-                        >
-                          {voice.drawn}
-                        </p>
-                        <div
-                          className={`drawn-card-container ${
-                            view.canSwap && !snapGivePending
-                              ? "ring-2 ring-accent shadow-glow-accent rounded-card drawn-card-glow"
-                              : isDrawnSlotMine
-                                ? "ring-2 ring-accent/50 rounded-card"
-                                : view.hasDrawnCard
-                                  ? "ring-1 ring-accent-alt/40 rounded-card"
-                                  : ""
-                          }`}
-                        >
-                          <PixelCard
-                            card={view.drawnCard}
-                            faceUp={isDrawnSlotMine}
-                            hidden={showDrawnFaceDown}
-                            empty={!isDrawnSlotMine && !view.hasDrawnCard}
-                            sizeClass="drawn-card-size"
-                          />
-                        </div>
-                      </motion.div>
+                    <AnimatePresence initial={false} mode="wait">
+                      {actionToast ? (
+                        <GameToast
+                          key={actionToast.id}
+                          toast={actionToast}
+                          inline
+                          className="p-2! text-[9px]! sm:text-[10px]! leading-[1.45]! shadow-none"
+                        />
+                      ) : null}
                     </AnimatePresence>
                   </div>
+                ) : null}
 
-                  <button
-                    type="button"
-                    disabled={!canInteractWithDiscard}
-                    onClick={() => {
-                      if (view.canDiscardDrawn) {
-                        send({ type: "discard_drawn" });
-                        return;
-                      }
-                      if (canTakeFromDiscard) {
-                        send({ type: "draw", source: "discard" });
-                      }
-                    }}
-                    className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                      canInteractWithDiscard
-                        ? "pile-interactable-btn cursor-pointer active:opacity-80"
-                        : ""
+                <div
+                  className={`flex flex-col items-center ${
+                    playerGridEnabled
+                      ? "shrink-0 gap-1"
+                      : "flex-1 min-h-0 justify-center gap-2"
+                  }`}
+                >
+                  <div
+                    className={`grid w-full grid-cols-3 items-end justify-items-center ${
+                      playerGridEnabled
+                        ? "gap-x-1.5 sm:gap-x-2 px-0.5"
+                        : "gap-x-2 sm:gap-x-4 lg:gap-x-6 px-1 sm:px-2"
                     }`}
-                    aria-label={
-                      view.canDiscardDrawn ? discardActionLabel : voice.take
-                    }
                   >
-                    <p
-                      className={`table-pile-label ${
-                        discardDrawFlash
-                          ? "pile-draw-flash-label pile-draw-flash-label-discard"
-                          : showDiscardPileGlow
-                            ? "pile-interactable-label pile-interactable-label-discard"
-                            : "text-theme-muted"
+                    <button
+                      type="button"
+                      disabled={!view.canDraw || snapGivePending}
+                      onClick={() => send({ type: "draw", source: "deck" })}
+                      className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
+                        view.canDraw && !snapGivePending
+                          ? "pile-interactable-btn cursor-pointer active:opacity-80"
+                          : ""
                       }`}
+                      aria-label={voice.draw}
                     >
-                      {voice.discard}
-                    </p>
+                      <p
+                        className={`table-pile-label ${
+                          deckDrawFlash
+                            ? "pile-draw-flash-label"
+                            : view.canDraw && !snapGivePending
+                              ? "pile-interactable-label"
+                              : "text-theme-muted"
+                        }`}
+                      >
+                        {voice.deck}
+                      </p>
+                      <div
+                        className={`table-pile-card pixel-border rounded-card scaled-pile-size bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
+                          deckDrawFlash
+                            ? "pile-draw-flash pile-draw-flash-deck"
+                            : view.canDraw && !snapGivePending
+                              ? "pile-interactable-card ring-2 ring-accent-alt"
+                              : ""
+                        }`}
+                      >
+                        {deckDrawFlash && (
+                          <span className="pile-draw-flash-badge pile-draw-flash-badge-deck">
+                            DRAWN
+                          </span>
+                        )}
+                        <span className="relative z-10">{view.deckCount}</span>
+                      </div>
+                    </button>
+
                     <div
-                      className={`scaled-pile-size shrink-0 relative ${
-                        discardDrawFlash
-                          ? "pile-draw-flash pile-draw-flash-discard rounded-card"
-                          : showDiscardPileGlow
-                            ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
-                            : snapWindowActive
-                              ? "ring-4 ring-danger rounded-card snap-window-discard"
-                              : view.canSnap
-                                ? "ring-1 ring-danger/50 rounded-card"
-                                : ""
-                      }`}
+                      className={`drawn-card-slot flex flex-col items-center ${
+                        isDrawnSlotMine || view.hasDrawnCard
+                          ? "drawn-card-slot-active"
+                          : ""
+                      } ${view.canSwap && !snapGivePending ? "drawn-card-slot-actionable" : ""}`}
                     >
-                      {discardDrawFlash && (
-                        <span className="pile-draw-flash-badge pile-draw-flash-badge-discard">
-                          TOOK
-                        </span>
-                      )}
                       <AnimatePresence mode="wait">
                         <motion.div
-                          key={view.discardTop?.id ?? "empty-discard"}
-                          className="h-full w-full"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          transition={{ duration: 0.18, ease: "easeOut" }}
+                          key={
+                            isDrawnSlotMine
+                              ? "mine"
+                              : view.hasDrawnCard
+                                ? "other"
+                                : "empty"
+                          }
+                          className={`flex flex-col items-center ${
+                            playerGridEnabled ? "gap-0.5" : "gap-1"
+                          }`}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.9 }}
+                          transition={{ duration: 0.2, ease: "easeOut" }}
                         >
-                          <PixelCard
-                            card={view.discardTop}
-                            faceUp={!!view.discardTop}
-                            hidden={!view.discardTop}
-                            empty={!view.discardTop}
-                            sizeClass="scaled-pile-size"
-                          />
+                          <p
+                            className={`drawn-card-label font-display ${
+                              playerGridEnabled
+                                ? "text-[8px] sm:text-[9px]"
+                                : "text-[10px] sm:text-xs lg:text-sm"
+                            } ${
+                              isDrawnSlotMine
+                                ? "text-accent"
+                                : view.hasDrawnCard
+                                  ? "text-accent-alt"
+                                  : "text-theme-muted"
+                            }`}
+                          >
+                            {voice.drawn}
+                          </p>
+                          <div
+                            className={`drawn-card-container ${
+                              view.canSwap && !snapGivePending
+                                ? "ring-2 ring-accent shadow-glow-accent rounded-card drawn-card-glow"
+                                : isDrawnSlotMine
+                                  ? "ring-2 ring-accent/50 rounded-card"
+                                  : view.hasDrawnCard
+                                    ? "ring-1 ring-accent-alt/40 rounded-card"
+                                    : ""
+                            }`}
+                          >
+                            <PixelCard
+                              card={view.drawnCard}
+                              faceUp={isDrawnSlotMine}
+                              hidden={showDrawnFaceDown}
+                              empty={!isDrawnSlotMine && !view.hasDrawnCard}
+                              sizeClass="drawn-card-size"
+                            />
+                          </div>
                         </motion.div>
                       </AnimatePresence>
                     </div>
-                  </button>
-                </div>
 
-                {playerGridEnabled ? (
-                  <div className="table-grid-context shrink-0 w-full min-w-0">
-                    {showDrawnActionChrome ? (
-                      view.canDiscardDrawn ? (
-                        <button
-                          type="button"
-                          onClick={() => send({ type: "discard_drawn" })}
-                          className="table-grid-context-action w-full truncate"
-                        >
-                          {discardActionLabel}
-                        </button>
-                      ) : view.canSwap ? (
-                        <p className="table-grid-context-hint truncate">
-                          {voice.tapToSwap}
-                        </p>
-                      ) : null
-                    ) : callCambioChip ? (
-                      callCambioChip
-                    ) : (
+                    <button
+                      type="button"
+                      disabled={!canInteractWithDiscard}
+                      onClick={() => {
+                        if (view.canDiscardDrawn) {
+                          send({ type: "discard_drawn" });
+                          return;
+                        }
+                        if (canTakeFromDiscard) {
+                          send({ type: "draw", source: "discard" });
+                        }
+                      }}
+                      className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
+                        canInteractWithDiscard
+                          ? "pile-interactable-btn cursor-pointer active:opacity-80"
+                          : ""
+                      }`}
+                      aria-label={
+                        view.canDiscardDrawn ? discardActionLabel : voice.take
+                      }
+                    >
                       <p
-                        className="table-grid-context-hint truncate invisible"
-                        aria-hidden
+                        className={`table-pile-label ${
+                          discardDrawFlash
+                            ? "pile-draw-flash-label pile-draw-flash-label-discard"
+                            : showDiscardPileGlow
+                              ? "pile-interactable-label pile-interactable-label-discard"
+                              : "text-theme-muted"
+                        }`}
                       >
-                        —
+                        {voice.discard}
                       </p>
-                    )}
-                  </div>
-                ) : null}
-
-                {!playerGridEnabled ? (
-                  <div
-                    data-table-chrome
-                    className="table-action-chrome table-chrome-slot flex items-center justify-center shrink-0"
-                  >
-                    {showDrawnActionChrome ? (
-                      <div className="table-action-chrome-row">
-                        {view.canSwap ? (
-                          <span className="chip-btn text-[8px] px-2 py-1 border-accent text-accent animate-pulse pointer-events-none">
-                            {voice.tapToSwap}
+                      <div
+                        className={`scaled-pile-size shrink-0 relative ${
+                          discardDrawFlash
+                            ? "pile-draw-flash pile-draw-flash-discard rounded-card"
+                            : showDiscardPileGlow
+                              ? "pile-interactable-card pile-interactable-discard ring-2 ring-accent rounded-card"
+                              : snapWindowActive
+                                ? "ring-4 ring-danger rounded-card snap-window-discard"
+                                : view.canSnap
+                                  ? "ring-1 ring-danger/50 rounded-card"
+                                  : ""
+                        }`}
+                      >
+                        {discardDrawFlash && (
+                          <span className="pile-draw-flash-badge pile-draw-flash-badge-discard">
+                            TOOK
                           </span>
-                        ) : null}
-                        {view.canDiscardDrawn ? (
+                        )}
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key={view.discardTop?.id ?? "empty-discard"}
+                            className="h-full w-full"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.18, ease: "easeOut" }}
+                          >
+                            <PixelCard
+                              card={view.discardTop}
+                              faceUp={!!view.discardTop}
+                              hidden={!view.discardTop}
+                              empty={!view.discardTop}
+                              sizeClass="scaled-pile-size"
+                            />
+                          </motion.div>
+                        </AnimatePresence>
+                      </div>
+                    </button>
+                  </div>
+
+                  {playerGridEnabled ? (
+                    <div className="table-grid-context shrink-0 w-full min-w-0">
+                      {showDrawnActionChrome ? (
+                        view.canDiscardDrawn ? (
                           <button
                             type="button"
                             onClick={() => send({ type: "discard_drawn" })}
-                            className="chip-btn text-[8px] px-2 py-1 border-accent-alt text-accent-alt hover:border-accent transition-colors"
+                            className="table-grid-context-action w-full truncate"
                           >
                             {discardActionLabel}
                           </button>
-                        ) : null}
-                      </div>
-                    ) : (
-                      callCambioChip
-                    )}
+                        ) : view.canSwap ? (
+                          <p className="table-grid-context-hint truncate">
+                            {voice.tapToSwap}
+                          </p>
+                        ) : null
+                      ) : callCambioChip ? (
+                        callCambioChip
+                      ) : (
+                        <p
+                          className="table-grid-context-hint truncate invisible"
+                          aria-hidden
+                        >
+                          —
+                        </p>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {!playerGridEnabled ? (
+                    <div
+                      data-table-chrome
+                      className="table-action-chrome table-chrome-slot flex items-center justify-center shrink-0"
+                    >
+                      {showDrawnActionChrome ? (
+                        <div className="table-action-chrome-row">
+                          {view.canSwap ? (
+                            <span className="chip-btn text-[8px] px-2 py-1 border-accent text-accent animate-pulse pointer-events-none">
+                              {voice.tapToSwap}
+                            </span>
+                          ) : null}
+                          {view.canDiscardDrawn ? (
+                            <button
+                              type="button"
+                              onClick={() => send({ type: "discard_drawn" })}
+                              className="chip-btn text-[8px] px-2 py-1 border-accent-alt text-accent-alt hover:border-accent transition-colors"
+                            >
+                              {discardActionLabel}
+                            </button>
+                          ) : null}
+                        </div>
+                      ) : (
+                        callCambioChip
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+
+                {!playerGridEnabled ? (
+                  <div
+                    data-table-event
+                    className="table-event-strip table-event-slot shrink-0 w-full min-w-0"
+                    aria-live="polite"
+                  >
+                    <AnimatePresence initial={false} mode="wait">
+                      {view.log.length > 0 ? (
+                        <motion.p
+                          key={`${view.log.length}-${view.log.at(-1)}`}
+                          className="font-mono text-[9px] sm:text-[10px] text-theme-muted text-center truncate px-1"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.18 }}
+                        >
+                          {view.log.at(-1)}
+                        </motion.p>
+                      ) : (
+                        <p
+                          key="empty-event"
+                          className="font-mono text-[9px] sm:text-[10px] text-transparent text-center truncate px-1 select-none"
+                          aria-hidden
+                        >
+                          —
+                        </p>
+                      )}
+                    </AnimatePresence>
                   </div>
                 ) : null}
               </div>
+            )}
 
-              {!playerGridEnabled ? (
-                <div
-                  data-table-event
-                  className="table-event-strip table-event-slot shrink-0 w-full min-w-0"
-                  aria-live="polite"
-                >
-                  <AnimatePresence initial={false} mode="wait">
-                    {view.log.length > 0 ? (
-                      <motion.p
-                        key={`${view.log.length}-${view.log.at(-1)}`}
-                        className="font-mono text-[9px] sm:text-[10px] text-theme-muted text-center truncate px-1"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.18 }}
-                      >
-                        {view.log.at(-1)}
-                      </motion.p>
-                    ) : (
-                      <p
-                        key="empty-event"
-                        className="font-mono text-[9px] sm:text-[10px] text-transparent text-center truncate px-1 select-none"
-                        aria-hidden
-                      >
-                        —
-                      </p>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ) : null}
-            </div>
-          )}
+            {view.phase === "lobby" ? (
+              <LobbyPlayers view={view} voice={voice} send={send} />
+            ) : (
+              <div className="players-with-action-overlay relative flex flex-1 flex-col gap-1.5 sm:gap-2 min-h-0 min-w-0 overflow-hidden">
+                <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">
+                  PLAYERS
+                </p>
 
-          {view.phase === "lobby" ? (
-            <LobbyPlayers view={view} voice={voice} send={send} />
-          ) : (
-            <div className="players-with-action-overlay relative flex flex-1 flex-col gap-1.5 sm:gap-2 min-h-0 min-w-0 overflow-hidden">
-              <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">
-                PLAYERS
-              </p>
+                {orderedPlayers.length > 0 ? (
+                  playerGridEnabled ? (
+                    <PlayerGridStage>{playerSeats}</PlayerGridStage>
+                  ) : (
+                    <PlayerScrollStage
+                      centerIndex={Math.max(
+                        0,
+                        orderedPlayers.findIndex(
+                          (player) => player.id === view.playerId,
+                        ),
+                      )}
+                    >
+                      {playerSeats}
+                    </PlayerScrollStage>
+                  )
+                ) : null}
 
-              {orderedPlayers.length > 0 ? (
-                playerGridEnabled ? (
-                  <PlayerGridStage>{playerSeats}</PlayerGridStage>
-                ) : (
-                  <PlayerScrollStage
-                    centerIndex={Math.max(
-                      0,
-                      orderedPlayers.findIndex(
-                        (player) => player.id === view.playerId,
-                      ),
-                    )}
-                  >
-                    {playerSeats}
-                  </PlayerScrollStage>
-                )
-              ) : null}
+                {hasActionButtons ? (
+                  <div className="action-buttons-overlay lg:hidden">
+                    {actionButtons}
+                  </div>
+                ) : null}
+              </div>
+            )}
 
-              {hasActionButtons ? (
-                <div className="action-buttons-overlay lg:hidden">
-                  {actionButtons}
-                </div>
-              ) : null}
-            </div>
-          )}
-
-          {view.phase === "lobby" ? (
-            <div className="shrink-0 lg:hidden mt-auto pt-4 sm:pt-5">
-              {actionButtons}
-            </div>
-          ) : null}
+            {view.phase === "lobby" ? (
+              <div className="shrink-0 lg:hidden mt-auto pt-4 sm:pt-5">
+                {actionButtons}
+              </div>
+            ) : null}
+          </div>
         </div>
 
-        <aside className="hidden lg:flex flex-col gap-3 lg:sticky lg:top-3 lg:self-start lg:max-h-[calc(100dvh-2.5rem)] lg:min-h-0 min-w-0">
-          {hasActionButtons ? (
-            <div className="shrink-0">{actionButtons}</div>
-          ) : null}
-          <div className="flex flex-col gap-3 flex-1 min-h-0 min-w-0">
-            {gameSidebar}
+        <div className="hidden lg:flex items-center justify-start gap-1.5 min-w-0 w-full lg:col-start-2 lg:row-start-1">
+          {gameSettingsButtons}
+        </div>
+
+        {(hasActionButtons || gameDebugButtons) && (
+          <div className="hidden lg:flex flex-wrap items-center gap-2 min-w-0 lg:col-start-2 lg:row-start-2">
+            {hasActionButtons ? (
+              <div className="shrink-0">{actionButtons}</div>
+            ) : null}
+            {gameDebugButtons}
           </div>
+        )}
+
+        <aside
+          className={`hidden lg:flex flex-col gap-3 min-w-0 lg:col-start-2 lg:row-start-3 ${
+            isLobbyScrollLayout
+              ? "lg:sticky lg:top-3 lg:self-start"
+              : "h-full min-h-0 self-stretch"
+          }`}
+        >
+          {gameSidebarPanels}
         </aside>
       </div>
     </div>
