@@ -76,6 +76,7 @@ import { copyToClipboard } from "@/lib/clipboard";
 import {
   COACH_HINT_IDS,
   type CoachHintId,
+  coachHintForClientMessage,
   isCoachEligiblePhase,
   nextCoachHint,
 } from "@/lib/coach-moments";
@@ -768,7 +769,7 @@ export function GameTable({
   reshuffleFlash,
   discardDrawFlash,
   deckDrawFlash,
-  send,
+  send: dispatch,
 }: GameTableProps) {
   useRehydrateUiPrefs();
   const voice = useThemeVoice();
@@ -790,6 +791,22 @@ export function GameTable({
   const [dismissedCoachHints, setDismissedCoachHints] = useState<
     Set<CoachHintId>
   >(() => new Set());
+  const dismissCoachHint = useCallback((id: CoachHintId) => {
+    setDismissedCoachHints((current) => {
+      if (current.has(id)) return current;
+      const next = new Set(current);
+      next.add(id);
+      return next;
+    });
+  }, []);
+  const send = useCallback(
+    (message: ClientMessage) => {
+      const completed = coachHintForClientMessage(message);
+      if (completed) dismissCoachHint(completed);
+      dispatch(message);
+    },
+    [dismissCoachHint, dispatch],
+  );
   const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
@@ -1545,12 +1562,7 @@ export function GameTable({
         onSkip={markGameSeen}
         onComplete={() => {
           if (!coachHint) return;
-          setDismissedCoachHints((current) => {
-            if (current.has(coachHint)) return current;
-            const next = new Set(current);
-            next.add(coachHint);
-            return next;
-          });
+          dismissCoachHint(coachHint);
         }}
       />
 

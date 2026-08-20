@@ -1,4 +1,4 @@
-import type { GamePhase } from "@/game/types";
+import type { ClientMessage, GamePhase } from "@/game/types";
 
 export const COACH_HINT_IDS = [
   "own-hand",
@@ -60,4 +60,22 @@ export function nextCoachHint(
   }
 
   return null;
+}
+
+/** Map a player action to the coach hint that action completes. */
+export function coachHintForClientMessage(
+  message: ClientMessage,
+): CoachHintId | null {
+  switch (message.type) {
+    case "setup_peek":
+      return "own-hand";
+    case "draw":
+      return message.source === "discard" ? "discard" : "deck";
+    case "snap":
+      return "discard";
+    case "call_cambio":
+      return "call-cambio";
+    default:
+      return null;
+  }
 }

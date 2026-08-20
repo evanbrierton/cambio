@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   type CoachHintId,
   type CoachMoment,
+  coachHintForClientMessage,
   nextCoachHint,
 } from "./coach-moments";
 
@@ -74,5 +75,45 @@ describe("nextCoachHint", () => {
         ["own-hand", "deck", "discard", "call-cambio"],
       ),
     ).toBeNull();
+  });
+});
+
+describe("coachHintForClientMessage", () => {
+  it("completes the matching hint when the player takes that action", () => {
+    expect(coachHintForClientMessage({ type: "setup_peek", slot: 2 })).toBe(
+      "own-hand",
+    );
+    expect(coachHintForClientMessage({ type: "draw", source: "deck" })).toBe(
+      "deck",
+    );
+    expect(coachHintForClientMessage({ type: "draw", source: "discard" })).toBe(
+      "discard",
+    );
+    expect(
+      coachHintForClientMessage({
+        type: "snap",
+        targetPlayerId: "p1",
+        slot: 0,
+      }),
+    ).toBe("discard");
+    expect(coachHintForClientMessage({ type: "call_cambio" })).toBe(
+      "call-cambio",
+    );
+  });
+
+  it("ignores unrelated messages", () => {
+    expect(coachHintForClientMessage({ type: "start_game" })).toBeNull();
+    expect(coachHintForClientMessage({ type: "swap", slot: 0 })).toBeNull();
+  });
+
+  it("does not repeat the deck hint after drawing from the deck", () => {
+    const completed = coachHintForClientMessage({
+      type: "draw",
+      source: "deck",
+    });
+    expect(completed).toBe("deck");
+    expect(hint({ canDraw: true, hasDiscard: true }, ["deck"])).not.toBe(
+      "deck",
+    );
   });
 });
