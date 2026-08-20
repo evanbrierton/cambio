@@ -1982,7 +1982,7 @@ export function GameTable({
           </div>
         </div>
 
-        <div className="hidden lg:flex items-center justify-between gap-1.5 min-w-0 w-full lg:col-start-2 lg:row-start-1">
+        <div className="hidden lg:flex items-center justify-start gap-1.5 min-w-0 w-full lg:col-start-2 lg:row-start-1">
           {gameSettingsButtons}
         </div>
 
