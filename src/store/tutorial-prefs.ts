@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { tutorialPrefsPersistStateSchema } from "@/store/tutorial-prefs-schema";
+import { tutorialPrefsPersistStateSchema } from "./tutorial-prefs-schema";
 
 export const TUTORIAL_PREFS_STORAGE_KEY = "cambio-tutorial-prefs";
 
@@ -25,7 +25,9 @@ const defaultPrefs: TutorialPrefsData = {
   gameSeen: false,
 };
 
-function sanitizePersistedPrefs(persisted: unknown): Partial<TutorialPrefsData> {
+function sanitizePersistedPrefs(
+  persisted: unknown,
+): Partial<TutorialPrefsData> {
   const result = tutorialPrefsPersistStateSchema.safeParse(persisted);
   if (!result.success) return {};
 

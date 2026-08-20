@@ -65,7 +65,10 @@ describe("tutorial prefs store", () => {
       tutorialPrefsModule.TUTORIAL_PREFS_STORAGE_KEY,
     );
     expect(raw).not.toBeNull();
-    expect(parseTutorialPrefsPersistJson(raw!)).toEqual({
+    if (raw === null) {
+      throw new Error("expected tutorial prefs to be persisted");
+    }
+    expect(parseTutorialPrefsPersistJson(raw)).toEqual({
       homeSeen: true,
       gameSeen: true,
     });
