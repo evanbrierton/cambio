@@ -29,6 +29,9 @@ const defaultPrefs: TutorialPrefsData = {
   dismissedCoachHints: [],
 };
 
+/** Session-only; persist rehydrate must not wipe these. */
+let sessionDismissedCoachHints: CoachHintId[] = [];
+
 function sanitizePersistedPrefs(
   persisted: unknown,
 ): Partial<TutorialPrefsData> {
@@ -48,17 +51,20 @@ export const useTutorialStore = create<TutorialPrefsState>()(
       ...defaultPrefs,
       markHomeSeen: () => set({ homeSeen: true }),
       markGameSeen: () => set({ gameSeen: true }),
-      dismissCoachHint: (id) =>
-        set((state) => {
-          if (state.dismissedCoachHints.includes(id)) return state;
-          return {
-            dismissedCoachHints: [...state.dismissedCoachHints, id],
-          };
-        }),
+      dismissCoachHint: (id) => {
+        if (sessionDismissedCoachHints.includes(id)) return;
+        sessionDismissedCoachHints = [...sessionDismissedCoachHints, id];
+        set({ dismissedCoachHints: sessionDismissedCoachHints });
+      },
       replayHomeTutorial: () => set({ homeSeen: false }),
-      replayGameTutorial: () =>
-        set({ gameSeen: false, dismissedCoachHints: [] }),
-      resetAll: () => set({ ...defaultPrefs }),
+      replayGameTutorial: () => {
+        sessionDismissedCoachHints = [];
+        set({ gameSeen: false, dismissedCoachHints: [] });
+      },
+      resetAll: () => {
+        sessionDismissedCoachHints = [];
+        set({ ...defaultPrefs });
+      },
     }),
     {
       name: TUTORIAL_PREFS_STORAGE_KEY,
@@ -67,6 +73,7 @@ export const useTutorialStore = create<TutorialPrefsState>()(
       merge: (persisted, current) => ({
         ...current,
         ...sanitizePersistedPrefs(persisted),
+        dismissedCoachHints: sessionDismissedCoachHints,
       }),
       partialize: (state) => ({
         homeSeen: state.homeSeen,
@@ -76,8 +83,12 @@ export const useTutorialStore = create<TutorialPrefsState>()(
   ),
 );
 
+let tutorialPrefsRehydrated = false;
+
 export function useRehydrateTutorialPrefs(): void {
   useEffect(() => {
+    if (tutorialPrefsRehydrated) return;
+    tutorialPrefsRehydrated = true;
     void useTutorialStore.persist.rehydrate();
   }, []);
 }

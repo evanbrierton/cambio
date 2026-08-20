@@ -81,6 +81,14 @@ describe("tutorial prefs store", () => {
     ).toEqual([]);
   });
 
+  it("does not wipe dismissed coach hints when persist rehydrates", async () => {
+    tutorialPrefsModule.useTutorialStore.getState().dismissCoachHint("deck");
+    await tutorialPrefsModule.useTutorialStore.persist.rehydrate();
+    expect(
+      tutorialPrefsModule.useTutorialStore.getState().dismissedCoachHints,
+    ).toEqual(["deck"]);
+  });
+
   it("persists seen flags across rehydration", async () => {
     tutorialPrefsModule.useTutorialStore.getState().markHomeSeen();
     tutorialPrefsModule.useTutorialStore.getState().markGameSeen();
