@@ -22,8 +22,10 @@ export function useTutorial() {
     useShallow((state) => ({
       homeSeen: state.homeSeen,
       gameSeen: state.gameSeen,
+      dismissedCoachHints: state.dismissedCoachHints,
       markHomeSeen: state.markHomeSeen,
       markGameSeen: state.markGameSeen,
+      dismissCoachHint: state.dismissCoachHint,
       replayHomeTutorial: state.replayHomeTutorial,
       replayGameTutorial: state.replayGameTutorial,
       resetAll: state.resetAll,

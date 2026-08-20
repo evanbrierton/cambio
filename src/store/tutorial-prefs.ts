@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import type { CoachHintId } from "@/lib/coach-moments";
 import { tutorialPrefsPersistStateSchema } from "./tutorial-prefs-schema";
 
 export const TUTORIAL_PREFS_STORAGE_KEY = "cambio-tutorial-prefs";
@@ -10,11 +11,13 @@ export const TUTORIAL_PREFS_STORAGE_KEY = "cambio-tutorial-prefs";
 type TutorialPrefsData = {
   homeSeen: boolean;
   gameSeen: boolean;
+  dismissedCoachHints: CoachHintId[];
 };
 
 type TutorialPrefsState = TutorialPrefsData & {
   markHomeSeen: () => void;
   markGameSeen: () => void;
+  dismissCoachHint: (id: CoachHintId) => void;
   replayHomeTutorial: () => void;
   replayGameTutorial: () => void;
   resetAll: () => void;
@@ -23,6 +26,7 @@ type TutorialPrefsState = TutorialPrefsData & {
 const defaultPrefs: TutorialPrefsData = {
   homeSeen: false,
   gameSeen: false,
+  dismissedCoachHints: [],
 };
 
 function sanitizePersistedPrefs(
@@ -44,9 +48,17 @@ export const useTutorialStore = create<TutorialPrefsState>()(
       ...defaultPrefs,
       markHomeSeen: () => set({ homeSeen: true }),
       markGameSeen: () => set({ gameSeen: true }),
+      dismissCoachHint: (id) =>
+        set((state) => {
+          if (state.dismissedCoachHints.includes(id)) return state;
+          return {
+            dismissedCoachHints: [...state.dismissedCoachHints, id],
+          };
+        }),
       replayHomeTutorial: () => set({ homeSeen: false }),
-      replayGameTutorial: () => set({ gameSeen: false }),
-      resetAll: () => set({ homeSeen: false, gameSeen: false }),
+      replayGameTutorial: () =>
+        set({ gameSeen: false, dismissedCoachHints: [] }),
+      resetAll: () => set({ ...defaultPrefs }),
     }),
     {
       name: TUTORIAL_PREFS_STORAGE_KEY,

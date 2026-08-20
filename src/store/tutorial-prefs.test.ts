@@ -38,6 +38,7 @@ beforeEach(async () => {
   tutorialPrefsModule.useTutorialStore.setState({
     homeSeen: false,
     gameSeen: false,
+    dismissedCoachHints: [],
   });
   await tutorialPrefsModule.useTutorialStore.persist.clearStorage();
 });
@@ -55,6 +56,29 @@ describe("tutorial prefs store", () => {
     expect(tutorialPrefsModule.useTutorialStore.getState().gameSeen).toBe(
       false,
     );
+    expect(
+      tutorialPrefsModule.useTutorialStore.getState().dismissedCoachHints,
+    ).toEqual([]);
+  });
+
+  it("keeps dismissed coach hints in memory without persisting them", async () => {
+    tutorialPrefsModule.useTutorialStore.getState().dismissCoachHint("deck");
+    expect(
+      tutorialPrefsModule.useTutorialStore.getState().dismissedCoachHints,
+    ).toEqual(["deck"]);
+
+    const raw = localStorage.getItem(
+      tutorialPrefsModule.TUTORIAL_PREFS_STORAGE_KEY,
+    );
+    expect(parseTutorialPrefsPersistJson(raw ?? "")).toEqual({
+      homeSeen: false,
+      gameSeen: false,
+    });
+
+    tutorialPrefsModule.useTutorialStore.getState().replayGameTutorial();
+    expect(
+      tutorialPrefsModule.useTutorialStore.getState().dismissedCoachHints,
+    ).toEqual([]);
   });
 
   it("persists seen flags across rehydration", async () => {

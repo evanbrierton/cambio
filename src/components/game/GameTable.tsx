@@ -75,7 +75,6 @@ import { useTutorial } from "@/hooks/useTutorial";
 import { copyToClipboard } from "@/lib/clipboard";
 import {
   COACH_HINT_IDS,
-  type CoachHintId,
   coachHintForClientMessage,
   isCoachEligiblePhase,
   nextCoachHint,
@@ -87,6 +86,7 @@ import {
   nearSquareGridShape,
 } from "@/lib/penalty-grid";
 import type { ThemeVoice } from "@/lib/themes";
+import { useTutorialStore } from "@/store/tutorial-prefs";
 import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 type GameTableProps = {
@@ -787,25 +787,23 @@ export function GameTable({
     toggleChatNotifications,
     toggleEventNotifications,
   } = useUiPrefs();
-  const { hydrated, gameSeen, markGameSeen } = useTutorial();
-  const [dismissedCoachHints, setDismissedCoachHints] = useState<
-    Set<CoachHintId>
-  >(() => new Set());
-  const dismissCoachHint = useCallback((id: CoachHintId) => {
-    setDismissedCoachHints((current) => {
-      if (current.has(id)) return current;
-      const next = new Set(current);
-      next.add(id);
-      return next;
-    });
-  }, []);
+  const { hydrated, gameSeen, markGameSeen, dismissedCoachHints } =
+    useTutorial();
+  const dismissedCoachHintSet = useMemo(
+    () => new Set(dismissedCoachHints),
+    [dismissedCoachHints],
+  );
   const send = useCallback(
     (message: ClientMessage) => {
       const completed = coachHintForClientMessage(message);
-      if (completed) dismissCoachHint(completed);
+      if (completed) {
+        // Call the store directly so React Compiler cannot keep a stale
+        // GameTable setState closure across table re-renders.
+        useTutorialStore.getState().dismissCoachHint(completed);
+      }
       dispatch(message);
     },
-    [dismissCoachHint, dispatch],
+    [dispatch],
   );
   const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
@@ -892,24 +890,24 @@ export function GameTable({
             canCallCambio: view.canCallCambio,
             hasDiscard: Boolean(view.discardTop),
           },
-          dismissedCoachHints,
+          dismissedCoachHintSet,
         )
       : null;
   const coachActive = coachHint !== null;
 
   useEffect(() => {
     if (gameSeen) return;
-    if (dismissedCoachHints.size === COACH_HINT_IDS.length) {
+    if (dismissedCoachHintSet.size === COACH_HINT_IDS.length) {
       markGameSeen();
     }
-  }, [dismissedCoachHints, gameSeen, markGameSeen]);
+  }, [dismissedCoachHintSet, gameSeen, markGameSeen]);
 
   useEffect(() => {
-    if (gameSeen || dismissedCoachHints.size === 0) return;
+    if (gameSeen || dismissedCoachHintSet.size === 0) return;
     if (!isCoachEligiblePhase(view.phase)) {
       markGameSeen();
     }
-  }, [dismissedCoachHints.size, gameSeen, markGameSeen, view.phase]);
+  }, [dismissedCoachHintSet.size, gameSeen, markGameSeen, view.phase]);
 
   const gameToasts = useMemo((): GameToastItem[] => {
     const items: GameToastItem[] = [];
@@ -1562,7 +1560,7 @@ export function GameTable({
         onSkip={markGameSeen}
         onComplete={() => {
           if (!coachHint) return;
-          dismissCoachHint(coachHint);
+          useTutorialStore.getState().dismissCoachHint(coachHint);
         }}
       />
 
