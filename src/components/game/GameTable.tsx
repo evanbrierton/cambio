@@ -77,6 +77,10 @@ import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { useTutorial } from "@/hooks/useTutorial";
 import { copyToClipboard } from "@/lib/clipboard";
 import {
+  debugTutorialLog,
+  inspectTutorialTargets,
+} from "@/lib/debug-tutorial-log";
+import {
   carouselPenaltyColumns,
   carouselPenaltyPosition,
   nearSquareGridPosition,
@@ -860,6 +864,19 @@ export function GameTable({
     snapWindowSeconds,
   );
   const coachActive = hydrated && !gameSeen && isCoachEligiblePhase(view.phase);
+
+  useEffect(() => {
+    // #region agent log
+    debugTutorialLog("B", "GameTable.tsx:coachActive", "coachActive computed", {
+      phase: view.phase,
+      hydrated,
+      gameSeen,
+      coachActive,
+      eligible: isCoachEligiblePhase(view.phase),
+      targets: inspectTutorialTargets(),
+    });
+    // #endregion
+  }, [view.phase, hydrated, gameSeen, coachActive]);
 
   const gameToasts = useMemo((): GameToastItem[] => {
     const items: GameToastItem[] = [];

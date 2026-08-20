@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { debugTutorialLog } from "@/lib/debug-tutorial-log";
 import {
   useRehydrateTutorialPrefs,
   useTutorialStore,
@@ -14,12 +15,25 @@ export function useTutorial() {
   );
 
   useEffect(() => {
+    const alreadyHasHydrated = useTutorialStore.persist.hasHydrated();
+    // #region agent log
+    debugTutorialLog("A", "useTutorial.ts:onFinishHydration", "listener registered", {
+      alreadyHasHydrated,
+      gameSeen: useTutorialStore.getState().gameSeen,
+    });
+    // #endregion
     return useTutorialStore.persist.onFinishHydration(() => {
+      // #region agent log
+      debugTutorialLog("A", "useTutorial.ts:onFinishHydration", "hydration finished callback", {
+        hasHydrated: useTutorialStore.persist.hasHydrated(),
+        gameSeen: useTutorialStore.getState().gameSeen,
+      });
+      // #endregion
       setHydrated(true);
     });
   }, []);
 
-  return useTutorialStore(
+  const snapshot = useTutorialStore(
     useShallow((state) => ({
       hydrated,
       homeSeen: state.homeSeen,
@@ -31,4 +45,18 @@ export function useTutorial() {
       resetAll: state.resetAll,
     })),
   );
+
+  useEffect(() => {
+    // #region agent log
+    debugTutorialLog("F", "useTutorial.ts:snapshot", "hydrated/gameSeen snapshot", {
+      reactHydrated: hydrated,
+      selectorHydrated: snapshot.hydrated,
+      selectorGameSeen: snapshot.gameSeen,
+      storeGameSeen: useTutorialStore.getState().gameSeen,
+      hasHydrated: useTutorialStore.persist.hasHydrated(),
+    });
+    // #endregion
+  }, [hydrated, snapshot.hydrated, snapshot.gameSeen]);
+
+  return snapshot;
 }
