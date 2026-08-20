@@ -101,4 +101,49 @@ describe("tutorial prefs store", () => {
       false,
     );
   });
+
+  it("onFinishHydration does not notify listeners registered after rehydrate", async () => {
+    await tutorialPrefsModule.useTutorialStore.persist.rehydrate();
+    expect(tutorialPrefsModule.useTutorialStore.persist.hasHydrated()).toBe(
+      true,
+    );
+
+    let notified = false;
+    const unsub =
+      tutorialPrefsModule.useTutorialStore.persist.onFinishHydration(() => {
+        notified = true;
+      });
+    expect(notified).toBe(false);
+    unsub();
+  });
+
+  it("onTutorialPrefsHydrated catches up if rehydrate already finished", async () => {
+    await tutorialPrefsModule.useTutorialStore.persist.rehydrate();
+    expect(tutorialPrefsModule.useTutorialStore.persist.hasHydrated()).toBe(
+      true,
+    );
+
+    let notified = 0;
+    const unsub = tutorialPrefsModule.onTutorialPrefsHydrated(() => {
+      notified += 1;
+    });
+    expect(notified).toBe(1);
+    unsub();
+  });
+
+  it("onTutorialPrefsHydrated notifies when rehydrate finishes later", async () => {
+    expect(tutorialPrefsModule.useTutorialStore.persist.hasHydrated()).toBe(
+      false,
+    );
+
+    let notified = 0;
+    const unsub = tutorialPrefsModule.onTutorialPrefsHydrated(() => {
+      notified += 1;
+    });
+    expect(notified).toBe(0);
+
+    await tutorialPrefsModule.useTutorialStore.persist.rehydrate();
+    expect(notified).toBe(1);
+    unsub();
+  });
 });

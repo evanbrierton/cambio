@@ -3,25 +3,23 @@
 import { useEffect, useState } from "react";
 import { useShallow } from "zustand/react/shallow";
 import {
+  onTutorialPrefsHydrated,
   useRehydrateTutorialPrefs,
   useTutorialStore,
 } from "@/store/tutorial-prefs";
 
 export function useTutorial() {
   useRehydrateTutorialPrefs();
-  const [hydrated, setHydrated] = useState(
+  const [hydrated, setHydrated] = useState(() =>
     useTutorialStore.persist.hasHydrated(),
   );
 
   useEffect(() => {
-    return useTutorialStore.persist.onFinishHydration(() => {
-      setHydrated(true);
-    });
+    return onTutorialPrefsHydrated(() => setHydrated(true));
   }, []);
 
-  return useTutorialStore(
+  const prefs = useTutorialStore(
     useShallow((state) => ({
-      hydrated,
       homeSeen: state.homeSeen,
       gameSeen: state.gameSeen,
       markHomeSeen: state.markHomeSeen,
@@ -31,4 +29,6 @@ export function useTutorial() {
       resetAll: state.resetAll,
     })),
   );
+
+  return { hydrated, ...prefs };
 }

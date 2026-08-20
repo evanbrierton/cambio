@@ -69,3 +69,16 @@ export function useRehydrateTutorialPrefs(): void {
     void useTutorialStore.persist.rehydrate();
   }, []);
 }
+
+/**
+ * Subscribe to persist hydration, catching up if rehydrate already finished.
+ * Zustand does not invoke `onFinishHydration` for listeners registered after
+ * `hasHydrated()` is already true (localStorage rehydrate is often sync).
+ */
+export function onTutorialPrefsHydrated(onHydrated: () => void): () => void {
+  const unsubscribe = useTutorialStore.persist.onFinishHydration(onHydrated);
+  if (useTutorialStore.persist.hasHydrated()) {
+    onHydrated();
+  }
+  return unsubscribe;
+}
