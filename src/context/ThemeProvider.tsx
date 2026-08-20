@@ -35,13 +35,17 @@ const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function ThemeContextProvider({
   children,
+  initialTheme,
   initialAppearancePreference,
 }: {
   children: ReactNode;
+  initialTheme: ThemeId;
   initialAppearancePreference: AppearancePreference;
 }) {
   const { theme: nextTheme, setTheme: setNextTheme } = useNextTheme();
-  const theme = nextTheme as ThemeId;
+  const theme = (
+    THEME_IDS.includes(nextTheme as ThemeId) ? nextTheme : initialTheme
+  ) as ThemeId;
   const [appearancePreference, setAppearancePreferenceState] =
     useState<AppearancePreference>(initialAppearancePreference);
   const [resolvedAppearance, setResolvedAppearance] =
@@ -132,6 +136,7 @@ export function ThemeProvider({
       enableColorScheme={false}
     >
       <ThemeContextProvider
+        initialTheme={initialTheme}
         initialAppearancePreference={initialAppearancePreference}
       >
         {children}
