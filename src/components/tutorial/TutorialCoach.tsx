@@ -1,11 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { Joyride, STATUS, type TooltipRenderProps } from "react-joyride";
-import {
-  debugTutorialLog,
-  inspectJoyrideDom,
-} from "@/lib/debug-tutorial-log";
 
 const COACH_STEPS = [
   {
@@ -105,35 +100,6 @@ type TutorialCoachProps = {
 };
 
 export function TutorialCoach({ run, onFinish }: TutorialCoachProps) {
-  const onFinishRef = useRef(onFinish);
-  onFinishRef.current = onFinish;
-
-  useEffect(() => {
-    // #region agent log
-    debugTutorialLog("F", "TutorialCoach.tsx:run", "run prop changed", {
-      run,
-    });
-    // #endregion
-  }, [run]);
-
-  useEffect(() => {
-    if (!run) return;
-    const delays = [0, 100, 500, 2600, 11000];
-    const timers = delays.map((ms) =>
-      window.setTimeout(() => {
-        // #region agent log
-        debugTutorialLog("D", "TutorialCoach.tsx:portal", "joyride DOM inspect", {
-          delayMs: ms,
-          ...inspectJoyrideDom(),
-        });
-        // #endregion
-      }, ms),
-    );
-    return () => {
-      for (const id of timers) window.clearTimeout(id);
-    };
-  }, [run]);
-
   return (
     <Joyride
       run={run}
@@ -162,32 +128,10 @@ export function TutorialCoach({ run, onFinish }: TutorialCoachProps) {
         },
       }}
       onEvent={(data) => {
-        // #region agent log
-        debugTutorialLog("C", "TutorialCoach.tsx:onEvent", "joyride event", {
-          type: data.type,
-          status: data.status,
-          lifecycle: data.lifecycle,
-          index: data.index,
-          waiting: data.waiting,
-          action: data.action,
-          origin: data.origin,
-          error: data.error ? String(data.error) : null,
-          stepTarget:
-            data.step && typeof data.step.target === "string"
-              ? data.step.target
-              : undefined,
-        });
-        // #endregion
         const finished =
           data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED;
         if (finished) {
-          // #region agent log
-          debugTutorialLog("C", "TutorialCoach.tsx:onFinish", "calling onFinish/markGameSeen", {
-            type: data.type,
-            status: data.status,
-          });
-          // #endregion
-          onFinishRef.current();
+          onFinish();
         }
       }}
     />

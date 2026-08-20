@@ -3,7 +3,6 @@
 import { useEffect } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { debugTutorialLog } from "@/lib/debug-tutorial-log";
 import { tutorialPrefsPersistStateSchema } from "./tutorial-prefs-schema";
 
 export const TUTORIAL_PREFS_STORAGE_KEY = "cambio-tutorial-prefs";
@@ -67,21 +66,6 @@ export const useTutorialStore = create<TutorialPrefsState>()(
 
 export function useRehydrateTutorialPrefs(): void {
   useEffect(() => {
-    // #region agent log
-    debugTutorialLog("A", "tutorial-prefs.ts:rehydrate", "rehydrate start", {
-      hasHydrated: useTutorialStore.persist.hasHydrated(),
-      gameSeen: useTutorialStore.getState().gameSeen,
-      homeSeen: useTutorialStore.getState().homeSeen,
-    });
-    // #endregion
-    void useTutorialStore.persist.rehydrate()?.then(() => {
-      // #region agent log
-      debugTutorialLog("A", "tutorial-prefs.ts:rehydrate", "rehydrate done", {
-        hasHydrated: useTutorialStore.persist.hasHydrated(),
-        gameSeen: useTutorialStore.getState().gameSeen,
-        homeSeen: useTutorialStore.getState().homeSeen,
-      });
-      // #endregion
-    });
+    void useTutorialStore.persist.rehydrate();
   }, []);
 }
