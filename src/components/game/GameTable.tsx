@@ -1445,7 +1445,7 @@ export function GameTable({
         onSend={(text) => send({ type: "chat", text })}
       />
 
-      <div className="pixel-border p-3 bg-surface w-full min-w-0 flex flex-col overflow-hidden shrink-0 lg:flex-1 lg:min-h-0">
+      <div className="pixel-border p-3 bg-surface w-full min-w-0 flex flex-col overflow-hidden max-h-35 lg:max-h-none lg:flex-1 lg:min-h-0">
         <p className="font-display text-[8px] text-theme-muted mb-2 shrink-0">
           {voice.gameLog}
         </p>
@@ -1999,7 +1999,7 @@ export function GameTable({
           className={`hidden lg:flex flex-col gap-3 min-w-0 lg:col-start-2 lg:row-start-3 ${
             isLobbyScrollLayout
               ? "lg:sticky lg:top-3 lg:self-start"
-              : "lg:min-h-0"
+              : "h-full min-h-0 self-stretch"
           }`}
         >
           {gameSidebarPanels}
