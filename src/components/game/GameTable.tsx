@@ -37,10 +37,7 @@ import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
 import { ReshuffleOverlay } from "@/components/game/ReshuffleOverlay";
 import { SnapWindowOverlay } from "@/components/game/SnapWindowOverlay";
 import { WaitingScreen } from "@/components/game/WaitingScreen";
-import {
-  isCoachEligiblePhase,
-  TutorialCoach,
-} from "@/components/tutorial/TutorialCoach";
+import { TutorialCoach } from "@/components/tutorial/TutorialCoach";
 import {
   GameToast,
   type GameToastItem,
@@ -76,6 +73,12 @@ import { useSeatHandFit } from "@/hooks/useSeatHandFit";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { useTutorial } from "@/hooks/useTutorial";
 import { copyToClipboard } from "@/lib/clipboard";
+import {
+  COACH_HINT_IDS,
+  type CoachHintId,
+  isCoachEligiblePhase,
+  nextCoachHint,
+} from "@/lib/coach-moments";
 import {
   carouselPenaltyColumns,
   carouselPenaltyPosition,
@@ -784,6 +787,9 @@ export function GameTable({
     toggleEventNotifications,
   } = useUiPrefs();
   const { hydrated, gameSeen, markGameSeen } = useTutorial();
+  const [dismissedCoachHints, setDismissedCoachHints] = useState<
+    Set<CoachHintId>
+  >(() => new Set());
   const debugEnabled = useDebugEnabled();
   const [selectedSwapCard, setSelectedSwapCard] = useState<SelectedCard | null>(
     null,
@@ -859,7 +865,34 @@ export function GameTable({
     selectedSwapCard,
     snapWindowSeconds,
   );
-  const coachActive = hydrated && !gameSeen && isCoachEligiblePhase(view.phase);
+  const coachHint =
+    hydrated && !gameSeen
+      ? nextCoachHint(
+          {
+            phase: view.phase,
+            canDraw: view.canDraw,
+            canSnap: view.canSnap,
+            canCallCambio: view.canCallCambio,
+            hasDiscard: Boolean(view.discardTop),
+          },
+          dismissedCoachHints,
+        )
+      : null;
+  const coachActive = coachHint !== null;
+
+  useEffect(() => {
+    if (gameSeen) return;
+    if (dismissedCoachHints.size === COACH_HINT_IDS.length) {
+      markGameSeen();
+    }
+  }, [dismissedCoachHints, gameSeen, markGameSeen]);
+
+  useEffect(() => {
+    if (gameSeen || dismissedCoachHints.size === 0) return;
+    if (!isCoachEligiblePhase(view.phase)) {
+      markGameSeen();
+    }
+  }, [dismissedCoachHints.size, gameSeen, markGameSeen, view.phase]);
 
   const gameToasts = useMemo((): GameToastItem[] => {
     const items: GameToastItem[] = [];
@@ -1314,6 +1347,7 @@ export function GameTable({
   const callCambioChip = view.canCallCambio ? (
     <button
       type="button"
+      data-tutorial="call-cambio"
       onClick={() => send({ type: "call_cambio" })}
       className="table-cambio-chip chip-btn"
     >
@@ -1499,7 +1533,20 @@ export function GameTable({
         seconds={snapWindowSeconds}
         voice={voice}
       />
-      <TutorialCoach run={coachActive} onFinish={markGameSeen} />
+      <TutorialCoach
+        key={coachHint ?? "idle"}
+        hintId={coachHint}
+        onSkip={markGameSeen}
+        onComplete={() => {
+          if (!coachHint) return;
+          setDismissedCoachHints((current) => {
+            if (current.has(coachHint)) return current;
+            const next = new Set(current);
+            next.add(coachHint);
+            return next;
+          });
+        }}
+      />
 
       {settingsOpen && (
         <div className="lg:hidden fixed inset-0 z-90">
@@ -1851,10 +1898,7 @@ export function GameTable({
                 </div>
 
                 {playerGridEnabled ? (
-                  <div
-                    data-tutorial="call-cambio"
-                    className="table-grid-context shrink-0 w-full min-w-0"
-                  >
+                  <div className="table-grid-context shrink-0 w-full min-w-0">
                     {showDrawnActionChrome ? (
                       view.canDiscardDrawn ? (
                         <button
@@ -1884,7 +1928,6 @@ export function GameTable({
 
                 {!playerGridEnabled ? (
                   <div
-                    data-tutorial="call-cambio"
                     data-table-chrome
                     className="table-action-chrome table-chrome-slot flex items-center justify-center shrink-0"
                   >

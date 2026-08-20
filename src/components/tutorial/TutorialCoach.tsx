@@ -1,47 +1,58 @@
 "use client";
 
+import { useRef } from "react";
 import { Joyride, STATUS, type TooltipRenderProps } from "react-joyride";
+import { type CoachHintId, isCoachEligiblePhase } from "@/lib/coach-moments";
 
-const COACH_STEPS = [
+export type { CoachHintId };
+export { isCoachEligiblePhase };
+
+const COACH_STEPS: Record<
+  CoachHintId,
   {
+    target: string;
+    title: string;
+    content: string;
+    skipBeacon: boolean;
+    placement: "top" | "bottom";
+  }
+> = {
+  "own-hand": {
     target: '[data-tutorial="own-hand"]',
     title: "Your hand",
     content:
       "These four face-down cards are yours. At setup, peek at two of them once — then rely on memory.",
     skipBeacon: true,
-    placement: "top" as const,
+    placement: "top",
   },
-  {
+  deck: {
     target: '[data-tutorial="deck"]',
     title: "Draw from the deck",
     content:
       "On your turn, draw from the deck or discard pile. From the deck you can swap or discard to trigger abilities.",
     skipBeacon: true,
-    placement: "bottom" as const,
+    placement: "bottom",
   },
-  {
+  discard: {
     target: '[data-tutorial="discard"]',
     title: "Discard pile & snap",
     content:
       "Cards land here face up. If you hold a matching rank, snap anytime to discard another card — wrong snaps cost a penalty.",
     skipBeacon: true,
-    placement: "bottom" as const,
+    placement: "bottom",
   },
-  {
+  "call-cambio": {
     target: '[data-tutorial="call-cambio"]',
     title: 'Call "Cambio"',
     content:
       "Happy with your hand? Call Cambio at the start of your turn before drawing. Everyone gets one last turn, then scores reveal.",
     skipBeacon: true,
-    placement: "top" as const,
+    placement: "top",
   },
-];
+};
 
 function CoachTooltip({
-  backProps,
   closeProps,
-  index,
-  isLastStep,
   primaryProps,
   skipProps,
   step,
@@ -63,15 +74,6 @@ function CoachTooltip({
         {step.content}
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {index > 0 ? (
-          <button
-            type="button"
-            {...backProps}
-            className={`${btnClass} btn-secondary`}
-          >
-            Back
-          </button>
-        ) : null}
         <button
           type="button"
           {...skipProps}
@@ -84,7 +86,7 @@ function CoachTooltip({
           {...primaryProps}
           className={`${btnClass} btn-primary ml-auto`}
         >
-          {isLastStep ? "Got it" : "Next"}
+          Got it
         </button>
         <button type="button" {...closeProps} className="sr-only">
           Close coach
@@ -95,22 +97,30 @@ function CoachTooltip({
 }
 
 type TutorialCoachProps = {
-  run: boolean;
-  onFinish: () => void;
+  hintId: CoachHintId | null;
+  onSkip: () => void;
+  onComplete: () => void;
 };
 
-export function TutorialCoach({ run, onFinish }: TutorialCoachProps) {
+export function TutorialCoach({
+  hintId,
+  onSkip,
+  onComplete,
+}: TutorialCoachProps) {
+  const settledRef = useRef(false);
+  const step = hintId ? COACH_STEPS[hintId] : null;
+
   return (
     <Joyride
-      run={run}
-      steps={COACH_STEPS}
+      key={hintId ?? "idle"}
+      run={step !== null}
+      steps={step ? [step] : []}
       continuous
       scrollToFirstStep
       tooltipComponent={CoachTooltip}
       locale={{
-        back: "Back",
         last: "Got it",
-        next: "Next",
+        next: "Got it",
         skip: "Skip",
       }}
       options={{
@@ -128,21 +138,17 @@ export function TutorialCoach({ run, onFinish }: TutorialCoachProps) {
         },
       }}
       onEvent={(data) => {
-        const finished =
-          data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED;
-        if (finished) {
-          onFinish();
+        if (settledRef.current) return;
+        if (data.status === STATUS.SKIPPED) {
+          settledRef.current = true;
+          onSkip();
+          return;
+        }
+        if (data.status === STATUS.FINISHED) {
+          settledRef.current = true;
+          onComplete();
         }
       }}
     />
-  );
-}
-
-export function isCoachEligiblePhase(phase: string): boolean {
-  return (
-    phase !== "lobby" &&
-    phase !== "ended" &&
-    phase !== "revealed" &&
-    phase !== "waiting"
   );
 }
