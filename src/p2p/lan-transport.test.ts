@@ -6,9 +6,9 @@ import {
   createLanHostRelay,
   deserializeClientMessage,
   deserializeServerMessage,
+  type LanSocketLike,
   serializeClientMessage,
   serializeServerMessage,
-  type LanSocketLike,
 } from "./lan-transport";
 import type { LanTransportEvent } from "./types";
 
@@ -156,7 +156,9 @@ describe("lan-transport", () => {
     expect(
       guestEvents.some(
         (event) =>
-          event.type === "server_message" && event.message.message === "host-msg",
+          event.type === "server_message" &&
+          event.message.type === "error" &&
+          event.message.message === "host-msg",
       ),
     ).toBe(true);
 

@@ -9,11 +9,11 @@ import {
   DEFAULT_HEARTBEAT_INTERVAL_MS,
   DEFAULT_HEARTBEAT_TIMEOUT_MS,
   DEFAULT_LAN_PORT,
-  MAX_HEARTBEAT_INTERVAL_MS,
-  MIN_HEARTBEAT_INTERVAL_MS,
   type LanDisconnectReason,
   type LanSessionConfig,
   type LanTransportEventHandler,
+  MAX_HEARTBEAT_INTERVAL_MS,
+  MIN_HEARTBEAT_INTERVAL_MS,
 } from "./types";
 
 const READY_STATE_OPEN = 1;
@@ -29,7 +29,10 @@ export interface LanSocketLike {
   send(data: string): void;
   close(code?: number, reason?: string): void;
   addEventListener(type: SocketEventName, listener: SocketEventListener): void;
-  removeEventListener(type: SocketEventName, listener: SocketEventListener): void;
+  removeEventListener(
+    type: SocketEventName,
+    listener: SocketEventListener,
+  ): void;
 }
 
 export type LanWebSocketFactory = (url: string) => LanSocketLike;
@@ -304,7 +307,11 @@ export class LanHostRelay {
       if (connection.socket.readyState === READY_STATE_OPEN) {
         connection.socket.send(serializeWireFrame({ kind: "host_closing" }));
       }
-      closeSocketSafely(connection.socket, CLOSE_CODE_SERVICE_RESTART, "host_closed");
+      closeSocketSafely(
+        connection.socket,
+        CLOSE_CODE_SERVICE_RESTART,
+        "host_closed",
+      );
       this.guests.delete(clientId);
       this.onEvent?.({
         type: "disconnected",
@@ -373,10 +380,14 @@ export class LanGuestTransport {
   private listeners: SocketListenerSet | null = null;
   private heartbeatIntervalTimer: ReturnType<typeof setInterval> | null = null;
   private heartbeatDeadlineTimer: ReturnType<typeof setTimeout> | null = null;
+  private awaitingPong = false;
   private disconnected = false;
   private hostClosed = false;
 
-  constructor(config: LanSessionConfig, options: LanGuestTransportOptions = {}) {
+  constructor(
+    config: LanSessionConfig,
+    options: LanGuestTransportOptions = {},
+  ) {
     this.config = resolveConfig(config);
     this.onEvent = options.onEvent;
     this.webSocketFactory = options.webSocketFactory ?? defaultWebSocketFactory;
@@ -430,6 +441,7 @@ export class LanGuestTransport {
       }
 
       if (frame.kind === "pong") {
+        this.awaitingPong = false;
         this.clearHeartbeatDeadline();
         return;
       }
@@ -460,7 +472,8 @@ export class LanGuestTransport {
   }
 
   send(message: ClientMessage): boolean {
-    if (!this.socket || this.socket.readyState !== READY_STATE_OPEN) return false;
+    if (!this.socket || this.socket.readyState !== READY_STATE_OPEN)
+      return false;
     this.sendFrame({ kind: "client", message });
     return true;
   }
@@ -492,11 +505,14 @@ export class LanGuestTransport {
 
   private sendHeartbeatPing(): void {
     if (!this.socket || this.socket.readyState !== READY_STATE_OPEN) return;
+    if (!this.awaitingPong) {
+      this.awaitingPong = true;
+      this.clearHeartbeatDeadline();
+      this.heartbeatDeadlineTimer = setTimeout(() => {
+        this.disconnectWithReason("heartbeat_timeout");
+      }, this.config.heartbeatTimeoutMs);
+    }
     this.sendFrame({ kind: "ping" });
-    this.clearHeartbeatDeadline();
-    this.heartbeatDeadlineTimer = setTimeout(() => {
-      this.disconnectWithReason("heartbeat_timeout");
-    }, this.config.heartbeatTimeoutMs);
   }
 
   private clearHeartbeatDeadline(): void {
@@ -511,6 +527,7 @@ export class LanGuestTransport {
   ): void {
     if (this.disconnected) return;
     this.disconnected = true;
+    this.awaitingPong = false;
     this.stopHeartbeat();
 
     if (this.socket && this.listeners) {
