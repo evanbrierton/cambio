@@ -99,6 +99,7 @@ describe("wire-schema server messages", () => {
       hasDrawnCard: false,
       canCallCambio: false,
       canDraw: false,
+      canDrawFromDeck: false,
       canSwap: false,
       canDiscardDrawn: false,
       canSnap: false,

@@ -1,4 +1,5 @@
 import { abilityForDiscard, cardPoints, cardsSnapMatch } from "./cards";
+import { canDrawFromDeck } from "./engine";
 import type {
   BotDifficulty,
   Card,
@@ -155,6 +156,7 @@ function isSnapEligible(state: GameState): boolean {
 
 function canAttemptSnap(state: GameState): boolean {
   if (state.discard.length === 0) return false;
+  if (!canDrawFromDeck(state)) return false;
   return isSnapEligible(state) || state.phase === "snap_window";
 }
 
@@ -685,7 +687,14 @@ function decideTurn(
     if (state.phase !== "playing" && state.phase !== "cambio_final")
       return null;
 
-    if (isSmart(difficulty) && state.discard.length > 0) {
+    const deckDrawable = canDrawFromDeck(state);
+    const discardDrawable = state.discard.length > 0;
+
+    if (!deckDrawable && discardDrawable) {
+      return { type: "draw", source: "discard" };
+    }
+
+    if (isSmart(difficulty) && discardDrawable) {
       const top = state.discard[state.discard.length - 1];
       const worst = worstKnownSlot(state, botId, knowledge, difficulty);
       const worstPts = estimateSlotPoints(
@@ -704,7 +713,15 @@ function decideTurn(
       }
     }
 
-    return { type: "draw", source: "deck" };
+    if (deckDrawable) {
+      return { type: "draw", source: "deck" };
+    }
+
+    if (discardDrawable) {
+      return { type: "draw", source: "discard" };
+    }
+
+    return null;
   }
 
   if (state.drawnCard && !state.drawnFromDiscard) {

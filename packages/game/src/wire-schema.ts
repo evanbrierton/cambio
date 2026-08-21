@@ -131,6 +131,7 @@ const playerViewSchema = z.object({
   hasDrawnCard: z.boolean(),
   canCallCambio: z.boolean(),
   canDraw: z.boolean(),
+  canDrawFromDeck: z.boolean(),
   canSwap: z.boolean(),
   canDiscardDrawn: z.boolean(),
   canSnap: z.boolean(),
