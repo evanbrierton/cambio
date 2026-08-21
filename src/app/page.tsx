@@ -1,8 +1,10 @@
 "use client";
 
 import { customAlphabet } from "nanoid";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { TutorialModal } from "@/components/tutorial/TutorialModal";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ThemePicker } from "@/components/ui/ThemePicker";
 import type { BotDifficulty } from "@/game/types";
@@ -17,6 +19,8 @@ export default function HomePage() {
   const voice = useThemeVoice();
   useRehydrateUiPrefs();
   const [joinCode, setJoinCode] = useState("");
+  const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
 
   const {
     playerName: name,
@@ -35,6 +39,11 @@ export default function HomePage() {
     setPlayerName(trimmedName);
     const params = new URLSearchParams({ name: trimmedName, [mode]: "1" });
     router.push(`/play/${code}?${params.toString()}`);
+  };
+
+  const openTutorial = () => {
+    setTutorialStep(0);
+    setTutorialOpen(true);
   };
 
   const goToSolo = () => {
@@ -180,10 +189,29 @@ export default function HomePage() {
 
         <ThemePicker />
 
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <RetroButton variant="secondary" onClick={openTutorial}>
+            How to play
+          </RetroButton>
+          <Link
+            href="/rules"
+            className="font-display text-[10px] text-accent hover:text-accent-soft transition-colors"
+          >
+            Full rules
+          </Link>
+        </div>
+
         <p className="font-display text-[8px] text-theme-muted">
           {voice.footer}
         </p>
       </div>
+
+      <TutorialModal
+        open={tutorialOpen}
+        stepIndex={tutorialStep}
+        onStepIndexChange={setTutorialStep}
+        onClose={() => setTutorialOpen(false)}
+      />
     </div>
   );
 }
