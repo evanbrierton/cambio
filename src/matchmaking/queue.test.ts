@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   assignPlayer,
   cancelAssignment,
+  closeLobby,
   createMatchmakingQueueState,
   normalizeMatchConfig,
 } from "./queue";
@@ -51,5 +52,36 @@ describe("matchmaking queue", () => {
     cancelAssignment(state, "p1");
     const next = assignPlayer(state, "p3", config, 3000);
     expect(next.roomId).toBe(first.roomId);
+  });
+
+  it("does not double-count the same playerId in a lobby", () => {
+    const state = createMatchmakingQueueState();
+    const config = normalizeMatchConfig(2, true);
+    const first = assignPlayer(state, "p1", config, 1000);
+    const again = assignPlayer(state, "p1", config, 1100);
+    expect(again.roomId).toBe(first.roomId);
+
+    const key = Object.keys(state.buckets)[0];
+    expect(state.buckets[key][0].assignedCount).toBe(1);
+
+    const second = assignPlayer(state, "p2", config, 1200);
+    expect(second.roomId).toBe(first.roomId);
+    expect(state.buckets[key][0].assignedCount).toBe(2);
+
+    const third = assignPlayer(state, "p3", config, 1300);
+    expect(third.roomId).not.toBe(first.roomId);
+  });
+
+  it("stops seating into a lobby after closeLobby", () => {
+    const state = createMatchmakingQueueState();
+    const config = normalizeMatchConfig(4, true);
+    const first = assignPlayer(state, "p1", config, 1000);
+    assignPlayer(state, "p2", config, 1100);
+    closeLobby(state, first.roomId);
+
+    const next = assignPlayer(state, "p3", config, 1200);
+    expect(next.roomId).not.toBe(first.roomId);
+    expect(state.assignments.p1).toBeUndefined();
+    expect(state.assignments.p2).toBeUndefined();
   });
 });
