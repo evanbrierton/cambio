@@ -2578,6 +2578,11 @@ html.native-shell [data-pwa-install] {
   transform-style: preserve-3d;
 }
 
+.players-grid-scroll > .grid {
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
 .players-grid-item {
   transform-style: preserve-3d;
   transition:
