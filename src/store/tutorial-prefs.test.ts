@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { TUTORIAL_DISMISS_REASON, TUTORIAL_STAGE } from "../lib/tutorial";
 import { parseTutorialPrefsPersistJson } from "./tutorial-prefs-schema";
 
 function createMemoryStorage(): Storage {
@@ -111,6 +112,80 @@ describe("tutorial prefs store", () => {
 
     expect(reloaded.useTutorialStore.getState().homeSeen).toBe(true);
     expect(reloaded.useTutorialStore.getState().gameSeen).toBe(true);
+  });
+
+  it("marks landing-modal stage seen for skip, finish, and escape dismiss", () => {
+    tutorialPrefsModule.useTutorialStore
+      .getState()
+      .markStageSeenFromDismiss(
+        TUTORIAL_STAGE.LANDING_MODAL,
+        TUTORIAL_DISMISS_REASON.SKIP,
+      );
+    expect(tutorialPrefsModule.useTutorialStore.getState().homeSeen).toBe(true);
+    expect(tutorialPrefsModule.useTutorialStore.getState().gameSeen).toBe(
+      false,
+    );
+
+    tutorialPrefsModule.useTutorialStore.getState().resetAll();
+    tutorialPrefsModule.useTutorialStore
+      .getState()
+      .markStageSeenFromDismiss(
+        TUTORIAL_STAGE.LANDING_MODAL,
+        TUTORIAL_DISMISS_REASON.FINISH,
+      );
+    expect(tutorialPrefsModule.useTutorialStore.getState().homeSeen).toBe(true);
+    expect(tutorialPrefsModule.useTutorialStore.getState().gameSeen).toBe(
+      false,
+    );
+
+    tutorialPrefsModule.useTutorialStore.getState().resetAll();
+    tutorialPrefsModule.useTutorialStore
+      .getState()
+      .markStageSeenFromDismiss(
+        TUTORIAL_STAGE.LANDING_MODAL,
+        TUTORIAL_DISMISS_REASON.ESCAPE,
+      );
+    expect(tutorialPrefsModule.useTutorialStore.getState().homeSeen).toBe(true);
+    expect(tutorialPrefsModule.useTutorialStore.getState().gameSeen).toBe(
+      false,
+    );
+  });
+
+  it("marks in-game coach stage seen for skip, finish, and escape dismiss", () => {
+    tutorialPrefsModule.useTutorialStore
+      .getState()
+      .markStageSeenFromDismiss(
+        TUTORIAL_STAGE.IN_GAME_COACH,
+        TUTORIAL_DISMISS_REASON.SKIP,
+      );
+    expect(tutorialPrefsModule.useTutorialStore.getState().homeSeen).toBe(
+      false,
+    );
+    expect(tutorialPrefsModule.useTutorialStore.getState().gameSeen).toBe(true);
+
+    tutorialPrefsModule.useTutorialStore.getState().resetAll();
+    tutorialPrefsModule.useTutorialStore
+      .getState()
+      .markStageSeenFromDismiss(
+        TUTORIAL_STAGE.IN_GAME_COACH,
+        TUTORIAL_DISMISS_REASON.FINISH,
+      );
+    expect(tutorialPrefsModule.useTutorialStore.getState().homeSeen).toBe(
+      false,
+    );
+    expect(tutorialPrefsModule.useTutorialStore.getState().gameSeen).toBe(true);
+
+    tutorialPrefsModule.useTutorialStore.getState().resetAll();
+    tutorialPrefsModule.useTutorialStore
+      .getState()
+      .markStageSeenFromDismiss(
+        TUTORIAL_STAGE.IN_GAME_COACH,
+        TUTORIAL_DISMISS_REASON.ESCAPE,
+      );
+    expect(tutorialPrefsModule.useTutorialStore.getState().homeSeen).toBe(
+      false,
+    );
+    expect(tutorialPrefsModule.useTutorialStore.getState().gameSeen).toBe(true);
   });
 
   it("reset clears seen flags", async () => {
