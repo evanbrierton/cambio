@@ -2522,7 +2522,6 @@ html.native-shell [data-pwa-install] {
 }
 
 .swipe-leave-root {
-  position: relative;
   isolation: isolate;
   touch-action: pan-y;
 }
