@@ -41,6 +41,12 @@ function playingState(): GameState {
     slot(card("4", "hearts")),
     slot(card("5", "hearts")),
   ];
+  state.deck = [
+    card("A", "diamonds"),
+    card("2", "diamonds"),
+    card("3", "diamonds"),
+    card("4", "diamonds"),
+  ];
   return state;
 }
 
@@ -759,22 +765,34 @@ describe("set_card_points (CAM-64)", () => {
 });
 
 describe("snap penalty softlock guards (CAM-95)", () => {
-  it("rejects wrong snaps when no penalty card can be dealt", () => {
+  it("blocks all snap attempts when no penalty card can be dealt", () => {
     const state = playingState();
     state.deck = [];
     state.discard = [card("9", "spades")];
     state.snapEligibleTopCardId = state.discard[0].id;
 
-    const result = handleMessage(state, "alice", {
+    const view = buildPlayerView(state, "alice");
+    expect(view.canSnap).toBe(false);
+
+    const wrong = handleMessage(state, "alice", {
       type: "snap",
       targetPlayerId: "alice",
       slot: 0,
     });
-
-    expect(result.error).toBe("Wrong snap! No cards left for a penalty.");
-    expect(result.penaltyFlash).toBeUndefined();
+    expect(wrong.error).toBe("Cannot snap — no cards left for a penalty.");
+    expect(wrong.penaltyFlash).toBeUndefined();
     expect(state.players[0].penaltyCount).toBe(0);
     expect(state.players[0].hand[0].card?.rank).toBe("2");
+
+    state.players[0].hand[0] = slot(card("9", "hearts"));
+    const matching = handleMessage(state, "alice", {
+      type: "snap",
+      targetPlayerId: "alice",
+      slot: 0,
+    });
+    expect(matching.error).toBe("Cannot snap — no cards left for a penalty.");
+    expect(state.players[0].hand[0].card?.rank).toBe("9");
+    expect(state.discard).toHaveLength(1);
   });
 
   it("blocks empty-slot discard swaps that would leave both piles empty", () => {

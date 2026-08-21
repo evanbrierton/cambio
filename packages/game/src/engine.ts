@@ -462,6 +462,7 @@ function tryAutoCallCambioForEmptyHand(
 
 function canAttemptSnap(state: GameState): boolean {
   if (state.discard.length === 0) return false;
+  if (!canDrawFromDeck(state)) return false;
   return isSnapEligible(state) || state.phase === "snap_window";
 }
 
@@ -1174,6 +1175,9 @@ export function handleMessage(
       if (isSnapResolutionPending(state)) {
         return { error: "Another player is resolving a snap." };
       }
+      if (!canDrawFromDeck(state)) {
+        return { error: "Cannot snap — no cards left for a penalty." };
+      }
       if (!canPlayerSnap(state, playerId)) {
         return { error: "No snap available right now." };
       }
@@ -1222,11 +1226,7 @@ export function handleMessage(
       if (!cardsSnapMatch(handCard, top)) {
         const penaltyResult = addPenalty(state, playerId);
         if (!penaltyResult) {
-          addLog(
-            state,
-            `${player.name} snapped wrong, but no cards remain for a penalty.`,
-          );
-          return { error: "Wrong snap! No cards left for a penalty." };
+          return { error: "Cannot snap — no cards left for a penalty." };
         }
         if (message.targetPlayerId !== playerId) {
           addLog(

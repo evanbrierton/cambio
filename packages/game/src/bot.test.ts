@@ -70,4 +70,22 @@ describe("bot discard draw fallback (CAM-95)", () => {
     const action = decideBotAction(state, "bot-1", new BotKnowledge());
     expect(action).toEqual({ type: "draw", source: "deck" });
   });
+
+  it("does not attempt snaps when no penalty card can be dealt", () => {
+    const state = botPlayingState("medium");
+    state.deck = [];
+    state.discard = [card("2", "diamonds")];
+    state.snapEligibleTopCardId = state.discard[0].id;
+    state.drawnCard = null;
+    state.pendingAbility = null;
+    state.turnStarted = false;
+    state.players[1].hand[0] = slot(card("2", "hearts"));
+
+    const knowledge = new BotKnowledge();
+    knowledge.remember("bot-1", 0, card("2", "hearts"));
+
+    const action = decideBotAction(state, "bot-1", knowledge);
+    expect(action).toEqual({ type: "draw", source: "discard" });
+    expect(action).not.toMatchObject({ type: "snap" });
+  });
 });

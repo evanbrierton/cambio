@@ -156,6 +156,7 @@ function isSnapEligible(state: GameState): boolean {
 
 function canAttemptSnap(state: GameState): boolean {
   if (state.discard.length === 0) return false;
+  if (!canDrawFromDeck(state)) return false;
   return isSnapEligible(state) || state.phase === "snap_window";
 }
 
