@@ -56,7 +56,13 @@ export function SwipeToLeave({
 
   const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (!enabled) return;
-    if (event.pointerType !== "touch") return;
+    if (
+      event.pointerType === "mouse" &&
+      typeof window !== "undefined" &&
+      window.matchMedia("(min-width: 1024px)").matches
+    ) {
+      return;
+    }
     const edgeWidth = edgeRef.current?.offsetWidth ?? 28;
     if (!isFromLeaveEdge(event.clientX, edgeWidth)) return;
     trackingRef.current = true;
