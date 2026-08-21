@@ -4,7 +4,10 @@ import {
   cancelAssignment,
   closeLobby,
   createMatchmakingQueueState,
+  listLobby,
+  lobbyHasFreeSeat,
   normalizeMatchConfig,
+  updateLobbySeats,
 } from "./queue";
 
 describe("matchmaking queue", () => {
@@ -83,5 +86,41 @@ describe("matchmaking queue", () => {
     expect(next.roomId).not.toBe(first.roomId);
     expect(state.assignments.p1).toBeUndefined();
     expect(state.assignments.p2).toBeUndefined();
+  });
+
+  it("lists a host-created public lobby and accounts for bots in free seats", () => {
+    const state = createMatchmakingQueueState();
+    const lobby = listLobby(state, {
+      roomId: "abc123",
+      targetSize: 4,
+      fillWithBots: true,
+      humanCount: 1,
+      botCount: 2,
+      createdAt: 1000,
+    });
+    expect(lobby.roomId).toBe("abc123");
+    expect(lobby.assignedCount).toBe(1);
+    expect(lobby.botCount).toBe(2);
+    expect(lobbyHasFreeSeat(lobby)).toBe(true);
+
+    const seated = assignPlayer(
+      state,
+      "stranger",
+      normalizeMatchConfig(4, true),
+      2000,
+    );
+    expect(seated.roomId).toBe("abc123");
+
+    updateLobbySeats(state, "abc123", 2, 2);
+    const key = Object.keys(state.buckets)[0];
+    expect(lobbyHasFreeSeat(state.buckets[key][0])).toBe(false);
+
+    const overflow = assignPlayer(
+      state,
+      "other",
+      normalizeMatchConfig(4, true),
+      3000,
+    );
+    expect(overflow.roomId).not.toBe("abc123");
   });
 });

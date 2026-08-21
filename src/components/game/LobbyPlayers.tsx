@@ -50,20 +50,27 @@ type LobbyPlayersProps = {
   view: PlayerView;
   voice: ThemeVoice;
   send: (message: ClientMessage) => void;
+  lanEndpoint?: string | null;
 };
 
-export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
+export function LobbyPlayers({
+  view,
+  voice,
+  send,
+  lanEndpoint,
+}: LobbyPlayersProps) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const me = view.players.find((player) => player.id === view.playerId);
   const readyCount = view.players.filter(
     (player) => (player.connected || player.isBot) && !player.isWaiting,
   ).length;
-  const lobbyLabel = view.isMatchmade
-    ? voice.matchmadeLobby
-    : view.isSoloMode
-      ? voice.soloMode
+  const isPublic = view.network === "online" && view.visibility === "public";
+  const lobbyLabel = isPublic
+    ? voice.publicLobby
+    : view.network === "nearby"
+      ? voice.networkNearby
       : voice.playersInLobby;
-  const lobbyCountLabel = view.isMatchmade
+  const lobbyCountLabel = isPublic
     ? voice.matchFillStatus(view.matchHumanCount, view.matchTargetSize)
     : `${readyCount}/${MAX_PLAYERS}`;
 
@@ -78,9 +85,21 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
         </p>
       </div>
 
-      {view.isMatchmade && view.matchStartingSoon ? (
+      {isPublic && view.matchStartingSoon ? (
         <p className="font-display text-[8px] text-theme-muted text-center animate-pulse">
           {voice.matchStartingSoon}
+        </p>
+      ) : null}
+
+      {view.network === "nearby" && lanEndpoint ? (
+        <p className="font-display text-[8px] text-theme-muted text-center normal-case tracking-normal">
+          {voice.nearbyEndpointLabel}: {lanEndpoint}
+        </p>
+      ) : null}
+
+      {view.network === "nearby" && me?.isHost ? (
+        <p className="font-display text-[8px] text-theme-muted text-center normal-case tracking-normal">
+          {voice.nearbyKeepAwake}
         </p>
       ) : null}
 
@@ -125,21 +144,18 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                       {voice.waitingBadge}
                     </span>
                   )}
-                  {view.isSoloMode &&
-                    me?.isHost &&
-                    player.isBot &&
-                    view.canAddBot && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          hapticClick("selection");
-                          send({ type: "remove_bot", playerId: player.id });
-                        }}
-                        className="ui-badge text-theme-muted hover:text-accent transition-colors"
-                      >
-                        {voice.removeBot}
-                      </button>
-                    )}
+                  {me?.isHost && player.isBot && view.canAddBot && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        hapticClick("selection");
+                        send({ type: "remove_bot", playerId: player.id });
+                      }}
+                      className="ui-badge text-theme-muted hover:text-accent transition-colors"
+                    >
+                      {voice.removeBot}
+                    </button>
+                  )}
                 </div>
               </motion.li>
             );
@@ -164,7 +180,10 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
             type="button"
             onClick={() => {
               hapticClick("selection");
-              send({ type: "add_bot" });
+              send({
+                type: "add_bot",
+                difficulty: view.botDifficulty ?? undefined,
+              });
             }}
             className="mt-3 w-full chip-btn text-[10px] py-2 border-theme-muted text-theme hover:border-accent transition-colors"
           >
@@ -203,7 +222,105 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                 transition={{ duration: 0.2, ease: "easeInOut" }}
                 className="overflow-hidden"
               >
-                <div className="pt-2">
+                <div className="pt-2 space-y-2">
+                  {view.canSetLobbySettings ? (
+                    <>
+                      <div className="flex items-center justify-between gap-3 px-1">
+                        <span className="font-display text-[10px] text-theme-muted">
+                          {voice.networkLabel}
+                        </span>
+                        <select
+                          value={view.network}
+                          onChange={(e) => {
+                            hapticClick("selection");
+                            send({
+                              type: "set_network",
+                              network: e.target.value as "online" | "nearby",
+                            });
+                          }}
+                          className={LOBBY_SETTING_SELECT_CLASS}
+                        >
+                          <option value="online">{voice.networkOnline}</option>
+                          <option value="nearby">{voice.networkNearby}</option>
+                        </select>
+                      </div>
+                      {view.network === "online" ? (
+                        <div className="flex items-center justify-between gap-3 px-1">
+                          <span className="font-display text-[10px] text-theme-muted">
+                            {voice.visibilityLabel}
+                          </span>
+                          <select
+                            value={view.visibility}
+                            onChange={(e) => {
+                              hapticClick("selection");
+                              send({
+                                type: "set_visibility",
+                                visibility: e.target.value as
+                                  | "private"
+                                  | "public",
+                              });
+                            }}
+                            className={LOBBY_SETTING_SELECT_CLASS}
+                          >
+                            <option value="private">
+                              {voice.visibilityPrivate}
+                            </option>
+                            <option value="public">
+                              {voice.visibilityPublic}
+                            </option>
+                          </select>
+                        </div>
+                      ) : null}
+                      {isPublic ? (
+                        <>
+                          <div className="flex items-center justify-between gap-3 px-1">
+                            <span className="font-display text-[10px] text-theme-muted">
+                              {voice.matchPlayersLabel}
+                            </span>
+                            <select
+                              value={view.matchTargetSize}
+                              onChange={(e) => {
+                                hapticClick("selection");
+                                send({
+                                  type: "set_match_config",
+                                  targetSize: Number(e.target.value),
+                                });
+                              }}
+                              className={LOBBY_SETTING_SELECT_CLASS}
+                            >
+                              {[2, 3, 4, 5, 6].map((size) => (
+                                <option key={size} value={size}>
+                                  {size}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div className="flex items-center justify-between gap-3 px-1">
+                            <span className="font-display text-[10px] text-theme-muted">
+                              {voice.matchFillWithBotsLabel}
+                            </span>
+                            <select
+                              value={view.matchFillWithBots ? "1" : "0"}
+                              onChange={(e) => {
+                                hapticClick("selection");
+                                send({
+                                  type: "set_match_config",
+                                  fillWithBots: e.target.value === "1",
+                                });
+                              }}
+                              className={LOBBY_SETTING_SELECT_CLASS}
+                            >
+                              <option value="1">{voice.matchFillBotsOn}</option>
+                              <option value="0">
+                                {voice.matchFillBotsOff}
+                              </option>
+                            </select>
+                          </div>
+                        </>
+                      ) : null}
+                    </>
+                  ) : null}
+
                   <div className="flex items-center justify-between gap-3 px-1">
                     <span className="font-display text-[10px] text-theme-muted">
                       {voice.jokerCountLabel}
@@ -275,7 +392,7 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
           </AnimatePresence>
         </div>
 
-        {!view.isMatchmade && !view.canStartGame && !me?.isHost ? (
+        {!isPublic && !view.canStartGame && !me?.isHost ? (
           <p className="font-display text-[10px] text-theme-muted text-center mt-4 animate-pulse">
             {voice.waitingForHost}
           </p>

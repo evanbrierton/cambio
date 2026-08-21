@@ -1,6 +1,5 @@
 "use client";
 
-import { hapticClick } from "@cambio/client";
 import { customAlphabet } from "nanoid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,8 +7,6 @@ import { useState } from "react";
 import { TutorialModal } from "@/components/tutorial/TutorialModal";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { ThemePicker } from "@/components/ui/ThemePicker";
-import type { BotDifficulty } from "@/game/types";
-import { MAX_BOT_COUNT, MIN_BOT_COUNT } from "@/game/types";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
@@ -20,17 +17,12 @@ export default function HomePage() {
   const voice = useThemeVoice();
   useRehydrateUiPrefs();
   const [joinCode, setJoinCode] = useState("");
+  const [nearbyEndpoint, setNearbyEndpoint] = useState("");
+  const [nearbyOpen, setNearbyOpen] = useState(false);
   const [tutorialOpen, setTutorialOpen] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
 
-  const {
-    playerName: name,
-    setPlayerName,
-    botCount,
-    setBotCount,
-    botDifficulty: difficulty,
-    setBotDifficulty,
-  } = useUiPrefs();
+  const { playerName: name, setPlayerName } = useUiPrefs();
 
   const trimmedName = name.trim();
   const hasName = trimmedName.length > 0;
@@ -42,25 +34,37 @@ export default function HomePage() {
     router.push(`/play/${code}?${params.toString()}`);
   };
 
-  const openTutorial = () => {
-    setTutorialStep(0);
-    setTutorialOpen(true);
-  };
-
-  const goToSolo = () => {
+  const goToNearbyHost = () => {
     if (!hasName) return;
     setPlayerName(trimmedName);
     const params = new URLSearchParams({
       name: trimmedName,
       host: "1",
-      solo: "1",
-      bots: String(botCount),
-      difficulty,
+      network: "nearby",
     });
     router.push(`/play/${roomCode()}?${params.toString()}`);
   };
 
-  const goToMatch = () => {
+  const goToNearbyJoin = () => {
+    if (!hasName || joinCode.trim().length < 4 || !nearbyEndpoint.trim()) {
+      return;
+    }
+    setPlayerName(trimmedName);
+    const params = new URLSearchParams({
+      name: trimmedName,
+      join: "1",
+      network: "nearby",
+      endpoint: nearbyEndpoint.trim(),
+    });
+    router.push(`/play/${joinCode.trim()}?${params.toString()}`);
+  };
+
+  const openTutorial = () => {
+    setTutorialStep(0);
+    setTutorialOpen(true);
+  };
+
+  const goToFindPublic = () => {
     if (!hasName) return;
     setPlayerName(trimmedName);
     router.push("/match");
@@ -100,16 +104,7 @@ export default function HomePage() {
             disabled={!hasName}
             onClick={() => goToRoom(roomCode(), "host")}
           >
-            {voice.createGame}
-          </RetroButton>
-
-          <RetroButton
-            className="w-full"
-            variant="secondary"
-            disabled={!hasName}
-            onClick={goToMatch}
-          >
-            {voice.findMatch}
+            {voice.createLobby}
           </RetroButton>
 
           <div className="flex gap-2 items-end">
@@ -133,63 +128,63 @@ export default function HomePage() {
               {voice.join}
             </RetroButton>
           </div>
+
+          <button
+            type="button"
+            disabled={!hasName}
+            onClick={goToFindPublic}
+            className="w-full font-display text-[10px] text-accent hover:text-accent-soft transition-colors disabled:opacity-40"
+          >
+            {voice.findPublicGame}
+          </button>
         </div>
 
-        <div className="pixel-border p-6 space-y-4 bg-surface-elevated text-left">
-          <p className="font-display text-[10px] text-theme-muted">
-            {voice.soloMode}
-          </p>
-
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block">
-              <span className="font-display text-[10px] text-theme-muted">
-                {voice.botCountLabel}
-              </span>
-              <select
-                value={botCount}
-                onChange={(e) => {
-                  hapticClick("selection");
-                  setBotCount(Number(e.target.value));
-                }}
-                className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
-              >
-                {Array.from(
-                  { length: MAX_BOT_COUNT - MIN_BOT_COUNT + 1 },
-                  (_, index) => MIN_BOT_COUNT + index,
-                ).map((count) => (
-                  <option key={count} value={count}>
-                    {count}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="block">
-              <span className="font-display text-[10px] text-theme-muted">
-                {voice.difficultyLabel}
-              </span>
-              <select
-                value={difficulty}
-                onChange={(e) => {
-                  hapticClick("selection");
-                  setBotDifficulty(e.target.value as BotDifficulty);
-                }}
-                className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
-              >
-                <option value="easy">{voice.difficultyEasy}</option>
-                <option value="medium">{voice.difficultyMedium}</option>
-                <option value="hard">{voice.difficultyHard}</option>
-              </select>
-            </label>
-          </div>
-
-          <RetroButton
-            className="w-full"
-            disabled={!hasName}
-            onClick={goToSolo}
+        <div className="pixel-border p-4 space-y-3 bg-surface-elevated text-left">
+          <button
+            type="button"
+            className="w-full flex items-center justify-between font-display text-[10px] text-theme-muted"
+            onClick={() => setNearbyOpen((open) => !open)}
           >
-            {voice.playVsBots}
-          </RetroButton>
+            <span>{voice.networkNearby}</span>
+            <span>{nearbyOpen ? "−" : "+"}</span>
+          </button>
+
+          {nearbyOpen ? (
+            <div className="space-y-3">
+              <RetroButton
+                className="w-full"
+                variant="secondary"
+                disabled={!hasName}
+                onClick={goToNearbyHost}
+              >
+                {voice.nearbyHost}
+              </RetroButton>
+              <label className="block">
+                <span className="font-display text-[10px] text-theme-muted">
+                  {voice.nearbyEndpointLabel}
+                </span>
+                <input
+                  value={nearbyEndpoint}
+                  onChange={(e) => setNearbyEndpoint(e.target.value)}
+                  placeholder="192.168.1.10:9876"
+                  className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
+                />
+              </label>
+              <RetroButton
+                className="w-full"
+                variant="secondary"
+                disabled={
+                  !hasName || joinCode.length < 4 || !nearbyEndpoint.trim()
+                }
+                onClick={goToNearbyJoin}
+              >
+                {voice.nearbyJoin}
+              </RetroButton>
+              <p className="font-display text-[8px] text-theme-muted normal-case tracking-normal">
+                {voice.nearbyKeepAwake}
+              </p>
+            </div>
+          ) : null}
         </div>
 
         <ThemePicker />

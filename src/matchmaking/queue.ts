@@ -14,7 +14,10 @@ const roomIdAlphabet = customAlphabet(
 
 export type OpenLobby = {
   roomId: string;
+  /** Humans assigned via matchmaking (and synced from the game room). */
   assignedCount: number;
+  /** Bots already seated in the game lobby. */
+  botCount: number;
   targetSize: number;
   fillWithBots: boolean;
   createdAt: number;
@@ -50,6 +53,14 @@ function sortedLobbies(lobbies: OpenLobby[]): OpenLobby[] {
   return [...lobbies].sort((a, b) => a.createdAt - b.createdAt);
 }
 
+export function lobbyFilledSeats(lobby: OpenLobby): number {
+  return lobby.assignedCount + lobby.botCount;
+}
+
+export function lobbyHasFreeSeat(lobby: OpenLobby): boolean {
+  return lobbyFilledSeats(lobby) < lobby.targetSize;
+}
+
 export function assignPlayer(
   state: MatchmakingQueueState,
   playerId: string,
@@ -73,9 +84,7 @@ export function assignPlayer(
 
   const key = bucketKey(config);
   const lobbies = state.buckets[key] ?? [];
-  const open = sortedLobbies(lobbies).find(
-    (lobby) => lobby.assignedCount < lobby.targetSize,
-  );
+  const open = sortedLobbies(lobbies).find((lobby) => lobbyHasFreeSeat(lobby));
 
   if (open) {
     open.assignedCount += 1;
@@ -91,6 +100,7 @@ export function assignPlayer(
   const lobby: OpenLobby = {
     roomId,
     assignedCount: 1,
+    botCount: 0,
     targetSize: config.targetSize,
     fillWithBots: config.fillWithBots,
     createdAt: now,
@@ -141,4 +151,73 @@ export function closeLobby(
     }
   }
   return closed;
+}
+
+export type ListLobbyParams = {
+  roomId: string;
+  targetSize: number;
+  fillWithBots: boolean;
+  humanCount: number;
+  botCount: number;
+  createdAt?: number;
+};
+
+/**
+ * List or refresh a public lobby created from a game room (visibility flip).
+ * Seat counts come from the authoritative game lobby.
+ */
+export function listLobby(
+  state: MatchmakingQueueState,
+  params: ListLobbyParams,
+): OpenLobby {
+  const config = normalizeMatchConfig(params.targetSize, params.fillWithBots);
+  const key = bucketKey(config);
+  const humanCount = Math.max(0, Math.round(params.humanCount));
+  const botCount = Math.max(0, Math.round(params.botCount));
+
+  // Drop from other buckets if config changed.
+  for (const [bucket, lobbies] of Object.entries(state.buckets)) {
+    if (bucket === key) continue;
+    state.buckets[bucket] = lobbies.filter(
+      (lobby) => lobby.roomId !== params.roomId,
+    );
+  }
+
+  const lobbies = state.buckets[key] ?? [];
+  const existing = lobbies.find((lobby) => lobby.roomId === params.roomId);
+  if (existing) {
+    existing.assignedCount = humanCount;
+    existing.botCount = botCount;
+    existing.targetSize = config.targetSize;
+    existing.fillWithBots = config.fillWithBots;
+    return existing;
+  }
+
+  const lobby: OpenLobby = {
+    roomId: params.roomId,
+    assignedCount: humanCount,
+    botCount,
+    targetSize: config.targetSize,
+    fillWithBots: config.fillWithBots,
+    createdAt: params.createdAt ?? Date.now(),
+  };
+  state.buckets[key] = [...lobbies, lobby];
+  return lobby;
+}
+
+/** Sync seat counts for an already-listed public lobby. */
+export function updateLobbySeats(
+  state: MatchmakingQueueState,
+  roomId: string,
+  humanCount: number,
+  botCount: number,
+): OpenLobby | null {
+  for (const lobbies of Object.values(state.buckets)) {
+    const lobby = lobbies.find((entry) => entry.roomId === roomId);
+    if (!lobby) continue;
+    lobby.assignedCount = Math.max(0, Math.round(humanCount));
+    lobby.botCount = Math.max(0, Math.round(botCount));
+    return lobby;
+  }
+  return null;
 }

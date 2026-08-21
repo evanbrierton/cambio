@@ -9,8 +9,11 @@ import {
   cancelAssignment,
   closeLobby,
   createMatchmakingQueueState,
+  listLobby,
   type MatchmakingQueueState,
   normalizeMatchConfig,
+  type OpenLobby,
+  updateLobbySeats,
 } from "../src/matchmaking/queue";
 import type {
   MatchmakingClientMessage,
@@ -35,13 +38,29 @@ function parseClientMessage(raw: string): MatchmakingClientMessage | null {
   }
 }
 
+function migrateQueueState(
+  saved: MatchmakingQueueState,
+): MatchmakingQueueState {
+  const buckets: Record<string, OpenLobby[]> = {};
+  for (const [key, lobbies] of Object.entries(saved.buckets ?? {})) {
+    buckets[key] = lobbies.map((lobby) => ({
+      ...lobby,
+      botCount: lobby.botCount ?? 0,
+    }));
+  }
+  return {
+    buckets,
+    assignments: saved.assignments ?? {},
+  };
+}
+
 export class MatchmakingParty extends Server<Env> {
   private queue: MatchmakingQueueState = createMatchmakingQueueState();
 
   async onStart() {
     const saved = await this.ctx.storage.get<MatchmakingQueueState>("queue");
     if (saved) {
-      this.queue = saved;
+      this.queue = migrateQueueState(saved);
     }
   }
 
@@ -56,17 +75,23 @@ export class MatchmakingParty extends Server<Env> {
     connection.send(JSON.stringify(message));
   }
 
-  /** HTTP from game rooms: POST /close-lobby { roomId } */
+  /** HTTP from game rooms: POST /close-lobby | /list-lobby | /update-lobby-seats */
   async onRequest(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    if (request.method === "POST" && url.pathname.endsWith("/close-lobby")) {
-      let roomId = "";
-      try {
-        const body = (await request.json()) as { roomId?: string };
-        roomId = body.roomId?.trim() ?? "";
-      } catch {
-        return Response.json({ error: "Invalid body." }, { status: 400 });
-      }
+    if (request.method !== "POST") {
+      return new Response("Not Found", { status: 404 });
+    }
+
+    let body: Record<string, unknown> = {};
+    try {
+      body = (await request.json()) as Record<string, unknown>;
+    } catch {
+      return Response.json({ error: "Invalid body." }, { status: 400 });
+    }
+
+    const roomId = typeof body.roomId === "string" ? body.roomId.trim() : "";
+
+    if (url.pathname.endsWith("/close-lobby")) {
       if (!roomId) {
         return Response.json({ error: "roomId required." }, { status: 400 });
       }
@@ -74,6 +99,40 @@ export class MatchmakingParty extends Server<Env> {
       await this.persistQueue();
       return Response.json({ closed });
     }
+
+    if (url.pathname.endsWith("/list-lobby")) {
+      if (!roomId) {
+        return Response.json({ error: "roomId required." }, { status: 400 });
+      }
+      const config = normalizeMatchConfig(
+        typeof body.targetSize === "number" ? body.targetSize : undefined,
+        typeof body.fillWithBots === "boolean" ? body.fillWithBots : undefined,
+      );
+      const lobby = listLobby(this.queue, {
+        roomId,
+        targetSize: config.targetSize,
+        fillWithBots: config.fillWithBots,
+        humanCount: typeof body.humanCount === "number" ? body.humanCount : 1,
+        botCount: typeof body.botCount === "number" ? body.botCount : 0,
+      });
+      await this.persistQueue();
+      return Response.json({ lobby });
+    }
+
+    if (url.pathname.endsWith("/update-lobby-seats")) {
+      if (!roomId) {
+        return Response.json({ error: "roomId required." }, { status: 400 });
+      }
+      const lobby = updateLobbySeats(
+        this.queue,
+        roomId,
+        typeof body.humanCount === "number" ? body.humanCount : 0,
+        typeof body.botCount === "number" ? body.botCount : 0,
+      );
+      await this.persistQueue();
+      return Response.json({ lobby });
+    }
+
     return new Response("Not Found", { status: 404 });
   }
 

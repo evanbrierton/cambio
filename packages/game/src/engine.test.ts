@@ -835,3 +835,54 @@ describe("snap penalty softlock guards (CAM-95)", () => {
     expect(view.discardTop?.rank).toBe("Q");
   });
 });
+
+describe("unified lobby", () => {
+  it("allows host to add and remove bots in a private lobby", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    expect(state.network).toBe("online");
+    expect(state.visibility).toBe("private");
+
+    const added = handleMessage(state, "alice", {
+      type: "add_bot",
+      difficulty: "medium",
+    });
+    expect(added).toEqual({});
+    expect(state.players).toHaveLength(2);
+    expect(state.players[1].isBot).toBe(true);
+
+    const view = buildPlayerView(state, "alice");
+    expect(view.canAddBot).toBe(true);
+    expect(view.canStartGame).toBe(true);
+
+    const botId = state.players[1].id;
+    const removed = handleMessage(state, "alice", {
+      type: "remove_bot",
+      playerId: botId,
+    });
+    expect(removed).toEqual({});
+    expect(state.players).toHaveLength(1);
+  });
+
+  it("blocks host Start on public lobbies and rejects nearby public", () => {
+    const state = createRoom("room-1", "Alice", "alice");
+    handleMessage(state, "alice", { type: "add_bot" });
+    handleMessage(state, "alice", { type: "set_visibility", visibility: "public" });
+    expect(state.visibility).toBe("public");
+
+    const start = handleMessage(state, "alice", { type: "start_game" });
+    expect(start.error).toBe("Public lobbies start automatically.");
+
+    const publicView = buildPlayerView(state, "alice");
+    expect(publicView.canStartGame).toBe(false);
+
+    handleMessage(state, "alice", { type: "set_network", network: "nearby" });
+    expect(state.network).toBe("nearby");
+    expect(state.visibility).toBe("private");
+
+    const nearbyPublic = handleMessage(state, "alice", {
+      type: "set_visibility",
+      visibility: "public",
+    });
+    expect(nearbyPublic.error).toBe("Nearby lobbies cannot be public.");
+  });
+});

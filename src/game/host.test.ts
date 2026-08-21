@@ -55,8 +55,7 @@ describe("GameHost", () => {
     const result = await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: false,
-      botCount: 1,
+      seedBotCount: 0,
       difficulty: "easy",
     });
 
@@ -74,8 +73,7 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: false,
-      botCount: 1,
+      seedBotCount: 0,
       difficulty: "easy",
     });
     const hostId = host.getState()?.hostId ?? "";
@@ -85,8 +83,7 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Bob",
-      isSolo: false,
-      botCount: 1,
+      seedBotCount: 0,
       difficulty: "easy",
     });
     const bobId =
@@ -145,8 +142,7 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: false,
-      botCount: 1,
+      seedBotCount: 0,
       difficulty: "easy",
     });
     const playerId = host.getState()?.hostId ?? "";
@@ -164,8 +160,7 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: false,
-      botCount: 1,
+      seedBotCount: 0,
       difficulty: "easy",
     });
     const originalId = host.getState()?.hostId ?? "";
@@ -181,13 +176,12 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: true,
-      botCount: 1,
+      seedBotCount: 1,
       difficulty: "easy",
     });
 
     const gameState = host.getState();
-    expect(gameState?.isSoloMode).toBe(true);
+    expect(gameState?.visibility).toBe("private");
     expect(gameState?.players.some((p) => p.isBot)).toBe(true);
 
     if (gameState) {
@@ -210,25 +204,25 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 2,
       matchFillWithBots: true,
     });
 
     const firstState = host.getState();
-    expect(firstState?.isMatchmade).toBe(true);
+    expect(firstState?.visibility).toBe("public");
     expect(firstState?.phase).toBe("lobby");
 
     await host.handleConnect({
       queryPlayerId: null,
       name: "Bob",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
     });
 
     const started = host.getState();
@@ -242,30 +236,30 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 2,
       matchFillWithBots: true,
     });
     await host.handleConnect({
       queryPlayerId: null,
       name: "Bob",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
     });
     expect(host.getState()?.phase).toBe("setup_peek");
 
     const late = await host.handleConnect({
       queryPlayerId: null,
       name: "Carol",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 2,
       matchFillWithBots: true,
     });
@@ -282,10 +276,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -296,10 +290,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Bob",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -332,10 +326,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: "bob-id",
       name: "Bob",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -348,10 +342,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: bobId,
       name: "Bob",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -375,10 +369,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: "alice-id",
       name: "Alice",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -400,10 +394,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -414,10 +408,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: "bob-id",
       name: "Bob",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -433,8 +427,7 @@ describe("GameHost", () => {
     const reconnect = await host.handleConnect({
       queryPlayerId: bobId,
       name: "Bob",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
     });
 
@@ -449,10 +442,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -463,10 +456,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: "bob-id",
       name: "Bob",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -482,10 +475,10 @@ describe("GameHost", () => {
     const rematch = await host.handleConnect({
       queryPlayerId: bobId,
       name: "Bob",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -502,10 +495,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alice",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 2,
       matchFillWithBots: true,
     });
@@ -514,8 +507,7 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Bob",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
     });
     const bobId =
@@ -537,7 +529,8 @@ describe("GameHost", () => {
   it("purges stale away humans when restoring a matchmade lobby", async () => {
     const { host } = createTestHost();
     const state = createRoom("stale-room", "Alice", "alice");
-    state.isMatchmade = true;
+    state.network = "online";
+    state.visibility = "public";
     state.matchTargetSize = 4;
     state.players.push({
       id: "ghost",
@@ -565,10 +558,10 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alex",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
-      isMatchmade: true,
+      network: "online",
+      visibility: "public",
       matchTargetSize: 4,
       matchFillWithBots: true,
     });
@@ -576,8 +569,7 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alex",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
     });
 
@@ -590,16 +582,14 @@ describe("GameHost", () => {
     await host.handleConnect({
       queryPlayerId: null,
       name: "Alex",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
     });
 
     const second = await host.handleConnect({
       queryPlayerId: null,
       name: "Alex",
-      isSolo: false,
-      botCount: 0,
+      seedBotCount: 0,
       difficulty: "easy",
     });
 

@@ -294,6 +294,11 @@ export class LanHostRelay {
     }
   }
 
+  sendToClient(clientId: string, message: ServerMessage): void {
+    if (this.closed) return;
+    this.sendToGuest(clientId, { kind: "server", message });
+  }
+
   close(): void {
     if (this.closed) return;
     this.closed = true;

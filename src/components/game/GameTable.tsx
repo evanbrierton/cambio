@@ -112,6 +112,7 @@ type GameTableProps = {
   discardDrawFlash: DiscardDrawFlash | null;
   deckDrawFlash: DeckDrawFlash | null;
   send: (message: ClientMessage) => void;
+  lanEndpoint?: string | null;
 };
 
 type SelectedCard = { playerId: string; slot: number };
@@ -778,6 +779,7 @@ export function GameTable({
   discardDrawFlash,
   deckDrawFlash,
   send: dispatch,
+  lanEndpoint = null,
 }: GameTableProps) {
   useRehydrateUiPrefs();
   const voice = useThemeVoice();
@@ -2139,7 +2141,12 @@ export function GameTable({
             )}
 
             {view.phase === "lobby" ? (
-              <LobbyPlayers view={view} voice={voice} send={send} />
+              <LobbyPlayers
+                view={view}
+                voice={voice}
+                send={send}
+                lanEndpoint={lanEndpoint}
+              />
             ) : (
               <div className="players-with-action-overlay relative flex flex-1 flex-col gap-1.5 sm:gap-2 min-h-0 min-w-0 overflow-hidden">
                 <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">

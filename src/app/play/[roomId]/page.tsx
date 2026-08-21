@@ -4,13 +4,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect, useMemo, useState } from "react";
 import { GameTable } from "@/components/game/GameTable";
 import type { PlayerView } from "@/game/types";
-import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "@/game/types";
 import {
-  type MatchOptions,
+  parseBotDifficulty,
+  parseLobbyNetwork,
+  parseLobbyVisibility,
+} from "@/game/types";
+import {
+  type LobbyConnectOptions,
   type SessionMode,
-  type SoloOptions,
   useGameConnection,
 } from "@/hooks/useGameConnection";
+import { useP2PConnection } from "@/hooks/useP2PConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
 
@@ -35,37 +39,45 @@ export default function PlayPage({
   const debugEnabled = hasDebugQueryParam(searchParams);
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
-  const isSolo = searchParams.get("solo") === "1";
-  const isMatchmade = searchParams.get("match") === "1";
-  const soloBotCount =
-    Number.parseInt(
-      searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
-      10,
-    ) || DEFAULT_BOT_COUNT;
-  const soloDifficulty = parseBotDifficulty(searchParams.get("difficulty"));
+  const network = parseLobbyNetwork(
+    searchParams.get("network") ??
+      (searchParams.get("mode") === "local" ? "nearby" : null),
+  );
+  const visibility =
+    searchParams.get("match") === "1"
+      ? ("public" as const)
+      : parseLobbyVisibility(searchParams.get("visibility"));
+  const seedBotCount =
+    Number.parseInt(searchParams.get("bots") ?? "0", 10) || 0;
+  const difficulty = parseBotDifficulty(searchParams.get("difficulty"));
   const matchTargetSize =
     Number.parseInt(searchParams.get("targetSize") ?? "4", 10) || 4;
   const matchFillWithBots = searchParams.get("fillWithBots") !== "0";
+  const nearbyEndpoint = searchParams.get("endpoint") ?? undefined;
+  const isNearby = network === "nearby";
+  const isNearbyHost = isNearby && searchParams.has("host");
 
-  const soloOptions: SoloOptions | undefined = useMemo(
+  const lobbyOptions: LobbyConnectOptions | undefined = useMemo(
     () =>
-      isSolo && isNavFresh
-        ? {
-            botCount: soloBotCount,
-            difficulty: soloDifficulty,
-          }
-        : undefined,
-    [isSolo, isNavFresh, soloBotCount, soloDifficulty],
-  );
-  const matchOptions: MatchOptions | undefined = useMemo(
-    () =>
-      isMatchmade
-        ? {
+      isNearby
+        ? undefined
+        : {
+            network: "online",
+            visibility,
+            seedBotCount: isNavFresh ? seedBotCount : 0,
+            difficulty,
             targetSize: matchTargetSize,
             fillWithBots: matchFillWithBots,
-          }
-        : undefined,
-    [isMatchmade, matchTargetSize, matchFillWithBots],
+          },
+    [
+      isNearby,
+      visibility,
+      isNavFresh,
+      seedBotCount,
+      difficulty,
+      matchTargetSize,
+      matchFillWithBots,
+    ],
   );
 
   useEffect(() => {
@@ -73,6 +85,23 @@ export default function PlayPage({
       router.replace("/");
     }
   }, [isNavFresh, name, router]);
+
+  const online = useGameConnection(
+    roomId,
+    name,
+    sessionMode,
+    lobbyOptions,
+    debugEnabled,
+    !isNearby,
+  );
+
+  const nearby = useP2PConnection(roomId, name, {
+    enabled: isNearby,
+    role: isNearbyHost ? "host" : "guest",
+    endpoint: nearbyEndpoint,
+    seedBotCount: isNavFresh ? seedBotCount : 0,
+    difficulty,
+  });
 
   const {
     connected,
@@ -89,32 +118,32 @@ export default function PlayPage({
     discardDrawFlash,
     deckDrawFlash,
     send,
-  } = useGameConnection(
-    roomId,
-    name,
-    sessionMode,
-    soloOptions,
-    debugEnabled,
-    matchOptions,
-  );
+  } = isNearby ? nearby : online;
+
+  const lanEndpoint = isNearby ? nearby.lanEndpoint : null;
 
   const [showConnecting, setShowConnecting] = useState(false);
 
   useEffect(() => {
     if (!view || !isNavFresh) return;
     const params = new URLSearchParams({ name });
-    // Keep host/join so sessionMode does not flip and reconnect the socket.
     if (searchParams.has("host")) params.set("host", "1");
     if (searchParams.has("join")) params.set("join", "1");
-    if (isMatchmade) {
-      params.set("match", "1");
-      params.set("targetSize", String(matchTargetSize));
-      params.set("fillWithBots", matchFillWithBots ? "1" : "0");
-    }
-    if (isSolo) {
-      params.set("solo", "1");
-      params.set("bots", String(soloBotCount));
-      params.set("difficulty", soloDifficulty);
+    if (isNearby) {
+      params.set("network", "nearby");
+      if (nearbyEndpoint) params.set("endpoint", nearbyEndpoint);
+    } else {
+      params.set("network", "online");
+      params.set("visibility", visibility);
+      if (visibility === "public") {
+        params.set("match", "1");
+        params.set("targetSize", String(matchTargetSize));
+        params.set("fillWithBots", matchFillWithBots ? "1" : "0");
+      }
+      if (seedBotCount > 0) {
+        params.set("bots", String(seedBotCount));
+        params.set("difficulty", difficulty);
+      }
     }
     if (debugEnabled) appendDebugQueryParam(params);
     const next = params.toString();
@@ -125,12 +154,13 @@ export default function PlayPage({
     debugEnabled,
     view,
     isNavFresh,
-    isMatchmade,
-    isSolo,
+    isNearby,
+    visibility,
     matchTargetSize,
     matchFillWithBots,
-    soloBotCount,
-    soloDifficulty,
+    seedBotCount,
+    difficulty,
+    nearbyEndpoint,
     name,
     roomId,
     router,
@@ -200,6 +230,7 @@ export default function PlayPage({
         discardDrawFlash={discardDrawFlash}
         deckDrawFlash={deckDrawFlash}
         send={send}
+        lanEndpoint={lanEndpoint}
       />
     </div>
   );

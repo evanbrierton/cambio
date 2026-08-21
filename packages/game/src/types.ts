@@ -61,10 +61,29 @@ export type PendingAbility = {
 
 export type BotDifficulty = "easy" | "medium" | "hard";
 
+export type LobbyNetwork = "online" | "nearby";
+export type LobbyVisibility = "private" | "public";
+
 export function parseBotDifficulty(value: string | null): BotDifficulty {
   if (value === "hard") return "hard";
   if (value === "medium") return "medium";
   return "easy";
+}
+
+export function parseLobbyNetwork(value: string | null): LobbyNetwork {
+  return value === "nearby" || value === "local" ? "nearby" : "online";
+}
+
+export function parseLobbyVisibility(value: string | null): LobbyVisibility {
+  return value === "public" ? "public" : "private";
+}
+
+/** Online public lobbies use auto-start; private and nearby use host Start. */
+export function isPublicLobby(state: {
+  network: LobbyNetwork;
+  visibility: LobbyVisibility;
+}): boolean {
+  return state.network === "online" && state.visibility === "public";
 }
 
 export const DEFAULT_BOT_COUNT = 2;
@@ -132,12 +151,12 @@ export type PlayerState = {
 export type GameState = {
   roomId: string;
   phase: GamePhase;
-  isSoloMode: boolean;
-  isMatchmade: boolean;
+  network: LobbyNetwork;
+  visibility: LobbyVisibility;
   matchTargetSize: number;
   matchFillWithBots: boolean;
   matchSoftStartAt: number | null;
-  soloDifficulty: BotDifficulty | null;
+  botDifficulty: BotDifficulty | null;
   jokerCount: number;
   cardPoints: CardPointValues;
   hostId: string;
@@ -208,6 +227,13 @@ export type ClientMessage =
   | { type: "show_results" }
   | { type: "add_bot"; difficulty?: BotDifficulty }
   | { type: "remove_bot"; playerId: string }
+  | { type: "set_network"; network: LobbyNetwork }
+  | { type: "set_visibility"; visibility: LobbyVisibility }
+  | {
+      type: "set_match_config";
+      targetSize?: number;
+      fillWithBots?: boolean;
+    }
   | { type: "set_joker_count"; count: number }
   | {
       type: "set_card_points";
@@ -278,13 +304,15 @@ export type PlayerView = {
   winnerIds: string[];
   scores: Record<string, number> | null;
   snapWindowEndsAt: number | null;
-  isSoloMode: boolean;
-  isMatchmade: boolean;
+  network: LobbyNetwork;
+  visibility: LobbyVisibility;
   matchTargetSize: number;
   matchFillWithBots: boolean;
   matchHumanCount: number;
   matchStartingSoon: boolean;
   canAddBot: boolean;
+  canSetLobbySettings: boolean;
+  botDifficulty: BotDifficulty | null;
   jokerCount: number;
   canSetJokerCount: boolean;
   cardPoints: CardPointValues;
