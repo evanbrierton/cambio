@@ -2516,6 +2516,54 @@ html.native-shell [data-pwa-install] {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
+/* In-game: let seats/grid occupy the home-indicator instead of leaving a padded gap. */
+.play-shell.play-shell-fill-chin {
+  padding-bottom: 0;
+}
+
+.swipe-leave-root {
+  position: relative;
+  isolation: isolate;
+}
+
+.swipe-leave-underlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--accent) 16%, var(--background));
+  pointer-events: none;
+}
+
+.swipe-leave-label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: var(--display-tracking);
+  text-transform: var(--display-transform);
+  color: var(--accent);
+}
+
+.swipe-leave-edge {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: calc(28px + env(safe-area-inset-left, 0px));
+  z-index: 20;
+  touch-action: pan-x;
+}
+
+.swipe-leave-surface {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 100%;
+  background-color: var(--background);
+}
+
 .mobile-game-scroll,
 .players-scroll {
   -webkit-overflow-scrolling: touch;
@@ -2727,6 +2775,10 @@ html.native-shell [data-pwa-install] {
   .play-shell {
     padding-top: 1.5rem;
     padding-bottom: 1rem;
+  }
+
+  .play-shell.play-shell-fill-chin {
+    padding-bottom: 0;
   }
 }
 
@@ -3263,7 +3315,7 @@ html.native-shell [data-pwa-install] {
     color-mix(in srgb, var(--foreground-muted) 22%, transparent);
   margin-top: 0.25rem;
   padding-top: 0.25rem;
-  min-height: 1.25rem;
+  min-height: 2.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3360,7 +3412,7 @@ html.native-shell [data-pwa-install] {
  * Grid keeps bottom padding so the last row can scroll under the button.
  */
 @media (max-width: 1023px) {
-  .players-with-action-overlay .players-grid-scroll {
+  .players-with-action-overlay.has-action-overlay .players-grid-scroll {
     padding-bottom: 3.25rem;
   }
 }
@@ -3372,6 +3424,10 @@ html.native-shell [data-pwa-install] {
   }
 
   .table-chrome-slot {
+    min-height: 2.5rem;
+  }
+
+  .table-grid-context {
     min-height: 2.5rem;
   }
 

@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect, useMemo, useState } from "react";
 import { GameTable } from "@/components/game/GameTable";
+import { SwipeToLeave } from "@/components/SwipeToLeave";
 import type { PlayerView } from "@/game/types";
 import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "@/game/types";
 import {
@@ -178,29 +179,35 @@ export default function PlayPage({
   }
 
   return (
-    <div
-      className={`play-shell touch-game fixed inset-0 z-10 flex flex-col px-3 sm:px-6 lg:px-8 ${
-        pageScrollable
-          ? "overflow-y-auto mobile-game-scroll"
-          : "overflow-hidden"
-      }`}
+    <SwipeToLeave
+      enabled={view.phase === "lobby" || view.isWaiting}
+      label={voice.leaveGame}
+      className="fixed inset-0 z-10"
     >
-      <GameTable
-        view={view}
-        connected={connected}
-        error={error}
-        fleetingPeek={fleetingPeek}
-        peekFlash={peekFlash}
-        swapFlash={swapFlash}
-        takeFlash={takeFlash}
-        snapFlash={snapFlash}
-        penaltyFlash={penaltyFlash}
-        cambioFlash={cambioFlash}
-        reshuffleFlash={reshuffleFlash}
-        discardDrawFlash={discardDrawFlash}
-        deckDrawFlash={deckDrawFlash}
-        send={send}
-      />
-    </div>
+      <div
+        className={`play-shell touch-game flex h-full w-full flex-col px-3 sm:px-6 lg:px-8 ${
+          pageScrollable
+            ? "overflow-y-auto mobile-game-scroll"
+            : "play-shell-fill-chin overflow-hidden"
+        }`}
+      >
+        <GameTable
+          view={view}
+          connected={connected}
+          error={error}
+          fleetingPeek={fleetingPeek}
+          peekFlash={peekFlash}
+          swapFlash={swapFlash}
+          takeFlash={takeFlash}
+          snapFlash={snapFlash}
+          penaltyFlash={penaltyFlash}
+          cambioFlash={cambioFlash}
+          reshuffleFlash={reshuffleFlash}
+          discardDrawFlash={discardDrawFlash}
+          deckDrawFlash={deckDrawFlash}
+          send={send}
+        />
+      </div>
+    </SwipeToLeave>
   );
 }
