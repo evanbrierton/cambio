@@ -1,7 +1,13 @@
-const CACHE_NAME = "cambio-v2";
+const CACHE_NAME = "cambio-v3";
+const OFFLINE_URL = "/offline.html";
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(self.skipWaiting());
+  event.waitUntil(
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.add(OFFLINE_URL))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -19,16 +25,20 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Never cache-first document navigations — stale HTML + new chunk hashes
-  // causes an infinite reload loop after deploys.
   if (event.request.mode === "navigate" || isDocumentPath(url.pathname)) {
-    event.respondWith(networkOnly(event.request));
+    event.respondWith(networkFirstDocument(event.request));
     return;
   }
 
@@ -52,8 +62,26 @@ function isDocumentPath(pathname) {
   );
 }
 
-async function networkOnly(request) {
-  return fetch(request);
+async function networkFirstDocument(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+
+    const offline = await caches.match(OFFLINE_URL);
+    if (offline) return offline;
+
+    return new Response("Offline — check your connection and reopen Cambio.", {
+      status: 503,
+      headers: { "Content-Type": "text/plain" },
+    });
+  }
 }
 
 function shouldCache(pathname) {

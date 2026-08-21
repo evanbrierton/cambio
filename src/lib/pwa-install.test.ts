@@ -1,3 +1,8 @@
+import {
+  createMemoryStorage,
+  createWebPlatformAdapters,
+  setDefaultPlatformAdapters,
+} from "@cambio/client/platform";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearInstallDismiss,
@@ -5,30 +10,33 @@ import {
   isInstallDismissed,
   isIosDevice,
   isStandaloneDisplay,
-  PWA_INSTALL_DISMISS_KEY,
   PWA_INSTALL_DISMISS_MS,
 } from "./pwa-install";
 
-function createMemoryStorage(): Storage {
-  const map = new Map<string, string>();
+function createLegacyStorage(): Storage {
+  const adapter = createMemoryStorage();
   return {
     get length() {
-      return map.size;
+      return 0;
     },
-    clear: () => map.clear(),
-    getItem: (key) => map.get(key) ?? null,
-    key: (index) => [...map.keys()][index] ?? null,
-    removeItem: (key) => {
-      map.delete(key);
-    },
-    setItem: (key, value) => {
-      map.set(key, String(value));
-    },
+    clear: () => {},
+    getItem: (key) => adapter.getItem(key),
+    key: () => null,
+    removeItem: (key) => adapter.removeItem(key),
+    setItem: (key, value) => adapter.setItem(key, value),
   };
 }
 
 beforeEach(() => {
-  const storage = createMemoryStorage();
+  const persistent = createMemoryStorage();
+  const session = createMemoryStorage();
+  setDefaultPlatformAdapters({
+    persistentStorage: persistent,
+    sessionStorage: session,
+    clipboard: createWebPlatformAdapters().clipboard,
+  });
+
+  const storage = createLegacyStorage();
   vi.stubGlobal("localStorage", storage);
   vi.stubGlobal("window", {
     localStorage: storage,
@@ -75,9 +83,9 @@ describe("isInstallDismissed", () => {
 
   it("clears dismiss state", () => {
     dismissInstallPrompt();
-    expect(localStorage.getItem(PWA_INSTALL_DISMISS_KEY)).not.toBeNull();
+    expect(isInstallDismissed()).toBe(true);
     clearInstallDismiss();
-    expect(localStorage.getItem(PWA_INSTALL_DISMISS_KEY)).toBeNull();
+    expect(isInstallDismissed()).toBe(false);
   });
 });
 

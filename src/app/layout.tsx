@@ -3,6 +3,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
+import { AudioUnlockRegistrar } from "@/components/AudioUnlockRegistrar";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import { PwaRegistrar } from "@/components/PwaRegistrar";
 import { ThemeProvider } from "@/context/ThemeProvider";
@@ -127,6 +128,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full flex flex-col relative z-0">
         <PwaRegistrar />
+        <AudioUnlockRegistrar />
         <ThemeProvider
           initialTheme={theme}
           initialAppearancePreference={appearancePreference}
