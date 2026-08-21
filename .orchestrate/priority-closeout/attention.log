@@ -1,0 +1,5 @@
+[2026-08-21T15:30:04.846Z] matchmaking-v1-closeout: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.
+[2026-08-21T15:30:58.987Z] matchmaking-v1-closeout: respawned by self-planner (was error)
+[2026-08-21T15:33:08.385Z] matchmaking-v1-closeout: verification self-reported (unit-test-verified)
+[2026-08-21T15:33:18.848Z] verify-matchmaking-v1-closeout: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Branch 'orch/priority-closeout/matchmaking-v1-closeout' does not exist in repository evanbrierton/cambio.
+[2026-08-21T15:34:21.746Z] verify-matchmaking-v1-closeout: respawned by self-planner (was error)
