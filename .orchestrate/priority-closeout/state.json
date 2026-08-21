@@ -1,0 +1,51 @@
+{
+  "rootSlug": "priority-closeout",
+  "tasks": [
+    {
+      "name": "matchmaking-v1-closeout",
+      "type": "worker",
+      "branch": "orch/priority-closeout/matchmaking-v1-closeout",
+      "startingRef": "main",
+      "dependsOn": [],
+      "agentId": null,
+      "runId": null,
+      "parentAgentId": null,
+      "status": "running",
+      "resultStatus": null,
+      "handoffPath": null,
+      "startedAt": "2026-08-21T15:29:55.976Z",
+      "finishedAt": null,
+      "lastUpdate": "2026-08-21T15:29:55.976Z",
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null,
+      "attempts": 1
+    },
+    {
+      "name": "verify-matchmaking-v1-closeout",
+      "type": "verifier",
+      "branch": "orch/priority-closeout/verify-matchmaking-v1-closeout",
+      "startingRef": "orch/priority-closeout/matchmaking-v1-closeout",
+      "dependsOn": [
+        "matchmaking-v1-closeout"
+      ],
+      "agentId": null,
+      "runId": null,
+      "parentAgentId": null,
+      "status": "pending",
+      "resultStatus": null,
+      "handoffPath": null,
+      "startedAt": null,
+      "finishedAt": null,
+      "lastUpdate": null,
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null
+    }
+  ],
+  "attention": []
+}
