@@ -34,18 +34,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "error",
+      "status": "pending",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-21T16:31:51.589Z",
+      "startedAt": null,
       "finishedAt": null,
-      "lastUpdate": "2026-08-21T16:32:21.781Z",
-      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Failed to verify existence of branch 'orch/project-priority/capacitor-shell' in repository evanbrierton/cambio. Please ensure the branch name is correct.",
+      "lastUpdate": "2026-08-21T16:34:03.669Z",
+      "note": "respawned by local-cli (was error; attempts=1)",
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
-      "failureMode": "unknown",
-      "verification": null,
-      "attempts": 1
+      "failureMode": null,
+      "verification": null
     },
     {
       "name": "verify-capacitor-shell",
@@ -65,11 +65,11 @@
       "finishedAt": null,
       "lastUpdate": "2026-08-21T16:32:25.988Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "lan-p2p-transport",
@@ -111,11 +111,11 @@
       "finishedAt": null,
       "lastUpdate": "2026-08-21T16:32:58.876Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "tutorial-polish",
