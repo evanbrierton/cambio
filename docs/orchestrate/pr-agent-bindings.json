@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-11T15:08:00Z",
+  "updatedAt": "2026-08-21T14:32:00Z",
   "model": "composer-2.5-fast",
   "mergeOrder": "#190 → #203",
   "bindings": [
@@ -9,7 +9,8 @@
       "branch": "evanbrierton/cam-19-gamehost-8f64",
       "agentId": "bc-43d45c78-f5af-4335-a73e-77dd88f35118",
       "url": "https://cursor.com/agents/bc-43d45c78-f5af-4335-a73e-77dd88f35118",
-      "prUrl": "https://github.com/evanbrierton/cambio/pull/190"
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/190",
+      "note": "Original steward; may be archived — recreate if needed"
     },
     {
       "pr": 191,
@@ -17,7 +18,8 @@
       "branch": "evanbrierton/cam-20-server-messages-8f64",
       "agentId": "bc-23327f26-4876-43be-be82-d2ea39c24907",
       "url": "https://cursor.com/agents/bc-23327f26-4876-43be-be82-d2ea39c24907",
-      "prUrl": "https://github.com/evanbrierton/cambio/pull/191"
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/191",
+      "note": "Original steward; may be archived — recreate if needed"
     },
     {
       "pr": 192,
@@ -25,7 +27,8 @@
       "branch": "evanbrierton/cam-21-host-tests-8f64",
       "agentId": "bc-5caeeec6-9299-4c59-abcc-485e9d18c47a",
       "url": "https://cursor.com/agents/bc-5caeeec6-9299-4c59-abcc-485e9d18c47a",
-      "prUrl": "https://github.com/evanbrierton/cambio/pull/192"
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/192",
+      "note": "Original steward; may be archived — recreate if needed"
     },
     {
       "pr": 193,
@@ -33,7 +36,8 @@
       "branch": "evanbrierton/cam-51-matchmaking-do-8f64",
       "agentId": "bc-d58ba410-cb7d-43b2-a525-b3b6a8469ce1",
       "url": "https://cursor.com/agents/bc-d58ba410-cb7d-43b2-a525-b3b6a8469ce1",
-      "prUrl": "https://github.com/evanbrierton/cambio/pull/193"
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/193",
+      "note": "Original steward; may be archived — recreate if needed"
     },
     {
       "pr": 194,
@@ -41,7 +45,8 @@
       "branch": "evanbrierton/cam-52-matchmade-autostart-8f64",
       "agentId": "bc-62528008-865d-47ca-bdf9-9dbebf9e7d84",
       "url": "https://cursor.com/agents/bc-62528008-865d-47ca-bdf9-9dbebf9e7d84",
-      "prUrl": "https://github.com/evanbrierton/cambio/pull/194"
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/194",
+      "note": "Original steward; may be archived — recreate if needed"
     },
     {
       "pr": 195,
@@ -49,7 +54,8 @@
       "branch": "evanbrierton/cam-54-find-match-ui-8f64",
       "agentId": "bc-3630a961-d157-4af1-9eb2-4b5989728c60",
       "url": "https://cursor.com/agents/bc-3630a961-d157-4af1-9eb2-4b5989728c60",
-      "prUrl": "https://github.com/evanbrierton/cambio/pull/195"
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/195",
+      "note": "Original steward; may be archived — recreate if needed"
     },
     {
       "pr": 196,
@@ -57,7 +63,8 @@
       "branch": "evanbrierton/cam-66-tutorial-persistence-8f64",
       "agentId": "bc-930e08ea-aaf5-478d-8fac-c4e7eb85382c",
       "url": "https://cursor.com/agents/bc-930e08ea-aaf5-478d-8fac-c4e7eb85382c",
-      "prUrl": "https://github.com/evanbrierton/cambio/pull/196"
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/196",
+      "note": "Original steward; may be archived — recreate if needed"
     },
     {
       "pr": 197,
@@ -65,7 +72,8 @@
       "branch": "evanbrierton/cam-67-tutorial-coach-8f64",
       "agentId": "bc-80053ba0-6e6b-435e-9892-47a597c56204",
       "url": "https://cursor.com/agents/bc-80053ba0-6e6b-435e-9892-47a597c56204",
-      "prUrl": "https://github.com/evanbrierton/cambio/pull/197"
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/197",
+      "note": "Original steward; may be archived — recreate if needed"
     },
     {
       "pr": 198,
@@ -73,16 +81,51 @@
       "branch": "evanbrierton/cam-68-landing-modal-8f64",
       "agentId": "bc-0ac94114-a3a9-4dc3-a4ed-dd7652b57f44",
       "url": "https://cursor.com/agents/bc-0ac94114-a3a9-4dc3-a4ed-dd7652b57f44",
-      "prUrl": "https://github.com/evanbrierton/cambio/pull/198"
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/198",
+      "note": "Original steward; may be archived — recreate if needed"
+    },
+    {
+      "pr": 199,
+      "cam": "CAM-69",
+      "branch": "evanbrierton/cam-69-rules-page-8f64",
+      "agentId": "bc-550790f9-bd01-49fe-818a-2425f6e44411",
+      "url": "https://cursor.com/agents/bc-550790f9-bd01-49fe-818a-2425f6e44411",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/199"
+    },
+    {
+      "pr": 200,
+      "cam": "CAM-35",
+      "branch": "evanbrierton/cam-35-monorepo-scaffold-8f64",
+      "agentId": "bc-ad001264-489e-438e-9585-1fa188575523",
+      "url": "https://cursor.com/agents/bc-ad001264-489e-438e-9585-1fa188575523",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/200"
+    },
+    {
+      "pr": 201,
+      "cam": "CAM-36",
+      "branch": "evanbrierton/cam-36-packages-game-8f64",
+      "agentId": "bc-a96fb105-c43c-4fe2-a9a2-7310f745d37f",
+      "url": "https://cursor.com/agents/bc-a96fb105-c43c-4fe2-a9a2-7310f745d37f",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/201"
+    },
+    {
+      "pr": 202,
+      "cam": "CAM-37",
+      "branch": "evanbrierton/cam-37-packages-client-8f64",
+      "agentId": "bc-af9c2401-faac-4ddf-9d26-d7ede695e6e8",
+      "url": "https://cursor.com/agents/bc-af9c2401-faac-4ddf-9d26-d7ede695e6e8",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/202"
+    },
+    {
+      "pr": 203,
+      "cam": "CAM-33/34",
+      "branch": "evanbrierton/cam-33-pwa-adapters-8f64",
+      "agentId": "bc-aad868a1-155f-4897-8564-f8f20847d4da",
+      "url": "https://cursor.com/agents/bc-aad868a1-155f-4897-8564-f8f20847d4da",
+      "prUrl": "https://github.com/evanbrierton/cambio/pull/203"
     }
   ],
-  "pending": [
-    { "pr": 199, "cam": "CAM-69", "branch": "evanbrierton/cam-69-rules-page-8f64" },
-    { "pr": 200, "cam": "CAM-35", "branch": "evanbrierton/cam-35-monorepo-scaffold-8f64" },
-    { "pr": 201, "cam": "CAM-36", "branch": "evanbrierton/cam-36-packages-game-8f64" },
-    { "pr": 202, "cam": "CAM-37", "branch": "evanbrierton/cam-37-packages-client-8f64" },
-    { "pr": 203, "cam": "CAM-33/34", "branch": "evanbrierton/cam-33-pwa-adapters-8f64" }
-  ],
+  "pending": [],
   "archivedAgentIds": [
     "bc-761af6a2-7a26-4106-8ddf-f7b2318e4d10",
     "bc-f0c9b2ea-5d42-4616-9e1d-ed587c8cf670",
