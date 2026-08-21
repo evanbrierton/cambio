@@ -141,6 +141,10 @@ export type ThemeVoice = {
   findMatch: string;
   findingMatch: string;
   cancelMatch: string;
+  matchPlayersLabel: string;
+  matchFillWithBotsLabel: string;
+  matchFillBotsOn: string;
+  matchFillBotsOff: string;
   matchmadeLobby: string;
   matchFillStatus: (current: number, target: number) => string;
   matchStartingSoon: string;
@@ -154,6 +158,17 @@ export type ThemeVoice = {
   chatEmpty: string;
   chatNotification: (name: string, text: string) => string;
   chatOpen: string;
+  /** Contextual table coach (first game). Keep short: retro titles render uppercase. */
+  coachHandTitle: string;
+  coachHandBody: string;
+  coachDeckTitle: string;
+  coachDeckBody: string;
+  coachDiscardTitle: string;
+  coachDiscardBody: string;
+  coachCambioTitle: string;
+  coachCambioBody: string;
+  coachSkip: string;
+  coachGotIt: string;
 };
 
 export const THEME_OPTIONS: ThemeOption[] = [
@@ -347,6 +362,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "FIND MATCH",
     findingMatch: "FINDING MATCH...",
     cancelMatch: "CANCEL",
+    matchPlayersLabel: "PLAYERS",
+    matchFillWithBotsLabel: "FILL WITH BOTS",
+    matchFillBotsOn: "ON",
+    matchFillBotsOff: "OFF",
     matchmadeLobby: "MATCHMADE LOBBY",
     matchFillStatus: (current, target) => `${current}/${target} PLAYERS`,
     matchStartingSoon: "STARTING SOON...",
@@ -360,6 +379,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatEmpty: "No messages yet — say hi!",
     chatNotification: (name, text) => `💬 ${name}: ${text}`,
     chatOpen: "OPEN CHAT",
+    coachHandTitle: "YOUR HAND",
+    coachHandBody:
+      "FOUR FACE-DOWN. PEEK THE BOTTOM TWO AT SETUP. THEN IT'S MEMORY.",
+    coachDeckTitle: "DECK",
+    coachDeckBody:
+      "YOUR TURN: TAP DECK OR DISCARD. FROM THE DECK, SWAP OR DUMP TO FIRE ABILITIES.",
+    coachDiscardTitle: "DISCARD",
+    coachDiscardBody:
+      "FACE UP. MATCH THE RANK AND SNAP ANY TIME. MISS = PENALTY CARD.",
+    coachCambioTitle: "CALL CAMBIO",
+    coachCambioBody:
+      "HIT THIS BEFORE YOU DRAW. EVERYONE GETS ONE LAST TURN. THEN SCORES.",
+    coachSkip: "SKIP",
+    coachGotIt: "GOT IT",
   },
   casino: {
     tagline: "Take a seat at the table",
@@ -499,6 +532,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding a table...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade table",
     matchFillStatus: (current, target) => `${current} of ${target} seated`,
     matchStartingSoon: "Starting soon...",
@@ -512,6 +549,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatEmpty: "No messages yet — break the ice!",
     chatNotification: (name, text) => `${name}: ${text}`,
     chatOpen: "Open chat",
+    coachHandTitle: "Your hole cards",
+    coachHandBody:
+      "Four face down. Peek the bottom two at the deal. After that, you play them blind.",
+    coachDeckTitle: "The shoe",
+    coachDeckBody:
+      "Your action: take from the shoe or the muck. A shoe card can sit in your hand or hit the muck. Folding it can fire an ability.",
+    coachDiscardTitle: "The muck",
+    coachDiscardBody:
+      "Face up. Matching rank, snap any time. Miss and you eat a penalty.",
+    coachCambioTitle: "Call Cambio",
+    coachCambioBody:
+      "Call it before you draw. The table gets one last turn, then we settle the pot.",
+    coachSkip: "Pass",
+    coachGotIt: "Got it",
   },
   party: {
     tagline: "Let's get this party started!",
@@ -649,6 +700,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding a party...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade party",
     matchFillStatus: (current, target) => `${current}/${target} players`,
     matchStartingSoon: "Starting soon!",
@@ -662,6 +717,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatEmpty: "The chat's quiet — start the banter!",
     chatNotification: (name, text) => `💬 ${name}: ${text}`,
     chatOpen: "Open chat",
+    coachHandTitle: "Your hand!",
+    coachHandBody:
+      "These four are yours! Peek the bottom two at the start. After that you're guessing!",
+    coachDeckTitle: "The deck",
+    coachDeckBody:
+      "Grab from here or the trash. Deck cards can swap into your hand or get tossed. Tossing can fire abilities!",
+    coachDiscardTitle: "Trash pile",
+    coachDiscardBody:
+      "Face up. Same rank, SNAP anytime. Wrong one and you eat a card. Oof.",
+    coachCambioTitle: "Cambio!",
+    coachCambioBody:
+      "Call it before you draw. Last dance for everyone, then scores!",
+    coachSkip: "Skip!",
+    coachGotIt: "Got it!",
   },
   minimal: {
     tagline: "Online Cambio",
@@ -798,6 +867,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding opponents...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade lobby",
     matchFillStatus: (current, target) => `${current}/${target} players`,
     matchStartingSoon: "Starting soon",
@@ -811,6 +884,18 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatEmpty: "No messages yet.",
     chatNotification: (name, text) => `${name}: ${text}`,
     chatOpen: "View chat",
+    coachHandTitle: "Your hand",
+    coachHandBody: "Four face-down. Peek two at setup. Then memory.",
+    coachDeckTitle: "Deck",
+    coachDeckBody:
+      "Draw from here or discard. From the deck: swap or dump. Dumping can trigger abilities.",
+    coachDiscardTitle: "Discard",
+    coachDiscardBody:
+      "Face up. Matching rank: snap anytime. Wrong snap: penalty.",
+    coachCambioTitle: "Call Cambio",
+    coachCambioBody: "Before you draw. One last round, then scores.",
+    coachSkip: "Skip",
+    coachGotIt: "Got it",
   },
   calm: {
     tagline: "A quiet evening of cards",
@@ -950,6 +1035,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding a table...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade table",
     matchFillStatus: (current, target) => `${current} of ${target} seated`,
     matchStartingSoon: "Starting soon...",
@@ -963,6 +1052,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatEmpty: "The room is peaceful — say hello when you're ready.",
     chatNotification: (name, text) => `${name}: ${text}`,
     chatOpen: "Open chat",
+    coachHandTitle: "Your cards",
+    coachHandBody:
+      "Four cards, face down. Peek the bottom two once, then let them rest.",
+    coachDeckTitle: "The deck",
+    coachDeckBody:
+      "When it is your turn, draw from here or the discard. A deck card can be swapped in, or set down. An ability may follow.",
+    coachDiscardTitle: "The discard",
+    coachDiscardBody:
+      "Cards rest here face up. Matching rank can be snapped whenever you like. A miss costs a penalty card.",
+    coachCambioTitle: "Call Cambio",
+    coachCambioBody:
+      "Speak it before you draw. Each player takes one last turn, then we score.",
+    coachSkip: "Skip",
+    coachGotIt: "Understood",
   },
   library: {
     tagline: "Cards by lamplight",
@@ -1102,6 +1205,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding a table...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade table",
     matchFillStatus: (current, target) => `${current} of ${target} seated`,
     matchStartingSoon: "Starting soon...",
@@ -1115,6 +1222,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatEmpty: "The room is hushed — say hello when you're ready.",
     chatNotification: (name, text) => `${name}: ${text}`,
     chatOpen: "Open chat",
+    coachHandTitle: "Your pages",
+    coachHandBody:
+      "Four pages, face down. Glance at the bottom two at the start. Memory keeps the place after that.",
+    coachDeckTitle: "The deck",
+    coachDeckBody:
+      "On your turn, draw from here or the discard. A deck card may be swapped in or set aside. Abilities can follow.",
+    coachDiscardTitle: "The discard",
+    coachDiscardBody:
+      "Face up. Matching rank: snap in the silence. A miss adds a penalty to your pile.",
+    coachCambioTitle: "Close the book",
+    coachCambioBody:
+      "Call it before you draw. Each reader takes one last turn, then we tally.",
+    coachSkip: "Skip",
+    coachGotIt: "Understood",
   },
   lodge: {
     tagline: "Cards by the fire",
@@ -1252,6 +1373,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding a table...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade table",
     matchFillStatus: (current, target) => `${current} of ${target} seated`,
     matchStartingSoon: "Starting soon...",
@@ -1265,6 +1390,20 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatEmpty: "The fire's quiet — start the banter.",
     chatNotification: (name, text) => `${name}: ${text}`,
     chatOpen: "Open chat",
+    coachHandTitle: "Your hand",
+    coachHandBody:
+      "Four face-down by the fire. Peek the bottom two at setup. After that, keep it in your head.",
+    coachDeckTitle: "The deck",
+    coachDeckBody:
+      "Your turn: take from here or the discard. From the deck you can swap or toss. Tossing can spark abilities.",
+    coachDiscardTitle: "The discard",
+    coachDiscardBody:
+      "Face up. Matching rank, snap whenever. Miss and you take a penalty card.",
+    coachCambioTitle: "Call Cambio",
+    coachCambioBody:
+      "Call it before you draw. The circle gets one last turn, then we score.",
+    coachSkip: "Skip",
+    coachGotIt: "Got it",
   },
   ink: {
     tagline: "一筆、一局",
@@ -1402,6 +1541,10 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     findMatch: "Find match",
     findingMatch: "Finding opponents...",
     cancelMatch: "Cancel",
+    matchPlayersLabel: "Players",
+    matchFillWithBotsLabel: "Fill with bots",
+    matchFillBotsOn: "On",
+    matchFillBotsOff: "Off",
     matchmadeLobby: "Matchmade lobby",
     matchFillStatus: (current, target) => `${current}/${target} players`,
     matchStartingSoon: "Starting soon",
@@ -1415,6 +1558,17 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     chatEmpty: "No messages yet.",
     chatNotification: (name, text) => `${name}: ${text}`,
     chatOpen: "View chat",
+    coachHandTitle: "Your hand",
+    coachHandBody: "Four face-down. Peek two at setup. Then memory.",
+    coachDeckTitle: "Deck",
+    coachDeckBody:
+      "Draw from here or the discard. Swap or dump. Dumping can trigger abilities.",
+    coachDiscardTitle: "Discard",
+    coachDiscardBody: "Face up. Matching rank: snap. Wrong snap: penalty.",
+    coachCambioTitle: "Call Cambio",
+    coachCambioBody: "Before you draw. One last round. Then scores.",
+    coachSkip: "Skip",
+    coachGotIt: "Got it",
   },
 };
 

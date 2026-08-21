@@ -1486,6 +1486,12 @@ body::after {
   letter-spacing: var(--display-tracking);
 }
 
+.react-joyride__floater {
+  font-family: var(--font-display);
+  text-transform: var(--display-transform);
+  letter-spacing: var(--display-tracking);
+}
+
 .bg-app {
   background: var(--background);
 }

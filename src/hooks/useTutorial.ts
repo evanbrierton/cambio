@@ -1,70 +1,36 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useShallow } from "zustand/react/shallow";
 import {
-  isGameTutorialSeen,
-  isHomeTutorialSeen,
-  markGameTutorialSeen,
-  markHomeTutorialSeen,
-  resetAllTutorialSeen,
-  resetGameTutorialSeen,
-  resetHomeTutorialSeen,
-} from "@/lib/tutorial";
-
-type TutorialState = {
-  hydrated: boolean;
-  homeSeen: boolean;
-  gameSeen: boolean;
-};
+  onTutorialPrefsHydrated,
+  useRehydrateTutorialPrefs,
+  useTutorialStore,
+} from "@/store/tutorial-prefs";
 
 export function useTutorial() {
-  const [state, setState] = useState<TutorialState>({
-    hydrated: false,
-    homeSeen: false,
-    gameSeen: false,
-  });
+  useRehydrateTutorialPrefs();
+  const [hydrated, setHydrated] = useState(() =>
+    useTutorialStore.persist.hasHydrated(),
+  );
 
   useEffect(() => {
-    setState({
-      hydrated: true,
-      homeSeen: isHomeTutorialSeen(),
-      gameSeen: isGameTutorialSeen(),
-    });
+    return onTutorialPrefsHydrated(() => setHydrated(true));
   }, []);
 
-  const markHomeSeen = useCallback(() => {
-    markHomeTutorialSeen();
-    setState((current) => ({ ...current, homeSeen: true }));
-  }, []);
+  const prefs = useTutorialStore(
+    useShallow((state) => ({
+      homeSeen: state.homeSeen,
+      gameSeen: state.gameSeen,
+      dismissedCoachHints: state.dismissedCoachHints,
+      markHomeSeen: state.markHomeSeen,
+      markGameSeen: state.markGameSeen,
+      dismissCoachHint: state.dismissCoachHint,
+      replayHomeTutorial: state.replayHomeTutorial,
+      replayGameTutorial: state.replayGameTutorial,
+      resetAll: state.resetAll,
+    })),
+  );
 
-  const markGameSeen = useCallback(() => {
-    markGameTutorialSeen();
-    setState((current) => ({ ...current, gameSeen: true }));
-  }, []);
-
-  const replayHomeTutorial = useCallback(() => {
-    resetHomeTutorialSeen();
-    setState((current) => ({ ...current, homeSeen: false }));
-  }, []);
-
-  const replayGameTutorial = useCallback(() => {
-    resetGameTutorialSeen();
-    setState((current) => ({ ...current, gameSeen: false }));
-  }, []);
-
-  const resetAll = useCallback(() => {
-    resetAllTutorialSeen();
-    setState((current) => ({ ...current, homeSeen: false, gameSeen: false }));
-  }, []);
-
-  return {
-    hydrated: state.hydrated,
-    homeSeen: state.homeSeen,
-    gameSeen: state.gameSeen,
-    markHomeSeen,
-    markGameSeen,
-    replayHomeTutorial,
-    replayGameTutorial,
-    resetAll,
-  };
+  return { hydrated, ...prefs };
 }

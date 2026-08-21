@@ -1,4 +1,9 @@
-import { MATCH_ABANDON_MS, MATCH_SOFT_START_MS } from "../matchmaking/types";
+import {
+  MATCH_ABANDON_MS,
+  MATCH_EMPTY_LOBBY_CLOSE_MS,
+  MATCH_LOBBY_AWAY_REMOVE_MS,
+  MATCH_SOFT_START_MS,
+} from "../matchmaking/types";
 import {
   BotKnowledge,
   botThinkDelay,
@@ -24,6 +29,8 @@ import {
   findPlayer,
   handleMessage,
   migrateRoundHistory,
+  purgeStaleMatchmadeLobbyPlayers,
+  removeLobbyPlayer,
 } from "./engine";
 import type {
   BotDifficulty,
@@ -56,6 +63,8 @@ export type GameHostConfig = {
   onPersist?: () => void | Promise<void>;
   /** Called when snap window end time changes (null clears). */
   onSnapWindowSchedule?: (endsAt: number | null) => void | Promise<void>;
+  /** Called when a matchmade lobby leaves lobby phase so Find Match stops seating into it. */
+  onMatchLobbyClosed?: (roomId: string) => void | Promise<void>;
 };
 
 export type ConnectParams = {
@@ -78,7 +87,7 @@ export type ConnectResult = {
 const MOVE_REACTION_COOLDOWN_MS = 12_000;
 
 export function migrateHostState(state: GameState): GameState {
-  return {
+  const migrated: GameState = {
     ...state,
     isSoloMode: state.isSoloMode ?? false,
     isMatchmade: state.isMatchmade ?? false,
@@ -104,6 +113,8 @@ export function migrateHostState(state: GameState): GameState {
       setupPeekedSlots: p.setupPeekedSlots ?? [],
     })),
   };
+  purgeStaleMatchmadeLobbyPlayers(migrated);
+  return migrated;
 }
 
 export class GameHost {
@@ -116,6 +127,15 @@ export class GameHost {
   private snapWindowTimer: ReturnType<typeof setTimeout> | null = null;
   private matchSoftStartTimer: ReturnType<typeof setTimeout> | null = null;
   private matchAbandonTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Player ids that left a matchmade lobby; blocked from passive reconnect only. */
+  private matchLobbyDepartedIds = new Set<string>();
+  /** Remove away humans after a long disconnect (keeps short flaps visible). */
+  private matchLobbyAwayTimers = new Map<
+    string,
+    ReturnType<typeof setTimeout>
+  >();
+  /** Close the lobby once it has no connected humans. */
+  private matchEmptyLobbyTimer: ReturnType<typeof setTimeout> | null = null;
   private humanSnapStreak = 0;
   private lastMoveReactionAt = 0;
 
@@ -165,9 +185,21 @@ export class GameHost {
   resolveReconnectPlayerId(queryPlayerId: string | null, name: string): string {
     if (!this.state) return queryPlayerId ?? crypto.randomUUID().slice(0, 10);
 
+    const isMatchmadeLobby =
+      this.state.isMatchmade && this.state.phase === "lobby";
+
     if (queryPlayerId) {
       const existing = this.state.players.find((p) => p.id === queryPlayerId);
-      if (existing) return queryPlayerId;
+      if (existing) {
+        // Reclaim the same seat (including brief disconnect grace).
+        return queryPlayerId;
+      }
+      // New matchmade join: keep the client id so onConnect/handleConnect agree.
+      if (isMatchmadeLobby) return queryPlayerId;
+    }
+
+    if (isMatchmadeLobby) {
+      return crypto.randomUUID().slice(0, 10);
     }
 
     const normalizedName = name.trim().toLowerCase();
@@ -183,6 +215,12 @@ export class GameHost {
     }
 
     return crypto.randomUUID().slice(0, 10);
+  }
+
+  private isMatchLobbyBlocked(queryPlayerId: string | null): boolean {
+    return Boolean(
+      queryPlayerId && this.matchLobbyDepartedIds.has(queryPlayerId),
+    );
   }
 
   async handleConnect(params: ConnectParams): Promise<ConnectResult> {
@@ -231,7 +269,38 @@ export class GameHost {
         this.state.matchFillWithBots = matchFillWithBots ?? true;
       }
     } else {
+      // Fresh Find Match must not land in a game that already started.
+      if (
+        isMatchmade &&
+        this.state.isMatchmade &&
+        this.state.phase !== "lobby" &&
+        !existingPlayer
+      ) {
+        return {
+          playerId: queryPlayerId ?? "",
+          error: "This match already started. Find a new match.",
+          closeConnection: true,
+        };
+      }
+      // Fresh Find Match (match=1) may reassign the same room — allow re-entry.
+      if (isMatchmade && queryPlayerId) {
+        this.matchLobbyDepartedIds.delete(queryPlayerId);
+      }
+      if (
+        this.state.isMatchmade &&
+        this.state.phase === "lobby" &&
+        !isMatchmade &&
+        this.isMatchLobbyBlocked(queryPlayerId)
+      ) {
+        return {
+          playerId: queryPlayerId ?? "",
+          error: "You left the match lobby.",
+          closeConnection: true,
+        };
+      }
       playerId = this.resolveReconnectPlayerId(queryPlayerId, name);
+      this.clearMatchLobbyAwayTimer(playerId);
+      this.clearMatchEmptyLobbyTimer();
     }
 
     const result = handleMessage(this.state, playerId, {
@@ -259,13 +328,32 @@ export class GameHost {
 
   async handleDisconnect(playerId: string, peerId: string) {
     if (!this.state) return;
-    if (this.playerHasOtherPeer(playerId, peerId)) return;
+
+    const isMatchmadeLobby =
+      this.state.isMatchmade && this.state.phase === "lobby";
+
+    if (!isMatchmadeLobby && this.playerHasOtherPeer(playerId, peerId)) return;
 
     this.clearBotChatTimer();
     this.clearBotChatReplyTimer();
 
     const player = this.state.players.find((p) => p.id === playerId);
     if (!player) return;
+
+    if (isMatchmadeLobby && !player.isBot) {
+      if (this.playerHasOtherPeer(playerId, peerId)) return;
+
+      // Stay on the roster as "away" so other players keep seeing this seat.
+      player.connected = false;
+      const closingPeer = this.peers.get(peerId);
+      if (closingPeer) closingPeer.connected = false;
+      await this.persist();
+      this.broadcastState();
+
+      this.scheduleMatchLobbyAwayRemove(playerId);
+      this.scheduleEmptyMatchLobbyClose();
+      return;
+    }
 
     player.connected = false;
     await this.persist();
@@ -278,6 +366,100 @@ export class GameHost {
 
     this.broadcastState();
     await this.maybeAutoStartMatchmade();
+  }
+
+  private clearMatchLobbyAwayTimer(playerId: string) {
+    const timer = this.matchLobbyAwayTimers.get(playerId);
+    if (!timer) return;
+    clearTimeout(timer);
+    this.matchLobbyAwayTimers.delete(playerId);
+  }
+
+  private clearAllMatchLobbyAwayTimers() {
+    for (const timer of this.matchLobbyAwayTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.matchLobbyAwayTimers.clear();
+  }
+
+  private clearMatchEmptyLobbyTimer() {
+    if (!this.matchEmptyLobbyTimer) return;
+    clearTimeout(this.matchEmptyLobbyTimer);
+    this.matchEmptyLobbyTimer = null;
+  }
+
+  private scheduleMatchLobbyAwayRemove(playerId: string) {
+    this.clearMatchLobbyAwayTimer(playerId);
+    const timer = setTimeout(() => {
+      void this.removeAwayMatchLobbyPlayer(playerId);
+    }, MATCH_LOBBY_AWAY_REMOVE_MS);
+    this.matchLobbyAwayTimers.set(playerId, timer);
+  }
+
+  private scheduleEmptyMatchLobbyClose() {
+    this.clearMatchEmptyLobbyTimer();
+    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (this.countMatchHumans() > 0) return;
+
+    this.matchEmptyLobbyTimer = setTimeout(() => {
+      void this.closeEmptyMatchLobby();
+    }, MATCH_EMPTY_LOBBY_CLOSE_MS);
+  }
+
+  private async removeAwayMatchLobbyPlayer(playerId: string) {
+    this.matchLobbyAwayTimers.delete(playerId);
+    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+
+    for (const peer of this.peers.values()) {
+      if (peer.playerId === playerId && peer.connected) return;
+    }
+
+    const player = this.state.players.find((entry) => entry.id === playerId);
+    if (!player || player.connected || player.isBot) return;
+
+    this.matchLobbyDepartedIds.add(playerId);
+    removeLobbyPlayer(this.state, playerId);
+
+    for (const [id, peer] of this.peers) {
+      if (peer.playerId === playerId) {
+        this.peers.delete(id);
+      }
+    }
+
+    if (this.countMatchHumans() < 2 && this.state.matchSoftStartAt) {
+      this.state.matchSoftStartAt = null;
+      this.clearMatchSoftStartTimer();
+    }
+
+    await this.persist();
+    this.broadcastState();
+    this.scheduleEmptyMatchLobbyClose();
+    await this.maybeAutoStartMatchmade();
+  }
+
+  private async closeEmptyMatchLobby() {
+    this.matchEmptyLobbyTimer = null;
+    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (this.countMatchHumans() > 0) return;
+
+    const roomId = this.config.roomId;
+    this.clearMatchTimers();
+    this.matchLobbyDepartedIds.clear();
+
+    for (const peer of this.peers.values()) {
+      try {
+        peer.send({
+          type: "error",
+          message: "Lobby closed — everyone left.",
+        });
+      } catch {
+        // Peer may already be gone.
+      }
+    }
+    this.peers.clear();
+    this.state = null;
+    await this.persist();
+    await this.config.onMatchLobbyClosed?.(roomId);
   }
 
   private countMatchHumans(): number {
@@ -304,6 +486,8 @@ export class GameHost {
   private clearMatchTimers() {
     this.clearMatchSoftStartTimer();
     this.clearMatchAbandonTimer();
+    this.clearMatchEmptyLobbyTimer();
+    this.clearAllMatchLobbyAwayTimers();
   }
 
   private scheduleMatchSoftStart() {
@@ -361,6 +545,9 @@ export class GameHost {
     this.state.matchSoftStartAt = null;
     this.clearMatchTimers();
     await this.dispatchMessage(this.state.hostId, { type: "start_game" });
+    if (this.state.phase !== "lobby") {
+      await this.config.onMatchLobbyClosed?.(this.config.roomId);
+    }
   }
 
   private async maybeAutoStartMatchmade() {
@@ -379,6 +566,10 @@ export class GameHost {
       this.state.matchSoftStartAt = Date.now() + MATCH_SOFT_START_MS;
       await this.persist();
       this.scheduleMatchSoftStart();
+    } else if (humans < 2 && this.state.matchSoftStartAt) {
+      this.state.matchSoftStartAt = null;
+      this.clearMatchSoftStartTimer();
+      await this.persist();
     }
 
     if (humans === 1 && !this.state.matchFillWithBots) {
@@ -534,9 +725,17 @@ export class GameHost {
 
   async restoreFromSaved(saved: GameState) {
     this.state = migrateHostState(saved);
+    await this.persist();
     await this.syncSnapWindow();
     this.scheduleBotTurns();
     this.scheduleBotChat();
+    if (this.state?.matchSoftStartAt) {
+      this.scheduleMatchSoftStart();
+    }
+    await this.maybeAutoStartMatchmade();
+    if (this.state?.isMatchmade && this.state.phase !== "lobby") {
+      await this.config.onMatchLobbyClosed?.(this.config.roomId);
+    }
   }
 
   sendToPlayer(playerId: string, message: ServerMessage) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import { GameTable } from "@/components/game/GameTable";
 import type { PlayerView } from "@/game/types";
 import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "@/game/types";
@@ -37,25 +37,36 @@ export default function PlayPage({
   const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
   const isSolo = searchParams.get("solo") === "1";
   const isMatchmade = searchParams.get("match") === "1";
-  const soloOptions: SoloOptions | undefined =
-    isSolo && isNavFresh
-      ? {
-          botCount:
-            Number.parseInt(
-              searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
-              10,
-            ) || DEFAULT_BOT_COUNT,
-          difficulty: parseBotDifficulty(searchParams.get("difficulty")),
-        }
-      : undefined;
-  const matchOptions: MatchOptions | undefined =
-    isMatchmade && isNavFresh
-      ? {
-          targetSize:
-            Number.parseInt(searchParams.get("targetSize") ?? "4", 10) || 4,
-          fillWithBots: searchParams.get("fillWithBots") !== "0",
-        }
-      : undefined;
+  const soloBotCount =
+    Number.parseInt(
+      searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
+      10,
+    ) || DEFAULT_BOT_COUNT;
+  const soloDifficulty = parseBotDifficulty(searchParams.get("difficulty"));
+  const matchTargetSize =
+    Number.parseInt(searchParams.get("targetSize") ?? "4", 10) || 4;
+  const matchFillWithBots = searchParams.get("fillWithBots") !== "0";
+
+  const soloOptions: SoloOptions | undefined = useMemo(
+    () =>
+      isSolo && isNavFresh
+        ? {
+            botCount: soloBotCount,
+            difficulty: soloDifficulty,
+          }
+        : undefined,
+    [isSolo, isNavFresh, soloBotCount, soloDifficulty],
+  );
+  const matchOptions: MatchOptions | undefined = useMemo(
+    () =>
+      isMatchmade
+        ? {
+            targetSize: matchTargetSize,
+            fillWithBots: matchFillWithBots,
+          }
+        : undefined,
+    [isMatchmade, matchTargetSize, matchFillWithBots],
+  );
 
   useEffect(() => {
     if (isNavFresh && !name) {
@@ -92,9 +103,39 @@ export default function PlayPage({
   useEffect(() => {
     if (!view || !isNavFresh) return;
     const params = new URLSearchParams({ name });
+    // Keep host/join so sessionMode does not flip and reconnect the socket.
+    if (searchParams.has("host")) params.set("host", "1");
+    if (searchParams.has("join")) params.set("join", "1");
+    if (isMatchmade) {
+      params.set("match", "1");
+      params.set("targetSize", String(matchTargetSize));
+      params.set("fillWithBots", matchFillWithBots ? "1" : "0");
+    }
+    if (isSolo) {
+      params.set("solo", "1");
+      params.set("bots", String(soloBotCount));
+      params.set("difficulty", soloDifficulty);
+    }
     if (debugEnabled) appendDebugQueryParam(params);
-    router.replace(`/play/${roomId}?${params.toString()}`);
-  }, [debugEnabled, view, isNavFresh, name, roomId, router]);
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next === current) return;
+    router.replace(`/play/${roomId}?${next}`);
+  }, [
+    debugEnabled,
+    view,
+    isNavFresh,
+    isMatchmade,
+    isSolo,
+    matchTargetSize,
+    matchFillWithBots,
+    soloBotCount,
+    soloDifficulty,
+    name,
+    roomId,
+    router,
+    searchParams,
+  ]);
 
   useEffect(() => {
     if (view || error) {

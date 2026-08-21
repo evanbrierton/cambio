@@ -110,6 +110,8 @@ export function useServerMessages(options?: {
 }) {
   const [messageState, setMessageState] =
     useState<ServerMessageState>(initialMessageState);
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
   const peekTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const peekEffectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const swapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -123,172 +125,169 @@ export function useServerMessages(options?: {
   );
   const deckDrawTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const applyMessage = useCallback(
-    (data: ServerMessage) => {
-      if (data.type === "room_info") {
-        options?.onRoomInfo?.(data.playerId);
-        setMessageState((s) => ({
-          ...s,
+  const applyMessage = useCallback((data: ServerMessage) => {
+    const callbacks = optionsRef.current;
+    if (data.type === "room_info") {
+      callbacks?.onRoomInfo?.(data.playerId);
+      setMessageState((s) => ({
+        ...s,
+        playerId: data.playerId,
+        error: null,
+      }));
+    }
+
+    if (data.type === "state") {
+      callbacks?.onViewChange?.(data.view);
+      setMessageState((s) => ({ ...s, view: data.view, error: null }));
+    }
+
+    if (data.type === "secret_peek") {
+      if (peekTimerRef.current) clearTimeout(peekTimerRef.current);
+      setMessageState((s) => ({
+        ...s,
+        fleetingPeek: {
           playerId: data.playerId,
-          error: null,
-        }));
-      }
+          slot: data.slot,
+          card: data.card,
+        },
+      }));
+      peekTimerRef.current = setTimeout(() => {
+        setMessageState((s) => ({ ...s, fleetingPeek: null }));
+      }, PEEK_FLASH_MS);
+    }
 
-      if (data.type === "state") {
-        options?.onViewChange?.(data.view);
-        setMessageState((s) => ({ ...s, view: data.view, error: null }));
-      }
+    if (data.type === "peek_flash") {
+      if (peekEffectTimerRef.current) clearTimeout(peekEffectTimerRef.current);
+      setMessageState((s) => ({
+        ...s,
+        peekFlash: {
+          kind: data.kind,
+          actorId: data.actorId,
+          playerId: data.playerId,
+          slot: data.slot,
+        },
+      }));
+      peekEffectTimerRef.current = setTimeout(() => {
+        setMessageState((s) => ({ ...s, peekFlash: null }));
+      }, PEEK_FLASH_MS);
+    }
 
-      if (data.type === "secret_peek") {
-        if (peekTimerRef.current) clearTimeout(peekTimerRef.current);
+    if (data.type === "swap_flash") {
+      const slots = data.slots ?? [];
+      if (isAbilitySwapFlash(slots)) {
+        if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
         setMessageState((s) => ({
           ...s,
-          fleetingPeek: {
-            playerId: data.playerId,
-            slot: data.slot,
-            card: data.card,
-          },
+          swapFlash: { slots },
+          takeFlash: null,
         }));
-        peekTimerRef.current = setTimeout(() => {
-          setMessageState((s) => ({ ...s, fleetingPeek: null }));
-        }, PEEK_FLASH_MS);
-      }
-
-      if (data.type === "peek_flash") {
-        if (peekEffectTimerRef.current)
-          clearTimeout(peekEffectTimerRef.current);
+        swapTimerRef.current = setTimeout(() => {
+          setMessageState((s) => ({ ...s, swapFlash: null }));
+        }, SWAP_FLASH_MS);
+      } else if (isHandTakeFlash(slots)) {
+        if (takeTimerRef.current) clearTimeout(takeTimerRef.current);
+        const [slot] = slots;
         setMessageState((s) => ({
           ...s,
-          peekFlash: {
-            kind: data.kind,
-            actorId: data.actorId,
-            playerId: data.playerId,
-            slot: data.slot,
-          },
+          takeFlash: { playerId: slot.playerId, slot: slot.slot },
+          swapFlash: null,
         }));
-        peekEffectTimerRef.current = setTimeout(() => {
-          setMessageState((s) => ({ ...s, peekFlash: null }));
-        }, PEEK_FLASH_MS);
+        takeTimerRef.current = setTimeout(() => {
+          setMessageState((s) => ({ ...s, takeFlash: null }));
+        }, TAKE_FLASH_MS);
       }
+    }
 
-      if (data.type === "swap_flash") {
-        const slots = data.slots ?? [];
-        if (isAbilitySwapFlash(slots)) {
-          if (swapTimerRef.current) clearTimeout(swapTimerRef.current);
-          setMessageState((s) => ({
-            ...s,
-            swapFlash: { slots },
-            takeFlash: null,
-          }));
-          swapTimerRef.current = setTimeout(() => {
-            setMessageState((s) => ({ ...s, swapFlash: null }));
-          }, SWAP_FLASH_MS);
-        } else if (isHandTakeFlash(slots)) {
-          if (takeTimerRef.current) clearTimeout(takeTimerRef.current);
-          const [slot] = slots;
-          setMessageState((s) => ({
-            ...s,
-            takeFlash: { playerId: slot.playerId, slot: slot.slot },
-            swapFlash: null,
-          }));
-          takeTimerRef.current = setTimeout(() => {
-            setMessageState((s) => ({ ...s, takeFlash: null }));
-          }, TAKE_FLASH_MS);
-        }
-      }
+    if (data.type === "snap_flash") {
+      if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
+      setMessageState((s) => ({
+        ...s,
+        snapFlash: {
+          actorId: data.actorId,
+          playerId: data.playerId,
+          slot: data.slot,
+        },
+      }));
+      snapTimerRef.current = setTimeout(() => {
+        setMessageState((s) => ({ ...s, snapFlash: null }));
+      }, SNAP_FLASH_MS);
+    }
 
-      if (data.type === "snap_flash") {
+    if (data.type === "penalty_flash") {
+      if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
+      setMessageState((s) => ({
+        ...s,
+        penaltyFlash: {
+          playerId: data.playerId,
+          slot: data.slot,
+        },
+      }));
+      penaltyTimerRef.current = setTimeout(() => {
+        setMessageState((s) => ({ ...s, penaltyFlash: null }));
+      }, PENALTY_FLASH_MS);
+    }
+
+    if (data.type === "cambio_flash") {
+      if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
+      const flash = { playerId: data.playerId };
+      callbacks?.onCambioFlashChange?.(flash);
+      setMessageState((s) => ({
+        ...s,
+        cambioFlash: flash,
+      }));
+      cambioTimerRef.current = setTimeout(() => {
+        optionsRef.current?.onCambioFlashChange?.(null);
+        setMessageState((s) => ({ ...s, cambioFlash: null }));
+      }, CAMBIO_FLASH_MS);
+    }
+
+    if (data.type === "reshuffle_flash") {
+      if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);
+      setMessageState((s) => ({
+        ...s,
+        reshuffleFlash: { id: (s.reshuffleFlash?.id ?? 0) + 1 },
+      }));
+      reshuffleTimerRef.current = setTimeout(() => {
+        setMessageState((s) => ({ ...s, reshuffleFlash: null }));
+      }, RESHUFFLE_FLASH_MS);
+    }
+
+    if (data.type === "discard_draw_flash") {
+      if (discardDrawTimerRef.current)
+        clearTimeout(discardDrawTimerRef.current);
+      setMessageState((s) => ({
+        ...s,
+        discardDrawFlash: { playerId: data.playerId },
+      }));
+      discardDrawTimerRef.current = setTimeout(() => {
+        setMessageState((s) => ({ ...s, discardDrawFlash: null }));
+      }, DISCARD_DRAW_FLASH_MS);
+    }
+
+    if (data.type === "deck_draw_flash") {
+      if (deckDrawTimerRef.current) clearTimeout(deckDrawTimerRef.current);
+      setMessageState((s) => ({
+        ...s,
+        deckDrawFlash: { playerId: data.playerId },
+      }));
+      deckDrawTimerRef.current = setTimeout(() => {
+        setMessageState((s) => ({ ...s, deckDrawFlash: null }));
+      }, DECK_DRAW_FLASH_MS);
+    }
+
+    if (data.type === "error") {
+      if (data.message.includes("Wrong snap")) {
         if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
         setMessageState((s) => ({
           ...s,
-          snapFlash: {
-            actorId: data.actorId,
-            playerId: data.playerId,
-            slot: data.slot,
-          },
+          error: data.message,
+          snapFlash: null,
         }));
-        snapTimerRef.current = setTimeout(() => {
-          setMessageState((s) => ({ ...s, snapFlash: null }));
-        }, SNAP_FLASH_MS);
+      } else {
+        setMessageState((s) => ({ ...s, error: data.message }));
       }
-
-      if (data.type === "penalty_flash") {
-        if (penaltyTimerRef.current) clearTimeout(penaltyTimerRef.current);
-        setMessageState((s) => ({
-          ...s,
-          penaltyFlash: {
-            playerId: data.playerId,
-            slot: data.slot,
-          },
-        }));
-        penaltyTimerRef.current = setTimeout(() => {
-          setMessageState((s) => ({ ...s, penaltyFlash: null }));
-        }, PENALTY_FLASH_MS);
-      }
-
-      if (data.type === "cambio_flash") {
-        if (cambioTimerRef.current) clearTimeout(cambioTimerRef.current);
-        const flash = { playerId: data.playerId };
-        options?.onCambioFlashChange?.(flash);
-        setMessageState((s) => ({
-          ...s,
-          cambioFlash: flash,
-        }));
-        cambioTimerRef.current = setTimeout(() => {
-          options?.onCambioFlashChange?.(null);
-          setMessageState((s) => ({ ...s, cambioFlash: null }));
-        }, CAMBIO_FLASH_MS);
-      }
-
-      if (data.type === "reshuffle_flash") {
-        if (reshuffleTimerRef.current) clearTimeout(reshuffleTimerRef.current);
-        setMessageState((s) => ({
-          ...s,
-          reshuffleFlash: { id: (s.reshuffleFlash?.id ?? 0) + 1 },
-        }));
-        reshuffleTimerRef.current = setTimeout(() => {
-          setMessageState((s) => ({ ...s, reshuffleFlash: null }));
-        }, RESHUFFLE_FLASH_MS);
-      }
-
-      if (data.type === "discard_draw_flash") {
-        if (discardDrawTimerRef.current)
-          clearTimeout(discardDrawTimerRef.current);
-        setMessageState((s) => ({
-          ...s,
-          discardDrawFlash: { playerId: data.playerId },
-        }));
-        discardDrawTimerRef.current = setTimeout(() => {
-          setMessageState((s) => ({ ...s, discardDrawFlash: null }));
-        }, DISCARD_DRAW_FLASH_MS);
-      }
-
-      if (data.type === "deck_draw_flash") {
-        if (deckDrawTimerRef.current) clearTimeout(deckDrawTimerRef.current);
-        setMessageState((s) => ({
-          ...s,
-          deckDrawFlash: { playerId: data.playerId },
-        }));
-        deckDrawTimerRef.current = setTimeout(() => {
-          setMessageState((s) => ({ ...s, deckDrawFlash: null }));
-        }, DECK_DRAW_FLASH_MS);
-      }
-
-      if (data.type === "error") {
-        if (data.message.includes("Wrong snap")) {
-          if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
-          setMessageState((s) => ({
-            ...s,
-            error: data.message,
-            snapFlash: null,
-          }));
-        } else {
-          setMessageState((s) => ({ ...s, error: data.message }));
-        }
-      }
-    },
-    [options],
-  );
+    }
+  }, []);
 
   const reset = useCallback(() => {
     setMessageState(initialMessageState());

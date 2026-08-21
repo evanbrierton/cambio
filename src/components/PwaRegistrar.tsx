@@ -5,6 +5,7 @@ import { useEffect } from "react";
 export function PwaRegistrar() {
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
+    if (process.env.NODE_ENV !== "production") return;
 
     let registration: ServiceWorkerRegistration | undefined;
 
