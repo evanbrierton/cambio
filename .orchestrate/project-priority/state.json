@@ -31,15 +31,15 @@
       "dependsOn": [
         "capacitor-shell"
       ],
-      "agentId": null,
-      "runId": null,
-      "parentAgentId": null,
+      "agentId": "bc-da1b2447-4ba7-47c6-bf71-ebd20797f175",
+      "runId": "run-a74db3fe-f654-47dd-9523-349a4d9fdb95",
+      "parentAgentId": "bc-21545a69-e676-4d22-a2e0-a53043906aa2",
       "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-21T16:34:13.113Z",
+      "startedAt": "2026-08-21T16:34:47.528Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-21T16:34:13.113Z",
+      "lastUpdate": "2026-08-21T16:34:49.461Z",
       "note": "respawned by local-cli (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
@@ -96,7 +96,7 @@
     {
       "name": "verify-lan-p2p-transport",
       "type": "verifier",
-      "branch": "orch/project-priority/verify-lan-p2p-transport",
+      "branch": "`orch/project-priority/lan-p2p-transport` (added audit note `src/p2p/VERIFICATION.md`, commit `aa2521f`, pushed)",
       "startingRef": "orch/project-priority/lan-p2p-transport",
       "dependsOn": [
         "lan-p2p-transport"
@@ -104,12 +104,12 @@
       "agentId": "bc-b9b0d498-4caa-4e01-8e99-e013b5d598fb",
       "runId": "run-1a978e71-e410-433d-9078-5e1b3cbb9261",
       "parentAgentId": "bc-21545a69-e676-4d22-a2e0-a53043906aa2",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-lan-p2p-transport.md",
       "startedAt": "2026-08-21T16:32:26.088Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-21T16:32:58.876Z",
+      "finishedAt": "2026-08-21T16:35:03.981Z",
+      "lastUpdate": "2026-08-21T16:35:03.981Z",
       "note": null,
       "attempts": 1,
       "slackTs": null,
@@ -180,6 +180,10 @@
     {
       "at": "2026-08-21T16:34:04.814Z",
       "message": "capacitor-plugins: respawned by local-cli (was error)"
+    },
+    {
+      "at": "2026-08-21T16:34:49.461Z",
+      "message": "capacitor-plugins: transient-retry succeeded on sub-attempt 2"
     }
   ]
 }
