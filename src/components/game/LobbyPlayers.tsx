@@ -229,20 +229,11 @@ export function LobbyPlayers({
                         <span className="font-display text-[10px] text-theme-muted">
                           {voice.networkLabel}
                         </span>
-                        <select
-                          value={view.network}
-                          onChange={(e) => {
-                            hapticClick("selection");
-                            send({
-                              type: "set_network",
-                              network: e.target.value as "online" | "nearby",
-                            });
-                          }}
-                          className={LOBBY_SETTING_SELECT_CLASS}
-                        >
-                          <option value="online">{voice.networkOnline}</option>
-                          <option value="nearby">{voice.networkNearby}</option>
-                        </select>
+                        <span className={LOBBY_SETTING_READOUT_CLASS}>
+                          {view.network === "nearby"
+                            ? voice.networkNearby
+                            : voice.networkOnline}
+                        </span>
                       </div>
                       {view.network === "online" ? (
                         <div className="flex items-center justify-between gap-3 px-1">
