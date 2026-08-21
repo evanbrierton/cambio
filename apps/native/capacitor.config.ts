@@ -24,11 +24,26 @@ const config: CapacitorConfig = {
   appId: "ie.brierton.cambio",
   appName: "Cambio",
   webDir: "web",
+  backgroundColor: "#12061f",
   server: {
     url: serverUrl,
     cleartext,
     allowNavigation,
   },
+  ios: {
+    contentInset: "never",
+    backgroundColor: "#12061f",
+  },
+  android: {
+    backgroundColor: "#12061f",
+  },
+  includePlugins: [
+    "@capacitor/clipboard",
+    "@capacitor/haptics",
+    "@capacitor/share",
+    "@capacitor/splash-screen",
+    "@capacitor/status-bar",
+  ],
   plugins: {
     SplashScreen: {
       launchShowDuration: 1000,
@@ -37,9 +52,10 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     StatusBar: {
+      // Style.Dark = light status-bar icons on this dark shell.
       style: "DARK",
       backgroundColor: "#12061f",
-      overlaysWebView: false,
+      overlaysWebView: true,
     },
   },
 };

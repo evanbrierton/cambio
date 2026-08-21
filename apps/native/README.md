@@ -57,7 +57,10 @@ Run from the repository root.
 
 - Select an iOS simulator/device.
 - Build and run from Xcode.
-- `StatusBar.overlaysWebView=false` keeps content below the status bar for safe-area alignment.
+- `StatusBar.overlaysWebView=true` draws the WebView under the status bar and home indicator; CSS `env(safe-area-inset-*)` keeps controls out of the notch/chin.
+- After adding Share / Clipboard / Haptics, run `cap:sync` and rebuild the Xcode app so those plugins exist in the iOS binary.
+- `cap:sync` now prints `cap ls`. Confirm `Haptics`, `Share`, and `Clipboard` are listed. If they are not, delete `apps/native/ios` and run `cap:add:ios` then `cap:sync` again.
+- You can also open `apps/native/ios/App/CapApp-SPM/Package.swift` and check it contains `CapacitorHaptics` and `CapacitorShare`.
 
 ### Android (Android Studio)
 

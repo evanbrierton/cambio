@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  canUseNativeShare,
+  shareRoomInvite,
+  triggerCambioHaptic,
+  triggerSnapHaptic,
+} from "@cambio/client";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   AlertTriangle,
@@ -20,6 +26,7 @@ import {
   MessageSquare,
   MessageSquareOff,
   MoreHorizontal,
+  Share2,
   Volume2,
   VolumeX,
   X,
@@ -810,6 +817,7 @@ export function GameTable({
     null,
   );
   const [roomCopied, setRoomCopied] = useState(false);
+  const [roomShared, setRoomShared] = useState(false);
   const [snapWindowSeconds, setSnapWindowSeconds] = useState<number | null>(
     null,
   );
@@ -851,6 +859,8 @@ export function GameTable({
   );
   const lobbyPlayersRef = useRef<Set<string>>(new Set());
   const lobbyJoinTimerRef = useRef<number | null>(null);
+  const snapHapticKeyRef = useRef<string | null>(null);
+  const cambioHapticKeyRef = useRef<string | null>(null);
   const tableDeckRef = useRef<HTMLDivElement>(null);
 
   useGameSounds(
@@ -865,6 +875,28 @@ export function GameTable({
     takeFlash,
     snapFlash,
   );
+  const nativeShareEnabled = canUseNativeShare();
+
+  useEffect(() => {
+    if (!snapFlash) {
+      snapHapticKeyRef.current = null;
+      return;
+    }
+    const key = `${snapFlash.actorId}-${snapFlash.playerId}-${snapFlash.slot}`;
+    if (snapHapticKeyRef.current === key) return;
+    snapHapticKeyRef.current = key;
+    void triggerSnapHaptic();
+  }, [snapFlash]);
+
+  useEffect(() => {
+    if (!cambioFlash) {
+      cambioHapticKeyRef.current = null;
+      return;
+    }
+    if (cambioHapticKeyRef.current === cambioFlash.playerId) return;
+    cambioHapticKeyRef.current = cambioFlash.playerId;
+    void triggerCambioHaptic();
+  }, [cambioFlash]);
 
   const swapAbilityActive = isSwapAbility(view.pendingAbility?.kind);
   const snapGiveActive = view.pendingAbility?.kind === "snap_give";
@@ -1293,6 +1325,7 @@ export function GameTable({
         view.cambioCallerId === playerId &&
         playerId !== view.playerId;
       if (isProtected) return;
+      void triggerSnapHaptic();
       send({ type: "snap", targetPlayerId: playerId, slot });
       return;
     }
@@ -1303,6 +1336,21 @@ export function GameTable({
       if (!copied) return;
       setRoomCopied(true);
       window.setTimeout(() => setRoomCopied(false), 2000);
+    });
+  };
+
+  const shareRoom = () => {
+    if (!nativeShareEnabled) return;
+    const roomCode = view.roomId.toUpperCase();
+    const roomUrl =
+      typeof window === "undefined"
+        ? null
+        : new URL(`/play/${view.roomId}`, window.location.origin).toString();
+    if (!roomUrl) return;
+    void shareRoomInvite({ roomCode, roomUrl }).then((shared) => {
+      if (!shared) return;
+      setRoomShared(true);
+      window.setTimeout(() => setRoomShared(false), 2000);
     });
   };
 
@@ -1363,7 +1411,10 @@ export function GameTable({
     <button
       type="button"
       data-tutorial="call-cambio"
-      onClick={() => send({ type: "call_cambio" })}
+      onClick={() => {
+        void triggerCambioHaptic();
+        send({ type: "call_cambio" });
+      }}
       className="table-cambio-chip chip-btn"
     >
       {voice.callCambio}
@@ -1630,6 +1681,24 @@ export function GameTable({
                     <Copy aria-hidden className={CHROME_ICON_CLASS} />
                   )}
                 </button>
+                {view.phase === "lobby" && nativeShareEnabled ? (
+                  <button
+                    type="button"
+                    onClick={shareRoom}
+                    aria-live="polite"
+                    aria-label={roomShared ? "Shared invite" : "Share invite"}
+                    title={roomShared ? "Shared invite" : "Share invite"}
+                    className={`${CHROME_ICON_BTN} shrink-0 ${
+                      roomShared ? "border-accent text-accent" : ""
+                    }`}
+                  >
+                    {roomShared ? (
+                      <Check aria-hidden className={CHROME_ICON_CLASS} />
+                    ) : (
+                      <Share2 aria-hidden className={CHROME_ICON_CLASS} />
+                    )}
+                  </button>
+                ) : null}
                 <span
                   role="status"
                   className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${

@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { AudioUnlockRegistrar } from "@/components/AudioUnlockRegistrar";
+import { NativeShellRegistrar } from "@/components/NativeShellRegistrar";
 import { PwaInstallPrompt } from "@/components/PwaInstallPrompt";
 import { PwaRegistrar } from "@/components/PwaRegistrar";
 import { ThemeProvider } from "@/context/ThemeProvider";
@@ -101,6 +102,38 @@ const APPEARANCE_INIT_SCRIPT = `
 })();
 `;
 
+const NATIVE_SHELL_INIT_SCRIPT = `
+(() => {
+  const win = window;
+  const cap = win.Capacitor;
+  const native = Boolean(
+    (cap && typeof cap.isNativePlatform === "function" && cap.isNativePlatform()) ||
+    (cap && typeof cap.getPlatform === "function" && (cap.getPlatform() === "ios" || cap.getPlatform() === "android")) ||
+    (win.webkit && win.webkit.messageHandlers && win.webkit.messageHandlers.bridge) ||
+    win.androidBridge
+  );
+  if (!native) return;
+  document.documentElement.classList.add("native-shell");
+  const overlay = { overlay: true };
+  const style = { style: "DARK" };
+  const background = { color: "#12061f" };
+  try {
+    const statusBar = cap && cap.Plugins && cap.Plugins.StatusBar;
+    if (statusBar && typeof statusBar.setOverlaysWebView === "function") {
+      statusBar.setOverlaysWebView(overlay);
+      if (typeof statusBar.setStyle === "function") statusBar.setStyle(style);
+      if (typeof statusBar.setBackgroundColor === "function") {
+        statusBar.setBackgroundColor(background);
+      }
+    } else if (cap && typeof cap.nativePromise === "function") {
+      cap.nativePromise("StatusBar", "setOverlaysWebView", overlay);
+      cap.nativePromise("StatusBar", "setStyle", style);
+      cap.nativePromise("StatusBar", "setBackgroundColor", background);
+    }
+  } catch {}
+})();
+`;
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -125,9 +158,13 @@ export default async function RootLayout({
     >
       <head>
         <script id="cambio-appearance-init">{APPEARANCE_INIT_SCRIPT}</script>
+        <script id="cambio-native-shell-init">
+          {NATIVE_SHELL_INIT_SCRIPT}
+        </script>
       </head>
       <body className="min-h-full flex flex-col relative z-0">
         <PwaRegistrar />
+        <NativeShellRegistrar />
         <AudioUnlockRegistrar />
         <ThemeProvider
           initialTheme={theme}

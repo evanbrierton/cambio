@@ -1,9 +1,11 @@
 "use client";
 
+import { isNativePlatform } from "@cambio/client";
 import { useEffect } from "react";
 
 export function PwaRegistrar() {
   useEffect(() => {
+    if (isNativePlatform()) return;
     if (!("serviceWorker" in navigator)) return;
     if (process.env.NODE_ENV !== "production") return;
 

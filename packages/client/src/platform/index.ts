@@ -1,3 +1,4 @@
+import { createCapacitorClipboardAdapter } from "./capacitor-clipboard";
 import type { ClientPlatformAdapters } from "./types";
 import { createWebClipboardAdapter } from "./web-clipboard";
 import {
@@ -17,7 +18,12 @@ export function createWebPlatformAdapters(): ClientPlatformAdapters {
 
 export function getDefaultPlatformAdapters(): ClientPlatformAdapters {
   if (!defaultAdapters) {
-    defaultAdapters = createWebPlatformAdapters();
+    const webClipboard = createWebClipboardAdapter();
+    defaultAdapters = {
+      persistentStorage: createWebPersistentStorage(),
+      sessionStorage: createWebSessionStorage(),
+      clipboard: createCapacitorClipboardAdapter(webClipboard),
+    };
   }
   return defaultAdapters;
 }
@@ -28,6 +34,8 @@ export function setDefaultPlatformAdapters(
   defaultAdapters = adapters;
 }
 
+export * from "./capacitor";
+export * from "./capacitor-clipboard";
 export * from "./types";
 export * from "./web-clipboard";
 export * from "./web-storage";
