@@ -1,1 +1,4 @@
-// CAM-35 scaffold — @cambio/client exports land in CAM-37.
+export * from "./party";
+export * from "./platform/index";
+export * from "./swap-flash";
+export * from "./useGameConnection";

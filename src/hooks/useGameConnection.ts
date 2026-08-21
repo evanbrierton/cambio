@@ -1,5 +1,6 @@
 "use client";
 
+import { getDefaultPlatformAdapters } from "@cambio/client/platform";
 import { nanoid } from "nanoid";
 import PartySocket from "partysocket";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -72,12 +73,15 @@ export type MatchOptions = {
 };
 
 function resolvePlayerId(roomId: string): string {
+  const platform = getDefaultPlatformAdapters();
   const key = storageKey(roomId);
   const stored =
-    localStorage.getItem(key) ?? sessionStorage.getItem(key) ?? undefined;
+    platform.persistentStorage.getItem(key) ??
+    platform.sessionStorage.getItem(key) ??
+    undefined;
 
   const playerId = stored ?? nanoid(10);
-  sessionStorage.setItem(key, playerId);
+  platform.sessionStorage.setItem(key, playerId);
   return playerId;
 }
 
@@ -109,9 +113,10 @@ export function useGameConnection(
 
   const { messageState, applyMessage } = useServerMessages({
     onRoomInfo: (playerId) => {
-      localStorage.setItem(roomKeyRef.current, playerId);
-      sessionStorage.setItem(roomKeyRef.current, playerId);
-      sessionStorage.setItem(seenKeyRef.current, "1");
+      const platform = getDefaultPlatformAdapters();
+      platform.persistentStorage.setItem(roomKeyRef.current, playerId);
+      platform.sessionStorage.setItem(roomKeyRef.current, playerId);
+      platform.sessionStorage.setItem(seenKeyRef.current, "1");
     },
     onViewChange: (view) => {
       viewRef.current = view;
