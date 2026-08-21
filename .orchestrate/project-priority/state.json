@@ -34,16 +34,16 @@
       "agentId": "bc-da1b2447-4ba7-47c6-bf71-ebd20797f175",
       "runId": "run-a74db3fe-f654-47dd-9523-349a4d9fdb95",
       "parentAgentId": "bc-21545a69-e676-4d22-a2e0-a53043906aa2",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/capacitor-plugins.md",
       "startedAt": "2026-08-21T16:34:47.528Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-21T16:34:49.461Z",
+      "finishedAt": "2026-08-21T16:57:59.759Z",
+      "lastUpdate": "2026-08-21T16:57:59.759Z",
       "note": "respawned by local-cli (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
-      "prNumber": null,
+      "prNumber": 216,
       "failureMode": null,
       "verification": null
     },
@@ -184,6 +184,22 @@
     {
       "at": "2026-08-21T16:34:49.461Z",
       "message": "capacitor-plugins: transient-retry succeeded on sub-attempt 2"
+    },
+    {
+      "at": "2026-08-21T16:40:14.542Z",
+      "message": "tutorial-polish: tool_call idle 356801ms; last=2026-08-21T16:34:17.741Z"
+    },
+    {
+      "at": "2026-08-21T16:42:52.278Z",
+      "message": "capacitor-plugins: SSE idle 302335ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-21T16:42:52.279Z",
+      "message": "capacitor-plugins: tool_call idle 302336ms; last=2026-08-21T16:37:49.943Z"
+    },
+    {
+      "at": "2026-08-21T16:43:14.948Z",
+      "message": "tutorial-polish: SSE idle 347229ms, polled status=running; watchdog still waiting"
     }
   ]
 }
