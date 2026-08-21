@@ -1,0 +1,103 @@
+{
+  "$schema": "/home/ubuntu/.cursor/plugins/cache/cursor-public/9333/46125561306434d8a1d7745d540d8932ab0cd2a2/skills/orchestrate/schemas/plan.schema.json",
+  "goal": "Ship the remaining Cambio work in the rework-avoiding order from the Linear \"Project priority order\" doc (https://linear.app/ebrierton-cambio/document/project-priority-order-67a9122bb396). Priority: (1) Mobile Phase 2a — Capacitor native shell over the existing Next.js web UI (CAM-38 shell, CAM-39 native plugins; CAM-40 store uploads is human-only), (2) Offline P2P Phase 1 — LAN WebSocket transport (CAM-22, transport layer only; the \"Play nearby\" home CTA is deferred until Capacitor wraps the current surface), (3) catch-up polish anytime (CAM-71 tutorial a11y/mobile). Repo is a pnpm workspace: Next.js app at src/, shared logic in packages/game and packages/client (platform adapters live in packages/client/src/platform). Keep party/cambio.ts thin; grow packages/*. Do NOT re-extract GameHost or re-home logic. For any PR stacking, use GitHub stacked PRs (dependent PR's base = the parent feature branch).",
+  "summary": "Ship Cambio priority order: Capacitor shell (stacked plugins PR) + LAN P2P transport + tutorial polish, in parallel",
+  "rootSlug": "project-priority",
+  "baseBranch": "main",
+  "prBase": "main",
+  "repoUrl": "https://github.com/evanbrierton/cambio",
+  "selfAgentId": "bc-21545a69-e676-4d22-a2e0-a53043906aa2",
+  "dispatcher": { "firstName": "Evan" },
+  "syncStateToGit": true,
+  "acceptanceCriteria": [
+    "Capacitor shell scaffolded and building for iOS + Android in remote-URL mode",
+    "Capacitor native plugins (share/clipboard/haptics) wired behind existing adapters, stacked on the shell PR",
+    "LAN WebSocket P2P transport module implemented with unit tests, online path untouched",
+    "Tutorial Skip/Escape/motion/mobile polish complete"
+  ],
+  "tasks": [
+    {
+      "name": "capacitor-shell",
+      "type": "worker",
+      "openPR": true,
+      "scopedGoal": "Implement Linear CAM-38 \"Capacitor app shell for iOS and Android\" (Mobile Phase 2a.1). Add a Capacitor native shell that loads the existing Next.js web UI in REMOTE-URL mode so iOS and Android builds can ship without rewriting any React DOM components. This repo is a pnpm workspace (see pnpm-workspace.yaml with `packages/*`). Create a new workspace app directory `apps/native` (add `apps/*` to the `packages:` globs in pnpm-workspace.yaml) containing a Capacitor project: install `@capacitor/core`, `@capacitor/cli`, `@capacitor/ios`, `@capacitor/android` at current stable versions, and add a `capacitor.config.ts` that points the WebView `server.url` at a configurable production/staging web URL (default to the site URL used in src/lib/site.ts; make it overridable via an env-driven or documented config constant). Add the iOS and Android native platform folders via `npx cap add ios` / `npx cap add android` if the CLI can run in this environment; if a platform's native tooling (Xcode/Android SDK) is unavailable in CI, still commit the Capacitor config, npm scripts, and a documented `npx cap add` step so a developer can generate the platforms locally — do not fake generated native binaries. Handle status bar / safe-area insets and a basic splash screen (use `@capacitor/status-bar`, `@capacitor/splash-screen`). Ensure the WebView is allowed to reach the Cloudflare PartyServer WebSocket host (allowlist / cleartext exceptions as needed for LAN/dev, documented). Add a README in `apps/native` documenting local run steps for Xcode + Android Studio and how to switch between remote-URL and (future) bundled export. Do NOT modify the web app's runtime behaviour or the online PartySocket path; the web deployment stays the source of truth for UI. Keep changes confined to apps/native plus the minimal pnpm-workspace.yaml edit. Ensure `pnpm install` still succeeds and root `pnpm typecheck` is unaffected.",
+      "pathsAllowed": ["apps/**", "pnpm-workspace.yaml"],
+      "pathsForbidden": ["src/**", "packages/**", "party/**"],
+      "acceptance": [
+        "apps/native contains a valid Capacitor project (capacitor.config.ts, package.json wired into the pnpm workspace)",
+        "Remote-URL mode is configured to load the existing web UI; the config URL is documented and overridable",
+        "iOS and Android targets are either generated via `npx cap add` or reproducibly documented with committed config + scripts (no fabricated native binaries)",
+        "Status bar / safe-area and splash-screen basics are handled",
+        "apps/native README documents local run (Xcode + Android Studio) and the remote-URL vs bundled-export choice",
+        "`pnpm install` succeeds and the web app's UI/runtime behaviour and online WebSocket path are unchanged"
+      ],
+      "verify": "## Setup\n- Run `pnpm install` at the repo root and confirm the new `apps/native` workspace resolves.\n\n## Automated\n- Run `pnpm typecheck` and `pnpm lint` at the repo root; confirm no new failures introduced by the app scaffold.\n- In apps/native, run `npx cap sync` (or `npx cap doctor`) if native tooling is present; otherwise confirm `capacitor.config.ts` is valid TypeScript.\n\n## Manual\n- Read capacitor.config.ts and confirm `server.url` points at the documented production/staging web URL and is overridable.\n- Confirm the WebView networking config permits the Cloudflare PartyServer WebSocket endpoint.\n\n## Gotchas\n- Do not commit generated native build outputs or signing material. iOS/Android platform folders may be gitignored if they can't be generated in CI — document the `npx cap add` step instead."
+    },
+    {
+      "name": "capacitor-plugins",
+      "type": "worker",
+      "openPR": true,
+      "dependsOn": ["capacitor-shell"],
+      "startingRef": "orch/project-priority/capacitor-shell",
+      "scopedGoal": "Implement Linear CAM-39 \"Capacitor native plugins (share, clipboard, haptics)\" (Mobile Phase 2a.2). This task STACKS on top of the CAM-38 Capacitor shell: your repo has already been cloned from the shell branch `orch/project-priority/capacitor-shell`, so the CAM-38 Capacitor scaffold is already present in your tree — build on it, do not recreate it. IMPORTANT PR base override (this overrides the generic 'base main' instruction in the Branch discipline section below): when you open your draft PR, set its BASE branch to `orch/project-priority/capacitor-shell` (the shell branch you started from), NOT `main`, so it is a GitHub stacked PR on top of the shell PR. Do the work: wire `@capacitor/share` for invite/room-link sharing from the lobby; implement a NATIVE clipboard path behind the existing `ClipboardAdapter` interface in packages/client/src/platform/types.ts (add a Capacitor clipboard adapter, e.g. packages/client/src/platform/capacitor-clipboard.ts, and select it when running inside the native shell — mirror the pattern in packages/client/src/platform/index.ts / web-clipboard.ts); add haptics (`@capacitor/haptics`) on at least snap and cambio events (feature-flag if needed); confirm audio unlock / Web Audio in src/lib/sounds.ts still works after first gesture; and GUARD every plugin call so pure web builds never break when the plugins are absent (detect native platform via Capacitor.isNativePlatform()). Keep the web code path byte-for-byte behaviourally unchanged when plugins are absent. Confine changes to apps/native plus the platform adapter layer in packages/client/src/platform/** and the minimal call sites needed to trigger share/haptics.",
+      "pathsAllowed": ["apps/**", "packages/client/src/platform/**", "packages/client/src/index.ts", "src/lib/clipboard.ts", "src/components/**"],
+      "pathsForbidden": ["packages/game/**", "party/**"],
+      "acceptance": [
+        "Share sheet is wired for iOS + Android from the lobby via a guarded Capacitor Share call",
+        "A native clipboard adapter implements the existing ClipboardAdapter interface and is selected on the native platform",
+        "Haptics fire on at least snap + cambio, guarded so web builds are unaffected",
+        "Web path is unchanged when plugins are absent (all plugin calls guarded by native-platform detection)",
+        "The draft PR base branch is the capacitor-shell branch (GitHub stacked PR), not main"
+      ],
+      "verify": "## Setup\n- Your repo already started from the shell branch; run `pnpm install`.\n\n## Automated\n- Run `pnpm lint`, `pnpm typecheck`, and `pnpm test` at the repo root; confirm no regressions, especially in packages/client platform tests.\n\n## Manual\n- Confirm every Capacitor plugin call is guarded so a pure web build with plugins absent behaves exactly as before.\n- Confirm the ClipboardAdapter contract is honored by the new native adapter.\n\n## Gotchas\n- The PR base must be the shell branch (stacked PR). Do not target main."
+    },
+    {
+      "name": "verify-capacitor-shell",
+      "type": "verifier",
+      "verifies": "capacitor-shell",
+      "scopedGoal": "Verify the CAM-38 Capacitor shell against every acceptance criterion. Confirm apps/native is a valid Capacitor project wired into the pnpm workspace, that remote-URL mode targets the existing web UI and is overridable, that iOS/Android targets are generated or reproducibly documented (no fabricated native binaries), that status-bar/safe-area/splash basics exist, that the README documents local run steps, and critically that the web app's UI/runtime and online WebSocket path are unchanged. Run `pnpm install`, `pnpm typecheck`, and `pnpm lint` at the repo root and report results. Do not implement fixes; produce a verdict handoff.",
+      "acceptance": ["Verification section includes execution evidence for every capacitor-shell acceptance criterion"]
+    },
+    {
+      "name": "lan-p2p-transport",
+      "type": "worker",
+      "openPR": true,
+      "model": "gpt-5.5-high",
+      "scopedGoal": "Implement Linear CAM-22 \"Implement LAN WebSocket P2P transport\" (Offline P2P Phase 1.1) — the TRANSPORT LAYER ONLY. Do NOT add or modify any home-screen CTA, lobby UI, or the \"Play nearby\" entry point; per the project priority doc those come after the Capacitor shell wraps the current surface, so keep this change purely to the transport module to avoid rework. Create `src/p2p/types.ts` (session config, transport events) and `src/p2p/lan-transport.ts` implementing: a HOST-side lightweight in-tab message relay that fans out `ServerMessage` and collects `ClientMessage` (reuse the existing wire message types from packages/game — see packages/game/src/wire-schema.ts and types.ts; do not redefine them), a GUEST-side WebSocket client connecting to `ws://{host-ip}:{port}/room/{roomId}`, a heartbeat/ping every 3-5s to detect disconnects (disconnect detection within 5s), JSON (de)serialization of ClientMessage/ServerMessage, default port 9876 (avoid PartyKit's 8787), and handling of host-tab-close so guests receive a disconnect event. Start with the simple in-tab relay (Option B). CRITICAL online-mode invariants: make NO changes to `getPartyHost()` or the PartySocket online path (src/lib/party.ts / packages/client/src/party.ts / useGameConnection), and ensure the LAN transport is inert unless explicitly activated (a `mode==='local'` guard/entry point). Add focused unit tests (vitest) covering serialization, heartbeat/disconnect detection, and host fan-out / guest receive using a mock or in-process WebSocket. Confine changes to src/p2p/** and its tests.",
+      "pathsAllowed": ["src/p2p/**"],
+      "pathsForbidden": ["src/lib/party.ts", "packages/client/src/party.ts", "src/hooks/useGameConnection.ts", "packages/game/**", "party/**", "src/app/page.tsx", "src/components/**"],
+      "acceptance": [
+        "src/p2p/types.ts and src/p2p/lan-transport.ts implement host relay + guest WebSocket client using the existing packages/game wire message types",
+        "Heartbeat/ping detects disconnects within 5 seconds and host-tab-close surfaces a disconnect event to guests",
+        "Default port is 9876; JSON serialization round-trips ClientMessage/ServerMessage",
+        "No changes to getPartyHost() or the PartySocket online path; transport is inert unless mode is local",
+        "Focused vitest unit tests cover serialization, heartbeat/disconnect, and fan-out/receive and pass"
+      ],
+      "verify": "## Setup\n- `pnpm install` at the repo root.\n\n## Automated\n- Run `pnpm test` (vitest) and confirm the new src/p2p tests pass.\n- Run `pnpm typecheck` and `pnpm lint`.\n\n## Manual\n- Confirm src/lib/party.ts, packages/client/src/party.ts, and useGameConnection are untouched (online path intact).\n- Confirm the transport is only reachable behind a mode==='local' entry point and does nothing otherwise.\n\n## Gotchas\n- Reuse packages/game wire types; do not fork message shapes. True two-device WiFi testing needs real devices and is out of scope for CI — cover behaviour with in-process/mocked sockets instead."
+    },
+    {
+      "name": "verify-lan-p2p-transport",
+      "type": "verifier",
+      "verifies": "lan-p2p-transport",
+      "scopedGoal": "Verify the CAM-22 LAN WebSocket P2P transport against every acceptance criterion. Run `pnpm test`, `pnpm typecheck`, and `pnpm lint` and report the new src/p2p test results. Confirm host relay fan-out and guest receive work in the tests, heartbeat/disconnect detection is within 5s, default port is 9876, JSON round-trips the packages/game wire types (not forked shapes), and — critically — that getPartyHost() and the PartySocket online path are untouched and the transport is inert unless mode is local. Do not implement fixes; produce a verdict handoff.",
+      "acceptance": ["Verification section includes execution evidence for every lan-p2p-transport acceptance criterion"]
+    },
+    {
+      "name": "tutorial-polish",
+      "type": "worker",
+      "openPR": true,
+      "scopedGoal": "Implement Linear CAM-71 \"Tutorial polish: Skip/Escape, motion, mobile\". Finish accessibility and mobile polish for the tutorial landing modal and the in-game Joyride coach. Requirements: Escape and Skip must consistently mark the current tutorial stage as seen (verify mark-seen on dismiss for BOTH the landing-modal stage and the in-game coach stage); add a proper focus trap and keyboard navigation to the landing modal; make the tutorial motion consistent with existing overlays (match the framer-motion patterns used by CambioCallOverlay); and make the modal and Joyride tooltips usable on small mobile viewports. The tutorial code lives in src/components/tutorial/**, src/hooks/useTutorial.ts, src/lib/tutorial.ts, and the seen-flag store in src/store/tutorial-prefs.ts (with schema in src/store/tutorial-prefs-schema.ts). Keep the seen-flag persistence going through the existing store/adapter (do not read/write localStorage directly). Preserve existing passing tests in src/lib/tutorial.test.ts and src/store/tutorial-prefs*.test.ts and extend them to cover skip/finish/Escape mark-seen for both stages. Confine changes to the tutorial components, hook, lib, store, and their tests.",
+      "pathsAllowed": ["src/components/tutorial/**", "src/hooks/useTutorial.ts", "src/lib/tutorial.ts", "src/lib/tutorial.test.ts", "src/store/tutorial-prefs.ts", "src/store/tutorial-prefs.test.ts", "src/store/tutorial-prefs-schema.ts", "src/store/tutorial-prefs-schema.test.ts"],
+      "pathsForbidden": ["packages/**", "party/**", "src/app/**"],
+      "acceptance": [
+        "Keyboard (Escape/Skip/finish) and touch dismiss all work without trapping the user, and mark the correct stage seen",
+        "Landing modal has a working focus trap and keyboard navigation",
+        "Tutorial motion matches existing overlay (framer-motion) patterns",
+        "Landing modal and Joyride tooltips are usable on a mobile viewport",
+        "Seen flags are set correctly for skip, finish, and Escape on both stages, persisted via the existing store (no direct localStorage)",
+        "Existing tutorial tests still pass and are extended to cover the mark-seen paths"
+      ],
+      "verify": "## Setup\n- `pnpm install` at the repo root.\n\n## Automated\n- Run `pnpm test` focusing on tutorial tests (src/lib/tutorial.test.ts, src/store/tutorial-prefs*.test.ts) and confirm they pass, including new mark-seen coverage.\n- Run `pnpm typecheck` and `pnpm lint`.\n\n## Manual\n- In a mobile viewport, open the landing modal: confirm focus trap, keyboard nav, Escape/Skip dismiss, and that tooltips are usable.\n- Confirm seen flags persist through the store, not raw localStorage.\n\n## Gotchas\n- Two stages exist (landing modal + in-game coach); mark-seen must be correct for both on skip, finish, and Escape."
+    }
+  ]
+}
