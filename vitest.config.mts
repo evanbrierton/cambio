@@ -5,6 +5,7 @@ export default defineConfig({
     passWithNoTests: true,
     include: [
       "src/**/*.{test,spec}.{ts,tsx}",
+      "packages/**/*.{test,spec}.{ts,tsx}",
       "party/**/*.{test,spec}.{ts,tsx}",
       "scripts/**/*.{test,spec}.{ts,tsx}",
     ],

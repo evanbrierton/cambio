@@ -1,1 +1,10 @@
-// CAM-35 scaffold — @cambio/game exports land in CAM-36.
+export * from "./bot";
+export * from "./bot-chat";
+export * from "./bot-chat-events";
+export * from "./bot-chat-llm";
+export * from "./bot-names";
+export * from "./cards";
+export * from "./engine";
+export * from "./scoring";
+export * from "./types";
+export * from "./wire-schema";
