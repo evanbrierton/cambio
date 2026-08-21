@@ -50,7 +50,7 @@
     {
       "name": "verify-capacitor-shell",
       "type": "verifier",
-      "branch": "orch/project-priority/verify-capacitor-shell",
+      "branch": "`orch/project-priority/capacitor-shell` (no commits added — I only ran verification; nothing to commit)",
       "startingRef": "orch/project-priority/capacitor-shell",
       "dependsOn": [
         "capacitor-shell"
@@ -58,12 +58,12 @@
       "agentId": "bc-d7696ff9-23c8-4414-ab82-eafdeaa2338e",
       "runId": "run-07dad20e-cb2a-4e33-8d46-76c57aca6067",
       "parentAgentId": "bc-21545a69-e676-4d22-a2e0-a53043906aa2",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-capacitor-shell.md",
       "startedAt": "2026-08-21T16:32:23.030Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-21T16:32:25.988Z",
+      "finishedAt": "2026-08-21T16:36:51.514Z",
+      "lastUpdate": "2026-08-21T16:36:51.516Z",
       "note": null,
       "attempts": 1,
       "slackTs": null,
