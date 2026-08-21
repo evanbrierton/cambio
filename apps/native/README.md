@@ -4,21 +4,22 @@ This workspace package provides an iOS/Android shell around the existing Next.js
 
 ## Remote URL configuration
 
+The native `appId` is `ie.brierton.cambio` (reverse-DNS of `cambio.brierton.ie`).
+
 `apps/native/capacitor.config.ts` resolves the WebView URL with this precedence:
 
-1. `CAPACITOR_SERVER_URL` (recommended for explicit production/staging selection)
+1. `CAPACITOR_SERVER_URL` (recommended for explicit production/staging/LAN selection)
 2. `NEXT_PUBLIC_APP_URL` (same first preference used by `src/lib/site.ts`)
-3. `https://${VERCEL_URL}` (same fallback used by `src/lib/site.ts`)
-4. `http://localhost:3000`
+3. `https://cambio.brierton.ie` (production frontend)
 
 Examples:
 
 ```bash
-# Production shell target
-CAPACITOR_SERVER_URL=https://cambio.example.com pnpm --filter @cambio/native cap:sync
+# Explicit production shell target (also the default)
+CAPACITOR_SERVER_URL=https://cambio.brierton.ie pnpm --filter @cambio/native cap:sync
 
-# Staging shell target
-CAPACITOR_SERVER_URL=https://staging-cambio.example.com pnpm --filter @cambio/native cap:sync
+# Staging / preview shell target
+CAPACITOR_SERVER_URL=https://staging.cambio.brierton.ie pnpm --filter @cambio/native cap:sync
 ```
 
 For LAN/dev HTTP targets, enable cleartext traffic explicitly:
@@ -69,6 +70,7 @@ Run from the repository root.
 The shell allows navigation to:
 
 - the host from `CAPACITOR_SERVER_URL` / resolved default URL
+- `cambio.brierton.ie` (production frontend)
 - `cambio.brierton.workers.dev` (default PartyServer host)
 - `*.workers.dev`
 - `*.partykit.dev`
