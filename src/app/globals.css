@@ -2516,6 +2516,60 @@ html.native-shell [data-pwa-install] {
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
+/* In-game: let seats/grid occupy the home-indicator instead of leaving a padded gap. */
+.play-shell.play-shell-fill-chin {
+  padding-bottom: 0;
+}
+
+.swipe-leave-root {
+  isolation: isolate;
+  touch-action: pan-y;
+}
+
+.swipe-leave-root[data-swipe-to-leave="on"] .touch-game {
+  touch-action: pan-y;
+}
+
+.swipe-leave-root.is-swiping {
+  touch-action: none;
+  user-select: none;
+}
+
+.swipe-leave-root.is-swiping .touch-game {
+  touch-action: none;
+}
+
+.swipe-leave-underlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  background: color-mix(in srgb, var(--accent) 16%, var(--background));
+  pointer-events: none;
+}
+
+.swipe-leave-label {
+  font-family: var(--font-display);
+  font-size: 10px;
+  letter-spacing: var(--display-tracking);
+  text-transform: var(--display-transform);
+  color: var(--accent);
+}
+
+.swipe-leave-surface {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 100%;
+  background-color: var(--background);
+}
+
 .mobile-game-scroll,
 .players-scroll {
   -webkit-overflow-scrolling: touch;
@@ -2523,11 +2577,31 @@ html.native-shell [data-pwa-install] {
 }
 
 .players-grid-stage {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
   perspective: 1000px;
 }
 
 .players-grid-scroll {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   transform-style: preserve-3d;
+}
+
+.players-grid-scroll > .grid {
+  box-sizing: border-box;
+  flex: 1 0 auto;
+  width: 100%;
+  min-height: 100%;
+  grid-auto-rows: minmax(min-content, 1fr);
 }
 
 .players-grid-item {
@@ -2727,6 +2801,10 @@ html.native-shell [data-pwa-install] {
   .play-shell {
     padding-top: 1.5rem;
     padding-bottom: 1rem;
+  }
+
+  .play-shell.play-shell-fill-chin {
+    padding-bottom: 0;
   }
 }
 
@@ -3235,6 +3313,10 @@ html.native-shell [data-pwa-install] {
   opacity: 0.85;
 }
 
+.table-cambio-chip[aria-hidden="true"] {
+  animation: none;
+}
+
 @keyframes table-cambio-pulse {
   0%,
   100% {
@@ -3263,7 +3345,7 @@ html.native-shell [data-pwa-install] {
     color-mix(in srgb, var(--foreground-muted) 22%, transparent);
   margin-top: 0.25rem;
   padding-top: 0.25rem;
-  min-height: 1.25rem;
+  min-height: 2.25rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3360,7 +3442,7 @@ html.native-shell [data-pwa-install] {
  * Grid keeps bottom padding so the last row can scroll under the button.
  */
 @media (max-width: 1023px) {
-  .players-with-action-overlay .players-grid-scroll {
+  .players-with-action-overlay.has-action-overlay .players-grid-scroll {
     padding-bottom: 3.25rem;
   }
 }
@@ -3372,6 +3454,10 @@ html.native-shell [data-pwa-install] {
   }
 
   .table-chrome-slot {
+    min-height: 2.5rem;
+  }
+
+  .table-grid-context {
     min-height: 2.5rem;
   }
 

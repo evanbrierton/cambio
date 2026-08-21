@@ -3,6 +3,7 @@
 import { hapticClick } from "@cambio/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { SwipeToLeave } from "@/components/SwipeToLeave";
 import { RetroButton } from "@/components/ui/RetroButton";
 import { useMatchmaking } from "@/hooks/useMatchmaking";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
@@ -87,69 +88,75 @@ export default function MatchPage() {
   ]);
 
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
-      <div className="w-full max-w-md space-y-4 pixel-border p-6 bg-surface-elevated text-left">
-        <div className="space-y-2">
-          <p className="font-display text-[10px] text-theme-muted">
-            {voice.matchPlayersLabel}
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {TARGET_SIZES.map((size) => {
-              const selected = size === targetSize;
-              return (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => {
-                    hapticClick("selection");
-                    setTargetSize(clampMatchTargetSize(size));
-                  }}
-                  className={`chip-btn min-w-10 px-3 py-2 text-[10px] transition-colors ${
-                    selected
-                      ? "border-accent text-accent"
-                      : "border-theme-muted text-theme hover:border-accent"
-                  }`}
-                  aria-pressed={selected}
-                >
-                  {size}
-                </button>
-              );
-            })}
+    <SwipeToLeave
+      enabled
+      label={voice.leaveGame}
+      className="fixed inset-0 z-10 flex flex-col"
+    >
+      <div className="flex h-full flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
+        <div className="w-full max-w-md space-y-4 pixel-border p-6 bg-surface-elevated text-left">
+          <div className="space-y-2">
+            <p className="font-display text-[10px] text-theme-muted">
+              {voice.matchPlayersLabel}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {TARGET_SIZES.map((size) => {
+                const selected = size === targetSize;
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => {
+                      hapticClick("selection");
+                      setTargetSize(clampMatchTargetSize(size));
+                    }}
+                    className={`chip-btn min-w-10 px-3 py-2 text-[10px] transition-colors ${
+                      selected
+                        ? "border-accent text-accent"
+                        : "border-theme-muted text-theme hover:border-accent"
+                    }`}
+                    aria-pressed={selected}
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-display text-[10px] text-theme-muted">
+              {voice.matchFillWithBotsLabel}
+            </span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={fillWithBots}
+              onClick={() => {
+                hapticClick("selection");
+                setFillWithBots((value) => !value);
+              }}
+              className={`chip-btn px-3 py-2 text-[10px] transition-colors ${
+                fillWithBots
+                  ? "border-accent text-accent"
+                  : "border-theme-muted text-theme hover:border-accent"
+              }`}
+            >
+              {fillWithBots ? voice.matchFillBotsOn : voice.matchFillBotsOff}
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-3">
-          <span className="font-display text-[10px] text-theme-muted">
-            {voice.matchFillWithBotsLabel}
-          </span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={fillWithBots}
-            onClick={() => {
-              hapticClick("selection");
-              setFillWithBots((value) => !value);
-            }}
-            className={`chip-btn px-3 py-2 text-[10px] transition-colors ${
-              fillWithBots
-                ? "border-accent text-accent"
-                : "border-theme-muted text-theme hover:border-accent"
-            }`}
-          >
-            {fillWithBots ? voice.matchFillBotsOn : voice.matchFillBotsOff}
-          </button>
-        </div>
+        <p className="font-display text-theme animate-pulse text-sm">
+          {matching ? voice.findingMatch : voice.loading}
+        </p>
+        {error ? (
+          <p className="font-display text-sm text-red-400">{error}</p>
+        ) : null}
+        <RetroButton variant="secondary" onClick={() => router.push("/")}>
+          {voice.cancelMatch}
+        </RetroButton>
       </div>
-
-      <p className="font-display text-theme animate-pulse text-sm">
-        {matching ? voice.findingMatch : voice.loading}
-      </p>
-      {error ? (
-        <p className="font-display text-sm text-red-400">{error}</p>
-      ) : null}
-      <RetroButton variant="secondary" onClick={() => router.push("/")}>
-        {voice.cancelMatch}
-      </RetroButton>
-    </div>
+    </SwipeToLeave>
   );
 }

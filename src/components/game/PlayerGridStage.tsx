@@ -15,12 +15,19 @@ type PlayerGridStageProps = {
 
 export function PlayerGridStage({ children }: PlayerGridStageProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const childCount = Children.count(children);
 
   const updateLayout = useCallback(() => {
     const scrollEl = scrollRef.current;
+    const gridEl = gridRef.current;
     if (!scrollEl) return;
+
+    const fillHeight = Math.max(scrollEl.clientHeight, 0);
+    if (gridEl && fillHeight > 0) {
+      gridEl.style.minHeight = `${fillHeight}px`;
+    }
 
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -81,12 +88,12 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
   }, [updateLayout]);
 
   return (
-    <div className="players-grid-stage flex flex-1 flex-col min-h-0 min-w-0 overflow-hidden">
-      <div
-        ref={scrollRef}
-        className="players-grid-scroll flex-1 basis-0 min-h-0 overflow-y-auto overflow-x-auto overscroll-contain [-webkit-overflow-scrolling:touch]"
-      >
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 p-2 justify-items-stretch items-stretch auto-rows-fr">
+    <div className="players-grid-stage">
+      <div ref={scrollRef} className="players-grid-scroll">
+        <div
+          ref={gridRef}
+          className="players-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 px-2 pt-2 pb-0 justify-items-stretch items-stretch"
+        >
           {Children.map(children, (child, index) => (
             <div
               key={
@@ -97,7 +104,7 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
               ref={(element) => {
                 itemRefs.current[index] = element;
               }}
-              className="players-grid-item min-w-0 w-full h-full flex justify-center items-stretch"
+              className="players-grid-item min-w-0 w-full h-full min-h-0 flex justify-center items-stretch"
             >
               {child}
             </div>
