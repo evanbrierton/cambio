@@ -10,18 +10,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "error",
+      "status": "pending",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-21T16:24:00.972Z",
+      "startedAt": null,
       "finishedAt": null,
-      "lastUpdate": "2026-08-21T16:24:01.121Z",
-      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "lastUpdate": "2026-08-21T16:26:15.258Z",
+      "note": "respawned by local-cli (was error; attempts=1)",
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
-      "failureMode": "unknown",
-      "verification": null,
-      "attempts": 1
+      "failureMode": null,
+      "verification": null
     },
     {
       "name": "capacitor-plugins",
@@ -85,11 +85,11 @@
       "finishedAt": null,
       "lastUpdate": "2026-08-21T16:24:10.234Z",
       "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": "unknown",
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "verify-lan-p2p-transport",
@@ -130,11 +130,11 @@
       "finishedAt": null,
       "lastUpdate": "2026-08-21T16:24:18.881Z",
       "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": "unknown",
-      "verification": null,
-      "attempts": 1
+      "verification": null
     }
   ],
   "attention": [
