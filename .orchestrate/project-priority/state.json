@@ -27,24 +27,25 @@
       "name": "capacitor-plugins",
       "type": "worker",
       "branch": "orch/project-priority/capacitor-plugins",
-      "startingRef": "main",
+      "startingRef": "orch/project-priority/capacitor-shell",
       "dependsOn": [
         "capacitor-shell"
       ],
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-21T16:30:43.054Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-21T16:30:43.054Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "verify-capacitor-shell",
@@ -83,13 +84,13 @@
       "handoffPath": "handoffs/lan-p2p-transport.md",
       "startedAt": "2026-08-21T16:26:35.645Z",
       "finishedAt": "2026-08-21T16:30:40.365Z",
-      "lastUpdate": "2026-08-21T16:30:40.365Z",
+      "lastUpdate": "2026-08-21T16:30:41.630Z",
       "note": "respawned by local-cli (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": "unit-test-verified"
     },
     {
       "name": "verify-lan-p2p-transport",
@@ -165,6 +166,10 @@
     {
       "at": "2026-08-21T16:30:37.690Z",
       "message": "capacitor-shell: verification self-reported (type-check-only)"
+    },
+    {
+      "at": "2026-08-21T16:30:41.630Z",
+      "message": "lan-p2p-transport: verification self-reported (unit-test-verified)"
     }
   ]
 }
