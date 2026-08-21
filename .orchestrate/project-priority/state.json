@@ -34,14 +34,14 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-21T16:34:13.113Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-21T16:34:03.669Z",
+      "lastUpdate": "2026-08-21T16:34:13.113Z",
       "note": "respawned by local-cli (was error; attempts=1)",
-      "attempts": 1,
+      "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
@@ -176,6 +176,10 @@
     {
       "at": "2026-08-21T16:32:22.937Z",
       "message": "capacitor-plugins: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Failed to verify existence of branch 'orch/project-priority/capacitor-shell' in repository evanbrierton/cambio. Please ensure the branch name is correct."
+    },
+    {
+      "at": "2026-08-21T16:34:04.814Z",
+      "message": "capacitor-plugins: respawned by local-cli (was error)"
     }
   ]
 }
