@@ -1436,7 +1436,7 @@ export function GameTable({
         send({ type: "call_cambio" });
       }}
       className={`table-cambio-chip chip-btn ${
-        view.canCallCambio ? "" : "invisible pointer-events-none"
+        view.canCallCambio ? "" : "invisible pointer-events-none animate-none"
       }`}
     >
       {voice.callCambio}

@@ -187,7 +187,7 @@ export default function PlayPage({
       <div
         className={`play-shell touch-game flex h-full w-full flex-col px-3 sm:px-6 lg:px-8 ${
           pageScrollable
-            ? "overflow-y-auto mobile-game-scroll"
+            ? "overflow-y-auto overflow-x-hidden mobile-game-scroll"
             : "play-shell-fill-chin overflow-hidden"
         }`}
       >

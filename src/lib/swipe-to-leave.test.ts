@@ -2,18 +2,28 @@ import { describe, expect, it } from "vitest";
 import {
   clampSwipeOffset,
   isFromLeaveEdge,
+  isHorizontalLeaveLock,
   isSwipeCommit,
+  isVerticalScrollLock,
   SWIPE_COMMIT_DISTANCE_PX,
   SWIPE_EDGE_PX,
   swipeVelocityPxS,
 } from "./swipe-to-leave";
 
 describe("swipe-to-leave", () => {
-  it("starts only from the left edge", () => {
+  it("identifies the left-edge eager zone", () => {
     expect(isFromLeaveEdge(0)).toBe(true);
     expect(isFromLeaveEdge(SWIPE_EDGE_PX)).toBe(true);
     expect(isFromLeaveEdge(SWIPE_EDGE_PX + 1)).toBe(false);
     expect(isFromLeaveEdge(-1)).toBe(false);
+  });
+
+  it("locks onto a right swipe before vertical scroll", () => {
+    expect(isHorizontalLeaveLock(16, 4)).toBe(true);
+    expect(isHorizontalLeaveLock(8, 2)).toBe(false);
+    expect(isHorizontalLeaveLock(10, 12)).toBe(false);
+    expect(isVerticalScrollLock(4, 16)).toBe(true);
+    expect(isVerticalScrollLock(16, 4)).toBe(false);
   });
 
   it("commits after a long drag or a fast flick", () => {

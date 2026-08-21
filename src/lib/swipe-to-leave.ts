@@ -1,5 +1,6 @@
-export const SWIPE_EDGE_PX = 28;
-export const SWIPE_COMMIT_DISTANCE_PX = 80;
+export const SWIPE_EDGE_PX = 48;
+export const SWIPE_AXIS_LOCK_PX = 12;
+export const SWIPE_COMMIT_DISTANCE_PX = 72;
 export const SWIPE_COMMIT_VELOCITY_PX_S = 700;
 
 export function isFromLeaveEdge(
@@ -7,6 +8,22 @@ export function isFromLeaveEdge(
   edgeWidthPx = SWIPE_EDGE_PX,
 ): boolean {
   return clientX >= 0 && clientX <= edgeWidthPx;
+}
+
+export function isHorizontalLeaveLock(
+  dx: number,
+  dy: number,
+  axisPx = SWIPE_AXIS_LOCK_PX,
+): boolean {
+  return dx >= axisPx && dx > Math.abs(dy);
+}
+
+export function isVerticalScrollLock(
+  dx: number,
+  dy: number,
+  axisPx = SWIPE_AXIS_LOCK_PX,
+): boolean {
+  return Math.abs(dy) >= axisPx && Math.abs(dy) >= Math.abs(dx);
 }
 
 export function swipeVelocityPxS(

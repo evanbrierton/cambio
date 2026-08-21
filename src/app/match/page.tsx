@@ -91,9 +91,9 @@ export default function MatchPage() {
     <SwipeToLeave
       enabled
       label={voice.leaveGame}
-      className="flex flex-1 flex-col"
+      className="fixed inset-0 z-10 flex flex-col"
     >
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
+      <div className="flex h-full flex-1 flex-col items-center justify-center gap-6 px-6 text-center">
         <div className="w-full max-w-md space-y-4 pixel-border p-6 bg-surface-elevated text-left">
           <div className="space-y-2">
             <p className="font-display text-[10px] text-theme-muted">
