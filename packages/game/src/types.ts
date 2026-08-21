@@ -261,6 +261,7 @@ export type PlayerView = {
   hasDrawnCard: boolean;
   canCallCambio: boolean;
   canDraw: boolean;
+  canDrawFromDeck: boolean;
   canSwap: boolean;
   canDiscardDrawn: boolean;
   canSnap: boolean;

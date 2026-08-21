@@ -4,9 +4,12 @@ import {
   isHomeTutorialSeen,
   markGameTutorialSeen,
   markHomeTutorialSeen,
+  markStageSeenOnDismiss,
   resetAllTutorialSeen,
+  TUTORIAL_DISMISS_REASON,
   TUTORIAL_GAME_SEEN_KEY,
   TUTORIAL_HOME_SEEN_KEY,
+  TUTORIAL_STAGE,
 } from "./tutorial";
 
 function createMemoryStorage(): Storage {
@@ -65,5 +68,55 @@ describe("tutorial persistence", () => {
     resetAllTutorialSeen();
     expect(isHomeTutorialSeen()).toBe(false);
     expect(isGameTutorialSeen()).toBe(false);
+  });
+
+  it("marks home stage seen on skip, finish, and escape dismiss paths", () => {
+    const baseline = { homeSeen: false, gameSeen: false };
+    expect(
+      markStageSeenOnDismiss(
+        baseline,
+        TUTORIAL_STAGE.LANDING_MODAL,
+        TUTORIAL_DISMISS_REASON.SKIP,
+      ),
+    ).toEqual({ homeSeen: true, gameSeen: false });
+    expect(
+      markStageSeenOnDismiss(
+        baseline,
+        TUTORIAL_STAGE.LANDING_MODAL,
+        TUTORIAL_DISMISS_REASON.FINISH,
+      ),
+    ).toEqual({ homeSeen: true, gameSeen: false });
+    expect(
+      markStageSeenOnDismiss(
+        baseline,
+        TUTORIAL_STAGE.LANDING_MODAL,
+        TUTORIAL_DISMISS_REASON.ESCAPE,
+      ),
+    ).toEqual({ homeSeen: true, gameSeen: false });
+  });
+
+  it("marks in-game coach stage seen on skip, finish, and escape dismiss paths", () => {
+    const baseline = { homeSeen: false, gameSeen: false };
+    expect(
+      markStageSeenOnDismiss(
+        baseline,
+        TUTORIAL_STAGE.IN_GAME_COACH,
+        TUTORIAL_DISMISS_REASON.SKIP,
+      ),
+    ).toEqual({ homeSeen: false, gameSeen: true });
+    expect(
+      markStageSeenOnDismiss(
+        baseline,
+        TUTORIAL_STAGE.IN_GAME_COACH,
+        TUTORIAL_DISMISS_REASON.FINISH,
+      ),
+    ).toEqual({ homeSeen: false, gameSeen: true });
+    expect(
+      markStageSeenOnDismiss(
+        baseline,
+        TUTORIAL_STAGE.IN_GAME_COACH,
+        TUTORIAL_DISMISS_REASON.ESCAPE,
+      ),
+    ).toEqual({ homeSeen: false, gameSeen: true });
   });
 });

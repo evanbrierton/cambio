@@ -25,6 +25,7 @@ export function useTutorial() {
       dismissedCoachHints: state.dismissedCoachHints,
       markHomeSeen: state.markHomeSeen,
       markGameSeen: state.markGameSeen,
+      markStageSeenFromDismiss: state.markStageSeenFromDismiss,
       dismissCoachHint: state.dismissCoachHint,
       replayHomeTutorial: state.replayHomeTutorial,
       replayGameTutorial: state.replayGameTutorial,

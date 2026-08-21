@@ -917,7 +917,7 @@ export function GameTable({
       ? nextCoachHint(
           {
             phase: view.phase,
-            canDraw: view.canDraw,
+            canDraw: view.canDrawFromDeck,
             canSnap: view.canSnap,
             canCallCambio: view.canCallCambio,
             hasDiscard: Boolean(view.discardTop),
@@ -1774,7 +1774,7 @@ export function GameTable({
                     ? "table-deck-compact shrink-0"
                     : "px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 gap-2 sm:gap-2.5 flex-1 max-h-[min(42vh,22rem)]"
                 } ${
-                  view.canDraw && !snapGivePending
+                  view.canDrawFromDeck && !snapGivePending
                     ? "table-deck-drawable ring-2 ring-accent-alt"
                     : ""
                 } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
@@ -1814,10 +1814,10 @@ export function GameTable({
                     <button
                       type="button"
                       data-tutorial="deck"
-                      disabled={!view.canDraw || snapGivePending}
+                      disabled={!view.canDrawFromDeck || snapGivePending}
                       onClick={() => send({ type: "draw", source: "deck" })}
                       className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
-                        view.canDraw && !snapGivePending
+                        view.canDrawFromDeck && !snapGivePending
                           ? "pile-interactable-btn cursor-pointer active:opacity-80"
                           : ""
                       }`}
@@ -1827,7 +1827,7 @@ export function GameTable({
                         className={`table-pile-label ${
                           deckDrawFlash
                             ? "pile-draw-flash-label"
-                            : view.canDraw && !snapGivePending
+                            : view.canDrawFromDeck && !snapGivePending
                               ? "pile-interactable-label"
                               : "text-theme-muted"
                         }`}
@@ -1838,7 +1838,7 @@ export function GameTable({
                         className={`table-pile-card pixel-border rounded-card scaled-pile-size bg-surface-card flex items-center justify-center font-display text-on-card shrink-0 ${
                           deckDrawFlash
                             ? "pile-draw-flash pile-draw-flash-deck"
-                            : view.canDraw && !snapGivePending
+                            : view.canDrawFromDeck && !snapGivePending
                               ? "pile-interactable-card ring-2 ring-accent-alt"
                               : ""
                         }`}
