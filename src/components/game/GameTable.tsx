@@ -1635,7 +1635,7 @@ export function GameTable({
   return (
     <div
       className={`w-full max-w-7xl mx-auto flex flex-col ${
-        isLobbyScrollLayout ? "" : "flex-1 min-h-0 overflow-hidden"
+        isLobbyScrollLayout ? "" : "h-full flex-1 min-h-0 overflow-hidden"
       } ${snapWindowActive ? "snap-window-active" : ""}`}
     >
       <GameToastLayer toasts={gameToasts} />
