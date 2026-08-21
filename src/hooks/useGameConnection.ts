@@ -9,6 +9,7 @@ import { parseServerMessageJson } from "@/game/wire-schema";
 import type { CambioFlash } from "@/hooks/useServerMessages";
 import { useServerMessages } from "@/hooks/useServerMessages";
 import { freshSessionKey, getPartyHost, storageKey } from "@/lib/party";
+import { nextTransportConnectionError } from "@/lib/transport-connection-error";
 
 export type {
   CambioFlash,
@@ -117,9 +118,15 @@ export function useGameConnection(
       platform.persistentStorage.setItem(roomKeyRef.current, playerId);
       platform.sessionStorage.setItem(roomKeyRef.current, playerId);
       platform.sessionStorage.setItem(seenKeyRef.current, "1");
+      setConnectionError((current) =>
+        nextTransportConnectionError(current, "server_ack"),
+      );
     },
     onViewChange: (view) => {
       viewRef.current = view;
+      setConnectionError((current) =>
+        nextTransportConnectionError(current, "server_ack"),
+      );
     },
     onCambioFlashChange: (flash) => {
       cambioFlashRef.current = flash;
@@ -214,8 +221,8 @@ export function useGameConnection(
 
     socket.addEventListener("error", () => {
       setConnected(false);
-      setConnectionError(
-        (current) => current ?? "Could not connect to game server.",
+      setConnectionError((current) =>
+        nextTransportConnectionError(current, "socket_error"),
       );
     });
 
