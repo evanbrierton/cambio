@@ -15,13 +15,13 @@
       "handoffPath": "handoffs/capacitor-shell.md",
       "startedAt": "2026-08-21T16:26:30.183Z",
       "finishedAt": "2026-08-21T16:30:36.554Z",
-      "lastUpdate": "2026-08-21T16:30:36.555Z",
+      "lastUpdate": "2026-08-21T16:30:37.689Z",
       "note": "respawned by local-cli (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": 213,
       "failureMode": null,
-      "verification": null
+      "verification": "type-check-only"
     },
     {
       "name": "capacitor-plugins",
@@ -78,12 +78,12 @@
       "agentId": "bc-fb99b4f9-69ac-4e44-9a38-cb2ff1c7f5ab",
       "runId": "run-d2e496c1-d6ed-4eb4-8150-322399f0f293",
       "parentAgentId": "bc-21545a69-e676-4d22-a2e0-a53043906aa2",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/lan-p2p-transport.md",
       "startedAt": "2026-08-21T16:26:35.645Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-21T16:26:39.113Z",
+      "finishedAt": "2026-08-21T16:30:40.365Z",
+      "lastUpdate": "2026-08-21T16:30:40.365Z",
       "note": "respawned by local-cli (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
@@ -161,6 +161,10 @@
     {
       "at": "2026-08-21T16:26:19.327Z",
       "message": "tutorial-polish: respawned by local-cli (was error)"
+    },
+    {
+      "at": "2026-08-21T16:30:37.690Z",
+      "message": "capacitor-shell: verification self-reported (type-check-only)"
     }
   ]
 }
