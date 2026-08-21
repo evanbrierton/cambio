@@ -60,6 +60,10 @@
     {
       "at": "2026-08-21T15:33:08.385Z",
       "message": "matchmaking-v1-closeout: verification self-reported (unit-test-verified)"
+    },
+    {
+      "at": "2026-08-21T15:33:18.848Z",
+      "message": "verify-matchmaking-v1-closeout: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Branch 'orch/priority-closeout/matchmaking-v1-closeout' does not exist in repository evanbrierton/cambio."
     }
   ]
 }
