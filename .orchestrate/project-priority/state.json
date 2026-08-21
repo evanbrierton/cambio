@@ -123,17 +123,17 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "error",
+      "status": "pending",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-21T16:24:18.789Z",
+      "startedAt": null,
       "finishedAt": null,
-      "lastUpdate": "2026-08-21T16:24:18.881Z",
-      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "lastUpdate": "2026-08-21T16:26:18.246Z",
+      "note": "respawned by local-cli (was error; attempts=1)",
       "attempts": 1,
       "slackTs": null,
       "prNumber": null,
-      "failureMode": "unknown",
+      "failureMode": null,
       "verification": null
     }
   ],
@@ -153,6 +153,10 @@
     {
       "at": "2026-08-21T16:26:16.444Z",
       "message": "capacitor-shell: respawned by local-cli (was error)"
+    },
+    {
+      "at": "2026-08-21T16:26:17.968Z",
+      "message": "lan-p2p-transport: respawned by local-cli (was error)"
     }
   ]
 }
