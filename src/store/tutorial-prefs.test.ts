@@ -38,6 +38,7 @@ beforeEach(async () => {
   tutorialPrefsModule.useTutorialStore.setState({
     homeSeen: false,
     gameSeen: false,
+    dismissedCoachHints: [],
   });
   await tutorialPrefsModule.useTutorialStore.persist.clearStorage();
 });
@@ -55,6 +56,37 @@ describe("tutorial prefs store", () => {
     expect(tutorialPrefsModule.useTutorialStore.getState().gameSeen).toBe(
       false,
     );
+    expect(
+      tutorialPrefsModule.useTutorialStore.getState().dismissedCoachHints,
+    ).toEqual([]);
+  });
+
+  it("keeps dismissed coach hints in memory without persisting them", async () => {
+    tutorialPrefsModule.useTutorialStore.getState().dismissCoachHint("deck");
+    expect(
+      tutorialPrefsModule.useTutorialStore.getState().dismissedCoachHints,
+    ).toEqual(["deck"]);
+
+    const raw = localStorage.getItem(
+      tutorialPrefsModule.TUTORIAL_PREFS_STORAGE_KEY,
+    );
+    expect(parseTutorialPrefsPersistJson(raw ?? "")).toEqual({
+      homeSeen: false,
+      gameSeen: false,
+    });
+
+    tutorialPrefsModule.useTutorialStore.getState().replayGameTutorial();
+    expect(
+      tutorialPrefsModule.useTutorialStore.getState().dismissedCoachHints,
+    ).toEqual([]);
+  });
+
+  it("does not wipe dismissed coach hints when persist rehydrates", async () => {
+    tutorialPrefsModule.useTutorialStore.getState().dismissCoachHint("deck");
+    await tutorialPrefsModule.useTutorialStore.persist.rehydrate();
+    expect(
+      tutorialPrefsModule.useTutorialStore.getState().dismissedCoachHints,
+    ).toEqual(["deck"]);
   });
 
   it("persists seen flags across rehydration", async () => {
@@ -100,5 +132,50 @@ describe("tutorial prefs store", () => {
     expect(tutorialPrefsModule.useTutorialStore.getState().gameSeen).toBe(
       false,
     );
+  });
+
+  it("onFinishHydration does not notify listeners registered after rehydrate", async () => {
+    await tutorialPrefsModule.useTutorialStore.persist.rehydrate();
+    expect(tutorialPrefsModule.useTutorialStore.persist.hasHydrated()).toBe(
+      true,
+    );
+
+    let notified = false;
+    const unsub =
+      tutorialPrefsModule.useTutorialStore.persist.onFinishHydration(() => {
+        notified = true;
+      });
+    expect(notified).toBe(false);
+    unsub();
+  });
+
+  it("onTutorialPrefsHydrated catches up if rehydrate already finished", async () => {
+    await tutorialPrefsModule.useTutorialStore.persist.rehydrate();
+    expect(tutorialPrefsModule.useTutorialStore.persist.hasHydrated()).toBe(
+      true,
+    );
+
+    let notified = 0;
+    const unsub = tutorialPrefsModule.onTutorialPrefsHydrated(() => {
+      notified += 1;
+    });
+    expect(notified).toBe(1);
+    unsub();
+  });
+
+  it("onTutorialPrefsHydrated notifies when rehydrate finishes later", async () => {
+    expect(tutorialPrefsModule.useTutorialStore.persist.hasHydrated()).toBe(
+      false,
+    );
+
+    let notified = 0;
+    const unsub = tutorialPrefsModule.onTutorialPrefsHydrated(() => {
+      notified += 1;
+    });
+    expect(notified).toBe(0);
+
+    await tutorialPrefsModule.useTutorialStore.persist.rehydrate();
+    expect(notified).toBe(1);
+    unsub();
   });
 });
