@@ -1,5 +1,6 @@
 "use client";
 
+import { isNativePlatform } from "@cambio/client";
 import { AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -18,6 +19,7 @@ const SHOW_DELAY_MS = 2_500;
 export function PwaInstallPrompt() {
   const pathname = usePathname();
   const onHome = pathname === "/";
+  const alreadyInstalled = isNativePlatform() || isStandaloneDisplay();
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [iosGuide, setIosGuide] = useState(false);
@@ -34,7 +36,7 @@ export function PwaInstallPrompt() {
 
   // Capture installability independently of route so the event isn't missed.
   useEffect(() => {
-    if (isStandaloneDisplay()) return;
+    if (alreadyInstalled) return;
 
     const onBeforeInstallPrompt = (event: Event) => {
       event.preventDefault();
@@ -59,7 +61,7 @@ export function PwaInstallPrompt() {
       window.removeEventListener("beforeinstallprompt", onBeforeInstallPrompt);
       window.removeEventListener("appinstalled", onAppInstalled);
     };
-  }, []);
+  }, [alreadyInstalled]);
 
   // Only prompt on the home screen, and respect dismiss / standalone state.
   useEffect(() => {
@@ -67,7 +69,7 @@ export function PwaInstallPrompt() {
 
     const eligible =
       onHome &&
-      !isStandaloneDisplay() &&
+      !alreadyInstalled &&
       !isInstallDismissed() &&
       (deferredPrompt !== null || iosGuide);
 
@@ -81,7 +83,7 @@ export function PwaInstallPrompt() {
     }, SHOW_DELAY_MS);
 
     return clearShowTimer;
-  }, [clearShowTimer, deferredPrompt, iosGuide, onHome]);
+  }, [alreadyInstalled, clearShowTimer, deferredPrompt, iosGuide, onHome]);
 
   const hide = useCallback(() => {
     clearShowTimer();
@@ -115,12 +117,17 @@ export function PwaInstallPrompt() {
   const canShowNativeInstall = deferredPrompt !== null;
   const canShowIosGuide = iosGuide && !canShowNativeInstall;
 
-  if (!visible || (!canShowNativeInstall && !canShowIosGuide)) {
+  if (
+    alreadyInstalled ||
+    visible === false ||
+    (!canShowNativeInstall && !canShowIosGuide)
+  ) {
     return null;
   }
 
   return (
     <div
+      data-pwa-install=""
       className="fixed inset-x-0 bottom-0 z-90 pointer-events-none flex flex-col items-stretch sm:items-center gap-2 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       aria-live="polite"
     >

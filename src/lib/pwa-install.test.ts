@@ -130,6 +130,26 @@ describe("isStandaloneDisplay", () => {
 
     expect(isStandaloneDisplay()).toBe(true);
   });
+
+  it("treats an iOS Capacitor WebView bridge as already installed", () => {
+    vi.stubGlobal("window", {
+      localStorage,
+      webkit: { messageHandlers: { bridge: {} } },
+      matchMedia: (query: string) =>
+        ({
+          matches: false,
+          media: query,
+          onchange: null,
+          addListener: vi.fn(),
+          removeListener: vi.fn(),
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+          dispatchEvent: vi.fn(),
+        }) as MediaQueryList,
+    });
+
+    expect(isStandaloneDisplay()).toBe(true);
+  });
 });
 
 describe("isIosDevice", () => {

@@ -2503,6 +2503,10 @@ html.native-shell body {
   background-color: var(--background);
 }
 
+html.native-shell [data-pwa-install] {
+  display: none;
+}
+
 .touch-game {
   touch-action: manipulation;
 }

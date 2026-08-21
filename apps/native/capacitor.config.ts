@@ -1,18 +1,18 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-const defaultSiteUrl =
-  process.env.NEXT_PUBLIC_APP_URL ??
-  (process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000");
+const PRODUCTION_WEB_URL = "https://cambio.brierton.ie";
 
-const serverUrl = process.env.CAPACITOR_SERVER_URL ?? defaultSiteUrl;
+const serverUrl =
+  process.env.CAPACITOR_SERVER_URL ??
+  process.env.NEXT_PUBLIC_APP_URL ??
+  PRODUCTION_WEB_URL;
 const parsedServerUrl = new URL(serverUrl);
 const cleartext =
   process.env.CAPACITOR_ALLOW_CLEARTEXT === "true" ||
   parsedServerUrl.protocol === "http:";
 const allowNavigation = [
   parsedServerUrl.hostname,
+  "cambio.brierton.ie",
   "cambio.brierton.workers.dev",
   "*.workers.dev",
   "*.partykit.dev",
@@ -21,7 +21,7 @@ const allowNavigation = [
 ];
 
 const config: CapacitorConfig = {
-  appId: "dev.brierton.cambio",
+  appId: "ie.brierton.cambio",
   appName: "Cambio",
   webDir: "web",
   backgroundColor: "#12061f",
@@ -45,7 +45,8 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     StatusBar: {
-      style: "LIGHT",
+      // Style.Dark = light status-bar icons on this dark shell.
+      style: "DARK",
       backgroundColor: "#12061f",
       overlaysWebView: true,
     },

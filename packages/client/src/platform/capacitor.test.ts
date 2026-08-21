@@ -11,14 +11,23 @@ import {
 
 const originalWindow = globalThis.window;
 
-function setWindowCapacitor(capacitor: {
-  isNativePlatform?: () => boolean;
-  registerPlugin?: <T>(name: string) => T;
-  Plugins?: Record<string, unknown>;
+function setNativeWindow(partial: {
+  Capacitor?: {
+    isNativePlatform?: () => boolean;
+    getPlatform?: () => string;
+    registerPlugin?: <T>(name: string) => T;
+    nativePromise?: (
+      pluginName: string,
+      methodName: string,
+      options?: unknown,
+    ) => Promise<unknown>;
+    isPluginAvailable?: (name: string) => boolean;
+    Plugins?: Record<string, unknown>;
+  };
+  webkit?: { messageHandlers?: { bridge?: unknown } };
+  androidBridge?: unknown;
 }) {
-  (globalThis as { window?: Window }).window = {
-    Capacitor: capacitor,
-  } as unknown as Window;
+  (globalThis as { window?: Window }).window = partial as unknown as Window;
 }
 
 function resetWindow() {
@@ -36,9 +45,54 @@ describe("capacitor native plugin bridge", () => {
   });
 
   it("treats missing Capacitor as web", () => {
-    setWindowCapacitor({});
+    setNativeWindow({ Capacitor: {} });
     expect(isNativePlatform()).toBe(false);
     expect(canUseNativeShare()).toBe(false);
+  });
+
+  it("detects an iOS Capacitor WebView from the native bridge object", () => {
+    setNativeWindow({
+      webkit: { messageHandlers: { bridge: {} } },
+    });
+    expect(isNativePlatform()).toBe(true);
+  });
+
+  it("calls haptics through nativePromise on the injected iOS bridge", async () => {
+    const nativePromise = vi.fn().mockResolvedValue(undefined);
+    setNativeWindow({
+      Capacitor: {
+        isNativePlatform: () => true,
+        Plugins: {},
+        nativePromise,
+      },
+    });
+
+    await triggerSnapHaptic();
+    await triggerCambioHaptic();
+
+    expect(nativePromise).toHaveBeenCalledWith("Haptics", "impact", {
+      style: "LIGHT",
+    });
+    expect(nativePromise).toHaveBeenCalledWith("Haptics", "notification", {
+      type: "SUCCESS",
+    });
+  });
+
+  it("uses JSExport plugin stubs when nativePromise is absent", async () => {
+    const impact = vi.fn().mockResolvedValue(undefined);
+    const notification = vi.fn().mockResolvedValue(undefined);
+    setNativeWindow({
+      Capacitor: {
+        isNativePlatform: () => true,
+        Plugins: { Haptics: { impact, notification } },
+      },
+    });
+
+    await triggerSnapHaptic();
+    await triggerCambioHaptic();
+
+    expect(impact).toHaveBeenCalledWith({ style: "LIGHT" });
+    expect(notification).toHaveBeenCalledWith({ type: "SUCCESS" });
   });
 
   it("registers haptics when the JS plugin package was not imported", async () => {
@@ -48,10 +102,12 @@ describe("capacitor native plugin bridge", () => {
       if (name !== "Haptics") return {};
       return { impact, notification };
     });
-    setWindowCapacitor({
-      isNativePlatform: () => true,
-      Plugins: {},
-      registerPlugin: registerPlugin as <T>(name: string) => T,
+    setNativeWindow({
+      Capacitor: {
+        isNativePlatform: () => true,
+        Plugins: {},
+        registerPlugin: registerPlugin as <T>(name: string) => T,
+      },
     });
 
     await triggerSnapHaptic();
@@ -70,10 +126,12 @@ describe("capacitor native plugin bridge", () => {
       if (name === "Share") return { share };
       return {};
     });
-    setWindowCapacitor({
-      isNativePlatform: () => true,
-      Plugins: {},
-      registerPlugin: registerPlugin as <T>(name: string) => T,
+    setNativeWindow({
+      Capacitor: {
+        isNativePlatform: () => true,
+        Plugins: {},
+        registerPlugin: registerPlugin as <T>(name: string) => T,
+      },
     });
 
     await expect(copyWithNativeClipboard("ROOM123")).resolves.toBe(true);
@@ -92,25 +150,29 @@ describe("capacitor native plugin bridge", () => {
     const setOverlaysWebView = vi.fn().mockResolvedValue(undefined);
     const setStyle = vi.fn().mockResolvedValue(undefined);
     const setBackgroundColor = vi.fn().mockResolvedValue(undefined);
-    setWindowCapacitor({
-      isNativePlatform: () => true,
-      Plugins: {
-        StatusBar: { setOverlaysWebView, setStyle, setBackgroundColor },
+    setNativeWindow({
+      Capacitor: {
+        isNativePlatform: () => true,
+        Plugins: {
+          StatusBar: { setOverlaysWebView, setStyle, setBackgroundColor },
+        },
       },
     });
 
     await applyNativeShellChrome();
 
     expect(setOverlaysWebView).toHaveBeenCalledWith({ overlay: true });
-    expect(setStyle).toHaveBeenCalledWith({ style: "LIGHT" });
+    expect(setStyle).toHaveBeenCalledWith({ style: "DARK" });
     expect(setBackgroundColor).toHaveBeenCalledWith({ color: "#12061f" });
   });
 
   it("does not call plugins on web", async () => {
     const impact = vi.fn();
-    setWindowCapacitor({
-      isNativePlatform: () => false,
-      Plugins: { Haptics: { impact } },
+    setNativeWindow({
+      Capacitor: {
+        isNativePlatform: () => false,
+        Plugins: { Haptics: { impact } },
+      },
     });
 
     await triggerSnapHaptic();
