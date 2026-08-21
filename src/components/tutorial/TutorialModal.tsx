@@ -36,7 +36,7 @@ const STEPS: TutorialModalStep[] = [
 type TutorialModalProps = {
   open: boolean;
   onClose: () => void;
-  onComplete: () => void;
+  onComplete?: () => void;
   stepIndex: number;
   onStepIndexChange: (index: number) => void;
 };
@@ -53,7 +53,7 @@ export function TutorialModal({
   const step = STEPS[stepIndex];
 
   const finish = useCallback(() => {
-    onComplete();
+    onComplete?.();
     onClose();
   }, [onClose, onComplete]);
 

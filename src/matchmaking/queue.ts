@@ -56,6 +56,21 @@ export function assignPlayer(
   config: MatchmakingConfig,
   now = Date.now(),
 ): MatchAssignment {
+  const existingRoomId = state.assignments[playerId];
+  if (existingRoomId) {
+    for (const lobbies of Object.values(state.buckets)) {
+      const existing = lobbies.find((lobby) => lobby.roomId === existingRoomId);
+      if (existing) {
+        return {
+          roomId: existing.roomId,
+          targetSize: existing.targetSize,
+          fillWithBots: existing.fillWithBots,
+        };
+      }
+    }
+    delete state.assignments[playerId];
+  }
+
   const key = bucketKey(config);
   const lobbies = state.buckets[key] ?? [];
   const open = sortedLobbies(lobbies).find(
@@ -104,4 +119,26 @@ export function cancelAssignment(
     return true;
   }
   return true;
+}
+
+/** Remove a lobby from the open queue once its game has started (or is dead). */
+export function closeLobby(
+  state: MatchmakingQueueState,
+  roomId: string,
+): boolean {
+  let closed = false;
+  for (const [key, lobbies] of Object.entries(state.buckets)) {
+    const next = lobbies.filter((lobby) => lobby.roomId !== roomId);
+    if (next.length !== lobbies.length) {
+      state.buckets[key] = next;
+      closed = true;
+    }
+  }
+  for (const [playerId, assignedRoomId] of Object.entries(state.assignments)) {
+    if (assignedRoomId === roomId) {
+      delete state.assignments[playerId];
+      closed = true;
+    }
+  }
+  return closed;
 }
