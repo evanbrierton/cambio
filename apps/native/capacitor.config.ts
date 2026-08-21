@@ -37,6 +37,13 @@ const config: CapacitorConfig = {
   android: {
     backgroundColor: "#12061f",
   },
+  includePlugins: [
+    "@capacitor/clipboard",
+    "@capacitor/haptics",
+    "@capacitor/share",
+    "@capacitor/splash-screen",
+    "@capacitor/status-bar",
+  ],
   plugins: {
     SplashScreen: {
       launchShowDuration: 1000,

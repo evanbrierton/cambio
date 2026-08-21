@@ -1325,6 +1325,7 @@ export function GameTable({
         view.cambioCallerId === playerId &&
         playerId !== view.playerId;
       if (isProtected) return;
+      void triggerSnapHaptic();
       send({ type: "snap", targetPlayerId: playerId, slot });
       return;
     }
@@ -1410,7 +1411,10 @@ export function GameTable({
     <button
       type="button"
       data-tutorial="call-cambio"
-      onClick={() => send({ type: "call_cambio" })}
+      onClick={() => {
+        void triggerCambioHaptic();
+        send({ type: "call_cambio" });
+      }}
       className="table-cambio-chip chip-btn"
     >
       {voice.callCambio}

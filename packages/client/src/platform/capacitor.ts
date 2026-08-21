@@ -148,19 +148,37 @@ export function markNativeShellClass(): boolean {
 }
 
 export function canUseNativeShare(): boolean {
-  return hasNativePluginMethod("Share", "share");
+  if (!isNativePlatform()) return false;
+  if (hasNativePluginMethod("Share", "share")) return true;
+  return canUseWebShare();
+}
+
+function canUseWebShare(): boolean {
+  return (
+    typeof navigator !== "undefined" && typeof navigator.share === "function"
+  );
 }
 
 export async function shareRoomInvite(params: {
   roomCode: string;
   roomUrl: string;
 }): Promise<boolean> {
-  return callNativePlugin("Share", "share", {
-    title: `Join my Cambio game (${params.roomCode})`,
-    text: `Join my Cambio game: ${params.roomCode}`,
+  const title = `Join my Cambio game (${params.roomCode})`;
+  const text = `Join my Cambio game: ${params.roomCode}`;
+  const shared = await callNativePlugin("Share", "share", {
+    title,
+    text,
     url: params.roomUrl,
     dialogTitle: "Share invite",
   });
+  if (shared) return true;
+  if (!isNativePlatform() || !canUseWebShare()) return false;
+  try {
+    await navigator.share({ title, text, url: params.roomUrl });
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function copyWithNativeClipboard(text: string): Promise<boolean> {
@@ -168,7 +186,11 @@ export async function copyWithNativeClipboard(text: string): Promise<boolean> {
 }
 
 export async function triggerSnapHaptic(): Promise<void> {
-  await callNativePlugin("Haptics", "impact", { style: "LIGHT" });
+  const impacted = await callNativePlugin("Haptics", "impact", {
+    style: "LIGHT",
+  });
+  if (impacted) return;
+  await callNativePlugin("Haptics", "vibrate", { duration: 20 });
 }
 
 export async function triggerCambioHaptic(): Promise<void> {
@@ -176,7 +198,11 @@ export async function triggerCambioHaptic(): Promise<void> {
     type: "SUCCESS",
   });
   if (notified) return;
-  await callNativePlugin("Haptics", "impact", { style: "MEDIUM" });
+  const impacted = await callNativePlugin("Haptics", "impact", {
+    style: "MEDIUM",
+  });
+  if (impacted) return;
+  await callNativePlugin("Haptics", "vibrate", { duration: 40 });
 }
 
 export async function applyNativeShellChrome(): Promise<void> {

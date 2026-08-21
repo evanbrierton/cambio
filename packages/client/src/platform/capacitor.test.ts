@@ -41,6 +41,7 @@ function resetWindow() {
 describe("capacitor native plugin bridge", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     resetWindow();
   });
 
@@ -177,5 +178,54 @@ describe("capacitor native plugin bridge", () => {
 
     await triggerSnapHaptic();
     expect(impact).not.toHaveBeenCalled();
+  });
+
+  it("uses the iOS Web Share API when the Share plugin is missing", async () => {
+    const webShare = vi.fn().mockResolvedValue(undefined);
+    const nativePromise = vi
+      .fn()
+      .mockRejectedValue(new Error("missing plugin"));
+    setNativeWindow({
+      Capacitor: {
+        isNativePlatform: () => true,
+        Plugins: {},
+        nativePromise,
+      },
+    });
+    vi.stubGlobal("navigator", { share: webShare });
+
+    expect(canUseNativeShare()).toBe(true);
+    await expect(
+      shareRoomInvite({
+        roomCode: "ROOM123",
+        roomUrl: "https://example.com/play/room123",
+      }),
+    ).resolves.toBe(true);
+    expect(webShare).toHaveBeenCalledWith({
+      title: "Join my Cambio game (ROOM123)",
+      text: "Join my Cambio game: ROOM123",
+      url: "https://example.com/play/room123",
+    });
+  });
+
+  it("falls back to vibrate when impact and notification are unimplemented", async () => {
+    const nativePromise = vi.fn((pluginName: string, methodName: string) => {
+      if (pluginName === "Haptics" && methodName === "vibrate") {
+        return Promise.resolve(undefined);
+      }
+      return Promise.reject(new Error("unimplemented"));
+    });
+    setNativeWindow({
+      Capacitor: {
+        isNativePlatform: () => true,
+        Plugins: {},
+        nativePromise,
+      },
+    });
+
+    await triggerCambioHaptic();
+    expect(nativePromise).toHaveBeenCalledWith("Haptics", "vibrate", {
+      duration: 40,
+    });
   });
 });

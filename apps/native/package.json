@@ -5,7 +5,8 @@
   "scripts": {
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "cap:doctor": "cap doctor",
-    "cap:sync": "cap sync",
+    "cap:sync": "cap sync && cap ls",
+    "cap:ls": "cap ls",
     "cap:copy": "cap copy",
     "cap:add:ios": "cap add ios",
     "cap:add:android": "cap add android",
