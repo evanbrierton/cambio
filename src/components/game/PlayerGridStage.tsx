@@ -15,12 +15,19 @@ type PlayerGridStageProps = {
 
 export function PlayerGridStage({ children }: PlayerGridStageProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const childCount = Children.count(children);
 
   const updateLayout = useCallback(() => {
     const scrollEl = scrollRef.current;
+    const gridEl = gridRef.current;
     if (!scrollEl) return;
+
+    const fillHeight = Math.max(scrollEl.clientHeight, 0);
+    if (gridEl && fillHeight > 0) {
+      gridEl.style.minHeight = `${fillHeight}px`;
+    }
 
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -83,7 +90,10 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
   return (
     <div className="players-grid-stage">
       <div ref={scrollRef} className="players-grid-scroll">
-        <div className="players-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 px-2 pt-2 pb-0 justify-items-stretch items-stretch">
+        <div
+          ref={gridRef}
+          className="players-grid grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-3 px-2 pt-2 pb-0 justify-items-stretch items-stretch"
+        >
           {Children.map(children, (child, index) => (
             <div
               key={

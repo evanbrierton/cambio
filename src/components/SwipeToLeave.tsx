@@ -18,8 +18,6 @@ import {
   swipeVelocityPxS,
 } from "@/lib/swipe-to-leave";
 
-const DESKTOP_MQ = "(min-width: 1024px)";
-
 type SwipeToLeaveProps = {
   enabled: boolean;
   label: string;
@@ -28,12 +26,14 @@ type SwipeToLeaveProps = {
   onLeave?: () => void;
 };
 
-function shouldIgnoreMouse(pointerType: string): boolean {
-  return (
-    pointerType === "mouse" &&
-    typeof window !== "undefined" &&
-    window.matchMedia(DESKTOP_MQ).matches
-  );
+type GesturePoint = {
+  x: number;
+  y: number;
+  timeStamp: number;
+};
+
+function isDesktopWidth(): boolean {
+  return typeof window !== "undefined" && window.innerWidth >= 1024;
 }
 
 function isIgnoredTarget(target: EventTarget | null): boolean {
@@ -52,9 +52,7 @@ export function SwipeToLeave({
 }: SwipeToLeaveProps) {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
-  const startXRef = useRef(0);
-  const startYRef = useRef(0);
-  const startTRef = useRef(0);
+  const startRef = useRef<GesturePoint>({ x: 0, y: 0, timeStamp: 0 });
   const pointerIdRef = useRef<number | null>(null);
   const trackingRef = useRef(false);
   const horizontalRef = useRef(false);
@@ -87,16 +85,65 @@ export function SwipeToLeave({
       return;
     }
 
-    const onPointerDown = (event: PointerEvent) => {
-      if (shouldIgnoreMouse(event.pointerType)) return;
-      if (event.pointerType === "mouse" && event.button !== 0) return;
-      if (isIgnoredTarget(event.target)) return;
+    const startGesture = (point: GesturePoint, pointerId: number | null) => {
       trackingRef.current = true;
       horizontalRef.current = false;
-      pointerIdRef.current = event.pointerId;
-      startXRef.current = event.clientX;
-      startYRef.current = event.clientY;
-      startTRef.current = event.timeStamp;
+      pointerIdRef.current = pointerId;
+      startRef.current = point;
+    };
+
+    const moveGesture = (point: GesturePoint) => {
+      if (!trackingRef.current) return;
+      const dx = point.x - startRef.current.x;
+      const dy = point.y - startRef.current.y;
+      if (!horizontalRef.current) {
+        if (isVerticalScrollLock(dx, dy)) {
+          trackingRef.current = false;
+          return;
+        }
+        const fromEdge = isFromLeaveEdge(startRef.current.x);
+        if (
+          !(fromEdge && dx >= 6 && dx > Math.abs(dy)) &&
+          !isHorizontalLeaveLock(dx, dy)
+        ) {
+          return;
+        }
+        horizontalRef.current = true;
+        setDragging(true);
+      }
+      setOffset(clampSwipeOffset(dx));
+    };
+
+    const endGesture = (point: GesturePoint) => {
+      if (!trackingRef.current) return;
+      const wasHorizontal = horizontalRef.current;
+      const dx = wasHorizontal
+        ? clampSwipeOffset(point.x - startRef.current.x)
+        : 0;
+      const velocity = swipeVelocityPxS(
+        startRef.current.x,
+        point.x,
+        point.timeStamp - startRef.current.timeStamp,
+      );
+      trackingRef.current = false;
+      horizontalRef.current = false;
+      pointerIdRef.current = null;
+      setDragging(false);
+      if (wasHorizontal && isSwipeCommit(dx, velocity)) {
+        leaveRef.current();
+      }
+      setOffset(0);
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      if (trackingRef.current) return;
+      if (event.pointerType === "mouse" && isDesktopWidth()) return;
+      if (event.pointerType === "mouse" && event.button !== 0) return;
+      if (isIgnoredTarget(event.target)) return;
+      startGesture(
+        { x: event.clientX, y: event.clientY, timeStamp: event.timeStamp },
+        event.pointerId,
+      );
     };
 
     const onPointerMove = (event: PointerEvent) => {
@@ -107,70 +154,95 @@ export function SwipeToLeave({
       ) {
         return;
       }
-      const dx = event.clientX - startXRef.current;
-      const dy = event.clientY - startYRef.current;
-      if (!horizontalRef.current) {
-        if (isVerticalScrollLock(dx, dy)) {
-          trackingRef.current = false;
-          return;
-        }
-        const fromEdge = isFromLeaveEdge(startXRef.current);
-        if (
-          !(fromEdge && dx >= 6 && dx > Math.abs(dy)) &&
-          !isHorizontalLeaveLock(dx, dy)
-        ) {
-          return;
-        }
-        horizontalRef.current = true;
-        setDragging(true);
-        try {
-          root.setPointerCapture(event.pointerId);
-        } catch {
-          // Window listeners still follow the pointer if capture is refused.
-        }
-      }
-      if (event.cancelable) event.preventDefault();
-      setOffset(clampSwipeOffset(dx));
+      if (horizontalRef.current && event.cancelable) event.preventDefault();
+      moveGesture({
+        x: event.clientX,
+        y: event.clientY,
+        timeStamp: event.timeStamp,
+      });
     };
 
     const onPointerUp = (event: PointerEvent) => {
-      if (!trackingRef.current) return;
       if (
         pointerIdRef.current != null &&
         event.pointerId !== pointerIdRef.current
       ) {
         return;
       }
-      const wasHorizontal = horizontalRef.current;
-      const dx = wasHorizontal
-        ? clampSwipeOffset(event.clientX - startXRef.current)
-        : 0;
-      const velocity = swipeVelocityPxS(
-        startXRef.current,
-        event.clientX,
-        event.timeStamp - startTRef.current,
-      );
-      trackingRef.current = false;
-      horizontalRef.current = false;
-      pointerIdRef.current = null;
-      setDragging(false);
       if (root.hasPointerCapture(event.pointerId)) {
         root.releasePointerCapture(event.pointerId);
       }
-      if (wasHorizontal && isSwipeCommit(dx, velocity)) {
-        leaveRef.current();
-      }
-      setOffset(0);
+      endGesture({
+        x: event.clientX,
+        y: event.clientY,
+        timeStamp: event.timeStamp,
+      });
     };
 
-    const onPointerCancel = (event: PointerEvent) => {
-      if (
-        pointerIdRef.current != null &&
-        event.pointerId !== pointerIdRef.current
-      ) {
+    const onTouchStart = (event: TouchEvent) => {
+      if (trackingRef.current) return;
+      if (event.touches.length !== 1) return;
+      if (isIgnoredTarget(event.target)) return;
+      const touch = event.touches[0];
+      startGesture(
+        { x: touch.clientX, y: touch.clientY, timeStamp: event.timeStamp },
+        null,
+      );
+    };
+
+    const onTouchMove = (event: TouchEvent) => {
+      if (!trackingRef.current) return;
+      const touch = event.touches[0];
+      if (!touch) return;
+      if (horizontalRef.current && event.cancelable) event.preventDefault();
+      moveGesture({
+        x: touch.clientX,
+        y: touch.clientY,
+        timeStamp: event.timeStamp,
+      });
+    };
+
+    const onTouchEnd = (event: TouchEvent) => {
+      const touch = event.changedTouches[0];
+      if (!touch) {
+        reset();
         return;
       }
-      reset();
+      endGesture({
+        x: touch.clientX,
+        y: touch.clientY,
+        timeStamp: event.timeStamp,
+      });
+    };
+
+    const onMouseDown = (event: MouseEvent) => {
+      if (event.button !== 0) return;
+      if (isDesktopWidth()) return;
+      if (isIgnoredTarget(event.target)) return;
+      if (trackingRef.current) return;
+      startGesture(
+        { x: event.clientX, y: event.clientY, timeStamp: event.timeStamp },
+        null,
+      );
+    };
+
+    const onMouseMove = (event: MouseEvent) => {
+      if (!trackingRef.current) return;
+      if (pointerIdRef.current != null) return;
+      moveGesture({
+        x: event.clientX,
+        y: event.clientY,
+        timeStamp: event.timeStamp,
+      });
+    };
+
+    const onMouseUp = (event: MouseEvent) => {
+      if (pointerIdRef.current != null) return;
+      endGesture({
+        x: event.clientX,
+        y: event.clientY,
+        timeStamp: event.timeStamp,
+      });
     };
 
     root.addEventListener("pointerdown", onPointerDown, { capture: true });
@@ -179,9 +251,20 @@ export function SwipeToLeave({
       passive: false,
     });
     window.addEventListener("pointerup", onPointerUp, { capture: true });
-    window.addEventListener("pointercancel", onPointerCancel, {
+    window.addEventListener("pointercancel", reset, { capture: true });
+    root.addEventListener("touchstart", onTouchStart, {
       capture: true,
+      passive: true,
     });
+    window.addEventListener("touchmove", onTouchMove, {
+      capture: true,
+      passive: false,
+    });
+    window.addEventListener("touchend", onTouchEnd, { capture: true });
+    window.addEventListener("touchcancel", reset, { capture: true });
+    root.addEventListener("mousedown", onMouseDown, { capture: true });
+    window.addEventListener("mousemove", onMouseMove, { capture: true });
+    window.addEventListener("mouseup", onMouseUp, { capture: true });
 
     return () => {
       root.removeEventListener("pointerdown", onPointerDown, { capture: true });
@@ -189,9 +272,14 @@ export function SwipeToLeave({
         capture: true,
       });
       window.removeEventListener("pointerup", onPointerUp, { capture: true });
-      window.removeEventListener("pointercancel", onPointerCancel, {
-        capture: true,
-      });
+      window.removeEventListener("pointercancel", reset, { capture: true });
+      root.removeEventListener("touchstart", onTouchStart, { capture: true });
+      window.removeEventListener("touchmove", onTouchMove, { capture: true });
+      window.removeEventListener("touchend", onTouchEnd, { capture: true });
+      window.removeEventListener("touchcancel", reset, { capture: true });
+      root.removeEventListener("mousedown", onMouseDown, { capture: true });
+      window.removeEventListener("mousemove", onMouseMove, { capture: true });
+      window.removeEventListener("mouseup", onMouseUp, { capture: true });
     };
   }, [enabled, reset]);
 
@@ -200,6 +288,7 @@ export function SwipeToLeave({
       ref={rootRef}
       className={`swipe-leave-root ${dragging ? "is-swiping" : ""} ${className}`.trim()}
       data-swipe-to-leave={enabled ? "on" : "off"}
+      data-swipe-offset={offset}
     >
       {enabled ? (
         <div className="swipe-leave-underlay" aria-hidden>
