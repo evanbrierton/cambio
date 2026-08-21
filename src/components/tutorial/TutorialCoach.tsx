@@ -1,55 +1,62 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { Joyride, STATUS, type TooltipRenderProps } from "react-joyride";
+import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { type CoachHintId, isCoachEligiblePhase } from "@/lib/coach-moments";
+import type { ThemeVoice } from "@/lib/themes";
 
 export type { CoachHintId };
 export { isCoachEligiblePhase };
 
-const COACH_STEPS: Record<
+const COACH_LAYOUT: Record<
   CoachHintId,
   {
     target: string;
-    title: string;
-    content: string;
     skipBeacon: boolean;
     placement: "top" | "bottom";
   }
 > = {
   "own-hand": {
     target: '[data-tutorial="own-hand"]',
-    title: "Your hand",
-    content:
-      "These four face-down cards are yours. At setup, peek at two of them once — then rely on memory.",
     skipBeacon: true,
     placement: "top",
   },
   deck: {
     target: '[data-tutorial="deck"]',
-    title: "Draw from the deck",
-    content:
-      "On your turn, draw from the deck or discard pile. From the deck you can swap or discard to trigger abilities.",
     skipBeacon: true,
     placement: "bottom",
   },
   discard: {
     target: '[data-tutorial="discard"]',
-    title: "Discard pile & snap",
-    content:
-      "Cards land here face up. If you hold a matching rank, snap anytime to discard another card — wrong snaps cost a penalty.",
     skipBeacon: true,
     placement: "bottom",
   },
   "call-cambio": {
     target: '[data-tutorial="call-cambio"]',
-    title: 'Call "Cambio"',
-    content:
-      "Happy with your hand? Call Cambio at the start of your turn before drawing. Everyone gets one last turn, then scores reveal.",
     skipBeacon: true,
     placement: "top",
   },
 };
+
+function coachCopy(
+  hintId: CoachHintId,
+  voice: ThemeVoice,
+): { title: string; content: string } {
+  switch (hintId) {
+    case "own-hand":
+      return { title: voice.coachHandTitle, content: voice.coachHandBody };
+    case "deck":
+      return { title: voice.coachDeckTitle, content: voice.coachDeckBody };
+    case "discard":
+      return {
+        title: voice.coachDiscardTitle,
+        content: voice.coachDiscardBody,
+      };
+    case "call-cambio":
+      return { title: voice.coachCambioTitle, content: voice.coachCambioBody };
+  }
+}
 
 function CoachTooltip({
   closeProps,
@@ -58,6 +65,7 @@ function CoachTooltip({
   step,
   tooltipProps,
 }: TooltipRenderProps) {
+  const voice = useThemeVoice();
   const btnClass =
     "btn-theme text-[10px] sm:text-xs px-3 py-2 transition-colors active:opacity-80";
   return (
@@ -79,14 +87,14 @@ function CoachTooltip({
           {...skipProps}
           className={`${btnClass} btn-secondary`}
         >
-          Skip
+          {voice.coachSkip}
         </button>
         <button
           type="button"
           {...primaryProps}
           className={`${btnClass} btn-primary ml-auto`}
         >
-          Got it
+          {voice.coachGotIt}
         </button>
         <button type="button" {...closeProps} className="sr-only">
           Close coach
@@ -107,8 +115,12 @@ export function TutorialCoach({
   onSkip,
   onComplete,
 }: TutorialCoachProps) {
+  const voice = useThemeVoice();
   const settledRef = useRef(false);
-  const step = hintId ? COACH_STEPS[hintId] : null;
+  const step = useMemo(() => {
+    if (!hintId) return null;
+    return { ...COACH_LAYOUT[hintId], ...coachCopy(hintId, voice) };
+  }, [hintId, voice]);
 
   return (
     <Joyride
@@ -119,9 +131,9 @@ export function TutorialCoach({
       scrollToFirstStep
       tooltipComponent={CoachTooltip}
       locale={{
-        last: "Got it",
-        next: "Got it",
-        skip: "Skip",
+        last: voice.coachGotIt,
+        next: voice.coachGotIt,
+        skip: voice.coachSkip,
       }}
       options={{
         skipBeacon: true,
