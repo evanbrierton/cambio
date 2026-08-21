@@ -27,21 +27,21 @@
       "name": "verify-matchmaking-v1-closeout",
       "type": "verifier",
       "branch": "orch/priority-closeout/verify-matchmaking-v1-closeout",
-      "startingRef": "orch/priority-closeout/matchmaking-v1-closeout",
+      "startingRef": "main",
       "dependsOn": [
         "matchmaking-v1-closeout"
       ],
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-21T15:34:59.203Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-21T15:34:20.388Z",
+      "lastUpdate": "2026-08-21T15:34:59.203Z",
       "note": "respawned by self-planner (was error; attempts=1)",
-      "attempts": 1,
+      "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
@@ -64,6 +64,10 @@
     {
       "at": "2026-08-21T15:33:18.848Z",
       "message": "verify-matchmaking-v1-closeout: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Branch 'orch/priority-closeout/matchmaking-v1-closeout' does not exist in repository evanbrierton/cambio."
+    },
+    {
+      "at": "2026-08-21T15:34:21.746Z",
+      "message": "verify-matchmaking-v1-closeout: respawned by self-planner (was error)"
     }
   ]
 }
