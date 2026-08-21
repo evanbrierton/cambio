@@ -2,12 +2,15 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const defaultSiteUrl =
   process.env.NEXT_PUBLIC_APP_URL ??
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000");
 
 const serverUrl = process.env.CAPACITOR_SERVER_URL ?? defaultSiteUrl;
 const parsedServerUrl = new URL(serverUrl);
 const cleartext =
-  process.env.CAPACITOR_ALLOW_CLEARTEXT === "true" || parsedServerUrl.protocol === "http:";
+  process.env.CAPACITOR_ALLOW_CLEARTEXT === "true" ||
+  parsedServerUrl.protocol === "http:";
 const allowNavigation = [
   parsedServerUrl.hostname,
   "cambio.brierton.workers.dev",
