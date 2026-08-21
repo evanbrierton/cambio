@@ -1,6 +1,10 @@
 "use client";
 
-import { canUseNativeShare, shareRoomInvite } from "@cambio/client";
+import {
+  canUseNativeShare,
+  hapticClick,
+  shareRoomInvite,
+} from "@cambio/client";
 import { Check, Share2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -20,6 +24,7 @@ export function WaitingScreen({ view, connected }: WaitingScreenProps) {
 
   const shareInvite = () => {
     if (!nativeShareEnabled) return;
+    hapticClick("selection");
     const roomCode = view.roomId.toUpperCase();
     const roomUrl =
       typeof window === "undefined"

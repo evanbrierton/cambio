@@ -1,5 +1,6 @@
 "use client";
 
+import { hapticClick } from "@cambio/client";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useRef } from "react";
@@ -211,7 +212,10 @@ export function TutorialModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             tabIndex={-1}
-            onClick={() => dismiss(TUTORIAL_DISMISS_REASON.TOUCH_DISMISS)}
+            onClick={() => {
+              hapticClick("selection");
+              dismiss(TUTORIAL_DISMISS_REASON.TOUCH_DISMISS);
+            }}
           />
           <motion.div
             ref={dialogRef}
@@ -254,7 +258,10 @@ export function TutorialModal({
               </div>
               <button
                 type="button"
-                onClick={skip}
+                onClick={() => {
+                  hapticClick("selection");
+                  skip();
+                }}
                 className="chip-btn shrink-0 px-2 py-1 text-[10px] border-theme-muted text-theme-muted hover:border-accent hover:text-accent transition-colors"
               >
                 Skip

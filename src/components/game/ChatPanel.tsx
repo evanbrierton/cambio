@@ -1,5 +1,6 @@
 "use client";
 
+import { hapticClick } from "@cambio/client";
 import { useEffect, useRef, useState } from "react";
 import type { ChatMessage } from "@/game/types";
 import type { ThemeVoice } from "@/lib/themes";
@@ -35,6 +36,7 @@ export function ChatPanel({
   const submit = () => {
     const text = draft.trim();
     if (!text || !connected) return;
+    hapticClick("selection");
     onSend(text);
     setDraft("");
   };

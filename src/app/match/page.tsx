@@ -1,5 +1,6 @@
 "use client";
 
+import { hapticClick } from "@cambio/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { RetroButton } from "@/components/ui/RetroButton";
@@ -99,7 +100,10 @@ export default function MatchPage() {
                 <button
                   key={size}
                   type="button"
-                  onClick={() => setTargetSize(clampMatchTargetSize(size))}
+                  onClick={() => {
+                    hapticClick("selection");
+                    setTargetSize(clampMatchTargetSize(size));
+                  }}
                   className={`chip-btn min-w-10 px-3 py-2 text-[10px] transition-colors ${
                     selected
                       ? "border-accent text-accent"
@@ -122,7 +126,10 @@ export default function MatchPage() {
             type="button"
             role="switch"
             aria-checked={fillWithBots}
-            onClick={() => setFillWithBots((value) => !value)}
+            onClick={() => {
+              hapticClick("selection");
+              setFillWithBots((value) => !value);
+            }}
             className={`chip-btn px-3 py-2 text-[10px] transition-colors ${
               fillWithBots
                 ? "border-accent text-accent"

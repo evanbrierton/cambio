@@ -3,9 +3,11 @@ import {
   applyNativeShellChrome,
   canUseNativeShare,
   copyWithNativeClipboard,
+  hapticClick,
   isNativePlatform,
   shareRoomInvite,
   triggerCambioHaptic,
+  triggerHaptic,
   triggerSnapHaptic,
 } from "./capacitor";
 
@@ -227,5 +229,50 @@ describe("capacitor native plugin bridge", () => {
     expect(nativePromise).toHaveBeenCalledWith("Haptics", "vibrate", {
       duration: 40,
     });
+  });
+
+  it("plays selection, impact, and error patterns through the native bridge", async () => {
+    const nativePromise = vi.fn().mockResolvedValue(undefined);
+    setNativeWindow({
+      Capacitor: {
+        isNativePlatform: () => true,
+        Plugins: {},
+        nativePromise,
+      },
+    });
+
+    hapticClick("selection");
+    await triggerHaptic("medium");
+    await triggerHaptic("error");
+    await triggerHaptic("warning");
+
+    expect(nativePromise).toHaveBeenCalledWith(
+      "Haptics",
+      "selectionChanged",
+      undefined,
+    );
+    expect(nativePromise).toHaveBeenCalledWith("Haptics", "impact", {
+      style: "MEDIUM",
+    });
+    expect(nativePromise).toHaveBeenCalledWith("Haptics", "notification", {
+      type: "ERROR",
+    });
+    expect(nativePromise).toHaveBeenCalledWith("Haptics", "notification", {
+      type: "WARNING",
+    });
+  });
+
+  it("does not call haptics on web for button clicks", async () => {
+    const nativePromise = vi.fn();
+    setNativeWindow({
+      Capacitor: {
+        isNativePlatform: () => false,
+        nativePromise,
+      },
+    });
+
+    hapticClick("selection");
+    await triggerHaptic("medium");
+    expect(nativePromise).not.toHaveBeenCalled();
   });
 });

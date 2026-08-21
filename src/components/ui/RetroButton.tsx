@@ -1,3 +1,4 @@
+import { hapticClick } from "@cambio/client";
 import type { ReactNode } from "react";
 
 type RetroButtonProps = {
@@ -24,7 +25,14 @@ export function RetroButton({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={
+        onClick
+          ? () => {
+              hapticClick("selection");
+              onClick();
+            }
+          : undefined
+      }
       disabled={disabled}
       className={`btn-theme text-[10px] sm:text-xs px-4 py-3 transition-colors active:opacity-80 ${variants[variant]} ${className}`}
     >
