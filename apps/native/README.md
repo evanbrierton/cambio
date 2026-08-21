@@ -61,6 +61,7 @@ Run from the repository root.
 - After adding Share / Clipboard / Haptics, run `cap:sync` and rebuild the Xcode app so those plugins exist in the iOS binary.
 - `cap:sync` now prints `cap ls`. Confirm `Haptics`, `Share`, and `Clipboard` are listed. If they are not, delete `apps/native/ios` and run `cap:add:ios` then `cap:sync` again.
 - You can also open `apps/native/ios/App/CapApp-SPM/Package.swift` and check it contains `CapacitorHaptics` and `CapacitorShare`.
+- Haptic patterns live in the web app (`triggerHaptic` / `hapticClick`). After the Haptics plugin is in the binary, extra taps and game events pick up on the next production deploy — no rebuild required. Muting sounds does not mute haptics.
 
 ### Android (Android Studio)
 

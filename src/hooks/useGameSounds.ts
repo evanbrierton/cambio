@@ -1,5 +1,6 @@
 "use client";
 
+import { triggerHaptic } from "@cambio/client";
 import { useEffect, useRef } from "react";
 import type { PlayerView } from "@/game/types";
 import type {
@@ -11,7 +12,14 @@ import type {
   SwapFlash,
   TakeFlash,
 } from "@/hooks/useGameConnection";
-import { playSound } from "@/lib/sounds";
+import { hapticKindForSound } from "@/lib/haptics";
+import { playSound, type SoundId } from "@/lib/sounds";
+
+function playFeedback(id: SoundId): void {
+  playSound(id);
+  const kind = hapticKindForSound(id);
+  if (kind) void triggerHaptic(kind);
+}
 
 export function useGameSounds(
   view: PlayerView | null,
@@ -45,7 +53,7 @@ export function useGameSounds(
     const key = `${fleetingPeek.playerId}-${fleetingPeek.slot}`;
     if (peekKey.current === key) return;
     peekKey.current = key;
-    playSound("flip");
+    playFeedback("flip");
   }, [fleetingPeek]);
 
   useEffect(() => {
@@ -56,7 +64,7 @@ export function useGameSounds(
     const key = `${peekFlash.kind}-${peekFlash.actorId}-${peekFlash.playerId}-${peekFlash.slot}`;
     if (peekFlashKey.current === key) return;
     peekFlashKey.current = key;
-    playSound(peekFlash.kind === "spy" ? "spy" : "peek");
+    playFeedback(peekFlash.kind === "spy" ? "spy" : "peek");
   }, [peekFlash]);
 
   useEffect(() => {
@@ -70,7 +78,7 @@ export function useGameSounds(
       .join("|");
     if (swapFlashKey.current === key) return;
     swapFlashKey.current = key;
-    playSound("swap");
+    playFeedback("swap");
   }, [swapFlash]);
 
   useEffect(() => {
@@ -81,7 +89,7 @@ export function useGameSounds(
     const key = `${takeFlash.playerId}-${takeFlash.slot}`;
     if (takeFlashKey.current === key) return;
     takeFlashKey.current = key;
-    playSound("take");
+    playFeedback("take");
   }, [takeFlash]);
 
   useEffect(() => {
@@ -92,7 +100,7 @@ export function useGameSounds(
     const key = `${snapFlash.actorId}-${snapFlash.playerId}-${snapFlash.slot}`;
     if (snapFlashKey.current === key) return;
     snapFlashKey.current = key;
-    playSound("snap");
+    playFeedback("snap");
   }, [snapFlash]);
 
   useEffect(() => {
@@ -102,7 +110,7 @@ export function useGameSounds(
     }
     if (cambioFlashKey.current === cambioFlash.playerId) return;
     cambioFlashKey.current = cambioFlash.playerId;
-    playSound("cambio");
+    playFeedback("cambio");
   }, [cambioFlash]);
 
   useEffect(() => {
@@ -112,23 +120,23 @@ export function useGameSounds(
     }
     if (reshuffleFlashKey.current === reshuffleFlash.id) return;
     reshuffleFlashKey.current = reshuffleFlash.id;
-    playSound("reshuffle");
+    playFeedback("reshuffle");
   }, [reshuffleFlash]);
 
   useEffect(() => {
     if (!error?.includes("Wrong snap")) return;
-    playSound("snapWrong");
+    playFeedback("snapWrong");
   }, [error]);
 
   useEffect(() => {
     if (!view) return;
 
     if (view.phase === "snap_window" && prevPhase.current !== "snap_window") {
-      playSound("snapWindowStart");
+      playFeedback("snapWindowStart");
     }
 
     if (view.phase === "ended" && prevPhase.current !== "ended") {
-      playSound("gameOver");
+      playFeedback("gameOver");
     }
     prevPhase.current = view.phase;
 
@@ -139,7 +147,7 @@ export function useGameSounds(
       !prevMyTurn.current &&
       (view.phase === "playing" || view.phase === "cambio_final")
     ) {
-      playSound("yourTurn");
+      playFeedback("yourTurn");
     }
     prevMyTurn.current = isMyTurn;
 
@@ -147,11 +155,11 @@ export function useGameSounds(
       const lastLog = view.log[view.log.length - 1] ?? "";
       // Successful snaps play via snapFlash; wrong snaps use error → snapWrong.
       if (lastLog.includes("drew from the discard")) {
-        playSound("discardDraw");
+        playFeedback("discardDraw");
       } else if (lastLog.includes("drew from")) {
-        playSound("deckDraw");
+        playFeedback("deckDraw");
       } else if (lastLog.includes("discarded")) {
-        playSound("take");
+        playFeedback("take");
       }
     }
     prevLogLen.current = view.log.length;
@@ -168,7 +176,7 @@ export function useGameSounds(
       snapWindowSeconds < prevSnapSeconds.current &&
       snapWindowSeconds > 0
     ) {
-      playSound("snapCountdown");
+      playFeedback("snapCountdown");
     }
     prevSnapSeconds.current = snapWindowSeconds;
   }, [view?.phase, snapWindowSeconds]);

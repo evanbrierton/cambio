@@ -1,5 +1,6 @@
 "use client";
 
+import { hapticClick } from "@cambio/client";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -180,7 +181,10 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
         <div className="flex flex-nowrap gap-2 mb-4 overflow-x-auto pb-1 scroll-stable">
           <button
             type="button"
-            onClick={() => setSelectedRound("total")}
+            onClick={() => {
+              hapticClick("selection");
+              setSelectedRound("total");
+            }}
             className={`chip-btn shrink-0 text-[8px] px-2 py-1 transition-colors ${
               selectedRound === "total"
                 ? "border-accent text-accent"
@@ -198,7 +202,10 @@ export function GameOverScreen({ view, connected, send }: GameOverScreenProps) {
                   : undefined
               }
               type="button"
-              onClick={() => setSelectedRound(round.roundNumber)}
+              onClick={() => {
+                hapticClick("selection");
+                setSelectedRound(round.roundNumber);
+              }}
               className={`chip-btn shrink-0 text-[8px] px-2 py-1 transition-colors ${
                 selectedRound === round.roundNumber
                   ? "border-accent text-accent"

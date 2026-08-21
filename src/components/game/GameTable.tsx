@@ -2,6 +2,7 @@
 
 import {
   canUseNativeShare,
+  hapticClick,
   shareRoomInvite,
   triggerCambioHaptic,
   triggerSnapHaptic,
@@ -844,6 +845,7 @@ export function GameTable({
         <button
           type="button"
           onClick={() => {
+            hapticClick("selection");
             openSettings();
             dismissNotification();
           }}
@@ -1066,7 +1068,10 @@ export function GameTable({
             swapAbilityActive && selectedSwapCard ? (
               <button
                 type="button"
-                onClick={() => setSelectedSwapCard(null)}
+                onClick={() => {
+                  hapticClick("selection");
+                  setSelectedSwapCard(null);
+                }}
                 className="chip-btn text-[8px] px-2 py-1 border-accent-alt text-accent-alt hover:border-accent transition-colors"
               >
                 {voice.swapAbilityCancel}
@@ -1263,6 +1268,7 @@ export function GameTable({
     if (view.phase === "setup_peek" && isOwn) {
       if (!SETUP_PEEK_SLOTS.includes(slot)) return;
       if (view.ownSetupPeekedSlots.includes(slot)) return;
+      hapticClick("light");
       send({ type: "setup_peek", slot });
       return;
     }
@@ -1270,6 +1276,7 @@ export function GameTable({
     const pending = view.pendingAbility;
     if (pending?.kind === "snap_give") {
       if (isOwn) {
+        hapticClick("medium");
         send({ type: "snap_give", slot });
       }
       return;
@@ -1278,19 +1285,23 @@ export function GameTable({
       return;
     }
     if (pending?.kind === "peek_own" && isOwn) {
+      hapticClick("light");
       send({ type: "ability_look", playerId, slot });
       return;
     }
     if (pending?.kind === "spy" && !isOwn) {
+      hapticClick("light");
       send({ type: "ability_look", playerId, slot });
       return;
     }
     if (pending?.kind === "queen_look" || pending?.kind === "king_look") {
+      hapticClick("light");
       send({ type: "ability_look", playerId, slot });
       return;
     }
     if (isSwapAbility(pending?.kind)) {
       if (!selectedSwapCard) {
+        hapticClick("selection");
         setSelectedSwapCard({ playerId, slot });
         return;
       }
@@ -1299,10 +1310,12 @@ export function GameTable({
         selectedSwapCard.playerId === playerId &&
         selectedSwapCard.slot === slot
       ) {
+        hapticClick("selection");
         setSelectedSwapCard(null);
         return;
       }
 
+      hapticClick("medium");
       send({
         type: "ability_swap",
         fromPlayerId: selectedSwapCard.playerId,
@@ -1315,6 +1328,7 @@ export function GameTable({
     }
 
     if (view.canSwap && isOwn) {
+      hapticClick("medium");
       send({ type: "swap", slot });
       return;
     }
@@ -1332,6 +1346,7 @@ export function GameTable({
   };
 
   const copyRoomCode = () => {
+    hapticClick("selection");
     void copyToClipboard(view.roomId.toUpperCase()).then((copied) => {
       if (!copied) return;
       setRoomCopied(true);
@@ -1341,6 +1356,7 @@ export function GameTable({
 
   const shareRoom = () => {
     if (!nativeShareEnabled) return;
+    hapticClick("selection");
     const roomCode = view.roomId.toUpperCase();
     const roomUrl =
       typeof window === "undefined"
@@ -1431,7 +1447,10 @@ export function GameTable({
     <>
       <button
         type="button"
-        onClick={toggleSound}
+        onClick={() => {
+          hapticClick("selection");
+          toggleSound();
+        }}
         aria-label={soundEnabled ? voice.soundOn : voice.soundOff}
         title={soundEnabled ? voice.soundOn : voice.soundOff}
         className={CHROME_ICON_BTN}
@@ -1444,7 +1463,10 @@ export function GameTable({
       </button>
       <button
         type="button"
-        onClick={toggleHints}
+        onClick={() => {
+          hapticClick("selection");
+          toggleHints();
+        }}
         aria-label={hintsEnabled ? voice.hintsOn : voice.hintsOff}
         title={hintsEnabled ? voice.hintsOn : voice.hintsOff}
         className={CHROME_ICON_BTN}
@@ -1457,7 +1479,10 @@ export function GameTable({
       </button>
       <button
         type="button"
-        onClick={togglePlayerGrid}
+        onClick={() => {
+          hapticClick("selection");
+          togglePlayerGrid();
+        }}
         aria-label={
           playerGridEnabled ? voice.playerGridOn : voice.playerGridOff
         }
@@ -1472,7 +1497,10 @@ export function GameTable({
       </button>
       <button
         type="button"
-        onClick={toggleOwnSeatDisplay}
+        onClick={() => {
+          hapticClick("selection");
+          toggleOwnSeatDisplay();
+        }}
         aria-label={
           ownSeatProminent ? voice.ownSeatProminent : voice.ownSeatTurnOrder
         }
@@ -1489,7 +1517,10 @@ export function GameTable({
       </button>
       <button
         type="button"
-        onClick={toggleChatNotifications}
+        onClick={() => {
+          hapticClick("selection");
+          toggleChatNotifications();
+        }}
         aria-label={
           chatNotificationsEnabled ? voice.chatNotifsOn : voice.chatNotifsOff
         }
@@ -1506,7 +1537,10 @@ export function GameTable({
       </button>
       <button
         type="button"
-        onClick={toggleEventNotifications}
+        onClick={() => {
+          hapticClick("selection");
+          toggleEventNotifications();
+        }}
         aria-label={
           eventNotificationsEnabled ? voice.eventNotifsOn : voice.eventNotifsOff
         }
@@ -1528,14 +1562,20 @@ export function GameTable({
     <div className="flex flex-wrap gap-2 shrink-0">
       <button
         type="button"
-        onClick={() => send({ type: "toggle_debug" })}
+        onClick={() => {
+          hapticClick("selection");
+          send({ type: "toggle_debug" });
+        }}
         className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
       >
         {view.debugReveal ? voice.debugHide : voice.debugReveal}
       </button>
       <button
         type="button"
-        onClick={() => send({ type: "restart_game" })}
+        onClick={() => {
+          hapticClick("warning");
+          send({ type: "restart_game" });
+        }}
         className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors"
       >
         {voice.debugRestart}
@@ -1620,7 +1660,10 @@ export function GameTable({
           <button
             type="button"
             className="absolute inset-0 bg-black/50"
-            onClick={() => setSettingsOpen(false)}
+            onClick={() => {
+              hapticClick("selection");
+              setSettingsOpen(false);
+            }}
             aria-label="Close menu"
           />
           <div className="mobile-settings-sheet absolute inset-x-0 bottom-0 top-[max(0.75rem,env(safe-area-inset-top,0px))] flex flex-col bg-surface pixel-border border-b-0 overflow-hidden">
@@ -1630,7 +1673,10 @@ export function GameTable({
               </p>
               <button
                 type="button"
-                onClick={() => setSettingsOpen(false)}
+                onClick={() => {
+                  hapticClick("selection");
+                  setSettingsOpen(false);
+                }}
                 className="sheet-close-btn border-theme-muted text-theme hover:border-accent hover:text-accent transition-colors"
                 aria-label="Close menu"
               >
@@ -1721,7 +1767,10 @@ export function GameTable({
               <div className="flex items-center gap-1.5 shrink-0">
                 <button
                   type="button"
-                  onClick={openSettings}
+                  onClick={() => {
+                    hapticClick("selection");
+                    openSettings();
+                  }}
                   className={`${CHROME_ICON_BTN} relative lg:hidden`}
                   aria-label={
                     unreadCount > 0
@@ -1815,7 +1864,10 @@ export function GameTable({
                       type="button"
                       data-tutorial="deck"
                       disabled={!view.canDrawFromDeck || snapGivePending}
-                      onClick={() => send({ type: "draw", source: "deck" })}
+                      onClick={() => {
+                        hapticClick("light");
+                        send({ type: "draw", source: "deck" });
+                      }}
                       className={`table-pile flex flex-col items-center gap-0.5 lg:gap-1 border-0 bg-transparent p-0 disabled:cursor-default ${
                         view.canDrawFromDeck && !snapGivePending
                           ? "pile-interactable-btn cursor-pointer active:opacity-80"
@@ -1920,10 +1972,12 @@ export function GameTable({
                       disabled={!canInteractWithDiscard}
                       onClick={() => {
                         if (view.canDiscardDrawn) {
+                          hapticClick("light");
                           send({ type: "discard_drawn" });
                           return;
                         }
                         if (canTakeFromDiscard) {
+                          hapticClick("light");
                           send({ type: "draw", source: "discard" });
                         }
                       }}
@@ -1993,7 +2047,10 @@ export function GameTable({
                         view.canDiscardDrawn ? (
                           <button
                             type="button"
-                            onClick={() => send({ type: "discard_drawn" })}
+                            onClick={() => {
+                              hapticClick("light");
+                              send({ type: "discard_drawn" });
+                            }}
                             className="table-grid-context-action w-full truncate"
                           >
                             {discardActionLabel}
@@ -2031,7 +2088,10 @@ export function GameTable({
                           {view.canDiscardDrawn ? (
                             <button
                               type="button"
-                              onClick={() => send({ type: "discard_drawn" })}
+                              onClick={() => {
+                                hapticClick("light");
+                                send({ type: "discard_drawn" });
+                              }}
                               className="chip-btn text-[8px] px-2 py-1 border-accent-alt text-accent-alt hover:border-accent transition-colors"
                             >
                               {discardActionLabel}

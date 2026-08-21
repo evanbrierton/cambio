@@ -1,5 +1,6 @@
 "use client";
 
+import { hapticClick } from "@cambio/client";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
@@ -130,9 +131,10 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                     view.canAddBot && (
                       <button
                         type="button"
-                        onClick={() =>
-                          send({ type: "remove_bot", playerId: player.id })
-                        }
+                        onClick={() => {
+                          hapticClick("selection");
+                          send({ type: "remove_bot", playerId: player.id });
+                        }}
                         className="ui-badge text-theme-muted hover:text-accent transition-colors"
                       >
                         {voice.removeBot}
@@ -160,7 +162,10 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
         {view.canAddBot && (
           <button
             type="button"
-            onClick={() => send({ type: "add_bot" })}
+            onClick={() => {
+              hapticClick("selection");
+              send({ type: "add_bot" });
+            }}
             className="mt-3 w-full chip-btn text-[10px] py-2 border-theme-muted text-theme hover:border-accent transition-colors"
           >
             {voice.addBot}
@@ -170,7 +175,10 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
         <div className="mt-3 border-t border-theme-muted/20 pt-3">
           <button
             type="button"
-            onClick={() => setSettingsOpen((open) => !open)}
+            onClick={() => {
+              hapticClick("selection");
+              setSettingsOpen((open) => !open);
+            }}
             aria-expanded={settingsOpen}
             className="flex w-full items-center justify-between gap-3 px-1 py-1 text-left transition-colors hover:text-accent"
           >
@@ -203,12 +211,13 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                     {view.canSetJokerCount ? (
                       <select
                         value={view.jokerCount}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          hapticClick("selection");
                           send({
                             type: "set_joker_count",
                             count: Number(e.target.value),
-                          })
-                        }
+                          });
+                        }}
                         className={LOBBY_SETTING_SELECT_CLASS}
                       >
                         {Array.from(
@@ -238,12 +247,13 @@ export function LobbyPlayers({ view, voice, send }: LobbyPlayersProps) {
                       {view.canSetCardPoints ? (
                         <select
                           value={view.cardPoints[key]}
-                          onChange={(e) =>
+                          onChange={(e) => {
+                            hapticClick("selection");
                             send({
                               type: "set_card_points",
                               values: { [key]: Number(e.target.value) },
-                            })
-                          }
+                            });
+                          }}
                           className={LOBBY_SETTING_SELECT_CLASS}
                         >
                           {CARD_POINT_OPTIONS.map((value) => (

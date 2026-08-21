@@ -1,5 +1,6 @@
 "use client";
 
+import { hapticClick } from "@cambio/client";
 import { Monitor, Moon, Sun } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTheme } from "@/context/ThemeProvider";
@@ -90,7 +91,10 @@ export function ThemePicker({ compact = false }: { compact?: boolean }) {
               <button
                 key={option.id}
                 type="button"
-                onClick={() => setAppearancePreference(option.id)}
+                onClick={() => {
+                  hapticClick("selection");
+                  setAppearancePreference(option.id);
+                }}
                 aria-label={option.label}
                 aria-pressed={active}
                 title={option.title}
@@ -119,7 +123,10 @@ export function ThemePicker({ compact = false }: { compact?: boolean }) {
             <button
               key={option.id}
               type="button"
-              onClick={() => setTheme(option.id)}
+              onClick={() => {
+                hapticClick("selection");
+                setTheme(option.id);
+              }}
               className={`theme-option-btn min-w-0 text-left px-3 py-2 border-2 transition-[border-color,background-color,color,box-shadow] font-sans ${
                 active
                   ? "border-accent-alt bg-surface text-accent shadow-glow-accent"

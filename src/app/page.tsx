@@ -1,5 +1,6 @@
 "use client";
 
+import { hapticClick } from "@cambio/client";
 import { customAlphabet } from "nanoid";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -146,7 +147,10 @@ export default function HomePage() {
               </span>
               <select
                 value={botCount}
-                onChange={(e) => setBotCount(Number(e.target.value))}
+                onChange={(e) => {
+                  hapticClick("selection");
+                  setBotCount(Number(e.target.value));
+                }}
                 className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
               >
                 {Array.from(
@@ -166,9 +170,10 @@ export default function HomePage() {
               </span>
               <select
                 value={difficulty}
-                onChange={(e) =>
-                  setBotDifficulty(e.target.value as BotDifficulty)
-                }
+                onChange={(e) => {
+                  hapticClick("selection");
+                  setBotDifficulty(e.target.value as BotDifficulty);
+                }}
                 className="mt-2 w-full input-theme px-3 py-2 font-mono normal-case"
               >
                 <option value="easy">{voice.difficultyEasy}</option>

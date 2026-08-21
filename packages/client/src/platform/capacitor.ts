@@ -185,24 +185,85 @@ export async function copyWithNativeClipboard(text: string): Promise<boolean> {
   return callNativePlugin("Clipboard", "write", { string: text });
 }
 
-export async function triggerSnapHaptic(): Promise<void> {
+export type HapticKind =
+  | "selection"
+  | "light"
+  | "medium"
+  | "heavy"
+  | "success"
+  | "warning"
+  | "error";
+
+const IMPACT_STYLE = {
+  light: "LIGHT",
+  medium: "MEDIUM",
+  heavy: "HEAVY",
+} as const;
+
+const NOTIFICATION_TYPE = {
+  success: "SUCCESS",
+  warning: "WARNING",
+  error: "ERROR",
+} as const;
+
+const VIBRATE_MS: Record<HapticKind, number> = {
+  selection: 10,
+  light: 20,
+  medium: 30,
+  heavy: 50,
+  success: 40,
+  warning: 30,
+  error: 50,
+};
+
+export async function triggerHaptic(kind: HapticKind): Promise<void> {
+  if (kind === "selection") {
+    const selected = await callNativePlugin("Haptics", "selectionChanged");
+    if (selected) return;
+    const impacted = await callNativePlugin("Haptics", "impact", {
+      style: "LIGHT",
+    });
+    if (impacted) return;
+    await callNativePlugin("Haptics", "vibrate", {
+      duration: VIBRATE_MS.selection,
+    });
+    return;
+  }
+
+  if (kind === "success" || kind === "warning" || kind === "error") {
+    const notified = await callNativePlugin("Haptics", "notification", {
+      type: NOTIFICATION_TYPE[kind],
+    });
+    if (notified) return;
+    const impacted = await callNativePlugin("Haptics", "impact", {
+      style: kind === "error" ? "HEAVY" : "MEDIUM",
+    });
+    if (impacted) return;
+    await callNativePlugin("Haptics", "vibrate", {
+      duration: VIBRATE_MS[kind],
+    });
+    return;
+  }
+
   const impacted = await callNativePlugin("Haptics", "impact", {
-    style: "LIGHT",
+    style: IMPACT_STYLE[kind],
   });
   if (impacted) return;
-  await callNativePlugin("Haptics", "vibrate", { duration: 20 });
+  await callNativePlugin("Haptics", "vibrate", {
+    duration: VIBRATE_MS[kind],
+  });
+}
+
+export function hapticClick(kind: HapticKind = "selection"): void {
+  void triggerHaptic(kind);
+}
+
+export async function triggerSnapHaptic(): Promise<void> {
+  await triggerHaptic("light");
 }
 
 export async function triggerCambioHaptic(): Promise<void> {
-  const notified = await callNativePlugin("Haptics", "notification", {
-    type: "SUCCESS",
-  });
-  if (notified) return;
-  const impacted = await callNativePlugin("Haptics", "impact", {
-    style: "MEDIUM",
-  });
-  if (impacted) return;
-  await callNativePlugin("Haptics", "vibrate", { duration: 40 });
+  await triggerHaptic("success");
 }
 
 export async function applyNativeShellChrome(): Promise<void> {
