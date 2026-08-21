@@ -2497,6 +2497,12 @@ html.play-scroll-lock body {
   height: 100%;
 }
 
+html.native-shell,
+html.native-shell body {
+  min-height: 100dvh;
+  background-color: var(--background);
+}
+
 .touch-game {
   touch-action: manipulation;
 }

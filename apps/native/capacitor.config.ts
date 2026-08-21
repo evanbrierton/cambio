@@ -24,10 +24,18 @@ const config: CapacitorConfig = {
   appId: "dev.brierton.cambio",
   appName: "Cambio",
   webDir: "web",
+  backgroundColor: "#12061f",
   server: {
     url: serverUrl,
     cleartext,
     allowNavigation,
+  },
+  ios: {
+    contentInset: "never",
+    backgroundColor: "#12061f",
+  },
+  android: {
+    backgroundColor: "#12061f",
   },
   plugins: {
     SplashScreen: {
@@ -37,9 +45,9 @@ const config: CapacitorConfig = {
       showSpinner: false,
     },
     StatusBar: {
-      style: "DARK",
+      style: "LIGHT",
       backgroundColor: "#12061f",
-      overlaysWebView: false,
+      overlaysWebView: true,
     },
   },
 };

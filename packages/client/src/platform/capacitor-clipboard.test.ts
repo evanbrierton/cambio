@@ -6,6 +6,7 @@ const originalWindow = globalThis.window;
 
 function setWindowCapacitor(capacitor: {
   isNativePlatform?: () => boolean;
+  registerPlugin?: <T>(name: string) => T;
   Plugins?: Record<string, unknown>;
 }) {
   (globalThis as { window?: Window }).window = {
@@ -52,6 +53,28 @@ describe("createCapacitorClipboardAdapter", () => {
           write: nativeWrite,
         },
       },
+    });
+    const fallbackCopy = vi
+      .fn<ClipboardAdapter["copyText"]>()
+      .mockResolvedValue(false);
+    const adapter = createCapacitorClipboardAdapter({
+      copyText: fallbackCopy,
+    });
+
+    await expect(adapter.copyText("ROOM123")).resolves.toBe(true);
+    expect(nativeWrite).toHaveBeenCalledWith({ string: "ROOM123" });
+    expect(fallbackCopy).not.toHaveBeenCalled();
+  });
+
+  it("registers native clipboard when the Plugins map is empty", async () => {
+    const nativeWrite = vi.fn().mockResolvedValue(undefined);
+    setWindowCapacitor({
+      isNativePlatform: () => true,
+      Plugins: {},
+      registerPlugin: ((name: string) =>
+        name === "Clipboard" ? { write: nativeWrite } : {}) as <T>(
+        pluginName: string,
+      ) => T,
     });
     const fallbackCopy = vi
       .fn<ClipboardAdapter["copyText"]>()

@@ -1,5 +1,6 @@
 import {
   getDefaultPlatformAdapters,
+  isNativePlatform,
   PWA_INSTALL_DISMISS_KEY,
 } from "@cambio/client";
 
@@ -19,6 +20,7 @@ export type BeforeInstallPromptEvent = Event & {
 
 export function isStandaloneDisplay(): boolean {
   if (typeof window === "undefined") return false;
+  if (isNativePlatform()) return true;
 
   const mediaStandalone = window.matchMedia(
     "(display-mode: standalone)",

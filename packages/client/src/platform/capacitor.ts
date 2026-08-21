@@ -2,6 +2,7 @@ type NativePluginMap = Record<string, unknown>;
 
 type CapacitorRuntime = {
   isNativePlatform?: () => boolean;
+  registerPlugin?: <T>(name: string) => T;
   Plugins?: NativePluginMap;
 };
 
@@ -26,6 +27,17 @@ type NativeHapticsPlugin = {
   impact: (options: {
     style: "LIGHT" | "MEDIUM" | "HEAVY";
   }) => Promise<unknown>;
+  notification?: (options: {
+    type: "SUCCESS" | "WARNING" | "ERROR";
+  }) => Promise<unknown>;
+};
+
+type NativeStatusBarPlugin = {
+  setOverlaysWebView?: (options: { overlay: boolean }) => Promise<unknown>;
+  setStyle?: (options: {
+    style: "DARK" | "LIGHT" | "DEFAULT";
+  }) => Promise<unknown>;
+  setBackgroundColor?: (options: { color: string }) => Promise<unknown>;
 };
 
 function getCapacitorRuntime(): CapacitorRuntime | null {
@@ -33,12 +45,23 @@ function getCapacitorRuntime(): CapacitorRuntime | null {
   return (window as WindowWithCapacitor).Capacitor ?? null;
 }
 
-function getNativePlugin<T>(name: string): T | null {
-  const plugins = getCapacitorRuntime()?.Plugins;
-  if (!plugins) return null;
-  const plugin = plugins[name];
-  if (!plugin) return null;
-  return plugin as T;
+function getOrRegisterPlugin<T>(name: string): T | null {
+  const runtime = getCapacitorRuntime();
+  if (!runtime) return null;
+
+  const existing = runtime.Plugins?.[name];
+  if (existing) return existing as T;
+
+  if (typeof runtime.registerPlugin !== "function") return null;
+  try {
+    const registered = runtime.registerPlugin<T>(name);
+    if (runtime.Plugins && registered && !runtime.Plugins[name]) {
+      runtime.Plugins[name] = registered;
+    }
+    return registered ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function isNativePlatform(): boolean {
@@ -49,7 +72,7 @@ export function isNativePlatform(): boolean {
 
 export function canUseNativeShare(): boolean {
   if (!isNativePlatform()) return false;
-  return Boolean(getNativePlugin<NativeSharePlugin>("Share")?.share);
+  return Boolean(getOrRegisterPlugin<NativeSharePlugin>("Share")?.share);
 }
 
 export async function shareRoomInvite(params: {
@@ -57,7 +80,7 @@ export async function shareRoomInvite(params: {
   roomUrl: string;
 }): Promise<boolean> {
   if (!isNativePlatform()) return false;
-  const share = getNativePlugin<NativeSharePlugin>("Share");
+  const share = getOrRegisterPlugin<NativeSharePlugin>("Share");
   if (!share?.share) return false;
   try {
     await share.share({
@@ -74,7 +97,7 @@ export async function shareRoomInvite(params: {
 
 export async function copyWithNativeClipboard(text: string): Promise<boolean> {
   if (!isNativePlatform()) return false;
-  const clipboard = getNativePlugin<NativeClipboardPlugin>("Clipboard");
+  const clipboard = getOrRegisterPlugin<NativeClipboardPlugin>("Clipboard");
   if (!clipboard?.write) return false;
   try {
     await clipboard.write({ string: text });
@@ -86,7 +109,7 @@ export async function copyWithNativeClipboard(text: string): Promise<boolean> {
 
 async function triggerNativeImpact(style: "LIGHT" | "MEDIUM" | "HEAVY") {
   if (!isNativePlatform()) return;
-  const haptics = getNativePlugin<NativeHapticsPlugin>("Haptics");
+  const haptics = getOrRegisterPlugin<NativeHapticsPlugin>("Haptics");
   if (!haptics?.impact) return;
   try {
     await haptics.impact({ style });
@@ -100,5 +123,41 @@ export function triggerSnapHaptic(): Promise<void> {
 }
 
 export function triggerCambioHaptic(): Promise<void> {
-  return triggerNativeImpact("MEDIUM");
+  if (!isNativePlatform()) return Promise.resolve();
+  const haptics = getOrRegisterPlugin<NativeHapticsPlugin>("Haptics");
+  if (!haptics) return Promise.resolve();
+
+  return (async () => {
+    try {
+      if (haptics.notification) {
+        await haptics.notification({ type: "SUCCESS" });
+        return;
+      }
+    } catch {
+      // Fall through to impact if notification is unavailable.
+    }
+    await triggerNativeImpact("MEDIUM");
+  })();
+}
+
+export async function applyNativeShellChrome(): Promise<void> {
+  if (!isNativePlatform()) return;
+  const statusBar = getOrRegisterPlugin<NativeStatusBarPlugin>("StatusBar");
+  if (!statusBar) return;
+
+  try {
+    await statusBar.setOverlaysWebView?.({ overlay: true });
+  } catch {
+    // Keep going so style/background still apply on older plugin builds.
+  }
+  try {
+    await statusBar.setStyle?.({ style: "LIGHT" });
+  } catch {
+    // Ignore plugin errors so web/native fallbacks stay unchanged.
+  }
+  try {
+    await statusBar.setBackgroundColor?.({ color: "#12061f" });
+  } catch {
+    // Ignore plugin errors so web/native fallbacks stay unchanged.
+  }
 }

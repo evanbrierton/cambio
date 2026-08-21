@@ -56,7 +56,7 @@ Run from the repository root.
 
 - Select an iOS simulator/device.
 - Build and run from Xcode.
-- `StatusBar.overlaysWebView=false` keeps content below the status bar for safe-area alignment.
+- `StatusBar.overlaysWebView=true` draws the WebView under the status bar and home indicator; CSS `env(safe-area-inset-*)` keeps controls out of the notch/chin.
 
 ### Android (Android Studio)
 
