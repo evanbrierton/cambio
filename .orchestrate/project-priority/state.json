@@ -58,17 +58,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-21T16:32:23.030Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-21T16:32:23.030Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "lan-p2p-transport",
@@ -170,6 +171,10 @@
     {
       "at": "2026-08-21T16:30:41.630Z",
       "message": "lan-p2p-transport: verification self-reported (unit-test-verified)"
+    },
+    {
+      "at": "2026-08-21T16:32:22.937Z",
+      "message": "capacitor-plugins: spawn failed after 3 transient sub-attempts: ConfigurationError: [validation_error] Failed to verify existence of branch 'orch/project-priority/capacitor-shell' in repository evanbrierton/cambio. Please ensure the branch name is correct."
     }
   ]
 }
