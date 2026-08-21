@@ -294,7 +294,7 @@ export function useP2PConnection(
       hostPlayerIdRef.current = null;
       setConnected(false);
     };
-  }, [roomId, playerName, applyMessage, options.enabled]);
+  }, [roomId, playerName, applyMessage]);
 
   return {
     connected,

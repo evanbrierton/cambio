@@ -1425,19 +1425,25 @@ export function GameTable({
 
   const hasActionButtons = view.canStartGame || view.canShowResults;
 
-  const callCambioChip = view.canCallCambio ? (
+  const callCambioChip = (
     <button
       type="button"
-      data-tutorial="call-cambio"
+      data-tutorial={view.canCallCambio ? "call-cambio" : undefined}
+      disabled={!view.canCallCambio}
+      aria-hidden={!view.canCallCambio}
+      tabIndex={view.canCallCambio ? undefined : -1}
       onClick={() => {
+        if (!view.canCallCambio) return;
         void triggerCambioHaptic();
         send({ type: "call_cambio" });
       }}
-      className="table-cambio-chip chip-btn"
+      className={`table-cambio-chip chip-btn ${
+        view.canCallCambio ? "" : "invisible pointer-events-none animate-none"
+      }`}
     >
       {voice.callCambio}
     </button>
-  ) : null;
+  );
 
   const canDebugRestart =
     debugEnabled &&
@@ -1631,7 +1637,7 @@ export function GameTable({
   return (
     <div
       className={`w-full max-w-7xl mx-auto flex flex-col ${
-        isLobbyScrollLayout ? "" : "flex-1 min-h-0 overflow-hidden"
+        isLobbyScrollLayout ? "" : "h-full flex-1 min-h-0 overflow-hidden"
       } ${snapWindowActive ? "snap-window-active" : ""}`}
     >
       <GameToastLayer toasts={gameToasts} />
@@ -2045,32 +2051,23 @@ export function GameTable({
 
                   {playerGridEnabled ? (
                     <div className="table-grid-context shrink-0 w-full min-w-0">
-                      {showDrawnActionChrome ? (
-                        view.canDiscardDrawn ? (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              hapticClick("light");
-                              send({ type: "discard_drawn" });
-                            }}
-                            className="table-grid-context-action w-full truncate"
-                          >
-                            {discardActionLabel}
-                          </button>
-                        ) : view.canSwap ? (
-                          <p className="table-grid-context-hint truncate">
-                            {voice.tapToSwap}
-                          </p>
-                        ) : null
-                      ) : callCambioChip ? (
-                        callCambioChip
-                      ) : (
-                        <p
-                          className="table-grid-context-hint truncate invisible"
-                          aria-hidden
+                      {showDrawnActionChrome && view.canDiscardDrawn ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            hapticClick("light");
+                            send({ type: "discard_drawn" });
+                          }}
+                          className="table-grid-context-action w-full truncate"
                         >
-                          —
+                          {discardActionLabel}
+                        </button>
+                      ) : showDrawnActionChrome && view.canSwap ? (
+                        <p className="table-grid-context-hint truncate">
+                          {voice.tapToSwap}
                         </p>
+                      ) : (
+                        callCambioChip
                       )}
                     </div>
                   ) : null}
@@ -2148,7 +2145,11 @@ export function GameTable({
                 lanEndpoint={lanEndpoint}
               />
             ) : (
-              <div className="players-with-action-overlay relative flex flex-1 flex-col gap-1.5 sm:gap-2 min-h-0 min-w-0 overflow-hidden">
+              <div
+                className={`players-with-action-overlay relative flex flex-1 flex-col gap-1.5 sm:gap-2 min-h-0 min-w-0 overflow-hidden ${
+                  hasActionButtons ? "has-action-overlay" : ""
+                }`}
+              >
                 <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">
                   PLAYERS
                 </p>
