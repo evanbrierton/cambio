@@ -10,14 +10,14 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-21T16:26:30.183Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-21T16:26:15.258Z",
+      "lastUpdate": "2026-08-21T16:26:30.183Z",
       "note": "respawned by local-cli (was error; attempts=1)",
-      "attempts": 1,
+      "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
@@ -157,6 +157,10 @@
     {
       "at": "2026-08-21T16:26:17.968Z",
       "message": "lan-p2p-transport: respawned by local-cli (was error)"
+    },
+    {
+      "at": "2026-08-21T16:26:19.327Z",
+      "message": "tutorial-polish: respawned by local-cli (was error)"
     }
   ]
 }
