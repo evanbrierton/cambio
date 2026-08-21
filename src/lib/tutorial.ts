@@ -9,7 +9,8 @@ export const TUTORIAL_STAGE = {
   IN_GAME_COACH: "in-game-coach",
 } as const;
 
-export type TutorialStage = (typeof TUTORIAL_STAGE)[keyof typeof TUTORIAL_STAGE];
+export type TutorialStage =
+  (typeof TUTORIAL_STAGE)[keyof typeof TUTORIAL_STAGE];
 
 export const TUTORIAL_DISMISS_REASON = {
   SKIP: "skip",

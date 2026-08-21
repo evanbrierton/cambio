@@ -3,13 +3,13 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useRef } from "react";
-import { useTutorial } from "@/hooks/useTutorial";
+import { RetroButton } from "@/components/ui/RetroButton";
 import {
   TUTORIAL_DISMISS_REASON,
   TUTORIAL_STAGE,
   type TutorialDismissReason,
 } from "@/lib/tutorial";
-import { RetroButton } from "@/components/ui/RetroButton";
+import { useTutorialStore } from "@/store/tutorial-prefs";
 
 export type TutorialModalStep = {
   title: string;
@@ -61,7 +61,9 @@ export function TutorialModal({
   const focusRestoreRef = useRef<HTMLElement | null>(null);
   const lastStep = STEPS.length - 1;
   const step = STEPS[stepIndex];
-  const { markStageSeenFromDismiss } = useTutorial();
+  const markStageSeenFromDismiss = useTutorialStore(
+    (state) => state.markStageSeenFromDismiss,
+  );
 
   const dismiss = useCallback(
     (reason: TutorialDismissReason) => {
@@ -91,7 +93,8 @@ export function TutorialModal({
     focusRestoreRef.current = document.activeElement as HTMLElement | null;
 
     const focusInitialElement = () => {
-      const focusable = dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      const focusable =
+        dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
       const firstFocusable = focusable[0];
       if (firstFocusable) {
         firstFocusable.focus();
@@ -137,9 +140,8 @@ export function TutorialModal({
 
       if (event.key !== "Tab") return;
 
-      const focusable = activeDialog.querySelectorAll<HTMLElement>(
-        FOCUSABLE_SELECTOR,
-      );
+      const focusable =
+        activeDialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
       if (focusable.length === 0) {
         event.preventDefault();
         activeDialog.focus();
@@ -170,9 +172,22 @@ export function TutorialModal({
       }
     };
 
+    const onFocusIn = (event: FocusEvent) => {
+      if (!dialogRef.current) return;
+      const activeDialog = dialogRef.current;
+      const targetNode = event.target instanceof Node ? event.target : null;
+      if (targetNode && activeDialog.contains(targetNode)) return;
+      const focusable =
+        activeDialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      const nextTarget = focusable[0] ?? activeDialog;
+      nextTarget.focus();
+    };
+
     window.addEventListener("keydown", onKeyDown);
+    document.addEventListener("focusin", onFocusIn);
     return () => {
       window.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("focusin", onFocusIn);
       focusRestoreRef.current?.focus();
     };
   }, [dismiss, lastStep, onStepIndexChange, open, stepIndex]);

@@ -3,21 +3,21 @@
 import { useMemo, useRef } from "react";
 import {
   ACTIONS,
+  type EventData,
   Joyride,
   ORIGIN,
   STATUS,
-  type EventData,
   type TooltipRenderProps,
 } from "react-joyride";
-import { useTutorial } from "@/hooks/useTutorial";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { type CoachHintId, isCoachEligiblePhase } from "@/lib/coach-moments";
+import type { ThemeVoice } from "@/lib/themes";
 import {
   TUTORIAL_DISMISS_REASON,
   TUTORIAL_STAGE,
   type TutorialDismissReason,
 } from "@/lib/tutorial";
-import type { ThemeVoice } from "@/lib/themes";
+import { useTutorialStore } from "@/store/tutorial-prefs";
 
 export type { CoachHintId };
 export { isCoachEligiblePhase };
@@ -129,7 +129,9 @@ export function TutorialCoach({
   onComplete,
 }: TutorialCoachProps) {
   const voice = useThemeVoice();
-  const { markStageSeenFromDismiss } = useTutorial();
+  const markStageSeenFromDismiss = useTutorialStore(
+    (state) => state.markStageSeenFromDismiss,
+  );
   const settledRef = useRef(false);
   const step = useMemo(() => {
     if (!hintId) return null;

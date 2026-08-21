@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   isGameTutorialSeen,
   isHomeTutorialSeen,
-  markStageSeenOnDismiss,
   markGameTutorialSeen,
   markHomeTutorialSeen,
+  markStageSeenOnDismiss,
   resetAllTutorialSeen,
   TUTORIAL_DISMISS_REASON,
   TUTORIAL_GAME_SEEN_KEY,

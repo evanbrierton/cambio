@@ -8,7 +8,7 @@ import {
   markStageSeenOnDismiss,
   type TutorialDismissReason,
   type TutorialStage,
-} from "@/lib/tutorial";
+} from "../lib/tutorial";
 import { tutorialPrefsPersistStateSchema } from "./tutorial-prefs-schema";
 
 export const TUTORIAL_PREFS_STORAGE_KEY = "cambio-tutorial-prefs";
