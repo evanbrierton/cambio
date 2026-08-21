@@ -531,6 +531,10 @@ function clearSnapEligibleDiscard(state: GameState): void {
   state.snapChainPlayerId = null;
 }
 
+export function canDrawFromDeck(state: GameState): boolean {
+  return state.deck.length > 0 || state.discard.length > 1;
+}
+
 /** When the deck is empty, shuffle the discard pile into it, keeping the top discard visible. */
 function reshuffleDiscardIntoDeck(state: GameState): boolean {
   if (state.deck.length > 0) return false;
@@ -1119,6 +1123,16 @@ export function handleMessage(
 
       const drawnCard = state.drawnCard;
       const existing = player.hand[message.slot];
+      if (
+        state.drawnFromDiscard &&
+        state.deck.length === 0 &&
+        state.discard.length === 0 &&
+        !existing.card
+      ) {
+        return {
+          error: "Must swap with a card when the deck is empty.",
+        };
+      }
       player.hand[message.slot] = { card: drawnCard, faceUp: false };
       if (existing.card) {
         state.discard.push(existing.card);
@@ -1207,6 +1221,13 @@ export function handleMessage(
 
       if (!cardsSnapMatch(handCard, top)) {
         const penaltyResult = addPenalty(state, playerId);
+        if (!penaltyResult) {
+          addLog(
+            state,
+            `${player.name} snapped wrong, but no cards remain for a penalty.`,
+          );
+          return { error: "Wrong snap! No cards left for a penalty." };
+        }
         if (message.targetPlayerId !== playerId) {
           addLog(
             state,
@@ -1217,11 +1238,8 @@ export function handleMessage(
         }
         return {
           error: "Wrong snap! Penalty card added.",
-          penaltyFlash:
-            penaltyResult !== null
-              ? { playerId, slot: penaltyResult.slot }
-              : undefined,
-          reshuffleFlash: penaltyResult?.reshuffleFlash,
+          penaltyFlash: { playerId, slot: penaltyResult.slot },
+          reshuffleFlash: penaltyResult.reshuffleFlash,
         };
       }
 
@@ -1644,6 +1662,14 @@ export function buildPlayerView(
       !state.drawnCard &&
       !state.pendingAbility &&
       (state.phase === "playing" || state.phase === "cambio_final"),
+    canDrawFromDeck:
+      gameInteractive &&
+      isMyTurn &&
+      !state.turnStarted &&
+      !state.drawnCard &&
+      !state.pendingAbility &&
+      (state.phase === "playing" || state.phase === "cambio_final") &&
+      canDrawFromDeck(state),
     canSwap:
       gameInteractive && isMyTurn && !!state.drawnCard && !state.pendingAbility,
     canDiscardDrawn:

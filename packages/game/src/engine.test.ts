@@ -757,3 +757,63 @@ describe("set_card_points (CAM-64)", () => {
     expect(guestView.canSetCardPoints).toBe(false);
   });
 });
+
+describe("snap penalty softlock guards (CAM-95)", () => {
+  it("rejects wrong snaps when no penalty card can be dealt", () => {
+    const state = playingState();
+    state.deck = [];
+    state.discard = [card("9", "spades")];
+    state.snapEligibleTopCardId = state.discard[0].id;
+
+    const result = handleMessage(state, "alice", {
+      type: "snap",
+      targetPlayerId: "alice",
+      slot: 0,
+    });
+
+    expect(result.error).toBe("Wrong snap! No cards left for a penalty.");
+    expect(result.penaltyFlash).toBeUndefined();
+    expect(state.players[0].penaltyCount).toBe(0);
+    expect(state.players[0].hand[0].card?.rank).toBe("2");
+  });
+
+  it("blocks empty-slot discard swaps that would leave both piles empty", () => {
+    const state = playingState();
+    state.deck = [];
+    state.discard = [];
+    state.drawnCard = card("8", "diamonds");
+    state.drawnFromDiscard = true;
+    state.turnStarted = true;
+    state.players[0].hand = [
+      slot(null),
+      slot(card("3", "hearts")),
+      slot(card("4", "hearts")),
+      slot(card("5", "hearts")),
+    ];
+
+    const blocked = handleMessage(state, "alice", { type: "swap", slot: 0 });
+    expect(blocked.error).toBe("Must swap with a card when the deck is empty.");
+    expect(state.drawnCard?.rank).toBe("8");
+    expect(state.discard).toHaveLength(0);
+
+    const ok = handleMessage(state, "alice", { type: "swap", slot: 1 });
+    expect(ok).toEqual({
+      swapFlash: { slots: [{ playerId: "alice", slot: 1 }] },
+    });
+    expect(state.drawnCard).toBeNull();
+    expect(state.discard.at(-1)?.rank).toBe("3");
+  });
+
+  it("exposes canDrawFromDeck false when only the discard top remains", () => {
+    const state = playingState();
+    state.deck = [];
+    state.discard = [card("Q", "hearts")];
+    state.turnStarted = false;
+    state.drawnCard = null;
+
+    const view = buildPlayerView(state, "alice");
+    expect(view.canDraw).toBe(true);
+    expect(view.canDrawFromDeck).toBe(false);
+    expect(view.discardTop?.rank).toBe("Q");
+  });
+});
