@@ -119,6 +119,57 @@ export function addBotPlayer(
   return id;
 }
 
+/** Remove a human from a lobby (matchmade disconnect). Returns false if not found. */
+export function removeLobbyPlayer(state: GameState, playerId: string): boolean {
+  const index = state.players.findIndex((player) => player.id === playerId);
+  if (index === -1) return false;
+
+  const player = state.players[index];
+  if (player.isBot) return false;
+
+  state.players.splice(index, 1);
+
+  if (state.hostId === playerId) {
+    const nextHost = state.players.find(
+      (candidate) => !candidate.isBot && candidate.connected,
+    );
+    if (nextHost) state.hostId = nextHost.id;
+  }
+
+  delete state.cumulativeScores[playerId];
+  addLog(state, `${player.name} left the match.`);
+
+  return true;
+}
+
+/**
+ * Self-heal stuck "away" humans left in matchmade lobbies before lobby-leave
+ * removal existed. In-progress games keep disconnected players for reconnect.
+ * Only call on Durable Object restore — not on every connect (reconnect races).
+ */
+export function purgeStaleMatchmadeLobbyPlayers(state: GameState): string[] {
+  if (!state.isMatchmade || state.phase !== "lobby") return [];
+
+  const staleIds = state.players
+    .filter((player) => !player.isBot && !player.connected)
+    .map((player) => player.id);
+
+  for (const playerId of staleIds) {
+    removeLobbyPlayer(state, playerId);
+  }
+
+  if (
+    state.matchSoftStartAt &&
+    state.players.filter(
+      (player) => !player.isBot && !player.isWaiting && player.connected,
+    ).length < 2
+  ) {
+    state.matchSoftStartAt = null;
+  }
+
+  return staleIds;
+}
+
 export function createRoom(
   roomId: string,
   hostName: string,
@@ -234,6 +285,36 @@ function isNameTaken(
   return state.players.some(
     (p) => p.id !== excludePlayerId && nameKey(p.name) === normalized,
   );
+}
+
+/**
+ * Friend rooms reject collisions. Matchmade rooms auto-suffix (`Alex` → `Alex 2`)
+ * so public lobbies don't fail on common nicknames.
+ */
+export function allocateDisplayName(
+  state: GameState,
+  desired: string,
+  excludePlayerId?: string,
+): { name: string } | { error: string } {
+  const trimmed = normalizePlayerName(desired);
+  if (!trimmed) return { error: "Please enter a name." };
+  if (!isNameTaken(state, trimmed, excludePlayerId)) {
+    return { name: trimmed };
+  }
+  if (!state.isMatchmade) {
+    return { error: "That name is already taken." };
+  }
+
+  for (let n = 2; n <= 99; n++) {
+    const suffix = ` ${n}`;
+    const base = trimmed.slice(0, Math.max(1, 24 - suffix.length));
+    const candidate = `${base}${suffix}`;
+    if (!isNameTaken(state, candidate, excludePlayerId)) {
+      return { name: candidate };
+    }
+  }
+
+  return { error: "That name is already taken." };
 }
 
 export function findPlayer(
@@ -869,31 +950,26 @@ export function handleMessage(
 
   switch (message.type) {
     case "join": {
-      const trimmedName = normalizePlayerName(message.name);
       const existing = findPlayer(state, playerId);
       if (existing) {
         existing.connected = true;
-        if (trimmedName) {
-          if (isNameTaken(state, trimmedName, playerId)) {
-            return { error: "That name is already taken." };
-          }
-          existing.name = trimmedName;
+        if (message.name.trim()) {
+          const allocated = allocateDisplayName(state, message.name, playerId);
+          if ("error" in allocated) return { error: allocated.error };
+          existing.name = allocated.name;
         }
         return {};
       }
-      if (!trimmedName) {
-        return { error: "Please enter a name." };
-      }
-      if (isNameTaken(state, trimmedName)) {
-        return { error: "That name is already taken." };
-      }
+      const allocated = allocateDisplayName(state, message.name);
+      if ("error" in allocated) return { error: allocated.error };
+      const displayName = allocated.name;
       if (state.players.length >= MAX_PLAYERS) {
         return { error: "Room is full." };
       }
       const waiting = isGameInProgress(state);
       state.players.push({
         id: playerId,
-        name: trimmedName,
+        name: displayName,
         hand: [],
         penaltyCount: 0,
         setupPeekedSlots: [],
@@ -908,10 +984,10 @@ export function handleMessage(
       if (waiting) {
         addLog(
           state,
-          `${trimmedName} joined — waiting for the current game to end.`,
+          `${displayName} joined — waiting for the current game to end.`,
         );
       } else {
-        addLog(state, `${trimmedName} joined.`);
+        addLog(state, `${displayName} joined.`);
       }
       return {};
     }

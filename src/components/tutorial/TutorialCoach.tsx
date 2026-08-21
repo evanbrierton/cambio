@@ -1,90 +1,100 @@
 "use client";
 
+import { useMemo, useRef } from "react";
 import { Joyride, STATUS, type TooltipRenderProps } from "react-joyride";
+import { useThemeVoice } from "@/hooks/useThemeVoice";
+import { type CoachHintId, isCoachEligiblePhase } from "@/lib/coach-moments";
+import type { ThemeVoice } from "@/lib/themes";
 
-const COACH_STEPS = [
+export type { CoachHintId };
+export { isCoachEligiblePhase };
+
+const COACH_LAYOUT: Record<
+  CoachHintId,
   {
+    target: string;
+    skipBeacon: boolean;
+    placement: "top" | "bottom";
+  }
+> = {
+  "own-hand": {
     target: '[data-tutorial="own-hand"]',
-    title: "Your hand",
-    content:
-      "These four face-down cards are yours. At setup, peek at two of them once — then rely on memory.",
     skipBeacon: true,
-    placement: "top" as const,
+    placement: "top",
   },
-  {
+  deck: {
     target: '[data-tutorial="deck"]',
-    title: "Draw from the deck",
-    content:
-      "On your turn, draw from the deck or discard pile. From the deck you can swap or discard to trigger abilities.",
     skipBeacon: true,
-    placement: "bottom" as const,
+    placement: "bottom",
   },
-  {
+  discard: {
     target: '[data-tutorial="discard"]',
-    title: "Discard pile & snap",
-    content:
-      "Cards land here face up. If you hold a matching rank, snap anytime to discard another card — wrong snaps cost a penalty.",
     skipBeacon: true,
-    placement: "bottom" as const,
+    placement: "bottom",
   },
-  {
+  "call-cambio": {
     target: '[data-tutorial="call-cambio"]',
-    title: 'Call "Cambio"',
-    content:
-      "Happy with your hand? Call Cambio at the start of your turn before drawing. Everyone gets one last turn, then scores reveal.",
     skipBeacon: true,
-    placement: "top" as const,
+    placement: "top",
   },
-];
+};
+
+function coachCopy(
+  hintId: CoachHintId,
+  voice: ThemeVoice,
+): { title: string; content: string } {
+  switch (hintId) {
+    case "own-hand":
+      return { title: voice.coachHandTitle, content: voice.coachHandBody };
+    case "deck":
+      return { title: voice.coachDeckTitle, content: voice.coachDeckBody };
+    case "discard":
+      return {
+        title: voice.coachDiscardTitle,
+        content: voice.coachDiscardBody,
+      };
+    case "call-cambio":
+      return { title: voice.coachCambioTitle, content: voice.coachCambioBody };
+  }
+}
 
 function CoachTooltip({
-  backProps,
   closeProps,
-  index,
-  isLastStep,
   primaryProps,
   skipProps,
   step,
   tooltipProps,
 }: TooltipRenderProps) {
+  const voice = useThemeVoice();
   const btnClass =
     "btn-theme text-[10px] sm:text-xs px-3 py-2 transition-colors active:opacity-80";
   return (
     <div
       {...tooltipProps}
-      className="pixel-border bg-surface-elevated p-4 sm:p-5 max-w-[min(92vw,22rem)] shadow-glow-accent text-left"
+      className="pixel-border bg-surface-elevated p-4 sm:p-5 max-w-[min(92vw,22rem)] shadow-glow-accent text-left font-display text-theme"
     >
       {step.title ? (
         <h3 className="font-display text-sm sm:text-base title-glow mb-2">
           {step.title}
         </h3>
       ) : null}
-      <p className="text-xs sm:text-sm text-theme normal-case tracking-normal leading-relaxed">
+      <p className="font-display text-[10px] sm:text-xs text-theme leading-relaxed">
         {step.content}
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        {index > 0 ? (
-          <button
-            type="button"
-            {...backProps}
-            className={`${btnClass} btn-secondary`}
-          >
-            Back
-          </button>
-        ) : null}
         <button
           type="button"
           {...skipProps}
           className={`${btnClass} btn-secondary`}
         >
-          Skip
+          {voice.coachSkip}
         </button>
         <button
           type="button"
           {...primaryProps}
           className={`${btnClass} btn-primary ml-auto`}
         >
-          {isLastStep ? "Got it" : "Next"}
+          {voice.coachGotIt}
         </button>
         <button type="button" {...closeProps} className="sr-only">
           Close coach
@@ -95,23 +105,35 @@ function CoachTooltip({
 }
 
 type TutorialCoachProps = {
-  run: boolean;
-  onFinish: () => void;
+  hintId: CoachHintId | null;
+  onSkip: () => void;
+  onComplete: () => void;
 };
 
-export function TutorialCoach({ run, onFinish }: TutorialCoachProps) {
+export function TutorialCoach({
+  hintId,
+  onSkip,
+  onComplete,
+}: TutorialCoachProps) {
+  const voice = useThemeVoice();
+  const settledRef = useRef(false);
+  const step = useMemo(() => {
+    if (!hintId) return null;
+    return { ...COACH_LAYOUT[hintId], ...coachCopy(hintId, voice) };
+  }, [hintId, voice]);
+
   return (
     <Joyride
-      run={run}
-      steps={COACH_STEPS}
+      key={hintId ?? "idle"}
+      run={step !== null}
+      steps={step ? [step] : []}
       continuous
       scrollToFirstStep
       tooltipComponent={CoachTooltip}
       locale={{
-        back: "Back",
-        last: "Got it",
-        next: "Next",
-        skip: "Skip",
+        last: voice.coachGotIt,
+        next: voice.coachGotIt,
+        skip: voice.coachSkip,
       }}
       options={{
         skipBeacon: true,
@@ -121,6 +143,7 @@ export function TutorialCoach({ run, onFinish }: TutorialCoachProps) {
         spotlightPadding: 8,
         spotlightRadius: 6,
         targetWaitTimeout: 2500,
+        arrowColor: "var(--border)",
       }}
       styles={{
         overlay: {
@@ -128,21 +151,17 @@ export function TutorialCoach({ run, onFinish }: TutorialCoachProps) {
         },
       }}
       onEvent={(data) => {
-        const finished =
-          data.status === STATUS.FINISHED || data.status === STATUS.SKIPPED;
-        if (finished) {
-          onFinish();
+        if (settledRef.current) return;
+        if (data.status === STATUS.SKIPPED) {
+          settledRef.current = true;
+          onSkip();
+          return;
+        }
+        if (data.status === STATUS.FINISHED) {
+          settledRef.current = true;
+          onComplete();
         }
       }}
     />
-  );
-}
-
-export function isCoachEligiblePhase(phase: string): boolean {
-  return (
-    phase !== "lobby" &&
-    phase !== "ended" &&
-    phase !== "revealed" &&
-    phase !== "waiting"
   );
 }
