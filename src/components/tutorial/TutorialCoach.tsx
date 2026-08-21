@@ -1,9 +1,22 @@
 "use client";
 
 import { useMemo, useRef } from "react";
-import { Joyride, STATUS, type TooltipRenderProps } from "react-joyride";
+import {
+  ACTIONS,
+  Joyride,
+  ORIGIN,
+  STATUS,
+  type EventData,
+  type TooltipRenderProps,
+} from "react-joyride";
+import { useTutorial } from "@/hooks/useTutorial";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { type CoachHintId, isCoachEligiblePhase } from "@/lib/coach-moments";
+import {
+  TUTORIAL_DISMISS_REASON,
+  TUTORIAL_STAGE,
+  type TutorialDismissReason,
+} from "@/lib/tutorial";
 import type { ThemeVoice } from "@/lib/themes";
 
 export type { CoachHintId };
@@ -67,21 +80,21 @@ function CoachTooltip({
 }: TooltipRenderProps) {
   const voice = useThemeVoice();
   const btnClass =
-    "btn-theme text-[10px] sm:text-xs px-3 py-2 transition-colors active:opacity-80";
+    "btn-theme text-[10px] sm:text-xs px-3 py-2 transition-colors active:opacity-80 w-full sm:w-auto";
   return (
     <div
       {...tooltipProps}
-      className="pixel-border bg-surface-elevated p-4 sm:p-5 max-w-[min(92vw,22rem)] shadow-glow-accent text-left font-display text-theme"
+      className="pixel-border bg-surface-elevated p-3.5 sm:p-5 w-[min(95vw,22rem)] max-h-[min(72dvh,24rem)] overflow-y-auto shadow-glow-accent text-left font-display text-theme"
     >
       {step.title ? (
-        <h3 className="font-display text-sm sm:text-base title-glow mb-2">
+        <h3 className="font-display text-sm sm:text-base title-glow mb-1.5 sm:mb-2">
           {step.title}
         </h3>
       ) : null}
-      <p className="font-display text-[10px] sm:text-xs text-theme leading-relaxed">
+      <p className="font-display text-[11px] sm:text-xs text-theme leading-relaxed normal-case tracking-normal">
         {step.content}
       </p>
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2">
         <button
           type="button"
           {...skipProps}
@@ -92,7 +105,7 @@ function CoachTooltip({
         <button
           type="button"
           {...primaryProps}
-          className={`${btnClass} btn-primary ml-auto`}
+          className={`${btnClass} btn-primary sm:ml-auto`}
         >
           {voice.coachGotIt}
         </button>
@@ -116,11 +129,43 @@ export function TutorialCoach({
   onComplete,
 }: TutorialCoachProps) {
   const voice = useThemeVoice();
+  const { markStageSeenFromDismiss } = useTutorial();
   const settledRef = useRef(false);
   const step = useMemo(() => {
     if (!hintId) return null;
     return { ...COACH_LAYOUT[hintId], ...coachCopy(hintId, voice) };
   }, [hintId, voice]);
+
+  const settleAsSeen = (reason: TutorialDismissReason) => {
+    if (settledRef.current) return;
+    settledRef.current = true;
+    markStageSeenFromDismiss(TUTORIAL_STAGE.IN_GAME_COACH, reason);
+  };
+
+  const onCoachEvent = (data: EventData) => {
+    if (settledRef.current) return;
+
+    if (data.status === STATUS.FINISHED) {
+      settleAsSeen(TUTORIAL_DISMISS_REASON.FINISH);
+      onComplete();
+      return;
+    }
+
+    if (data.status === STATUS.SKIPPED || data.action === ACTIONS.SKIP) {
+      settleAsSeen(TUTORIAL_DISMISS_REASON.SKIP);
+      onSkip();
+      return;
+    }
+
+    if (data.action === ACTIONS.CLOSE) {
+      const reason =
+        data.origin === ORIGIN.KEYBOARD
+          ? TUTORIAL_DISMISS_REASON.ESCAPE
+          : TUTORIAL_DISMISS_REASON.TOUCH_DISMISS;
+      settleAsSeen(reason);
+      onSkip();
+    }
+  };
 
   return (
     <Joyride
@@ -150,18 +195,7 @@ export function TutorialCoach({
           backgroundColor: "rgba(0, 0, 0, 0.55)",
         },
       }}
-      onEvent={(data) => {
-        if (settledRef.current) return;
-        if (data.status === STATUS.SKIPPED) {
-          settledRef.current = true;
-          onSkip();
-          return;
-        }
-        if (data.status === STATUS.FINISHED) {
-          settledRef.current = true;
-          onComplete();
-        }
-      }}
+      onEvent={onCoachEvent}
     />
   );
 }

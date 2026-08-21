@@ -4,6 +4,11 @@ import { useEffect } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import type { CoachHintId } from "@/lib/coach-moments";
+import {
+  markStageSeenOnDismiss,
+  type TutorialDismissReason,
+  type TutorialStage,
+} from "@/lib/tutorial";
 import { tutorialPrefsPersistStateSchema } from "./tutorial-prefs-schema";
 
 export const TUTORIAL_PREFS_STORAGE_KEY = "cambio-tutorial-prefs";
@@ -17,6 +22,10 @@ type TutorialPrefsData = {
 type TutorialPrefsState = TutorialPrefsData & {
   markHomeSeen: () => void;
   markGameSeen: () => void;
+  markStageSeenFromDismiss: (
+    stage: TutorialStage,
+    reason: TutorialDismissReason,
+  ) => void;
   dismissCoachHint: (id: CoachHintId) => void;
   replayHomeTutorial: () => void;
   replayGameTutorial: () => void;
@@ -51,6 +60,14 @@ export const useTutorialStore = create<TutorialPrefsState>()(
       ...defaultPrefs,
       markHomeSeen: () => set({ homeSeen: true }),
       markGameSeen: () => set({ gameSeen: true }),
+      markStageSeenFromDismiss: (stage, reason) =>
+        set((state) =>
+          markStageSeenOnDismiss(
+            { homeSeen: state.homeSeen, gameSeen: state.gameSeen },
+            stage,
+            reason,
+          ),
+        ),
       dismissCoachHint: (id) => {
         if (sessionDismissedCoachHints.includes(id)) return;
         sessionDismissedCoachHints = [...sessionDismissedCoachHints, id];

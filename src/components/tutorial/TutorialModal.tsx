@@ -3,6 +3,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import { useCallback, useEffect, useRef } from "react";
+import { useTutorial } from "@/hooks/useTutorial";
+import {
+  TUTORIAL_DISMISS_REASON,
+  TUTORIAL_STAGE,
+  type TutorialDismissReason,
+} from "@/lib/tutorial";
 import { RetroButton } from "@/components/ui/RetroButton";
 
 export type TutorialModalStep = {
@@ -41,6 +47,9 @@ type TutorialModalProps = {
   onStepIndexChange: (index: number) => void;
 };
 
+const FOCUSABLE_SELECTOR =
+  'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function TutorialModal({
   open,
   onClose,
@@ -49,83 +58,130 @@ export function TutorialModal({
   onStepIndexChange,
 }: TutorialModalProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const focusRestoreRef = useRef<HTMLElement | null>(null);
   const lastStep = STEPS.length - 1;
   const step = STEPS[stepIndex];
+  const { markStageSeenFromDismiss } = useTutorial();
+
+  const dismiss = useCallback(
+    (reason: TutorialDismissReason) => {
+      markStageSeenFromDismiss(TUTORIAL_STAGE.LANDING_MODAL, reason);
+      onClose();
+    },
+    [markStageSeenFromDismiss, onClose],
+  );
 
   const finish = useCallback(() => {
+    markStageSeenFromDismiss(
+      TUTORIAL_STAGE.LANDING_MODAL,
+      TUTORIAL_DISMISS_REASON.FINISH,
+    );
     onComplete?.();
     onClose();
-  }, [onClose, onComplete]);
+  }, [markStageSeenFromDismiss, onClose, onComplete]);
 
   const skip = useCallback(() => {
-    finish();
-  }, [finish]);
+    dismiss(TUTORIAL_DISMISS_REASON.SKIP);
+  }, [dismiss]);
 
   useEffect(() => {
     if (!open) return;
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    focusRestoreRef.current = document.activeElement as HTMLElement | null;
+
+    const focusInitialElement = () => {
+      const focusable = dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      const firstFocusable = focusable[0];
+      if (firstFocusable) {
+        firstFocusable.focus();
+        return;
+      }
+      dialog.focus();
+    };
+
+    focusInitialElement();
 
     const onKeyDown = (event: KeyboardEvent) => {
+      if (!dialogRef.current) return;
+      const activeDialog = dialogRef.current;
+      const targetNode = event.target instanceof Node ? event.target : null;
+
       if (event.key === "Escape") {
         event.preventDefault();
-        skip();
+        dismiss(TUTORIAL_DISMISS_REASON.ESCAPE);
         return;
       }
 
-      if (event.key === "ArrowRight" && stepIndex < lastStep) {
+      if (
+        targetNode !== null &&
+        activeDialog.contains(targetNode) &&
+        event.key === "ArrowRight" &&
+        stepIndex < lastStep
+      ) {
         event.preventDefault();
         onStepIndexChange(stepIndex + 1);
         return;
       }
 
-      if (event.key === "ArrowLeft" && stepIndex > 0) {
+      if (
+        targetNode !== null &&
+        activeDialog.contains(targetNode) &&
+        event.key === "ArrowLeft" &&
+        stepIndex > 0
+      ) {
         event.preventDefault();
         onStepIndexChange(stepIndex - 1);
+        return;
+      }
+
+      if (event.key !== "Tab") return;
+
+      const focusable = activeDialog.querySelectorAll<HTMLElement>(
+        FOCUSABLE_SELECTOR,
+      );
+      if (focusable.length === 0) {
+        event.preventDefault();
+        activeDialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const activeElement = document.activeElement as HTMLElement | null;
+      const focusedInside = activeElement
+        ? activeDialog.contains(activeElement)
+        : false;
+      if (!focusedInside) {
+        event.preventDefault();
+        first.focus();
+        return;
+      }
+
+      if (event.shiftKey && activeElement === first) {
+        event.preventDefault();
+        last.focus();
+        return;
+      }
+
+      if (!event.shiftKey && activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
 
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [lastStep, onStepIndexChange, open, skip, stepIndex]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-
-    const focusable = dialog.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    );
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    first?.focus();
-
-    const trapFocus = (event: KeyboardEvent) => {
-      if (event.key !== "Tab" || focusable.length === 0) return;
-
-      if (event.shiftKey) {
-        if (document.activeElement === first) {
-          event.preventDefault();
-          last?.focus();
-        }
-        return;
-      }
-
-      if (document.activeElement === last) {
-        event.preventDefault();
-        first?.focus();
-      }
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      focusRestoreRef.current?.focus();
     };
-
-    window.addEventListener("keydown", trapFocus);
-    return () => window.removeEventListener("keydown", trapFocus);
-  }, [open]);
+  }, [dismiss, lastStep, onStepIndexChange, open, stepIndex]);
 
   return (
     <AnimatePresence>
       {open ? (
         <motion.div
-          className="fixed inset-0 z-130 flex items-end sm:items-center justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom,0px))] sm:pb-4"
+          className="fixed inset-0 z-130 flex items-end sm:items-center justify-center px-3 sm:px-4 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] sm:pb-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -139,7 +195,8 @@ export function TutorialModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={skip}
+            tabIndex={-1}
+            onClick={() => dismiss(TUTORIAL_DISMISS_REASON.TOUCH_DISMISS)}
           />
           <motion.div
             ref={dialogRef}
@@ -147,11 +204,20 @@ export function TutorialModal({
             aria-modal="true"
             aria-labelledby="tutorial-modal-title"
             aria-describedby="tutorial-modal-body"
-            className="relative pixel-border bg-surface-elevated w-full max-w-md p-5 sm:p-6 space-y-5 shadow-glow-accent"
-            initial={{ opacity: 0, scale: 0.92, y: 24 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 12 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            tabIndex={-1}
+            className="relative pixel-border bg-surface-elevated w-full max-w-md max-h-[min(84dvh,42rem)] overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-glow-accent"
+            initial={{ opacity: 0, scale: 0.5, y: 20 }}
+            animate={{
+              opacity: 1,
+              scale: [0.5, 1.08, 1],
+              y: 0,
+            }}
+            exit={{ opacity: 0, scale: 0.85, y: -10 }}
+            transition={{
+              duration: 0.45,
+              ease: [0.22, 1, 0.36, 1],
+              scale: { times: [0, 0.6, 1], duration: 0.45 },
+            }}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="space-y-2 text-left min-w-0">
