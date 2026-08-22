@@ -566,6 +566,53 @@ describe("expireSnapWindow (CAM-14)", () => {
     expect(state.phase).toBe("revealed");
     expect(state.pendingAbility).toBeNull();
   });
+
+  it("blocks the cambio caller from snapping during snap_window", () => {
+    const now = 1_000_000;
+    const state = snapWindowState(now);
+    state.cambioCallerId = "alice";
+    state.players[0].hasCalledCambio = true;
+    state.players[0].hand = [
+      slot(card("5", "diamonds")),
+      slot(card("3")),
+      slot(card("4")),
+      slot(card("6")),
+    ];
+    state.snapEligibleTopCardId = state.discard[0].id;
+
+    expect(
+      handleMessage(state, "alice", {
+        type: "snap",
+        targetPlayerId: "alice",
+        slot: 0,
+      }).error,
+    ).toBe("Cambio caller cannot snap.");
+
+    const bobSnap = handleMessage(state, "bob", {
+      type: "snap",
+      targetPlayerId: "bob",
+      slot: 0,
+    });
+    expect("error" in bobSnap).toBe(false);
+    expect(state.players[1].hand[0].card).toBeNull();
+  });
+
+  it("hides canSnap for the cambio caller during snap_window", () => {
+    const now = 1_000_000;
+    const state = snapWindowState(now);
+    state.cambioCallerId = "alice";
+    state.players[0].hasCalledCambio = true;
+    state.players[0].hand = [
+      slot(card("5", "diamonds")),
+      slot(card("3")),
+      slot(card("4")),
+      slot(card("6")),
+    ];
+    state.snapEligibleTopCardId = state.discard[0].id;
+
+    expect(buildPlayerView(state, "alice").canSnap).toBe(false);
+    expect(buildPlayerView(state, "bob").canSnap).toBe(true);
+  });
 });
 
 describe("reconnect with drawn card (CAM-74)", () => {

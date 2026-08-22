@@ -88,6 +88,27 @@ describe("bot discard draw fallback (CAM-95)", () => {
     expect(action).toEqual({ type: "draw", source: "discard" });
     expect(action).not.toMatchObject({ type: "snap" });
   });
+
+  it("does not snap after calling Cambio, including during snap_window", () => {
+    const state = botPlayingState("medium");
+    state.phase = "snap_window";
+    state.cambioCallerId = "bot-1";
+    state.players[1].hasCalledCambio = true;
+    state.deck = [card("A", "clubs"), card("3", "clubs")];
+    state.discard = [card("2", "diamonds")];
+    state.snapEligibleTopCardId = state.discard[0].id;
+    state.snapWindowEndsAt = Date.now() + 10_000;
+    state.drawnCard = null;
+    state.pendingAbility = null;
+    state.turnStarted = false;
+    state.players[1].hand[0] = slot(card("2", "hearts"));
+
+    const knowledge = new BotKnowledge();
+    knowledge.remember("bot-1", 0, card("2", "hearts"));
+
+    const action = decideBotAction(state, "bot-1", knowledge);
+    expect(action).not.toMatchObject({ type: "snap" });
+  });
 });
 
 describe("bot snap value awareness (CAM-96)", () => {

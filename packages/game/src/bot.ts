@@ -171,7 +171,7 @@ function canBotSnap(state: GameState, bot: PlayerState): boolean {
     return false;
   }
   if (isSnapResolutionPending(state)) return false;
-  if (bot.hasCalledCambio && state.phase === "cambio_final") return false;
+  if (bot.hasCalledCambio) return false;
   if (state.pendingAbility?.playerId === bot.id) return false;
 
   const turnPlayer = currentPlayer(state);

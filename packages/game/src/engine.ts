@@ -1191,7 +1191,8 @@ export function handleMessage(
       if (state.pendingAbility?.playerId === playerId) {
         return { error: "Resolve your pending action first." };
       }
-      if (player.hasCalledCambio && state.phase === "cambio_final") {
+      // Caller cannot snap for the rest of the round (cambio_final and snap_window).
+      if (player.hasCalledCambio) {
         return { error: "Cambio caller cannot snap." };
       }
       const turnPlayer = currentPlayer(state);
@@ -1682,7 +1683,7 @@ export function buildPlayerView(
       tableInteractive &&
       canPlayerSnap(state, viewerId) &&
       !snapGivePending &&
-      !(viewer?.hasCalledCambio && state.phase === "cambio_final") &&
+      !viewer?.hasCalledCambio &&
       !(gameInteractive && isMyTurn && state.drawnCard) &&
       state.pendingAbility?.playerId !== viewerId,
     pendingAbility:
