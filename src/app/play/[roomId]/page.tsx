@@ -14,6 +14,8 @@ import {
 } from "@/hooks/useGameConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
+import { shouldFillPlayShellChin } from "@/lib/play-shell-layout";
+import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 /** Delay before showing the connecting indicator so fast failures go straight to error. */
 const CONNECTING_UI_DELAY_MS = 300;
@@ -32,6 +34,8 @@ export default function PlayPage({
   const searchParams = useSearchParams();
   const router = useRouter();
   const voice = useThemeVoice();
+  useRehydrateUiPrefs();
+  const { playerGridEnabled } = useUiPrefs();
   const name = searchParams.get("name")?.trim() ?? "";
   const debugEnabled = hasDebugQueryParam(searchParams);
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
@@ -150,6 +154,13 @@ export default function PlayPage({
   }, [view, error]);
 
   const pageScrollable = allowsPageScroll(view);
+  const seatCount =
+    view?.players.filter((player) => !player.isWaiting).length ?? 0;
+  const fillChin = shouldFillPlayShellChin({
+    pageScrollable,
+    playerGridEnabled,
+    seatCount,
+  });
 
   useEffect(() => {
     if (pageScrollable) {
@@ -188,7 +199,9 @@ export default function PlayPage({
         className={`play-shell touch-game flex h-full w-full flex-col px-3 sm:px-6 lg:px-8 ${
           pageScrollable
             ? "overflow-y-auto overflow-x-hidden mobile-game-scroll"
-            : "play-shell-fill-chin overflow-hidden"
+            : fillChin
+              ? "play-shell-fill-chin overflow-hidden"
+              : "overflow-hidden"
         }`}
       >
         <GameTable

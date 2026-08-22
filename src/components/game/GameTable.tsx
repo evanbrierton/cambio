@@ -2138,11 +2138,7 @@ export function GameTable({
             {view.phase === "lobby" ? (
               <LobbyPlayers view={view} voice={voice} send={send} />
             ) : (
-              <div
-                className={`players-with-action-overlay relative flex flex-1 flex-col gap-1.5 sm:gap-2 min-h-0 min-w-0 overflow-hidden ${
-                  hasActionButtons ? "has-action-overlay" : ""
-                }`}
-              >
+              <div className="players-with-action-overlay relative flex flex-1 flex-col gap-1.5 sm:gap-2 min-h-0 min-w-0 overflow-hidden">
                 <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">
                   PLAYERS
                 </p>
@@ -2165,7 +2161,7 @@ export function GameTable({
                 ) : null}
 
                 {hasActionButtons ? (
-                  <div className="action-buttons-overlay lg:hidden">
+                  <div className="players-action-bar shrink-0 lg:hidden">
                     {actionButtons}
                   </div>
                 ) : null}
