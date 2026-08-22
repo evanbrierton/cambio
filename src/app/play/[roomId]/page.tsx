@@ -14,26 +14,15 @@ import {
 } from "@/hooks/useGameConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
+import { shouldFillPlayShellChin } from "@/lib/play-shell-layout";
 import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 /** Delay before showing the connecting indicator so fast failures go straight to error. */
 const CONNECTING_UI_DELAY_MS = 300;
 
-/** Mobile grid is 2 columns; at this count seats need vertical scroll into the chin. */
-const GRID_CHIN_FILL_MIN_PLAYERS = 5;
-
 function allowsPageScroll(view: PlayerView | null): boolean {
   if (!view) return true;
   return view.isWaiting || view.phase === "lobby" || view.phase === "ended";
-}
-
-function shouldFillChin(
-  view: PlayerView | null,
-  playerGridEnabled: boolean,
-): boolean {
-  if (!view || allowsPageScroll(view) || !playerGridEnabled) return false;
-  const seatCount = view.players.filter((player) => !player.isWaiting).length;
-  return seatCount >= GRID_CHIN_FILL_MIN_PLAYERS;
 }
 
 export default function PlayPage({
@@ -165,7 +154,13 @@ export default function PlayPage({
   }, [view, error]);
 
   const pageScrollable = allowsPageScroll(view);
-  const fillChin = shouldFillChin(view, playerGridEnabled);
+  const seatCount =
+    view?.players.filter((player) => !player.isWaiting).length ?? 0;
+  const fillChin = shouldFillPlayShellChin({
+    pageScrollable,
+    playerGridEnabled,
+    seatCount,
+  });
 
   useEffect(() => {
     if (pageScrollable) {
