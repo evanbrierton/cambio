@@ -14,10 +14,7 @@ import {
 } from "@/hooks/useGameConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
-import {
-  useRehydrateUiPrefs,
-  useUiPrefs,
-} from "@/store/ui-prefs";
+import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 /** Delay before showing the connecting indicator so fast failures go straight to error. */
 const CONNECTING_UI_DELAY_MS = 300;
