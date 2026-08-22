@@ -187,14 +187,15 @@ export function useP2PConnection(
               return;
             }
             if (event.type === "connected" && event.clientId) {
+              const clientId = event.clientId;
               const peer: HostPeer = {
-                playerId: event.clientId,
+                playerId: clientId,
                 connected: true,
                 send: (message) => {
-                  relay?.sendToClient(event.clientId!, message);
+                  relay?.sendToClient(clientId, message);
                 },
               };
-              host.addPeer(event.clientId, peer);
+              host.addPeer(clientId, peer);
               return;
             }
             if (event.type === "disconnected" && event.clientId) {

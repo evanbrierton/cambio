@@ -866,7 +866,10 @@ describe("unified lobby", () => {
   it("blocks host Start on public lobbies and rejects nearby public", () => {
     const state = createRoom("room-1", "Alice", "alice");
     handleMessage(state, "alice", { type: "add_bot" });
-    handleMessage(state, "alice", { type: "set_visibility", visibility: "public" });
+    handleMessage(state, "alice", {
+      type: "set_visibility",
+      visibility: "public",
+    });
     expect(state.visibility).toBe("public");
 
     const start = handleMessage(state, "alice", { type: "start_game" });
