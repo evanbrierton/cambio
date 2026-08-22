@@ -26,6 +26,28 @@ export function isVerticalScrollLock(
   return Math.abs(dy) >= axisPx && Math.abs(dy) >= Math.abs(dx);
 }
 
+/** True when a horizontal rail is currently overflow-scrolling (not packed/static). */
+export function isHorizontalScrollOverflow(rail: {
+  scrollWidth: number;
+  clientWidth: number;
+  classList: { contains: (token: string) => boolean };
+}): boolean {
+  if (rail.classList.contains("is-static")) return false;
+  return rail.scrollWidth > rail.clientWidth + 1;
+}
+
+/** True when the gesture target is inside a horizontally overflowing rail. */
+export function isInsideHorizontalScrollTarget(
+  target: EventTarget | null,
+): boolean {
+  if (!(target instanceof Element)) return false;
+  const rail = target.closest(
+    ".players-3d-rail, [data-horizontal-scroll='true']",
+  );
+  if (!(rail instanceof HTMLElement)) return false;
+  return isHorizontalScrollOverflow(rail);
+}
+
 export function swipeVelocityPxS(
   fromX: number,
   toX: number,

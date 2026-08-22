@@ -31,10 +31,13 @@ const config: CapacitorConfig = {
     allowNavigation,
   },
   ios: {
+    // contentInset never + Capacitor's default webView.scrollView.bounces=false
+    // keep chrome from rubber-banding; nested CSS overflow:contain provides bounce.
     contentInset: "never",
     backgroundColor: "#12061f",
   },
   android: {
+    // Document overscroll is suppressed via CSS; inner scrollports use contain.
     backgroundColor: "#12061f",
   },
   includePlugins: [

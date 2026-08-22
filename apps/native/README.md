@@ -82,6 +82,17 @@ The shell allows navigation to:
 
 This keeps production `wss://` access working while still permitting LAN/dev workflows when cleartext is enabled intentionally.
 
+## Scroll / overscroll contract
+
+Capacitor’s iOS bridge sets `webView.scrollView.bounces = false` by default (`CAPBridgeViewController`). Do **not** re-enable outer WebView bounce — it would rubber-band fixed chrome with the whole page.
+
+Native-feel bounce comes from **nested** CSS scrollports in the web UI:
+
+- Document / body: `overscroll-behavior: none` (also under `html.native-shell`)
+- Lobby / sheets / chat / player rails / grids: `overscroll-behavior: contain` + `-webkit-overflow-scrolling: touch`
+
+After regenerating `ios/` / `android/`, confirm the Capacitor WebView still has outer bounce disabled (Capacitor core default). Prefer fixing web scroll owners over custom bounce plugins.
+
 ## Remote URL mode vs future bundled export
 
 - **Current (this phase):** remote URL mode (`server.url`) loads the deployed Next.js UI.

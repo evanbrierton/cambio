@@ -2514,12 +2514,21 @@ html.native-shell,
 html.native-shell body {
   min-height: 100dvh;
   background-color: var(--background);
+  /* Outer WKWebView bounce is disabled by Capacitor; keep document overscroll off
+     so rubber-band stays on intentional nested scrollports only. */
+  overscroll-behavior: none;
 }
 
 html.native-shell [data-pwa-install] {
   display: none;
 }
 
+/*
+ * Scroll-owner contract (Capacitor / mobile web):
+ * - Body under .play-scroll-lock: overflow hidden + overscroll none (no chrome bounce).
+ * - Intentional scrollports (.mobile-game-scroll, rails, panels): contain + touch overflow.
+ * - Prefer pan-y / pan-x on the matching axis so OS momentum wins over manipulation.
+ */
 .touch-game {
   touch-action: manipulation;
 }
@@ -2527,6 +2536,11 @@ html.native-shell [data-pwa-install] {
 .play-shell {
   padding-top: max(1rem, env(safe-area-inset-top, 0px));
   padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+}
+
+.play-shell.mobile-game-scroll {
+  touch-action: pan-y;
+  min-height: 0;
 }
 
 /* In-game: let seats/grid occupy the home-indicator instead of leaving a padded gap. */
@@ -2584,9 +2598,20 @@ html.native-shell [data-pwa-install] {
 }
 
 .mobile-game-scroll,
-.players-scroll {
+.players-scroll,
+.native-panel-scroll,
+.mobile-game-sheet {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+}
+
+.native-panel-scroll {
+  touch-action: pan-y;
+  min-height: 0;
+}
+
+.mobile-game-sheet {
+  touch-action: pan-y;
 }
 
 .players-grid-stage {
@@ -2606,6 +2631,7 @@ html.native-shell [data-pwa-install] {
   overflow: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   transform-style: preserve-3d;
 }
 
@@ -2659,6 +2685,7 @@ html.native-shell [data-pwa-install] {
   scroll-snap-type: x proximity;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  overscroll-behavior-y: none;
   touch-action: pan-x pinch-zoom;
   padding: 0.25rem 1rem 0.5rem;
   transform-style: preserve-3d;
