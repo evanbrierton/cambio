@@ -67,7 +67,7 @@ Run from the repository root.
 
 - Select an emulator/device.
 - Build and run from Android Studio.
-- Launch splash and status bar behavior comes from `SplashScreen` and `StatusBar` plugin config in `capacitor.config.ts`.
+- Shell background and status bar behavior come from `backgroundColor` and `StatusBar` plugin config in `capacitor.config.ts` (no Capacitor splash screen plugin).
 
 ## Networking notes for PartyServer WebSocket access
 
