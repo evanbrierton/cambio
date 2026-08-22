@@ -3406,45 +3406,21 @@ html.native-shell [data-pwa-install] {
   background-image: none;
 }
 
-.action-buttons-overlay {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  z-index: 10;
+.players-action-bar {
   display: flex;
   justify-content: center;
-  pointer-events: none;
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
   background-color: rgba(0, 0, 0, 0);
   background-image: none;
-  /* Own compositor layer above perspective / overflow-scrolling children (Chrome iOS) */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+}
+
+.play-shell-fill-chin .players-action-bar {
   padding-bottom: max(0.25rem, env(safe-area-inset-bottom, 0px));
 }
 
-/*
- * Overlay is out of flow — size to the button only.
- * A min-height empty band is what Chrome iOS often paints as an opaque slab.
- */
-.action-buttons-overlay .action-buttons-slot {
+.players-action-bar .action-buttons-slot {
   min-height: 0;
-  pointer-events: none;
-  background-color: rgba(0, 0, 0, 0);
-  background-image: none;
-}
-
-.action-buttons-overlay .action-buttons-slot > * {
-  pointer-events: auto;
-}
-
-/*
- * Mobile: overlay on both grid and carousel.
- * Grid keeps bottom padding so the last row can scroll under the button.
- */
-@media (max-width: 1023px) {
-  .players-with-action-overlay.has-action-overlay .players-grid-scroll {
-    padding-bottom: 3.25rem;
-  }
 }
 
 @media (min-width: 640px) {
@@ -3465,7 +3441,7 @@ html.native-shell [data-pwa-install] {
     min-height: 3rem;
   }
 
-  .action-buttons-overlay .action-buttons-slot {
+  .players-action-bar .action-buttons-slot {
     min-height: 0;
   }
 }

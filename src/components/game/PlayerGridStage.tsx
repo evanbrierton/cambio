@@ -24,7 +24,11 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
     const gridEl = gridRef.current;
     if (!scrollEl) return;
 
-    const fillHeight = Math.max(scrollEl.clientHeight, 0);
+    const styles = getComputedStyle(scrollEl);
+    const padTop = Number.parseFloat(styles.paddingTop) || 0;
+    const padBottom = Number.parseFloat(styles.paddingBottom) || 0;
+    const padY = padTop + padBottom;
+    const fillHeight = Math.max(scrollEl.clientHeight - padY, 0);
     if (gridEl && fillHeight > 0) {
       gridEl.style.minHeight = `${fillHeight}px`;
     }
@@ -33,8 +37,9 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
       "(prefers-reduced-motion: reduce)",
     ).matches;
     const viewport = scrollEl.getBoundingClientRect();
-    const centerY = viewport.top + viewport.height / 2;
-    const halfH = Math.max(viewport.height / 2, 1);
+    const contentHeight = Math.max(viewport.height - padY, 1);
+    const centerY = viewport.top + padTop + contentHeight / 2;
+    const halfH = contentHeight / 2;
 
     itemRefs.current.forEach((item) => {
       if (!item) return;
