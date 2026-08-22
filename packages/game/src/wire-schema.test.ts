@@ -82,6 +82,19 @@ describe("wire-schema server messages", () => {
       type: "swap_flash",
       slots: [{ playerId: "p1", slot: 0 }],
     });
+    expect(
+      parseServerMessage({
+        type: "snap_flash",
+        actorId: "p1",
+        playerId: "p2",
+        slot: 1,
+      }),
+    ).toEqual({
+      type: "snap_flash",
+      actorId: "p1",
+      playerId: "p2",
+      slot: 1,
+    });
   });
 
   it("accepts state messages with card point fields", () => {

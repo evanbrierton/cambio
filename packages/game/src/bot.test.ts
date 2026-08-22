@@ -89,3 +89,94 @@ describe("bot discard draw fallback (CAM-95)", () => {
     expect(action).not.toMatchObject({ type: "snap" });
   });
 });
+
+describe("bot snap value awareness (CAM-96)", () => {
+  function snapReadyState(difficulty: "easy" | "medium" | "hard"): {
+    state: GameState;
+    knowledge: BotKnowledge;
+  } {
+    const state = botPlayingState(difficulty);
+    state.deck = [card("A", "clubs"), card("3", "clubs"), card("4", "clubs")];
+    state.drawnCard = null;
+    state.pendingAbility = null;
+    state.turnStarted = false;
+    state.currentPlayerIndex = 0;
+    const knowledge = new BotKnowledge();
+    knowledge.prepareForState(state);
+    return { state, knowledge };
+  }
+
+  it.each(["medium", "hard"] as const)(
+    "does not snap an own black king when that is the only match (%s)",
+    (difficulty) => {
+      const { state, knowledge } = snapReadyState(difficulty);
+      const blackKing = card("K", "spades");
+      state.discard = [card("K", "hearts")];
+      state.snapEligibleTopCardId = state.discard[0].id;
+      state.players[1].hand[0] = slot(blackKing);
+      knowledge.remember("bot-1", 0, blackKing);
+
+      const action = decideBotAction(state, "bot-1", knowledge);
+      expect(action).not.toMatchObject({ type: "snap" });
+    },
+  );
+
+  it.each(["medium", "hard"] as const)(
+    "does not snap an own joker when that is the only match (%s)",
+    (difficulty) => {
+      const { state, knowledge } = snapReadyState(difficulty);
+      const joker = card("JOKER", "joker");
+      state.discard = [card("JOKER", "joker")];
+      state.snapEligibleTopCardId = state.discard[0].id;
+      state.players[1].hand[0] = slot(joker);
+      knowledge.remember("bot-1", 0, joker);
+
+      const action = decideBotAction(state, "bot-1", knowledge);
+      expect(action).not.toMatchObject({ type: "snap" });
+    },
+  );
+
+  it.each(["medium", "hard"] as const)(
+    "prefers snapping a high own card over an own black king (%s)",
+    (difficulty) => {
+      const { state, knowledge } = snapReadyState(difficulty);
+      const blackKing = card("K", "clubs");
+      const redKing = card("K", "hearts");
+      state.discard = [card("K", "diamonds")];
+      state.snapEligibleTopCardId = state.discard[0].id;
+      state.players[1].hand[0] = slot(blackKing);
+      state.players[1].hand[1] = slot(redKing);
+      knowledge.remember("bot-1", 0, blackKing);
+      knowledge.remember("bot-1", 1, redKing);
+
+      const action = decideBotAction(state, "bot-1", knowledge);
+      expect(action).toEqual({
+        type: "snap",
+        targetPlayerId: "bot-1",
+        slot: 1,
+      });
+    },
+  );
+
+  it.each(["medium", "hard"] as const)(
+    "prefers snapping an opponent high card over an own black king (%s)",
+    (difficulty) => {
+      const { state, knowledge } = snapReadyState(difficulty);
+      const blackKing = card("K", "spades");
+      const oppKing = card("K", "diamonds");
+      state.discard = [card("K", "hearts")];
+      state.snapEligibleTopCardId = state.discard[0].id;
+      state.players[1].hand[0] = slot(blackKing);
+      state.players[0].hand[0] = slot(oppKing);
+      knowledge.remember("bot-1", 0, blackKing);
+      knowledge.remember("alice", 0, oppKing);
+
+      const action = decideBotAction(state, "bot-1", knowledge);
+      expect(action).toEqual({
+        type: "snap",
+        targetPlayerId: "alice",
+        slot: 0,
+      });
+    },
+  );
+});
