@@ -3,6 +3,7 @@ import {
   clampSwipeOffset,
   isFromLeaveEdge,
   isHorizontalLeaveLock,
+  isHorizontalScrollOverflow,
   isSwipeCommit,
   isVerticalScrollLock,
   SWIPE_COMMIT_DISTANCE_PX,
@@ -24,6 +25,25 @@ describe("swipe-to-leave", () => {
     expect(isHorizontalLeaveLock(10, 12)).toBe(false);
     expect(isVerticalScrollLock(4, 16)).toBe(true);
     expect(isVerticalScrollLock(16, 4)).toBe(false);
+  });
+
+  it("detects overflowing horizontal rails", () => {
+    const tokens = new Set<string>();
+    const rail = {
+      scrollWidth: 800,
+      clientWidth: 320,
+      classList: {
+        contains: (token: string) => tokens.has(token),
+      },
+    };
+    expect(isHorizontalScrollOverflow(rail)).toBe(true);
+
+    tokens.add("is-static");
+    expect(isHorizontalScrollOverflow(rail)).toBe(false);
+
+    tokens.clear();
+    rail.scrollWidth = 320;
+    expect(isHorizontalScrollOverflow(rail)).toBe(false);
   });
 
   it("commits after a long drag or a fast flick", () => {

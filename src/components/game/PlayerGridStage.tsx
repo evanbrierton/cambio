@@ -18,16 +18,12 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const childCount = Children.count(children);
+  const scrollRafRef = useRef(0);
+  const resizeRafRef = useRef(0);
 
-  const updateLayout = useCallback(() => {
+  const applyScrollTransforms = useCallback(() => {
     const scrollEl = scrollRef.current;
-    const gridEl = gridRef.current;
     if (!scrollEl) return;
-
-    const fillHeight = Math.max(scrollEl.clientHeight, 0);
-    if (gridEl && fillHeight > 0) {
-      gridEl.style.minHeight = `${fillHeight}px`;
-    }
 
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
@@ -61,31 +57,66 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
     });
   }, []);
 
+  const updateFillHeight = useCallback(() => {
+    const scrollEl = scrollRef.current;
+    const gridEl = gridRef.current;
+    if (!scrollEl) return;
+
+    const fillHeight = Math.max(scrollEl.clientHeight, 0);
+    if (gridEl && fillHeight > 0) {
+      gridEl.style.minHeight = `${fillHeight}px`;
+    }
+
+    applyScrollTransforms();
+  }, [applyScrollTransforms]);
+
+  const scheduleScrollTransforms = useCallback(() => {
+    if (scrollRafRef.current) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = 0;
+      applyScrollTransforms();
+    });
+  }, [applyScrollTransforms]);
+
+  const scheduleFillHeight = useCallback(() => {
+    if (resizeRafRef.current) return;
+    resizeRafRef.current = requestAnimationFrame(() => {
+      resizeRafRef.current = 0;
+      updateFillHeight();
+    });
+  }, [updateFillHeight]);
+
   useEffect(() => {
     itemRefs.current.length = childCount;
-    const frame = requestAnimationFrame(updateLayout);
+    const frame = requestAnimationFrame(updateFillHeight);
     return () => cancelAnimationFrame(frame);
-  }, [childCount, updateLayout]);
+  }, [childCount, updateFillHeight]);
 
   useEffect(() => {
     const scrollEl = scrollRef.current;
     if (!scrollEl) return;
 
-    const frame = requestAnimationFrame(updateLayout);
+    const frame = requestAnimationFrame(updateFillHeight);
 
-    scrollEl.addEventListener("scroll", updateLayout, { passive: true });
-    window.addEventListener("resize", updateLayout);
+    scrollEl.addEventListener("scroll", scheduleScrollTransforms, {
+      passive: true,
+    });
+    window.addEventListener("resize", scheduleFillHeight);
 
-    const observer = new ResizeObserver(updateLayout);
+    const observer = new ResizeObserver(scheduleFillHeight);
     observer.observe(scrollEl);
 
     return () => {
       cancelAnimationFrame(frame);
-      scrollEl.removeEventListener("scroll", updateLayout);
-      window.removeEventListener("resize", updateLayout);
+      if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
+      if (resizeRafRef.current) cancelAnimationFrame(resizeRafRef.current);
+      scrollRafRef.current = 0;
+      resizeRafRef.current = 0;
+      scrollEl.removeEventListener("scroll", scheduleScrollTransforms);
+      window.removeEventListener("resize", scheduleFillHeight);
       observer.disconnect();
     };
-  }, [updateLayout]);
+  }, [scheduleFillHeight, scheduleScrollTransforms, updateFillHeight]);
 
   return (
     <div className="players-grid-stage">

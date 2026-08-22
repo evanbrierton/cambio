@@ -13,6 +13,7 @@ import {
   clampSwipeOffset,
   isFromLeaveEdge,
   isHorizontalLeaveLock,
+  isInsideHorizontalScrollTarget,
   isSwipeCommit,
   isVerticalScrollLock,
   swipeVelocityPxS,
@@ -85,7 +86,13 @@ export function SwipeToLeave({
       return;
     }
 
-    const startGesture = (point: GesturePoint, pointerId: number | null) => {
+    const startGesture = (
+      point: GesturePoint,
+      pointerId: number | null,
+      target: EventTarget | null,
+    ) => {
+      // Horizontal rails own pan-x; do not arm leave over them.
+      if (isInsideHorizontalScrollTarget(target)) return;
       trackingRef.current = true;
       horizontalRef.current = false;
       pointerIdRef.current = pointerId;
@@ -98,6 +105,7 @@ export function SwipeToLeave({
       const dy = point.y - startRef.current.y;
       if (!horizontalRef.current) {
         if (isVerticalScrollLock(dx, dy)) {
+          // Abandon leave tracking so vertical momentum stays with the OS scroller.
           trackingRef.current = false;
           return;
         }
@@ -143,6 +151,7 @@ export function SwipeToLeave({
       startGesture(
         { x: event.clientX, y: event.clientY, timeStamp: event.timeStamp },
         event.pointerId,
+        event.target,
       );
     };
 
@@ -154,6 +163,7 @@ export function SwipeToLeave({
       ) {
         return;
       }
+      // Only preventDefault after horizontal leave lock — never on vertical paths.
       if (horizontalRef.current && event.cancelable) event.preventDefault();
       moveGesture({
         x: event.clientX,
@@ -187,6 +197,7 @@ export function SwipeToLeave({
       startGesture(
         { x: touch.clientX, y: touch.clientY, timeStamp: event.timeStamp },
         null,
+        event.target,
       );
     };
 
@@ -194,6 +205,7 @@ export function SwipeToLeave({
       if (!trackingRef.current) return;
       const touch = event.touches[0];
       if (!touch) return;
+      // Only preventDefault after horizontal leave lock — never on vertical paths.
       if (horizontalRef.current && event.cancelable) event.preventDefault();
       moveGesture({
         x: touch.clientX,
@@ -223,6 +235,7 @@ export function SwipeToLeave({
       startGesture(
         { x: event.clientX, y: event.clientY, timeStamp: event.timeStamp },
         null,
+        event.target,
       );
     };
 
