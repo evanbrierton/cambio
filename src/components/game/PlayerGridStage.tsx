@@ -25,18 +25,11 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
     const scrollEl = scrollRef.current;
     if (!scrollEl) return;
 
-<<<<<<< HEAD
-=======
     const styles = getComputedStyle(scrollEl);
     const padTop = Number.parseFloat(styles.paddingTop) || 0;
     const padBottom = Number.parseFloat(styles.paddingBottom) || 0;
     const padY = padTop + padBottom;
-    const fillHeight = Math.max(scrollEl.clientHeight - padY, 0);
-    if (gridEl && fillHeight > 0) {
-      gridEl.style.minHeight = `${fillHeight}px`;
-    }
 
->>>>>>> origin/main
     const reducedMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -75,7 +68,11 @@ export function PlayerGridStage({ children }: PlayerGridStageProps) {
     const gridEl = gridRef.current;
     if (!scrollEl) return;
 
-    const fillHeight = Math.max(scrollEl.clientHeight, 0);
+    const styles = getComputedStyle(scrollEl);
+    const padTop = Number.parseFloat(styles.paddingTop) || 0;
+    const padBottom = Number.parseFloat(styles.paddingBottom) || 0;
+    const padY = padTop + padBottom;
+    const fillHeight = Math.max(scrollEl.clientHeight - padY, 0);
     if (gridEl && fillHeight > 0) {
       gridEl.style.minHeight = `${fillHeight}px`;
     }
