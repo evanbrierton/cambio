@@ -41,16 +41,9 @@ const config: CapacitorConfig = {
     "@capacitor/clipboard",
     "@capacitor/haptics",
     "@capacitor/share",
-    "@capacitor/splash-screen",
     "@capacitor/status-bar",
   ],
   plugins: {
-    SplashScreen: {
-      launchShowDuration: 1000,
-      launchAutoHide: true,
-      backgroundColor: "#12061f",
-      showSpinner: false,
-    },
     StatusBar: {
       // Style.Dark = light status-bar icons on this dark shell.
       style: "DARK",
