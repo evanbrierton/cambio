@@ -47,6 +47,8 @@ export function PlayerScrollStage({
   const leadSpacerRef = useRef<HTMLDivElement>(null);
   const trailSpacerRef = useRef<HTMLDivElement>(null);
   const childCount = Children.count(children);
+  const scrollRafRef = useRef(0);
+  const resizeRafRef = useRef(0);
 
   const scrollToCenter = useCallback(
     (index: number, behavior: ScrollBehavior = "auto") => {
@@ -62,7 +64,40 @@ export function PlayerScrollStage({
     [],
   );
 
-  const updateLayout = useCallback(() => {
+  const applyScrollTransforms = useCallback(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    const fits = rail.classList.contains("is-static");
+    const railRect = rail.getBoundingClientRect();
+    const center = railRect.left + railRect.width / 2;
+
+    itemRefs.current.forEach((item) => {
+      if (!item) return;
+
+      if (reducedMotion || fits) {
+        item.style.transform = "";
+        item.style.opacity = "";
+        return;
+      }
+
+      const rect = item.getBoundingClientRect();
+      const itemCenter = rect.left + rect.width / 2;
+      const offset = (itemCenter - center) / Math.max(railRect.width, 1);
+      const clamped = Math.max(-1, Math.min(1, offset));
+      const rotateY = clamped * -12;
+      const scale = 1 - Math.abs(clamped) * 0.06;
+      const translateZ = (1 - Math.abs(clamped)) * 14;
+
+      item.style.transform = `rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
+      item.style.opacity = String(1 - Math.abs(clamped) * 0.15);
+    });
+  }, []);
+
+  const updatePackLayout = useCallback(() => {
     const stage = stageRef.current;
     const rail = railRef.current;
     if (!rail) return;
@@ -73,9 +108,6 @@ export function PlayerScrollStage({
       void stage.offsetWidth;
     }
 
-    const reducedMotion = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
     const items = itemRefs.current
       .slice(0, childCount)
       .filter((item): item is HTMLDivElement => item != null);
@@ -112,30 +144,16 @@ export function PlayerScrollStage({
       rail.scrollTo({ left: 0 });
     }
 
-    const railRect = rail.getBoundingClientRect();
-    const center = railRect.left + railRect.width / 2;
+    applyScrollTransforms();
+  }, [applyScrollTransforms, centerIndex, childCount]);
 
-    itemRefs.current.forEach((item) => {
-      if (!item) return;
-
-      if (reducedMotion || fits) {
-        item.style.transform = "";
-        item.style.opacity = "";
-        return;
-      }
-
-      const rect = item.getBoundingClientRect();
-      const itemCenter = rect.left + rect.width / 2;
-      const offset = (itemCenter - center) / Math.max(railRect.width, 1);
-      const clamped = Math.max(-1, Math.min(1, offset));
-      const rotateY = clamped * -12;
-      const scale = 1 - Math.abs(clamped) * 0.06;
-      const translateZ = (1 - Math.abs(clamped)) * 14;
-
-      item.style.transform = `rotateY(${rotateY}deg) scale(${scale}) translateZ(${translateZ}px)`;
-      item.style.opacity = String(1 - Math.abs(clamped) * 0.15);
+  const scheduleScrollTransforms = useCallback(() => {
+    if (scrollRafRef.current) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = 0;
+      applyScrollTransforms();
     });
-  }, [centerIndex, childCount]);
+  }, [applyScrollTransforms]);
 
   useEffect(() => {
     itemRefs.current.length = childCount;
@@ -146,26 +164,38 @@ export function PlayerScrollStage({
     if (!rail) return;
 
     const frame = requestAnimationFrame(() => {
-      updateLayout();
+      updatePackLayout();
       requestAnimationFrame(() => scrollToCenter(centerIndex));
     });
 
-    rail.addEventListener("scroll", updateLayout, { passive: true });
-    window.addEventListener("resize", updateLayout);
+    const onResize = () => {
+      if (resizeRafRef.current) return;
+      resizeRafRef.current = requestAnimationFrame(() => {
+        resizeRafRef.current = 0;
+        updatePackLayout();
+        scrollToCenter(centerIndex);
+      });
+    };
 
-    const observer = new ResizeObserver(() => {
-      updateLayout();
-      scrollToCenter(centerIndex);
+    rail.addEventListener("scroll", scheduleScrollTransforms, {
+      passive: true,
     });
+    window.addEventListener("resize", onResize);
+
+    const observer = new ResizeObserver(onResize);
     observer.observe(rail);
 
     return () => {
       cancelAnimationFrame(frame);
-      rail.removeEventListener("scroll", updateLayout);
-      window.removeEventListener("resize", updateLayout);
+      if (scrollRafRef.current) cancelAnimationFrame(scrollRafRef.current);
+      if (resizeRafRef.current) cancelAnimationFrame(resizeRafRef.current);
+      scrollRafRef.current = 0;
+      resizeRafRef.current = 0;
+      rail.removeEventListener("scroll", scheduleScrollTransforms);
+      window.removeEventListener("resize", onResize);
       observer.disconnect();
     };
-  }, [centerIndex, scrollToCenter, updateLayout]);
+  }, [centerIndex, scheduleScrollTransforms, scrollToCenter, updatePackLayout]);
 
   return (
     <div ref={stageRef} className="players-3d-stage">

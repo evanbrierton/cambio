@@ -13,6 +13,14 @@ type ChatPanelProps = {
   onSend: (text: string) => void;
 };
 
+const NEAR_BOTTOM_PX = 48;
+
+function isPinnedToBottom(list: HTMLElement): boolean {
+  return (
+    list.scrollHeight - list.scrollTop - list.clientHeight <= NEAR_BOTTOM_PX
+  );
+}
+
 export function ChatPanel({
   messages,
   playerId,
@@ -23,14 +31,33 @@ export function ChatPanel({
   const [draft, setDraft] = useState("");
   const listRef = useRef<HTMLDivElement>(null);
   const prevCountRef = useRef(messages.length);
+  const pinnedRef = useRef(true);
 
   useEffect(() => {
     const list = listRef.current;
     if (!list) return;
-    if (messages.length > prevCountRef.current) {
-      list.scrollTop = list.scrollHeight;
-    }
+
+    const onScroll = () => {
+      pinnedRef.current = isPinnedToBottom(list);
+    };
+
+    pinnedRef.current = isPinnedToBottom(list);
+    list.addEventListener("scroll", onScroll, { passive: true });
+    return () => list.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+
+    const grew = messages.length > prevCountRef.current;
     prevCountRef.current = messages.length;
+    if (!grew) return;
+    if (!pinnedRef.current) return;
+
+    // Instant jump when already following the bottom — avoids fighting live appends
+    // and preserves OS momentum when the user has scrolled up.
+    list.scrollTop = list.scrollHeight;
   }, [messages.length]);
 
   const submit = () => {
@@ -49,7 +76,7 @@ export function ChatPanel({
 
       <div
         ref={listRef}
-        className="min-h-18 max-h-40 lg:max-h-50 overflow-y-auto overflow-x-hidden space-y-1.5"
+        className="native-panel-scroll min-h-18 max-h-40 lg:max-h-50 overflow-y-auto overflow-x-hidden space-y-1.5"
         aria-live="polite"
         aria-relevant="additions"
       >
@@ -98,7 +125,7 @@ export function ChatPanel({
         <button
           type="submit"
           disabled={!connected || !draft.trim()}
-          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent transition-colors disabled:opacity-40"
+          className="chip-btn text-[8px] px-2 py-1 border-theme-muted text-theme hover:border-accent hover:text-accent transition-colors disabled:opacity-40"
         >
           {voice.chatSend}
         </button>

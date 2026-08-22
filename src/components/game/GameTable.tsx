@@ -1603,7 +1603,7 @@ export function GameTable({
         <p className="font-display text-[8px] text-theme-muted mb-2 shrink-0">
           {voice.gameLog}
         </p>
-        <div className="min-h-18 max-h-35 lg:max-h-none lg:flex-1 lg:min-h-0 overflow-y-auto overflow-x-hidden">
+        <div className="native-panel-scroll min-h-18 max-h-35 lg:max-h-none lg:flex-1 lg:min-h-0 overflow-y-auto overflow-x-hidden">
           {view.log.slice(-12).map((line, index) => {
             const logIndex = Math.max(0, view.log.length - 12) + index;
             return (
