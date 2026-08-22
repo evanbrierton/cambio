@@ -17,6 +17,8 @@ import type {
   ChatMessage,
   ClientMessage,
   GameState,
+  LobbyNetwork,
+  LobbyVisibility,
   PeekFlash,
   PeekFlashKind,
   PlayerState,
@@ -30,6 +32,7 @@ import {
   DEFAULT_CARD_POINTS,
   DEFAULT_JOKER_COUNT,
   HAND_BASE_SLOTS,
+  isPublicLobby,
   MAX_JOKER_COUNT,
   MIN_JOKER_COUNT,
   SETUP_PEEK_SLOTS,
@@ -37,6 +40,9 @@ import {
 
 const MAX_PLAYERS = 6;
 const MIN_PLAYERS = 2;
+const MIN_MATCH_TARGET_SIZE = 2;
+const MAX_MATCH_TARGET_SIZE = 6;
+const DEFAULT_MATCH_TARGET_SIZE = 4;
 const SETUP_PEEKS = 2;
 export const SNAP_WINDOW_MS = 6_000;
 const SNAP_WINDOW_GRACE_MS = 3_000;
@@ -148,7 +154,7 @@ export function removeLobbyPlayer(state: GameState, playerId: string): boolean {
  * Only call on Durable Object restore — not on every connect (reconnect races).
  */
 export function purgeStaleMatchmadeLobbyPlayers(state: GameState): string[] {
-  if (!state.isMatchmade || state.phase !== "lobby") return [];
+  if (!isPublicLobby(state) || state.phase !== "lobby") return [];
 
   const staleIds = state.players
     .filter((player) => !player.isBot && !player.connected)
@@ -179,12 +185,12 @@ export function createRoom(
   return {
     roomId,
     phase: "lobby",
-    isSoloMode: false,
-    isMatchmade: false,
-    matchTargetSize: 4,
+    network: "online",
+    visibility: "private",
+    matchTargetSize: DEFAULT_MATCH_TARGET_SIZE,
     matchFillWithBots: true,
     matchSoftStartAt: null,
-    soloDifficulty: null,
+    botDifficulty: null,
     jokerCount: DEFAULT_JOKER_COUNT,
     cardPoints: { ...DEFAULT_CARD_POINTS },
     hostId: id,
@@ -288,7 +294,7 @@ function isNameTaken(
 }
 
 /**
- * Friend rooms reject collisions. Matchmade rooms auto-suffix (`Alex` → `Alex 2`)
+ * Friend / nearby rooms reject collisions. Public rooms auto-suffix (`Alex` → `Alex 2`)
  * so public lobbies don't fail on common nicknames.
  */
 export function allocateDisplayName(
@@ -301,7 +307,7 @@ export function allocateDisplayName(
   if (!isNameTaken(state, trimmed, excludePlayerId)) {
     return { name: trimmed };
   }
-  if (!state.isMatchmade) {
+  if (!isPublicLobby(state)) {
     return { error: "That name is already taken." };
   }
 
@@ -930,6 +936,24 @@ function swapSlots(
   return true;
 }
 
+/** Start a dealt round. Used by host Start and public lobby auto-start. */
+export function beginGame(state: GameState): { error?: string } {
+  if (state.phase !== "lobby" && state.phase !== "ended") {
+    return { error: "A game is already in progress." };
+  }
+  const participants = state.players.filter(isParticipant);
+  if (participants.length < MIN_PLAYERS) {
+    return { error: `Need at least ${MIN_PLAYERS} players.` };
+  }
+  if (state.roundNumber >= 1) {
+    rotatePlayerOrder(state);
+    addLog(state, "Player order rotated.");
+  }
+  state.roundNumber += 1;
+  dealHands(state);
+  return {};
+}
+
 export function handleMessage(
   state: GameState,
   playerId: string,
@@ -1000,20 +1024,10 @@ export function handleMessage(
     case "start_game": {
       if (playerId !== state.hostId)
         return { error: "Only the host can start." };
-      if (state.phase !== "lobby" && state.phase !== "ended") {
-        return { error: "A game is already in progress." };
+      if (isPublicLobby(state)) {
+        return { error: "Public lobbies start automatically." };
       }
-      const participants = state.players.filter(isParticipant);
-      if (participants.length < MIN_PLAYERS) {
-        return { error: `Need at least ${MIN_PLAYERS} players.` };
-      }
-      if (state.roundNumber >= 1) {
-        rotatePlayerOrder(state);
-        addLog(state, "Player order rotated.");
-      }
-      state.roundNumber += 1;
-      dealHands(state);
-      return {};
+      return beginGame(state);
     }
 
     case "setup_peek": {
@@ -1347,16 +1361,14 @@ export function handleMessage(
       if (playerId !== state.hostId) {
         return { error: "Only the host can add bots." };
       }
-      if (!state.isSoloMode) {
-        return { error: "Bots are only available in solo mode." };
-      }
       if (state.phase !== "lobby" && state.phase !== "ended") {
         return { error: "Cannot add bots during a game." };
       }
       if (state.players.length >= MAX_PLAYERS) {
         return { error: "Room is full." };
       }
-      const difficulty = message.difficulty ?? state.soloDifficulty ?? "easy";
+      const difficulty = message.difficulty ?? state.botDifficulty ?? "easy";
+      state.botDifficulty = difficulty;
       addBotPlayer(state, difficulty);
       return {};
     }
@@ -1364,9 +1376,6 @@ export function handleMessage(
     case "remove_bot": {
       if (playerId !== state.hostId) {
         return { error: "Only the host can remove bots." };
-      }
-      if (!state.isSoloMode) {
-        return { error: "Bots are only available in solo mode." };
       }
       if (state.phase !== "lobby" && state.phase !== "ended") {
         return { error: "Cannot remove bots during a game." };
@@ -1377,6 +1386,71 @@ export function handleMessage(
       }
       state.players = state.players.filter((p) => p.id !== message.playerId);
       addLog(state, `${bot.name} left.`);
+      return {};
+    }
+
+    case "set_network": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can change network." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot change network during a game." };
+      }
+      const network = message.network as LobbyNetwork;
+      if (network !== "online" && network !== "nearby") {
+        return { error: "Invalid network." };
+      }
+      state.network = network;
+      if (network === "nearby") {
+        state.visibility = "private";
+        state.matchSoftStartAt = null;
+      }
+      return {};
+    }
+
+    case "set_visibility": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can change visibility." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot change visibility during a game." };
+      }
+      const visibility = message.visibility as LobbyVisibility;
+      if (visibility !== "private" && visibility !== "public") {
+        return { error: "Invalid visibility." };
+      }
+      if (visibility === "public" && state.network === "nearby") {
+        return { error: "Nearby lobbies cannot be public." };
+      }
+      state.visibility = visibility;
+      if (visibility === "private") {
+        state.matchSoftStartAt = null;
+      }
+      return {};
+    }
+
+    case "set_match_config": {
+      if (playerId !== state.hostId) {
+        return { error: "Only the host can change match settings." };
+      }
+      if (state.phase !== "lobby" && state.phase !== "ended") {
+        return { error: "Cannot change match settings during a game." };
+      }
+      if (!isPublicLobby(state)) {
+        return { error: "Match settings apply to public lobbies only." };
+      }
+      if (message.targetSize != null) {
+        if (!Number.isFinite(message.targetSize)) {
+          return { error: "Invalid target size." };
+        }
+        state.matchTargetSize = Math.min(
+          MAX_MATCH_TARGET_SIZE,
+          Math.max(MIN_MATCH_TARGET_SIZE, Math.round(message.targetSize)),
+        );
+      }
+      if (message.fillWithBots != null) {
+        state.matchFillWithBots = Boolean(message.fillWithBots);
+      }
       return {};
     }
 
@@ -1693,7 +1767,7 @@ export function buildPlayerView(
     debugReveal: state.debugReveal,
     isWaiting: viewerWaiting,
     canStartGame:
-      !state.isMatchmade &&
+      !isPublicLobby(state) &&
       viewerId === state.hostId &&
       (state.phase === "lobby" || state.phase === "ended") &&
       participants.length >= MIN_PLAYERS,
@@ -1705,22 +1779,25 @@ export function buildPlayerView(
     winnerIds: state.winnerIds,
     scores: state.scores,
     snapWindowEndsAt: state.snapWindowEndsAt,
-    isSoloMode: state.isSoloMode,
-    isMatchmade: state.isMatchmade,
+    network: state.network,
+    visibility: state.visibility,
     matchTargetSize: state.matchTargetSize,
     matchFillWithBots: state.matchFillWithBots,
     matchHumanCount: state.players.filter(
       (player) => !player.isBot && !player.isWaiting && player.connected,
     ).length,
     matchStartingSoon:
-      state.isMatchmade &&
+      isPublicLobby(state) &&
       state.phase === "lobby" &&
       state.matchSoftStartAt != null,
     canAddBot:
       viewerId === state.hostId &&
-      state.isSoloMode &&
       (state.phase === "lobby" || state.phase === "ended") &&
       state.players.length < MAX_PLAYERS,
+    canSetLobbySettings:
+      viewerId === state.hostId &&
+      (state.phase === "lobby" || state.phase === "ended"),
+    botDifficulty: state.botDifficulty,
     jokerCount: state.jokerCount,
     canSetJokerCount:
       viewerId === state.hostId &&

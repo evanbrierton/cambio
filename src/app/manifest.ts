@@ -20,10 +20,10 @@ export default function manifest(): MetadataRoute.Manifest {
     prefer_related_applications: false,
     shortcuts: [
       {
-        name: "Play solo",
-        short_name: "Solo",
-        url: "/?solo=1",
-        description: "Start a solo game against bots",
+        name: "Create lobby",
+        short_name: "Lobby",
+        url: "/",
+        description: "Create a lobby and add bots or friends",
       },
     ],
     icons: [

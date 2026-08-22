@@ -4,9 +4,14 @@ import {
   Server,
   type WSMessage,
 } from "partyserver";
-import { clampBotCount, GameHost, type HostPeer } from "../src/game/host";
+import { clampSeedBotCount, GameHost, type HostPeer } from "../src/game/host";
 import type { GameState, ServerMessage } from "../src/game/types";
-import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "../src/game/types";
+import {
+  DEFAULT_BOT_COUNT,
+  parseBotDifficulty,
+  parseLobbyNetwork,
+  parseLobbyVisibility,
+} from "../src/game/types";
 import { parseClientMessageJson } from "../src/game/wire-schema";
 import { MATCHMAKING_ROOM_ID } from "../src/matchmaking/types";
 
@@ -29,6 +34,9 @@ export class CambioParty extends Server<Env> {
       onPersist: () => this.persist(),
       onSnapWindowSchedule: (endsAt) => this.scheduleSnapWindowAlarm(endsAt),
       onMatchLobbyClosed: (roomId) => this.closeMatchmakingLobby(roomId),
+      onPublicLobbyListed: (info) => this.listMatchmakingLobby(info),
+      onPublicLobbySeatsChanged: (info) =>
+        this.updateMatchmakingLobbySeats(info),
     });
   }
 
@@ -42,7 +50,51 @@ export class CambioParty extends Server<Env> {
         body: JSON.stringify({ roomId }),
       });
     } catch {
-      // Best-effort: Find Match may briefly reuse a started room until next close.
+      // Best-effort: Find Public may briefly reuse a started room until next close.
+    }
+  }
+
+  private async listMatchmakingLobby(info: {
+    roomId: string;
+    targetSize: number;
+    fillWithBots: boolean;
+    humanCount: number;
+    botCount: number;
+  }) {
+    try {
+      const id = this.env.Matchmaking.idFromName(MATCHMAKING_ROOM_ID);
+      const stub = this.env.Matchmaking.get(id);
+      await stub.fetch("https://matchmaking/list-lobby", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(info),
+      });
+    } catch {
+      // Best-effort listing.
+    }
+  }
+
+  private async updateMatchmakingLobbySeats(info: {
+    roomId: string;
+    targetSize: number;
+    fillWithBots: boolean;
+    humanCount: number;
+    botCount: number;
+  }) {
+    try {
+      const id = this.env.Matchmaking.idFromName(MATCHMAKING_ROOM_ID);
+      const stub = this.env.Matchmaking.get(id);
+      await stub.fetch("https://matchmaking/update-lobby-seats", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          roomId: info.roomId,
+          humanCount: info.humanCount,
+          botCount: info.botCount,
+        }),
+      });
+    } catch {
+      // Best-effort seat sync.
     }
   }
 
@@ -117,18 +169,27 @@ export class CambioParty extends Server<Env> {
     const queryPlayerId = url.searchParams.get("playerId");
     const name = (url.searchParams.get("name") ?? "").trim().slice(0, 24);
     const debugEnabled = url.searchParams.has("debug");
-    const isSolo = url.searchParams.get("solo") === "1";
-    const isMatchmade = url.searchParams.get("match") === "1";
+    const network = parseLobbyNetwork(
+      url.searchParams.get("network") ??
+        (url.searchParams.get("mode") === "local" ? "nearby" : null),
+    );
+    const visibilityFromQuery = parseLobbyVisibility(
+      url.searchParams.get("visibility"),
+    );
+    const isLegacySolo = url.searchParams.get("solo") === "1";
+    const isPublic =
+      url.searchParams.get("match") === "1" || visibilityFromQuery === "public";
     const matchTargetSize = Number.parseInt(
       url.searchParams.get("targetSize") ?? "4",
       10,
     );
     const matchFillWithBots = url.searchParams.get("fillWithBots") !== "0";
-    const botCount = clampBotCount(
+    const seedBotCount = clampSeedBotCount(
       Number.parseInt(
-        url.searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
+        url.searchParams.get("bots") ??
+          (isLegacySolo ? String(DEFAULT_BOT_COUNT) : "0"),
         10,
-      ) || DEFAULT_BOT_COUNT,
+      ),
     );
     const difficulty = parseBotDifficulty(url.searchParams.get("difficulty"));
 
@@ -168,10 +229,10 @@ export class CambioParty extends Server<Env> {
     const result = await this.host.handleConnect({
       queryPlayerId: playerId,
       name,
-      isSolo,
-      botCount,
+      seedBotCount,
       difficulty,
-      isMatchmade,
+      network,
+      visibility: isPublic ? "public" : "private",
       matchTargetSize,
       matchFillWithBots,
     });

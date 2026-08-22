@@ -23,6 +23,7 @@ import { generateBotChatMessage } from "./bot-chat-llm";
 import {
   addBotPlayer,
   addChatMessage,
+  beginGame,
   buildPlayerView,
   createRoom,
   expireSnapWindow,
@@ -37,6 +38,8 @@ import type {
   Card,
   ClientMessage,
   GameState,
+  LobbyNetwork,
+  LobbyVisibility,
   PeekFlash,
   ServerMessage,
   SnapFlash,
@@ -46,6 +49,7 @@ import {
   DEFAULT_BOT_COUNT,
   DEFAULT_CARD_POINTS,
   DEFAULT_JOKER_COUNT,
+  isPublicLobby,
   MAX_BOT_COUNT,
   MIN_BOT_COUNT,
 } from "./types";
@@ -63,17 +67,34 @@ export type GameHostConfig = {
   onPersist?: () => void | Promise<void>;
   /** Called when snap window end time changes (null clears). */
   onSnapWindowSchedule?: (endsAt: number | null) => void | Promise<void>;
-  /** Called when a matchmade lobby leaves lobby phase so Find Match stops seating into it. */
+  /** Called when a public lobby leaves lobby phase so Find Public stops seating into it. */
   onMatchLobbyClosed?: (roomId: string) => void | Promise<void>;
+  /** Called when a lobby becomes publicly listed (visibility flip or create as public). */
+  onPublicLobbyListed?: (info: {
+    roomId: string;
+    targetSize: number;
+    fillWithBots: boolean;
+    humanCount: number;
+    botCount: number;
+  }) => void | Promise<void>;
+  /** Called when public lobby seat counts change (join/leave/bots). */
+  onPublicLobbySeatsChanged?: (info: {
+    roomId: string;
+    targetSize: number;
+    fillWithBots: boolean;
+    humanCount: number;
+    botCount: number;
+  }) => void | Promise<void>;
 };
 
 export type ConnectParams = {
   queryPlayerId: string | null;
   name: string;
-  isSolo: boolean;
-  botCount: number;
-  difficulty: BotDifficulty;
-  isMatchmade?: boolean;
+  /** Seed bots when creating a fresh private lobby (replaces solo mode). */
+  seedBotCount?: number;
+  difficulty?: BotDifficulty;
+  network?: LobbyNetwork;
+  visibility?: LobbyVisibility;
   matchTargetSize?: number;
   matchFillWithBots?: boolean;
 };
@@ -87,14 +108,30 @@ export type ConnectResult = {
 const MOVE_REACTION_COOLDOWN_MS = 12_000;
 
 export function migrateHostState(state: GameState): GameState {
+  const legacy = state as GameState & {
+    isSoloMode?: boolean;
+    isMatchmade?: boolean;
+    soloDifficulty?: BotDifficulty | null;
+  };
+
+  let network: LobbyNetwork = legacy.network ?? "online";
+  let visibility: LobbyVisibility = legacy.visibility ?? "private";
+  if (legacy.isMatchmade) {
+    network = "online";
+    visibility = "public";
+  } else if (legacy.isSoloMode) {
+    network = "online";
+    visibility = "private";
+  }
+
   const migrated: GameState = {
     ...state,
-    isSoloMode: state.isSoloMode ?? false,
-    isMatchmade: state.isMatchmade ?? false,
+    network,
+    visibility,
     matchTargetSize: state.matchTargetSize ?? 4,
     matchFillWithBots: state.matchFillWithBots ?? true,
     matchSoftStartAt: state.matchSoftStartAt ?? null,
-    soloDifficulty: state.soloDifficulty ?? null,
+    botDifficulty: state.botDifficulty ?? legacy.soloDifficulty ?? null,
     jokerCount: state.jokerCount ?? DEFAULT_JOKER_COUNT,
     cardPoints: { ...DEFAULT_CARD_POINTS, ...state.cardPoints },
     botThinkingId: null,
@@ -113,6 +150,10 @@ export function migrateHostState(state: GameState): GameState {
       setupPeekedSlots: p.setupPeekedSlots ?? [],
     })),
   };
+  // Drop legacy flags if present on persisted blobs.
+  delete (migrated as { isSoloMode?: boolean }).isSoloMode;
+  delete (migrated as { isMatchmade?: boolean }).isMatchmade;
+  delete (migrated as { soloDifficulty?: BotDifficulty | null }).soloDifficulty;
   purgeStaleMatchmadeLobbyPlayers(migrated);
   return migrated;
 }
@@ -185,8 +226,8 @@ export class GameHost {
   resolveReconnectPlayerId(queryPlayerId: string | null, name: string): string {
     if (!this.state) return queryPlayerId ?? crypto.randomUUID().slice(0, 10);
 
-    const isMatchmadeLobby =
-      this.state.isMatchmade && this.state.phase === "lobby";
+    const isPublicLobbyPhase =
+      isPublicLobby(this.state) && this.state.phase === "lobby";
 
     if (queryPlayerId) {
       const existing = this.state.players.find((p) => p.id === queryPlayerId);
@@ -194,11 +235,11 @@ export class GameHost {
         // Reclaim the same seat (including brief disconnect grace).
         return queryPlayerId;
       }
-      // New matchmade join: keep the client id so onConnect/handleConnect agree.
-      if (isMatchmadeLobby) return queryPlayerId;
+      // New public join: keep the client id so onConnect/handleConnect agree.
+      if (isPublicLobbyPhase) return queryPlayerId;
     }
 
-    if (isMatchmadeLobby) {
+    if (isPublicLobbyPhase) {
       return crypto.randomUUID().slice(0, 10);
     }
 
@@ -223,17 +264,61 @@ export class GameHost {
     );
   }
 
+  private countLobbyBots(): number {
+    if (!this.state) return 0;
+    return this.state.players.filter((player) => player.isBot).length;
+  }
+
+  private publicLobbySeatInfo() {
+    if (!this.state) return null;
+    return {
+      roomId: this.config.roomId,
+      targetSize: this.state.matchTargetSize,
+      fillWithBots: this.state.matchFillWithBots,
+      humanCount: this.countMatchHumans(),
+      botCount: this.countLobbyBots(),
+    };
+  }
+
+  private async syncPublicLobbyListing() {
+    if (
+      !this.state ||
+      !isPublicLobby(this.state) ||
+      this.state.phase !== "lobby"
+    ) {
+      return;
+    }
+    const info = this.publicLobbySeatInfo();
+    if (!info) return;
+    await this.config.onPublicLobbyListed?.(info);
+  }
+
+  private async syncPublicLobbySeats() {
+    if (
+      !this.state ||
+      !isPublicLobby(this.state) ||
+      this.state.phase !== "lobby"
+    ) {
+      return;
+    }
+    const info = this.publicLobbySeatInfo();
+    if (!info) return;
+    await this.config.onPublicLobbySeatsChanged?.(info);
+  }
+
   async handleConnect(params: ConnectParams): Promise<ConnectResult> {
     const {
       queryPlayerId,
       name,
-      isSolo,
-      botCount,
-      difficulty,
-      isMatchmade,
+      seedBotCount = 0,
+      difficulty = "easy",
+      network = "online",
+      visibility = "private",
       matchTargetSize,
       matchFillWithBots,
     } = params;
+
+    const joiningPublic = network === "online" && visibility === "public";
 
     const existingPlayer = queryPlayerId
       ? this.state?.players.find((p) => p.id === queryPlayerId)
@@ -256,23 +341,25 @@ export class GameHost {
         queryPlayerId ?? undefined,
       );
       playerId = this.state.hostId;
+      this.state.network = network;
+      this.state.visibility = network === "nearby" ? "private" : visibility;
+      this.state.botDifficulty = difficulty;
 
-      if (isSolo) {
-        this.state.isSoloMode = true;
-        this.state.soloDifficulty = difficulty;
-        for (let i = 0; i < botCount; i++) {
+      if (seedBotCount > 0) {
+        for (let i = 0; i < seedBotCount; i++) {
           addBotPlayer(this.state, difficulty);
         }
-      } else if (isMatchmade) {
-        this.state.isMatchmade = true;
+      }
+
+      if (isPublicLobby(this.state)) {
         this.state.matchTargetSize = matchTargetSize ?? 4;
         this.state.matchFillWithBots = matchFillWithBots ?? true;
       }
     } else {
-      // Fresh Find Match must not land in a game that already started.
+      // Fresh Find Public must not land in a game that already started.
       if (
-        isMatchmade &&
-        this.state.isMatchmade &&
+        joiningPublic &&
+        isPublicLobby(this.state) &&
         this.state.phase !== "lobby" &&
         !existingPlayer
       ) {
@@ -282,14 +369,14 @@ export class GameHost {
           closeConnection: true,
         };
       }
-      // Fresh Find Match (match=1) may reassign the same room — allow re-entry.
-      if (isMatchmade && queryPlayerId) {
+      // Fresh Find Public may reassign the same room — allow re-entry.
+      if (joiningPublic && queryPlayerId) {
         this.matchLobbyDepartedIds.delete(queryPlayerId);
       }
       if (
-        this.state.isMatchmade &&
+        isPublicLobby(this.state) &&
         this.state.phase === "lobby" &&
-        !isMatchmade &&
+        !joiningPublic &&
         this.isMatchLobbyBlocked(queryPlayerId)
       ) {
         return {
@@ -321,6 +408,10 @@ export class GameHost {
     this.broadcastState();
     this.scheduleBotTurns();
     this.scheduleBotChat();
+    if (isPublicLobby(this.state) && this.state.phase === "lobby") {
+      await this.syncPublicLobbyListing();
+      await this.syncPublicLobbySeats();
+    }
     await this.maybeAutoStartMatchmade();
 
     return { playerId };
@@ -329,10 +420,11 @@ export class GameHost {
   async handleDisconnect(playerId: string, peerId: string) {
     if (!this.state) return;
 
-    const isMatchmadeLobby =
-      this.state.isMatchmade && this.state.phase === "lobby";
+    const isPublicLobbyPhase =
+      isPublicLobby(this.state) && this.state.phase === "lobby";
 
-    if (!isMatchmadeLobby && this.playerHasOtherPeer(playerId, peerId)) return;
+    if (!isPublicLobbyPhase && this.playerHasOtherPeer(playerId, peerId))
+      return;
 
     this.clearBotChatTimer();
     this.clearBotChatReplyTimer();
@@ -340,7 +432,7 @@ export class GameHost {
     const player = this.state.players.find((p) => p.id === playerId);
     if (!player) return;
 
-    if (isMatchmadeLobby && !player.isBot) {
+    if (isPublicLobbyPhase && !player.isBot) {
       if (this.playerHasOtherPeer(playerId, peerId)) return;
 
       // Stay on the roster as "away" so other players keep seeing this seat.
@@ -398,7 +490,12 @@ export class GameHost {
 
   private scheduleEmptyMatchLobbyClose() {
     this.clearMatchEmptyLobbyTimer();
-    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (
+      !this.state ||
+      !isPublicLobby(this.state) ||
+      this.state.phase !== "lobby"
+    )
+      return;
     if (this.countMatchHumans() > 0) return;
 
     this.matchEmptyLobbyTimer = setTimeout(() => {
@@ -408,7 +505,12 @@ export class GameHost {
 
   private async removeAwayMatchLobbyPlayer(playerId: string) {
     this.matchLobbyAwayTimers.delete(playerId);
-    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (
+      !this.state ||
+      !isPublicLobby(this.state) ||
+      this.state.phase !== "lobby"
+    )
+      return;
 
     for (const peer of this.peers.values()) {
       if (peer.playerId === playerId && peer.connected) return;
@@ -439,7 +541,12 @@ export class GameHost {
 
   private async closeEmptyMatchLobby() {
     this.matchEmptyLobbyTimer = null;
-    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (
+      !this.state ||
+      !isPublicLobby(this.state) ||
+      this.state.phase !== "lobby"
+    )
+      return;
     if (this.countMatchHumans() > 0) return;
 
     const roomId = this.config.roomId;
@@ -507,14 +614,24 @@ export class GameHost {
   }
 
   private async onMatchSoftStart() {
-    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (
+      !this.state ||
+      !isPublicLobby(this.state) ||
+      this.state.phase !== "lobby"
+    )
+      return;
     if (this.countMatchHumans() >= 2) {
       await this.startMatchmadeGame();
     }
   }
 
   private async onMatchAbandon() {
-    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (
+      !this.state ||
+      !isPublicLobby(this.state) ||
+      this.state.phase !== "lobby"
+    )
+      return;
     if (this.countMatchHumans() !== 1 || this.state.matchFillWithBots) return;
     addChatMessage(
       this.state,
@@ -528,7 +645,12 @@ export class GameHost {
   }
 
   private async startMatchmadeGame() {
-    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (
+      !this.state ||
+      !isPublicLobby(this.state) ||
+      this.state.phase !== "lobby"
+    )
+      return;
 
     const target = this.state.matchTargetSize;
     if (this.state.matchFillWithBots) {
@@ -544,14 +666,29 @@ export class GameHost {
 
     this.state.matchSoftStartAt = null;
     this.clearMatchTimers();
-    await this.dispatchMessage(this.state.hostId, { type: "start_game" });
+    const started = beginGame(this.state);
+    if (started.error) {
+      await this.persist();
+      this.broadcastState();
+      return;
+    }
+    await this.persist();
+    await this.syncSnapWindow();
+    this.broadcastState();
+    this.scheduleBotTurns();
+    this.scheduleBotChat();
     if (this.state.phase !== "lobby") {
       await this.config.onMatchLobbyClosed?.(this.config.roomId);
     }
   }
 
   private async maybeAutoStartMatchmade() {
-    if (!this.state?.isMatchmade || this.state.phase !== "lobby") return;
+    if (
+      !this.state ||
+      !isPublicLobby(this.state) ||
+      this.state.phase !== "lobby"
+    )
+      return;
 
     const humans = this.countMatchHumans();
     const target = this.state.matchTargetSize;
@@ -689,7 +826,43 @@ export class GameHost {
       }
     }
 
+    if (!result.error) {
+      await this.handleLobbySettingsSideEffects(message);
+    }
+
     this.scheduleBotTurns();
+  }
+
+  private async handleLobbySettingsSideEffects(message: ClientMessage) {
+    if (!this.state) return;
+
+    if (message.type === "set_visibility" || message.type === "set_network") {
+      if (isPublicLobby(this.state) && this.state.phase === "lobby") {
+        await this.syncPublicLobbyListing();
+        await this.syncPublicLobbySeats();
+        await this.maybeAutoStartMatchmade();
+      } else {
+        this.clearMatchTimers();
+        this.state.matchSoftStartAt = null;
+        await this.config.onMatchLobbyClosed?.(this.config.roomId);
+        await this.persist();
+        this.broadcastState();
+      }
+      return;
+    }
+
+    if (
+      message.type === "add_bot" ||
+      message.type === "remove_bot" ||
+      message.type === "set_match_config"
+    ) {
+      await this.syncPublicLobbySeats();
+      await this.maybeAutoStartMatchmade();
+    }
+
+    if (message.type === "start_game" && this.state.phase !== "lobby") {
+      await this.config.onMatchLobbyClosed?.(this.config.roomId);
+    }
   }
 
   async onSnapWindowAlarm() {
@@ -733,7 +906,11 @@ export class GameHost {
       this.scheduleMatchSoftStart();
     }
     await this.maybeAutoStartMatchmade();
-    if (this.state?.isMatchmade && this.state.phase !== "lobby") {
+    if (
+      this.state &&
+      isPublicLobby(this.state) &&
+      this.state.phase !== "lobby"
+    ) {
       await this.config.onMatchLobbyClosed?.(this.config.roomId);
     }
   }
@@ -865,7 +1042,7 @@ export class GameHost {
 
   private scheduleBotChat() {
     if (this.botChatTimer) return;
-    if (!this.state?.isSoloMode) return;
+    if (!this.state?.players.some((p) => p.isBot)) return;
 
     const bots = this.state.players.filter((p) => p.isBot);
     if (bots.length === 0) return;
@@ -878,7 +1055,7 @@ export class GameHost {
   }
 
   private scheduleBotChatReply(playerName: string, text: string) {
-    if (!this.state?.isSoloMode) return;
+    if (!this.state?.players.some((p) => p.isBot)) return;
 
     this.clearBotChatReplyTimer();
     const delay = 2_000 + Math.floor(Math.random() * 3_000);
@@ -889,7 +1066,7 @@ export class GameHost {
   }
 
   private scheduleBotMoveReaction(reaction: GameMoveReaction) {
-    if (!this.state?.isSoloMode) return;
+    if (!this.state?.players.some((p) => p.isBot)) return;
 
     const now = Date.now();
     if (now - this.lastMoveReactionAt < MOVE_REACTION_COOLDOWN_MS) return;
@@ -907,7 +1084,7 @@ export class GameHost {
     replyTo?: { playerName: string; text: string };
     gameMove?: GameMoveReaction;
   }) {
-    if (!this.state?.isSoloMode) return;
+    if (!this.state?.players.some((p) => p.isBot)) return;
 
     const bots = this.state.players.filter((p) => p.isBot);
     if (bots.length === 0) {
@@ -1026,4 +1203,10 @@ export function clampBotCount(raw: number): number {
     MAX_BOT_COUNT,
     Math.max(MIN_BOT_COUNT, Number.isFinite(raw) ? raw : DEFAULT_BOT_COUNT),
   );
+}
+
+/** Allows zero bots when seeding an empty private lobby. */
+export function clampSeedBotCount(raw: number): number {
+  if (!Number.isFinite(raw) || raw <= 0) return 0;
+  return Math.min(MAX_BOT_COUNT, Math.round(raw));
 }

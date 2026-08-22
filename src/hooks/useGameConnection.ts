@@ -4,7 +4,13 @@ import { getDefaultPlatformAdapters } from "@cambio/client/platform";
 import { nanoid } from "nanoid";
 import PartySocket from "partysocket";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { BotDifficulty, ClientMessage, PlayerView } from "@/game/types";
+import type {
+  BotDifficulty,
+  ClientMessage,
+  LobbyNetwork,
+  LobbyVisibility,
+  PlayerView,
+} from "@/game/types";
 import { parseServerMessageJson } from "@/game/wire-schema";
 import type { CambioFlash } from "@/hooks/useServerMessages";
 import { useServerMessages } from "@/hooks/useServerMessages";
@@ -63,14 +69,25 @@ const PLAY_ACTIONS_BLOCKED_DURING_SNAP_GIVE = new Set<ClientMessage["type"]>([
 
 export type SessionMode = "new" | "reconnect";
 
+/** @deprecated Use LobbyConnectOptions.seedBotCount */
 export type SoloOptions = {
   botCount: number;
   difficulty: BotDifficulty;
 };
 
+/** @deprecated Use LobbyConnectOptions */
 export type MatchOptions = {
   targetSize: number;
   fillWithBots: boolean;
+};
+
+export type LobbyConnectOptions = {
+  network?: LobbyNetwork;
+  visibility?: LobbyVisibility;
+  seedBotCount?: number;
+  difficulty?: BotDifficulty;
+  targetSize?: number;
+  fillWithBots?: boolean;
 };
 
 function resolvePlayerId(roomId: string): string {
@@ -90,9 +107,9 @@ export function useGameConnection(
   roomId: string,
   playerName: string,
   sessionMode: SessionMode = "reconnect",
-  soloOptions?: SoloOptions,
+  lobbyOptions?: LobbyConnectOptions,
   debugEnabled = false,
-  matchOptions?: MatchOptions,
+  enabled = true,
 ) {
   const [connected, setConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<string | null>(null);
@@ -107,9 +124,9 @@ export function useGameConnection(
   // (dropping host/join) cannot tear down the socket and drop lobby seats.
   const connectQueryRef = useRef({
     sessionMode,
-    soloOptions,
-    matchOptions,
+    lobbyOptions,
     debugEnabled,
+    enabled,
   });
 
   const { messageState, applyMessage } = useServerMessages({
@@ -177,13 +194,23 @@ export function useGameConnection(
   useEffect(() => {
     roomKeyRef.current = storageKey(roomId);
     seenKeyRef.current = freshSessionKey(roomId);
+    if (!connectQueryRef.current.enabled) {
+      setConnected(false);
+      return;
+    }
     const playerId = resolvePlayerId(roomId);
     const {
       sessionMode: mode,
-      soloOptions: solo,
-      matchOptions: match,
+      lobbyOptions: lobby,
       debugEnabled: debug,
     } = connectQueryRef.current;
+
+    const network = lobby?.network ?? "online";
+    const visibility = lobby?.visibility ?? "private";
+    const seedBots =
+      mode === "new" && lobby?.seedBotCount && lobby.seedBotCount > 0
+        ? lobby.seedBotCount
+        : 0;
 
     const socket = new PartySocket({
       host: getPartyHost(),
@@ -191,18 +218,19 @@ export function useGameConnection(
       query: {
         name: playerName,
         playerId,
-        ...(solo && mode === "new"
+        network,
+        visibility,
+        ...(seedBots > 0
           ? {
-              solo: "1",
-              bots: String(solo.botCount),
-              difficulty: solo.difficulty,
+              bots: String(seedBots),
+              difficulty: lobby?.difficulty ?? "easy",
             }
           : {}),
-        ...(match
+        ...(visibility === "public"
           ? {
               match: "1",
-              targetSize: String(match.targetSize),
-              fillWithBots: match.fillWithBots ? "1" : "0",
+              targetSize: String(lobby?.targetSize ?? 4),
+              fillWithBots: lobby?.fillWithBots === false ? "0" : "1",
             }
           : {}),
         ...(debug ? { debug: "1" } : {}),

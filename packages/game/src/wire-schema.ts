@@ -148,13 +148,15 @@ const playerViewSchema = z.object({
   winnerIds: z.array(z.string()),
   scores: z.record(z.string(), z.number()).nullable(),
   snapWindowEndsAt: z.number().nullable(),
-  isSoloMode: z.boolean(),
-  isMatchmade: z.boolean(),
+  network: z.enum(["online", "nearby"]),
+  visibility: z.enum(["private", "public"]),
   matchTargetSize: z.number(),
   matchFillWithBots: z.boolean(),
   matchHumanCount: z.number(),
   matchStartingSoon: z.boolean(),
   canAddBot: z.boolean(),
+  canSetLobbySettings: z.boolean(),
+  botDifficulty: botDifficultySchema.nullable(),
   jokerCount: z.number(),
   canSetJokerCount: z.boolean(),
   cardPoints: cardPointValuesSchema,
@@ -201,6 +203,19 @@ export const clientMessageSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("remove_bot"),
     playerId: z.string(),
+  }),
+  z.object({
+    type: z.literal("set_network"),
+    network: z.enum(["online", "nearby"]),
+  }),
+  z.object({
+    type: z.literal("set_visibility"),
+    visibility: z.enum(["private", "public"]),
+  }),
+  z.object({
+    type: z.literal("set_match_config"),
+    targetSize: z.number().optional(),
+    fillWithBots: z.boolean().optional(),
   }),
   z.object({
     type: z.literal("set_joker_count"),
