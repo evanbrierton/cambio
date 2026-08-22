@@ -84,7 +84,7 @@ export function ThemePicker({ compact = false }: { compact?: boolean }) {
         <p className="font-display text-[8px] sm:text-[10px] text-theme-muted">
           {voice.styleLabel}
         </p>
-        <div className="chip-btn border-theme-muted bg-surface px-1 py-1 inline-flex items-center gap-0.5 self-start">
+        <div className="chip-btn chip-btn-group border-theme-muted bg-surface px-1 py-1 inline-flex items-center gap-0.5 self-start">
           {appearanceOptions.map((option) => {
             const active = appearancePreference === option.id;
             return (

@@ -1575,6 +1575,7 @@ body::after {
   border: var(--border-weight) solid var(--border);
   border-radius: var(--radius-panel);
   box-shadow: var(--panel-shadow);
+  background-clip: padding-box;
 }
 
 .title-glow {
@@ -2338,6 +2339,7 @@ body::after {
   letter-spacing: var(--display-tracking);
   font-weight: var(--btn-font-weight);
   font-family: var(--font-display);
+  background-clip: padding-box;
 }
 
 .btn-theme:disabled {
@@ -2398,6 +2400,14 @@ body::after {
   text-transform: var(--display-transform);
   letter-spacing: var(--display-tracking);
   font-family: var(--font-display);
+  /* Keep nested fills/borders inside the chip curve (Party Pop pills especially). */
+  overflow: hidden;
+  background-clip: padding-box;
+}
+
+/* Segmented controls nested in a chip (e.g. appearance light/dark/system). */
+.chip-btn-group > button {
+  border-radius: var(--radius-chip);
 }
 
 .chip-btn-sm {
@@ -2418,6 +2428,7 @@ body::after {
   text-transform: var(--display-transform);
   min-width: 0;
   overflow: hidden;
+  background-clip: padding-box;
 }
 
 .theme-option-name {
@@ -2438,13 +2449,15 @@ body::after {
 }
 
 .input-theme {
-  background: var(--surface-card-alt);
+  background-color: var(--surface-card-alt);
   border-width: var(--border-weight);
   border-style: solid;
   border-color: var(--border-muted);
   border-radius: var(--radius-btn);
   color: var(--foreground);
   font-size: 16px;
+  overflow: hidden;
+  background-clip: padding-box;
 }
 
 @media (min-width: 640px) {
@@ -2760,6 +2773,8 @@ html.native-shell [data-pwa-install] {
   font-weight: var(--btn-font-weight);
   line-height: 1;
   padding: 0;
+  overflow: hidden;
+  background-clip: padding-box;
 }
 
 .sheet-close-btn span {
