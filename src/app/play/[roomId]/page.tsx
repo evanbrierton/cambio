@@ -14,13 +14,26 @@ import {
 } from "@/hooks/useGameConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
+import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 /** Delay before showing the connecting indicator so fast failures go straight to error. */
 const CONNECTING_UI_DELAY_MS = 300;
 
+/** Mobile grid is 2 columns; at this count seats need vertical scroll into the chin. */
+const GRID_CHIN_FILL_MIN_PLAYERS = 5;
+
 function allowsPageScroll(view: PlayerView | null): boolean {
   if (!view) return true;
   return view.isWaiting || view.phase === "lobby" || view.phase === "ended";
+}
+
+function shouldFillChin(
+  view: PlayerView | null,
+  playerGridEnabled: boolean,
+): boolean {
+  if (!view || allowsPageScroll(view) || !playerGridEnabled) return false;
+  const seatCount = view.players.filter((player) => !player.isWaiting).length;
+  return seatCount >= GRID_CHIN_FILL_MIN_PLAYERS;
 }
 
 export default function PlayPage({
@@ -32,6 +45,8 @@ export default function PlayPage({
   const searchParams = useSearchParams();
   const router = useRouter();
   const voice = useThemeVoice();
+  useRehydrateUiPrefs();
+  const { playerGridEnabled } = useUiPrefs();
   const name = searchParams.get("name")?.trim() ?? "";
   const debugEnabled = hasDebugQueryParam(searchParams);
   const isNavFresh = searchParams.has("host") || searchParams.has("join");
@@ -150,6 +165,7 @@ export default function PlayPage({
   }, [view, error]);
 
   const pageScrollable = allowsPageScroll(view);
+  const fillChin = shouldFillChin(view, playerGridEnabled);
 
   useEffect(() => {
     if (pageScrollable) {
@@ -188,7 +204,9 @@ export default function PlayPage({
         className={`play-shell touch-game flex h-full w-full flex-col px-3 sm:px-6 lg:px-8 ${
           pageScrollable
             ? "overflow-y-auto overflow-x-hidden mobile-game-scroll"
-            : "play-shell-fill-chin overflow-hidden"
+            : fillChin
+              ? "play-shell-fill-chin overflow-hidden"
+              : "overflow-hidden"
         }`}
       >
         <GameTable
