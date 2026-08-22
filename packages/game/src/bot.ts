@@ -446,16 +446,32 @@ function firstUnknownOwnSlot(
   return null;
 }
 
+function snapMatchPoints(
+  match: { targetPlayerId: string; slot: number },
+  knowledge: BotKnowledge,
+  pointValues: CardPointValues,
+): number {
+  const known = knowledge.get(match.targetPlayerId, match.slot);
+  return known ? cardPoints(known, pointValues) : 8;
+}
+
 function snapMatchScore(
   botId: string,
   match: { targetPlayerId: string; slot: number },
   knowledge: BotKnowledge,
   pointValues: CardPointValues,
 ): number {
-  const known = knowledge.get(match.targetPlayerId, match.slot);
-  const pts = known ? cardPoints(known, pointValues) : 8;
+  const pts = snapMatchPoints(match, knowledge, pointValues);
   if (match.targetPlayerId !== botId) return pts + 10;
   return pts;
+}
+
+function isLowValueSnapTarget(
+  match: { targetPlayerId: string; slot: number },
+  knowledge: BotKnowledge,
+  pointValues: CardPointValues,
+): boolean {
+  return snapMatchPoints(match, knowledge, pointValues) <= 0;
 }
 
 function randomItem<T>(items: T[]): T | null {
@@ -489,22 +505,22 @@ function findSnapTarget(
 
   if (difficulty === "easy") {
     const own = matches.filter((m) => m.targetPlayerId === botId);
-    return randomItem(own);
-  }
-
-  if (isExpert(difficulty)) {
-    return (
-      [...matches].sort(
-        (a, b) =>
-          snapMatchScore(botId, b, knowledge, state.cardPoints) -
-          snapMatchScore(botId, a, knowledge, state.cardPoints),
-      )[0] ?? null
+    const dumpable = own.filter(
+      (m) => !isLowValueSnapTarget(m, knowledge, state.cardPoints),
     );
+    return randomItem(dumpable.length > 0 ? dumpable : own);
   }
 
-  const own = matches.find((m) => m.targetPlayerId === botId);
-  if (own) return own;
-  return matches[0] ?? null;
+  const ranked = [...matches].sort(
+    (a, b) =>
+      snapMatchScore(botId, b, knowledge, state.cardPoints) -
+      snapMatchScore(botId, a, knowledge, state.cardPoints),
+  );
+
+  const bestWorthDumping = ranked.find(
+    (m) => !isLowValueSnapTarget(m, knowledge, state.cardPoints),
+  );
+  return bestWorthDumping ?? null;
 }
 
 function decideAbility(

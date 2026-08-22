@@ -245,6 +245,12 @@ export const serverMessageSchema = z.discriminatedUnion("type", [
     slots: z.array(swapFlashSlotSchema),
   }),
   z.object({
+    type: z.literal("snap_flash"),
+    actorId: z.string(),
+    playerId: z.string(),
+    slot: z.number(),
+  }),
+  z.object({
     type: z.literal("penalty_flash"),
     playerId: z.string(),
     slot: z.number(),
