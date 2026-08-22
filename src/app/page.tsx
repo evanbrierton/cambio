@@ -76,7 +76,7 @@ export default function HomePage() {
           <h1 className="font-display text-3xl sm:text-5xl title-glow leading-tight">
             Cambio
           </h1>
-          <p className="text-sm text-theme-muted max-w-sm mx-auto normal-case tracking-normal">
+          <p className="font-display text-sm text-theme-muted max-w-sm mx-auto normal-case tracking-normal">
             {voice.subtitle}
           </p>
         </div>
