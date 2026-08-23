@@ -397,6 +397,7 @@ function PlayerSeat({
   pendingLookKind,
   compact = false,
   fitHandToWidth = false,
+  emphasizeTurn = false,
   voice,
   onCardClick,
 }: {
@@ -421,6 +422,7 @@ function PlayerSeat({
   pendingLookKind?: PendingAbility["kind"] | null;
   compact?: boolean;
   fitHandToWidth?: boolean;
+  emphasizeTurn?: boolean;
   voice: ThemeVoice;
   onCardClick: (playerId: string, slot: number, isOwn: boolean) => void;
 }) {
@@ -613,7 +615,9 @@ function PlayerSeat({
                       : hasSwapFirstSelected
                         ? "bg-swap-first-selected ring-2 ring-accent-alt shadow-glow-accent-alt"
                         : player.isCurrentTurn
-                          ? "bg-surface-elevated ring-2 ring-accent-alt"
+                          ? emphasizeTurn
+                            ? "bg-surface-elevated ring-2 ring-accent-alt animate-pulse shadow-glow-accent-alt"
+                            : "bg-surface-elevated ring-2 ring-accent-alt"
                           : "bg-surface"
       } ${phase === "setup_peek" && !isOwn ? "opacity-40" : ""} ${
         lookAbilityActive &&
@@ -1080,6 +1084,23 @@ export function GameTable({
         }
       : null;
 
+  const viewer = view.players.find((p) => p.id === view.playerId);
+  const isMyTurn =
+    (viewer?.isCurrentTurn ?? false) &&
+    (view.phase === "playing" || view.phase === "cambio_final");
+
+  const turnOnlyToast: GameToastItem | null =
+    !hintsEnabled && !coachActive && isMyTurn
+      ? {
+          id: "turn",
+          message: voice.turn,
+          tone: "turn",
+          pulse: true,
+        }
+      : null;
+
+  const tableHintToast = hintsEnabled ? actionToast : turnOnlyToast;
+
   const showDrawnActionChrome =
     Boolean(view.drawnCard) &&
     !snapGivePending &&
@@ -1396,6 +1417,12 @@ export function GameTable({
         pendingLookKind={pendingLookKind}
         compact
         fitHandToWidth={playerGridEnabled}
+        emphasizeTurn={
+          !hintsEnabled &&
+          isOwn &&
+          player.isCurrentTurn &&
+          (view.phase === "playing" || view.phase === "cambio_final")
+        }
         voice={voice}
         onCardClick={handleCardClick}
       />
@@ -1834,20 +1861,18 @@ export function GameTable({
                     : ""
                 } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
               >
-                {hintsEnabled ? (
+                {tableHintToast ? (
                   <div
                     data-table-hint
                     className="table-hint table-hint-slot shrink-0 mx-auto w-full flex items-center justify-center"
                   >
                     <AnimatePresence initial={false} mode="wait">
-                      {actionToast ? (
-                        <GameToast
-                          key={actionToast.id}
-                          toast={actionToast}
-                          inline
-                          className="p-2! text-[9px]! sm:text-[10px]! leading-[1.45]! shadow-none"
-                        />
-                      ) : null}
+                      <GameToast
+                        key={tableHintToast.id}
+                        toast={tableHintToast}
+                        inline
+                        className="p-2! text-[9px]! sm:text-[10px]! leading-[1.45]! shadow-none"
+                      />
                     </AnimatePresence>
                   </div>
                 ) : null}
