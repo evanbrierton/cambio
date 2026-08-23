@@ -122,6 +122,8 @@ export class GameHost {
   private peers = new Map<string, HostPeer>();
   private botKnowledge = new Map<string, BotKnowledge>();
   private botTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Per-bot timers during setup_peek so bots can peek in parallel. */
+  private setupPeekTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private botChatTimer: ReturnType<typeof setTimeout> | null = null;
   private botChatReplyTimer: ReturnType<typeof setTimeout> | null = null;
   private snapWindowTimer: ReturnType<typeof setTimeout> | null = null;
@@ -827,6 +829,13 @@ export class GameHost {
     }
   }
 
+  private clearSetupPeekTimers() {
+    for (const timer of this.setupPeekTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.setupPeekTimers.clear();
+  }
+
   private clearBotChatTimer() {
     if (this.botChatTimer) {
       clearTimeout(this.botChatTimer);
@@ -975,8 +984,15 @@ export class GameHost {
   }
 
   scheduleBotTurns() {
-    this.clearBotTimer();
     if (!this.state) return;
+
+    if (this.state.phase === "setup_peek") {
+      this.scheduleParallelSetupPeeks();
+      return;
+    }
+
+    this.clearSetupPeekTimers();
+    this.clearBotTimer();
 
     let scheduledBotId: string | null = null;
     let scheduledAction: ClientMessage | null = null;
@@ -1011,6 +1027,33 @@ export class GameHost {
       this.state.botThinkingId = null;
       void this.dispatchMessage(scheduledBotId, scheduledAction);
     }, delay);
+  }
+
+  /** Schedule setup peeks for every bot that still needs one (in parallel). */
+  private scheduleParallelSetupPeeks() {
+    if (!this.state || this.state.phase !== "setup_peek") return;
+
+    for (const botId of collectActingBots(this.state)) {
+      if (this.setupPeekTimers.has(botId)) continue;
+
+      const bot = findPlayer(this.state, botId);
+      if (!bot?.isBot) continue;
+
+      const action = decideBotAction(
+        this.state,
+        botId,
+        this.getBotKnowledge(botId),
+      );
+      if (!action || action.type !== "setup_peek") continue;
+
+      const delay = botThinkDelay(bot.botDifficulty ?? "easy");
+      const timer = setTimeout(() => {
+        this.setupPeekTimers.delete(botId);
+        if (!this.state) return;
+        void this.dispatchMessage(botId, action);
+      }, delay);
+      this.setupPeekTimers.set(botId, timer);
+    }
   }
 
   private async persist() {

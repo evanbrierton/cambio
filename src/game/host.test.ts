@@ -3,6 +3,7 @@ import {
   MATCH_EMPTY_LOBBY_CLOSE_MS,
   MATCH_LOBBY_AWAY_REMOVE_MS,
 } from "../matchmaking/types";
+import * as botModule from "./bot";
 import { createRoom, handleMessage, SNAP_WINDOW_MS } from "./engine";
 import { GameHost } from "./host";
 import type { ServerMessage } from "./types";
@@ -196,6 +197,48 @@ describe("GameHost", () => {
     host.scheduleBotTurns();
 
     vi.advanceTimersByTime(60_000);
+    expect(host.getState()?.botThinkingId).toBeNull();
+  });
+
+  it("schedules setup peeks for all bots in parallel", async () => {
+    vi.spyOn(botModule, "botThinkDelay").mockReturnValue(1_000);
+
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Alice",
+      isSolo: true,
+      botCount: 3,
+      difficulty: "easy",
+    });
+
+    const gameState = host.getState();
+    if (!gameState) throw new Error("missing state");
+    handleMessage(gameState, gameState.hostId, { type: "start_game" });
+    host.setState(gameState);
+
+    expect(host.getState()?.phase).toBe("setup_peek");
+    const bots =
+      host.getState()?.players.filter((player) => player.isBot) ?? [];
+    expect(bots).toHaveLength(3);
+
+    host.scheduleBotTurns();
+
+    await vi.advanceTimersByTimeAsync(999);
+    const peekedBeforeDelay = bots.map(
+      (bot) =>
+        host.getState()?.players.find((entry) => entry.id === bot.id)
+          ?.setupPeekedSlots.length ?? 0,
+    );
+    expect(peekedBeforeDelay.every((count) => count === 0)).toBe(true);
+
+    await vi.advanceTimersByTimeAsync(1);
+    const peekedAfterFirstWave = bots.map(
+      (bot) =>
+        host.getState()?.players.find((entry) => entry.id === bot.id)
+          ?.setupPeekedSlots.length ?? 0,
+    );
+    expect(peekedAfterFirstWave.every((count) => count === 1)).toBe(true);
     expect(host.getState()?.botThinkingId).toBeNull();
   });
 
