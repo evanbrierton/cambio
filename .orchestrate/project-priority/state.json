@@ -63,12 +63,12 @@
       "handoffPath": "handoffs/play-nearby.md",
       "startedAt": "2026-08-24T18:26:31.444Z",
       "finishedAt": "2026-08-24T18:38:08.612Z",
-      "lastUpdate": "2026-08-24T18:38:08.612Z",
+      "lastUpdate": "2026-08-24T18:38:09.955Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
+      "verification": "live-ui-verified",
       "attempts": 1
     },
     {
@@ -82,17 +82,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-24T18:38:13.280Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-24T18:38:13.280Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "host-reliability",
@@ -229,6 +230,10 @@
     {
       "at": "2026-08-24T18:37:26.441Z",
       "message": "verify-host-reliability: tool_call idle 328013ms; last=2026-08-24T18:31:58.428Z"
+    },
+    {
+      "at": "2026-08-24T18:38:09.955Z",
+      "message": "play-nearby: verification self-reported (live-ui-verified)"
     }
   ]
 }
