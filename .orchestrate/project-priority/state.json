@@ -147,17 +147,17 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "error",
+      "status": "pending",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": "2026-08-24T18:17:02.115Z",
+      "startedAt": null,
       "finishedAt": null,
-      "lastUpdate": "2026-08-24T18:17:02.221Z",
-      "note": "spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.",
+      "lastUpdate": "2026-08-24T18:17:49.728Z",
+      "note": "respawned by local-cli (was error; attempts=1)",
       "attempts": 1,
       "slackTs": null,
       "prNumber": null,
-      "failureMode": "unknown",
+      "failureMode": null,
       "verification": null
     },
     {
@@ -192,6 +192,10 @@
     {
       "at": "2026-08-24T18:17:03.826Z",
       "message": "store-testing-prep: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents."
+    },
+    {
+      "at": "2026-08-24T18:17:49.450Z",
+      "message": "p2p-hook: respawned by local-cli (was error)"
     }
   ]
 }
