@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
@@ -13,7 +13,9 @@ const background = "#12061f";
 async function fetchIconBuffer() {
   const response = await fetch(iconSource);
   if (!response.ok) {
-    throw new Error(`Failed to fetch icon from ${iconSource}: ${response.status}`);
+    throw new Error(
+      `Failed to fetch icon from ${iconSource}: ${response.status}`,
+    );
   }
   return Buffer.from(await response.arrayBuffer());
 }
@@ -50,7 +52,7 @@ async function writeSplash(source) {
   return splashPath;
 }
 
-async function writeSplashDark(source) {
+async function writeSplashDark() {
   const splashPath = path.join(resourcesDir, "splash-dark.png");
   await sharp(path.join(resourcesDir, "splash.png")).png().toFile(splashPath);
   return splashPath;
@@ -60,7 +62,7 @@ await mkdir(resourcesDir, { recursive: true });
 const source = await fetchIconBuffer();
 const iconPath = await writeIcon(source);
 const splashPath = await writeSplash(source);
-await writeSplashDark(source);
+await writeSplashDark();
 
 console.log(`Wrote ${iconPath}`);
 console.log(`Wrote ${splashPath}`);
