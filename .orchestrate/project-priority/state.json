@@ -26,7 +26,7 @@
     {
       "name": "verify-p2p-hook",
       "type": "verifier",
-      "branch": "orch/project-priority/verify-p2p-hook",
+      "branch": "orch/project-priority/p2p-hook",
       "startingRef": "orch/project-priority/p2p-hook",
       "dependsOn": [
         "p2p-hook"
@@ -34,12 +34,12 @@
       "agentId": "bc-66cd31f2-13a0-462b-b239-66b796e7f9dc",
       "runId": "run-5c346ffb-656f-4db5-9f3e-825084e08b0d",
       "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-p2p-hook.md",
       "startedAt": "2026-08-24T18:26:27.577Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-24T18:26:31.335Z",
+      "finishedAt": "2026-08-24T18:56:20.665Z",
+      "lastUpdate": "2026-08-24T18:56:20.665Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
