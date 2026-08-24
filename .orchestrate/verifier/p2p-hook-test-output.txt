@@ -1,0 +1,13 @@
+
+> cambio@0.1.0 test /workspace
+> vitest run src/p2p/lan-transport.test.ts src/hooks/useP2PConnection.test.ts src/game/host.test.ts
+
+
+ RUN  v4.1.10 /workspace
+
+
+ Test Files  3 passed (3)
+      Tests  30 passed (30)
+   Start at  18:44:44
+   Duration  520ms (transform 421ms, setup 0ms, import 719ms, tests 144ms, environment 1ms)
+
