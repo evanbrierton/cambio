@@ -15,13 +15,13 @@
       "handoffPath": "handoffs/p2p-hook.md",
       "startedAt": "2026-08-24T18:17:56.041Z",
       "finishedAt": "2026-08-24T18:26:23.135Z",
-      "lastUpdate": "2026-08-24T18:26:23.135Z",
+      "lastUpdate": "2026-08-24T18:26:26.215Z",
       "note": "respawned by local-cli (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": "unit-test-verified"
     },
     {
       "name": "verify-p2p-hook",
@@ -34,17 +34,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-24T18:26:27.577Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-24T18:26:27.577Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "play-nearby",
@@ -205,6 +206,10 @@
     {
       "at": "2026-08-24T18:20:57.160Z",
       "message": "store-testing-prep: verification self-reported (type-check-only)"
+    },
+    {
+      "at": "2026-08-24T18:26:26.215Z",
+      "message": "p2p-hook: verification self-reported (unit-test-verified)"
     }
   ]
 }
