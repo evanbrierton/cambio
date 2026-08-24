@@ -41,12 +41,14 @@
         "Tests pass: pnpm test src/p2p/ src/hooks/useP2PConnection.test.ts src/game/host.test.ts"
       ],
       "verify": "## Setup\npnpm install\n\n## Automated\npnpm test src/p2p/lan-transport.test.ts\npnpm test src/hooks/useP2PConnection.test.ts\npnpm test src/game/host.test.ts\n\n## Manual\n1. Start dev server\n2. Open /play/test?mode=local&host=1&name=Host in two browser tabs (host + guest with endpoint)\n3. Confirm lobby appears for both\n4. Open /play/test?name=Guest (no mode=local) — confirm online path still uses PartySocket\n\n## Gotchas\n- Transport returns null unless mode=local\n- Do not duplicate GameHost logic outside host.ts\n- Freeze connect query like useGameConnection does",
-      "openPR": true
+      "openPR": true,
+      "model": "composer-2-fast"
     },
     {
       "name": "verify-p2p-hook",
       "type": "verifier",
       "verifies": "p2p-hook",
+      "model": "composer-2-fast",
       "scopedGoal": "Verify CAM-23 useP2PConnection implementation meets acceptance criteria and online regression is clean."
     },
     {
@@ -72,12 +74,14 @@
         "Mobile defaults to join with host warning"
       ],
       "verify": "## Automated\npnpm test\n\n## Manual\n1. Homepage shows Play nearby section alongside existing buttons\n2. Host flow navigates to local play with generated code\n3. Join flow accepts code + endpoint\n4. Create room / Find Match / Solo still work unchanged",
-      "openPR": true
+      "openPR": true,
+      "model": "composer-2-fast"
     },
     {
       "name": "verify-play-nearby",
       "type": "verifier",
       "verifies": "play-nearby",
+      "model": "composer-2-fast",
       "scopedGoal": "Verify CAM-24 Play nearby UX: homepage CTA, local routing, online flows untouched."
     },
     {
@@ -105,12 +109,14 @@
         "Online mode unaffected"
       ],
       "verify": "## Automated\npnpm test src/game/host.test.ts\npnpm test src/hooks/useHostReliability.test.ts\n\n## Manual\n1. Host local game, switch tabs — game pauses\n2. Return to tab — game resumes\n3. Verify Wake Lock on supported browser\n4. Online game unaffected",
-      "openPR": true
+      "openPR": true,
+      "model": "composer-2-fast"
     },
     {
       "name": "verify-host-reliability",
       "type": "verifier",
       "verifies": "host-reliability",
+      "model": "composer-2-fast",
       "scopedGoal": "Verify CAM-25 host reliability: Wake Lock, visibility pause, guest UX, online isolation."
     },
     {
@@ -133,12 +139,14 @@
         "Blockers documented if credentials missing"
       ],
       "verify": "## Manual review\n1. apps/native has icons/splash/bundle IDs configured\n2. Upload checklist exists in docs/\n3. Device matrix checklist covers core flows\n4. README updated if steps changed",
-      "openPR": true
+      "openPR": true,
+      "model": "composer-2-fast"
     },
     {
       "name": "verify-store-testing-prep",
       "type": "verifier",
       "verifies": "store-testing-prep",
+      "model": "composer-2-fast",
       "scopedGoal": "Verify CAM-40 store testing prep: assets, checklists, and upload documentation are complete."
     }
   ]
