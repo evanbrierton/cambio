@@ -282,6 +282,11 @@ export class LanHostRelay {
     return resolvedClientId;
   }
 
+  sendServerMessage(clientId: string, message: ServerMessage): void {
+    if (this.closed) return;
+    this.sendToGuest(clientId, { kind: "server", message });
+  }
+
   broadcast(message: ServerMessage): void {
     if (this.closed) return;
     const payload = serializeWireFrame({ kind: "server", message });
