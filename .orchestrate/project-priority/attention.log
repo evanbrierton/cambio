@@ -1,2 +1,15 @@
 [2026-08-24T18:16:54.139Z] p2p-hook: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.
 [2026-08-24T18:17:03.826Z] store-testing-prep: spawn failed after 3 transient sub-attempts: ConfigurationError: [invalid_model] Model 'gpt-5.5' does not match a known variant. Call GET /v1/models to list valid id+params combinations. run `bun cli.ts models --check` to re-probe the catalog against /v1/agents.
+[2026-08-24T18:17:49.450Z] p2p-hook: respawned by local-cli (was error)
+[2026-08-24T18:17:52.096Z] store-testing-prep: respawned by local-cli (was error)
+[2026-08-24T18:20:57.160Z] store-testing-prep: verification self-reported (type-check-only)
+[2026-08-24T18:26:26.215Z] p2p-hook: verification self-reported (unit-test-verified)
+[2026-08-24T18:29:59.267Z] host-reliability: verification self-reported (unit-test-verified)
+[2026-08-24T18:33:34.081Z] verify-p2p-hook: tool_call idle 351187ms; last=2026-08-24T18:27:42.894Z
+[2026-08-24T18:37:26.440Z] verify-host-reliability: SSE idle 328012ms, polled status=running; watchdog still waiting
+[2026-08-24T18:37:26.441Z] verify-host-reliability: tool_call idle 328013ms; last=2026-08-24T18:31:58.428Z
+[2026-08-24T18:38:09.955Z] play-nearby: verification self-reported (live-ui-verified)
+[2026-08-24T18:39:42.589Z] verify-p2p-hook: SSE idle 312053ms, polled status=running; watchdog still waiting
+[2026-08-24T18:44:18.902Z] verify-play-nearby: SSE idle 308026ms, polled status=running; watchdog still waiting
+[2026-08-24T18:44:18.903Z] verify-play-nearby: tool_call idle 308027ms; last=2026-08-24T18:39:10.876Z
+[2026-08-24T18:56:24.454Z] p2p-hook: verification recorded (verifier-failed) by verifier verify-p2p-hook

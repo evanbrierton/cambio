@@ -41,11 +41,11 @@
       "finishedAt": "2026-08-24T18:56:20.665Z",
       "lastUpdate": "2026-08-24T18:56:20.665Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "play-nearby",
@@ -65,11 +65,11 @@
       "finishedAt": "2026-08-24T18:38:08.612Z",
       "lastUpdate": "2026-08-24T18:38:09.955Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": "live-ui-verified",
-      "attempts": 1
+      "verification": "live-ui-verified"
     },
     {
       "name": "verify-play-nearby",
@@ -89,11 +89,11 @@
       "finishedAt": "2026-08-24T19:01:53.170Z",
       "lastUpdate": "2026-08-24T19:01:53.170Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "host-reliability",
@@ -113,11 +113,11 @@
       "finishedAt": "2026-08-24T18:29:58.130Z",
       "lastUpdate": "2026-08-24T18:29:59.267Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": "unit-test-verified",
-      "attempts": 1
+      "verification": "unit-test-verified"
     },
     {
       "name": "verify-host-reliability",
@@ -137,11 +137,11 @@
       "finishedAt": "2026-08-24T18:47:13.985Z",
       "lastUpdate": "2026-08-24T18:47:13.985Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     },
     {
       "name": "store-testing-prep",
@@ -183,11 +183,11 @@
       "finishedAt": "2026-08-24T18:22:24.216Z",
       "lastUpdate": "2026-08-24T18:22:24.216Z",
       "note": null,
+      "attempts": 1,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
-      "attempts": 1
+      "verification": null
     }
   ],
   "attention": [
