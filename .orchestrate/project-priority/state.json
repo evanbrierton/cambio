@@ -110,12 +110,12 @@
       "handoffPath": "handoffs/host-reliability.md",
       "startedAt": "2026-08-24T18:26:34.682Z",
       "finishedAt": "2026-08-24T18:29:58.130Z",
-      "lastUpdate": "2026-08-24T18:29:58.130Z",
+      "lastUpdate": "2026-08-24T18:29:59.267Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null,
+      "verification": "unit-test-verified",
       "attempts": 1
     },
     {
@@ -129,17 +129,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-24T18:30:07.507Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-24T18:30:07.507Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     },
     {
       "name": "store-testing-prep",
@@ -212,6 +213,10 @@
     {
       "at": "2026-08-24T18:26:26.215Z",
       "message": "p2p-hook: verification self-reported (unit-test-verified)"
+    },
+    {
+      "at": "2026-08-24T18:29:59.267Z",
+      "message": "host-reliability: verification self-reported (unit-test-verified)"
     }
   ]
 }
