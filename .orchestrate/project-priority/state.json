@@ -10,14 +10,14 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-24T18:17:56.041Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-24T18:17:47.920Z",
+      "lastUpdate": "2026-08-24T18:17:56.041Z",
       "note": "respawned by local-cli (was error; attempts=1)",
-      "attempts": 1,
+      "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
@@ -196,6 +196,10 @@
     {
       "at": "2026-08-24T18:17:49.450Z",
       "message": "p2p-hook: respawned by local-cli (was error)"
+    },
+    {
+      "at": "2026-08-24T18:17:52.096Z",
+      "message": "store-testing-prep: respawned by local-cli (was error)"
     }
   ]
 }
