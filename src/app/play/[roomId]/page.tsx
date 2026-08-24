@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { use, useEffect, useMemo, useState } from "react";
 import { GameTable } from "@/components/game/GameTable";
 import { SwipeToLeave } from "@/components/SwipeToLeave";
-import type { PlayerView } from "@/game/types";
+import type { ClientMessage, PlayerView } from "@/game/types";
 import { DEFAULT_BOT_COUNT, parseBotDifficulty } from "@/game/types";
 import {
   type MatchOptions,
@@ -12,6 +12,7 @@ import {
   type SoloOptions,
   useGameConnection,
 } from "@/hooks/useGameConnection";
+import { useP2PConnection } from "@/hooks/useP2PConnection";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { appendDebugQueryParam, hasDebugQueryParam } from "@/lib/debug";
 import { shouldFillPlayShellChin } from "@/lib/play-shell-layout";
@@ -20,65 +21,91 @@ import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 /** Delay before showing the connecting indicator so fast failures go straight to error. */
 const CONNECTING_UI_DELAY_MS = 300;
 
+type GameConnectionState = {
+  connected: boolean;
+  view: PlayerView | null;
+  error: string | null;
+  fleetingPeek: ReturnType<typeof useGameConnection>["fleetingPeek"];
+  peekFlash: ReturnType<typeof useGameConnection>["peekFlash"];
+  swapFlash: ReturnType<typeof useGameConnection>["swapFlash"];
+  takeFlash: ReturnType<typeof useGameConnection>["takeFlash"];
+  snapFlash: ReturnType<typeof useGameConnection>["snapFlash"];
+  penaltyFlash: ReturnType<typeof useGameConnection>["penaltyFlash"];
+  cambioFlash: ReturnType<typeof useGameConnection>["cambioFlash"];
+  reshuffleFlash: ReturnType<typeof useGameConnection>["reshuffleFlash"];
+  discardDrawFlash: ReturnType<typeof useGameConnection>["discardDrawFlash"];
+  deckDrawFlash: ReturnType<typeof useGameConnection>["deckDrawFlash"];
+  send: (message: ClientMessage) => void;
+};
+
 function allowsPageScroll(view: PlayerView | null): boolean {
   if (!view) return true;
   return view.isWaiting || view.phase === "lobby" || view.phase === "ended";
 }
 
-export default function PlayPage({
-  params,
-}: {
-  params: Promise<{ roomId: string }>;
-}) {
-  const { roomId } = use(params);
+type PlaySessionProps = {
+  roomId: string;
+  name: string;
+  sessionMode: SessionMode;
+  soloOptions?: SoloOptions;
+  matchOptions?: MatchOptions;
+  debugEnabled: boolean;
+  isNavFresh: boolean;
+  isLocalMode: boolean;
+  isHost: boolean;
+  endpoint: string | null;
+  isMatchmade: boolean;
+  isSolo: boolean;
+  matchTargetSize: number;
+  matchFillWithBots: boolean;
+  soloBotCount: number;
+  soloDifficulty: ReturnType<typeof parseBotDifficulty>;
+};
+
+function OnlinePlaySession(props: PlaySessionProps) {
+  const connection = useGameConnection(
+    props.roomId,
+    props.name,
+    props.sessionMode,
+    props.soloOptions,
+    props.debugEnabled,
+    props.matchOptions,
+  );
+  return <PlaySessionView {...props} connection={connection} />;
+}
+
+function LocalPlaySession(props: PlaySessionProps) {
+  const connection = useP2PConnection(props.roomId, props.name, {
+    enabled: true,
+    role: props.isHost ? "host" : "guest",
+    endpoint: props.endpoint,
+    sessionMode: props.sessionMode,
+    soloOptions: props.soloOptions,
+    debugEnabled: props.debugEnabled,
+    matchOptions: props.matchOptions,
+  });
+  return <PlaySessionView {...props} connection={connection} />;
+}
+
+function PlaySessionView({
+  roomId,
+  name,
+  isNavFresh,
+  isLocalMode,
+  endpoint,
+  isMatchmade,
+  isSolo,
+  matchTargetSize,
+  matchFillWithBots,
+  soloBotCount,
+  soloDifficulty,
+  debugEnabled,
+  connection,
+}: PlaySessionProps & { connection: GameConnectionState }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const voice = useThemeVoice();
-  useRehydrateUiPrefs();
   const { playerGridEnabled } = useUiPrefs();
-  const name = searchParams.get("name")?.trim() ?? "";
-  const debugEnabled = hasDebugQueryParam(searchParams);
-  const isNavFresh = searchParams.has("host") || searchParams.has("join");
-  const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
-  const isSolo = searchParams.get("solo") === "1";
-  const isMatchmade = searchParams.get("match") === "1";
-  const soloBotCount =
-    Number.parseInt(
-      searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
-      10,
-    ) || DEFAULT_BOT_COUNT;
-  const soloDifficulty = parseBotDifficulty(searchParams.get("difficulty"));
-  const matchTargetSize =
-    Number.parseInt(searchParams.get("targetSize") ?? "4", 10) || 4;
-  const matchFillWithBots = searchParams.get("fillWithBots") !== "0";
-
-  const soloOptions: SoloOptions | undefined = useMemo(
-    () =>
-      isSolo && isNavFresh
-        ? {
-            botCount: soloBotCount,
-            difficulty: soloDifficulty,
-          }
-        : undefined,
-    [isSolo, isNavFresh, soloBotCount, soloDifficulty],
-  );
-  const matchOptions: MatchOptions | undefined = useMemo(
-    () =>
-      isMatchmade
-        ? {
-            targetSize: matchTargetSize,
-            fillWithBots: matchFillWithBots,
-          }
-        : undefined,
-    [isMatchmade, matchTargetSize, matchFillWithBots],
-  );
-
-  useEffect(() => {
-    if (isNavFresh && !name) {
-      router.replace("/");
-    }
-  }, [isNavFresh, name, router]);
-
   const {
     connected,
     view,
@@ -94,23 +121,17 @@ export default function PlayPage({
     discardDrawFlash,
     deckDrawFlash,
     send,
-  } = useGameConnection(
-    roomId,
-    name,
-    sessionMode,
-    soloOptions,
-    debugEnabled,
-    matchOptions,
-  );
+  } = connection;
 
   const [showConnecting, setShowConnecting] = useState(false);
 
   useEffect(() => {
     if (!view || !isNavFresh) return;
     const params = new URLSearchParams({ name });
-    // Keep host/join so sessionMode does not flip and reconnect the socket.
+    if (isLocalMode) params.set("mode", "local");
     if (searchParams.has("host")) params.set("host", "1");
     if (searchParams.has("join")) params.set("join", "1");
+    if (isLocalMode && endpoint) params.set("endpoint", endpoint);
     if (isMatchmade) {
       params.set("match", "1");
       params.set("targetSize", String(matchTargetSize));
@@ -128,6 +149,8 @@ export default function PlayPage({
     router.replace(`/play/${roomId}?${next}`);
   }, [
     debugEnabled,
+    endpoint,
+    isLocalMode,
     view,
     isNavFresh,
     isMatchmade,
@@ -223,4 +246,86 @@ export default function PlayPage({
       </div>
     </SwipeToLeave>
   );
+}
+
+export default function PlayPage({
+  params,
+}: {
+  params: Promise<{ roomId: string }>;
+}) {
+  const { roomId } = use(params);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  useRehydrateUiPrefs();
+  const name = searchParams.get("name")?.trim() ?? "";
+  const debugEnabled = hasDebugQueryParam(searchParams);
+  const isLocalMode = searchParams.get("mode") === "local";
+  const isHost = searchParams.get("host") === "1";
+  const endpoint = searchParams.get("endpoint");
+  const isNavFresh =
+    searchParams.has("host") || searchParams.has("join") || isLocalMode;
+  const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
+  const isSolo = searchParams.get("solo") === "1";
+  const isMatchmade = searchParams.get("match") === "1";
+  const soloBotCount =
+    Number.parseInt(
+      searchParams.get("bots") ?? String(DEFAULT_BOT_COUNT),
+      10,
+    ) || DEFAULT_BOT_COUNT;
+  const soloDifficulty = parseBotDifficulty(searchParams.get("difficulty"));
+  const matchTargetSize =
+    Number.parseInt(searchParams.get("targetSize") ?? "4", 10) || 4;
+  const matchFillWithBots = searchParams.get("fillWithBots") !== "0";
+
+  const soloOptions: SoloOptions | undefined = useMemo(
+    () =>
+      isSolo && isNavFresh
+        ? {
+            botCount: soloBotCount,
+            difficulty: soloDifficulty,
+          }
+        : undefined,
+    [isSolo, isNavFresh, soloBotCount, soloDifficulty],
+  );
+  const matchOptions: MatchOptions | undefined = useMemo(
+    () =>
+      isMatchmade
+        ? {
+            targetSize: matchTargetSize,
+            fillWithBots: matchFillWithBots,
+          }
+        : undefined,
+    [isMatchmade, matchTargetSize, matchFillWithBots],
+  );
+
+  useEffect(() => {
+    if (isNavFresh && !name) {
+      router.replace("/");
+    }
+  }, [isNavFresh, name, router]);
+
+  const sessionProps: PlaySessionProps = {
+    roomId,
+    name,
+    sessionMode,
+    soloOptions,
+    matchOptions,
+    debugEnabled,
+    isNavFresh,
+    isLocalMode,
+    isHost,
+    endpoint,
+    isMatchmade,
+    isSolo,
+    matchTargetSize,
+    matchFillWithBots,
+    soloBotCount,
+    soloDifficulty,
+  };
+
+  if (isLocalMode) {
+    return <LocalPlaySession {...sessionProps} />;
+  }
+
+  return <OnlinePlaySession {...sessionProps} />;
 }
