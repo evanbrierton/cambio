@@ -34,6 +34,7 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PixelCard } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
@@ -98,7 +99,7 @@ import { useTutorialStore } from "@/store/tutorial-prefs";
 import { useRehydrateUiPrefs, useUiPrefs } from "@/store/ui-prefs";
 
 type GameTableProps = {
-  view: PlayerView;
+  view: PlayerView & { hostPaused?: boolean };
   connected: boolean;
   error: string | null;
   fleetingPeek: FleetingPeek | null;
@@ -118,6 +119,11 @@ type SelectedCard = { playerId: string; slot: number };
 
 const LOBBY_JOIN_TOAST_MS = 3000;
 const CHROME_ICON_CLASS = "size-3.5 shrink-0";
+const LOCAL_HOST_MOBILE_MEDIA_QUERY = "(max-width: 1023px)";
+const LOCAL_HOST_DISCONNECT_ERRORS = new Set([
+  "Host disconnected.",
+  "Lost connection to host.",
+]);
 const CHROME_ICON_BTN =
   "chip-btn chip-btn-sm inline-flex items-center justify-center px-1.5 border-theme-muted text-theme hover:border-accent transition-colors";
 
@@ -784,6 +790,11 @@ export function GameTable({
   send: dispatch,
 }: GameTableProps) {
   useRehydrateUiPrefs();
+  const searchParams = useSearchParams();
+  const isLocalMode = searchParams.get("mode") === "local";
+  const isLocalHost = isLocalMode && searchParams.get("host") === "1";
+  const isLocalGuest = isLocalMode && searchParams.get("host") !== "1";
+  const [isMobileHost, setIsMobileHost] = useState(false);
   const voice = useThemeVoice();
   const {
     soundEnabled,
@@ -869,6 +880,20 @@ export function GameTable({
   const cambioHapticKeyRef = useRef<string | null>(null);
   const tableDeckRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (!isLocalHost) {
+      setIsMobileHost(false);
+      return;
+    }
+    const mediaQuery = window.matchMedia(LOCAL_HOST_MOBILE_MEDIA_QUERY);
+    const update = () => {
+      setIsMobileHost(mediaQuery.matches);
+    };
+    update();
+    mediaQuery.addEventListener("change", update);
+    return () => mediaQuery.removeEventListener("change", update);
+  }, [isLocalHost]);
+
   useGameSounds(
     view,
     error,
@@ -950,8 +975,51 @@ export function GameTable({
   const gameToasts = useMemo((): GameToastItem[] => {
     const items: GameToastItem[] = [];
 
+    if (
+      isLocalHost &&
+      isMobileHost &&
+      view.phase !== "lobby" &&
+      view.phase !== "ended"
+    ) {
+      items.push({
+        id: "local-host-mobile-warning",
+        message:
+          "Keep this tab open while hosting. A laptop or tablet works best.",
+        tone: "info",
+      });
+    }
+
+    if (view.hostPaused && isLocalGuest) {
+      items.push({
+        id: "host-paused",
+        message: "Game paused — host left the app",
+        tone: "info",
+      });
+    }
+
+    const showHostDisconnectRetry =
+      isLocalGuest &&
+      Boolean(error) &&
+      LOCAL_HOST_DISCONNECT_ERRORS.has(error);
+
     if (error) {
-      items.push({ id: "error", message: error, tone: "error" });
+      items.push({
+        id: showHostDisconnectRetry ? "host-disconnect" : "error",
+        message: error,
+        tone: "error",
+        action: showHostDisconnectRetry ? (
+          <button
+            type="button"
+            onClick={() => {
+              hapticClick("selection");
+              window.location.reload();
+            }}
+            className="chip-btn text-[8px] px-2 py-1 border-accent text-accent hover:border-accent-alt transition-colors"
+          >
+            Retry
+          </button>
+        ) : undefined,
+      });
     }
 
     if (eventNotificationsEnabled) {
@@ -1051,11 +1119,15 @@ export function GameTable({
     discardDrawFlash,
     error,
     eventNotificationsEnabled,
+    isLocalGuest,
+    isLocalHost,
+    isMobileHost,
     lobbyJoinToast,
     peekFlash,
     penaltyFlash,
     snapFlash,
     swapFlash,
+    view.hostPaused,
     view.phase,
     view.players,
     voice,

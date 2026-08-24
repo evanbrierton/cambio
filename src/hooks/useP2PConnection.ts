@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { ClientMessage, PlayerView } from "@/game/types";
 import type { CambioFlash } from "@/hooks/useServerMessages";
 import { useServerMessages } from "@/hooks/useServerMessages";
+import { useHostReliability } from "@/hooks/useHostReliability";
 import {
   createDevBridgeWebSocketFactory,
   registerDevBridgeHost,
@@ -181,6 +182,22 @@ export function useP2PConnection(
     },
     onCambioFlashChange: (flash) => {
       cambioFlashRef.current = flash;
+    },
+  });
+
+  const gameActive =
+    messageState.view != null &&
+    messageState.view.phase !== "lobby" &&
+    messageState.view.phase !== "ended";
+
+  useHostReliability({
+    enabled: role === "host",
+    gameActive,
+    onVisibilityHidden: () => {
+      void hostSessionRef.current?.gameHost.pauseForHostVisibility();
+    },
+    onVisibilityVisible: () => {
+      void hostSessionRef.current?.gameHost.resumeFromHostVisibility();
     },
   });
 

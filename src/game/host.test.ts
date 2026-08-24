@@ -649,4 +649,87 @@ describe("GameHost", () => {
     expect(second.error).toBe("That name is already taken.");
     expect(host.getState()?.players).toHaveLength(1);
   });
+
+  it("pauses snap timers and broadcasts hostPaused when host tab is hidden", async () => {
+    const snapEndsAt = Date.now() + SNAP_WINDOW_MS;
+    const onSnapWindowSchedule = vi.fn();
+    const host = new GameHost({
+      roomId: "pause-room",
+      onSnapWindowSchedule,
+    });
+    const state = createRoom("pause-room", "Alice", "alice");
+    state.phase = "snap_window";
+    state.snapWindowEndsAt = snapEndsAt;
+    host.setState(state);
+
+    const { peerId, peer, sent } = mockPeer("alice");
+    host.addPeer(peerId, peer);
+
+    await host.pauseForHostVisibility();
+
+    expect(host.isHostPaused()).toBe(true);
+    expect(onSnapWindowSchedule).toHaveBeenCalledWith(null);
+    const viewMessage = sent.find((message) => message.type === "state");
+    if (viewMessage?.type === "state") {
+      expect((viewMessage.view as { hostPaused?: boolean }).hostPaused).toBe(
+        true,
+      );
+    }
+  });
+
+  it("extends snapWindowEndsAt and resumes timers when host tab is visible again", async () => {
+    const onSnapWindowSchedule = vi.fn();
+    const host = new GameHost({
+      roomId: "resume-room",
+      onSnapWindowSchedule,
+    });
+    const state = createRoom("resume-room", "Alice", "alice");
+    state.phase = "snap_window";
+    state.snapWindowEndsAt = Date.now() + SNAP_WINDOW_MS;
+    host.setState(state);
+
+    await host.pauseForHostVisibility();
+    const pausedEndsAt = host.getState()?.snapWindowEndsAt ?? 0;
+    onSnapWindowSchedule.mockClear();
+
+    vi.advanceTimersByTime(5_000);
+    await host.resumeFromHostVisibility();
+
+    expect(host.isHostPaused()).toBe(false);
+    expect(host.getState()?.snapWindowEndsAt).toBeGreaterThan(pausedEndsAt);
+    expect(onSnapWindowSchedule).toHaveBeenCalledWith(
+      host.getState()?.snapWindowEndsAt ?? null,
+    );
+  });
+
+  it("rejects messages while the host session is paused", async () => {
+    const { host } = createTestHost();
+    await host.handleConnect({
+      queryPlayerId: null,
+      name: "Alice",
+      isSolo: false,
+      botCount: 0,
+      difficulty: "easy",
+    });
+    const playerId = host.getState()?.hostId ?? "";
+    const state = host.getState();
+    if (state) {
+      handleMessage(state, playerId, { type: "start_game" });
+      state.phase = "playing";
+      host.setState(state);
+    }
+
+    await host.pauseForHostVisibility();
+
+    const sendError = vi.fn();
+    await host.dispatchMessage(
+      playerId,
+      { type: "draw", source: "deck" },
+      sendError,
+    );
+
+    expect(sendError).toHaveBeenCalledWith(
+      "Game is paused while the host is away.",
+    );
+  });
 });

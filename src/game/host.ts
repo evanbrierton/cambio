@@ -38,6 +38,7 @@ import type {
   ClientMessage,
   GameState,
   PeekFlash,
+  PlayerView,
   ServerMessage,
   SnapFlash,
   SwapFlashSlot,
@@ -140,8 +141,48 @@ export class GameHost {
   private matchEmptyLobbyTimer: ReturnType<typeof setTimeout> | null = null;
   private humanSnapStreak = 0;
   private lastMoveReactionAt = 0;
+  hostPaused = false;
+  private hostPausedAt: number | null = null;
 
   constructor(private readonly config: GameHostConfig) {}
+
+  isHostPaused(): boolean {
+    return this.hostPaused;
+  }
+
+  async pauseForHostVisibility(): Promise<void> {
+    if (this.hostPaused || !this.state) return;
+    if (this.state.phase === "lobby" || this.state.phase === "ended") return;
+
+    this.hostPaused = true;
+    this.hostPausedAt = Date.now();
+    this.clearSnapWindowTimer();
+    await this.config.onSnapWindowSchedule?.(null);
+    await this.persist();
+    this.broadcastState();
+  }
+
+  async resumeFromHostVisibility(): Promise<void> {
+    if (!this.hostPaused || !this.state) return;
+
+    const pausedMs =
+      this.hostPausedAt != null ? Date.now() - this.hostPausedAt : 0;
+    this.hostPaused = false;
+    this.hostPausedAt = null;
+
+    if (
+      this.state.phase === "snap_window" &&
+      this.state.snapWindowEndsAt != null &&
+      pausedMs > 0
+    ) {
+      this.state.snapWindowEndsAt += pausedMs;
+    }
+
+    await this.persist();
+    await this.syncSnapWindow();
+    this.broadcastState();
+    this.scheduleBotTurns();
+  }
 
   getState(): GameState | null {
     return this.state;
@@ -592,6 +633,11 @@ export class GameHost {
   ) {
     if (!this.state) return;
 
+    if (this.hostPaused) {
+      sendError?.("Game is paused while the host is away.");
+      return;
+    }
+
     const actor = findPlayer(this.state, playerId);
     const isHuman = actor !== undefined && !actor.isBot;
     const snapshot =
@@ -752,8 +798,11 @@ export class GameHost {
     if (!this.state) return;
     for (const peer of this.peers.values()) {
       if (!peer.connected) continue;
-      const view = buildPlayerView(this.state, peer.playerId);
-      peer.send({ type: "state", view });
+      const baseView = buildPlayerView(this.state, peer.playerId);
+      const view = this.hostPaused
+        ? { ...baseView, hostPaused: true }
+        : baseView;
+      peer.send({ type: "state", view: view as PlayerView });
     }
   }
 
