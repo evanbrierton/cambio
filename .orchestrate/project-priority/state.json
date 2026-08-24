@@ -15,13 +15,13 @@
       "handoffPath": "handoffs/p2p-hook.md",
       "startedAt": "2026-08-24T18:17:56.041Z",
       "finishedAt": "2026-08-24T18:26:23.135Z",
-      "lastUpdate": "2026-08-24T18:26:26.215Z",
+      "lastUpdate": "2026-08-24T18:56:24.454Z",
       "note": "respawned by local-cli (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": "unit-test-verified"
+      "verification": "verifier-failed"
     },
     {
       "name": "verify-p2p-hook",
@@ -74,7 +74,7 @@
     {
       "name": "verify-play-nearby",
       "type": "verifier",
-      "branch": "orch/project-priority/verify-play-nearby",
+      "branch": "orch/project-priority/play-nearby",
       "startingRef": "orch/project-priority/play-nearby",
       "dependsOn": [
         "play-nearby"
@@ -82,12 +82,12 @@
       "agentId": "bc-c722a0c8-6ff7-4dd7-a668-46f8f06bc17d",
       "runId": "run-51b01e47-5263-47eb-a131-4bbd4b483030",
       "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-play-nearby.md",
       "startedAt": "2026-08-24T18:38:13.280Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-24T18:38:18.025Z",
+      "finishedAt": "2026-08-24T19:01:53.170Z",
+      "lastUpdate": "2026-08-24T19:01:53.170Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
@@ -246,6 +246,10 @@
     {
       "at": "2026-08-24T18:44:18.903Z",
       "message": "verify-play-nearby: tool_call idle 308027ms; last=2026-08-24T18:39:10.876Z"
+    },
+    {
+      "at": "2026-08-24T18:56:24.454Z",
+      "message": "p2p-hook: verification recorded (verifier-failed) by verifier verify-p2p-hook"
     }
   ]
 }
