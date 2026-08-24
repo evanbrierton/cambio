@@ -58,12 +58,12 @@
       "agentId": "bc-587a1791-0312-43f7-ad52-07218c6c32d2",
       "runId": "run-cc372d1f-cc31-4393-99cb-07c290e12bb4",
       "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/play-nearby.md",
       "startedAt": "2026-08-24T18:26:31.444Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-24T18:26:34.564Z",
+      "finishedAt": "2026-08-24T18:38:08.612Z",
+      "lastUpdate": "2026-08-24T18:38:08.612Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
@@ -126,15 +126,15 @@
       "dependsOn": [
         "host-reliability"
       ],
-      "agentId": null,
-      "runId": null,
-      "parentAgentId": null,
+      "agentId": "bc-bb80ed8e-4d21-425e-9709-824a828d1c93",
+      "runId": "run-81aee397-16c8-4a56-87a5-b20b26e8bd2a",
+      "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
       "status": "running",
       "resultStatus": null,
       "handoffPath": null,
       "startedAt": "2026-08-24T18:30:07.507Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-24T18:30:07.507Z",
+      "lastUpdate": "2026-08-24T18:30:23.114Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
@@ -217,6 +217,18 @@
     {
       "at": "2026-08-24T18:29:59.267Z",
       "message": "host-reliability: verification self-reported (unit-test-verified)"
+    },
+    {
+      "at": "2026-08-24T18:33:34.081Z",
+      "message": "verify-p2p-hook: tool_call idle 351187ms; last=2026-08-24T18:27:42.894Z"
+    },
+    {
+      "at": "2026-08-24T18:37:26.440Z",
+      "message": "verify-host-reliability: SSE idle 328012ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-24T18:37:26.441Z",
+      "message": "verify-host-reliability: tool_call idle 328013ms; last=2026-08-24T18:31:58.428Z"
     }
   ]
 }
