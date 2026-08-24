@@ -152,13 +152,13 @@
       "handoffPath": "handoffs/store-testing-prep.md",
       "startedAt": "2026-08-24T18:18:00.307Z",
       "finishedAt": "2026-08-24T18:20:54.829Z",
-      "lastUpdate": "2026-08-24T18:20:54.829Z",
+      "lastUpdate": "2026-08-24T18:20:57.160Z",
       "note": "respawned by local-cli (was error; attempts=1)",
       "attempts": 2,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": "type-check-only"
     },
     {
       "name": "verify-store-testing-prep",
@@ -171,17 +171,18 @@
       "agentId": null,
       "runId": null,
       "parentAgentId": null,
-      "status": "pending",
+      "status": "running",
       "resultStatus": null,
       "handoffPath": null,
-      "startedAt": null,
+      "startedAt": "2026-08-24T18:21:03.929Z",
       "finishedAt": null,
-      "lastUpdate": null,
+      "lastUpdate": "2026-08-24T18:21:03.929Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
       "failureMode": null,
-      "verification": null
+      "verification": null,
+      "attempts": 1
     }
   ],
   "attention": [
@@ -200,6 +201,10 @@
     {
       "at": "2026-08-24T18:17:52.096Z",
       "message": "store-testing-prep: respawned by local-cli (was error)"
+    },
+    {
+      "at": "2026-08-24T18:20:57.160Z",
+      "message": "store-testing-prep: verification self-reported (type-check-only)"
     }
   ]
 }
