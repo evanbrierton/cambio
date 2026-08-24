@@ -34,11 +34,13 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PixelCard } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
 import { GameOverScreen } from "@/components/game/GameOverScreen";
+import { LocalHostPanel } from "@/components/game/LocalHostPanel";
 import { LobbyPlayers } from "@/components/game/LobbyPlayers";
 import { PlayerGridStage } from "@/components/game/PlayerGridStage";
 import { PlayerScrollStage } from "@/components/game/PlayerScrollStage";
@@ -81,6 +83,7 @@ import { useSeatHandFit } from "@/hooks/useSeatHandFit";
 import { useThemeVoice } from "@/hooks/useThemeVoice";
 import { useTutorial } from "@/hooks/useTutorial";
 import { copyToClipboard } from "@/lib/clipboard";
+import { DEFAULT_LAN_PORT } from "@/p2p/types";
 import {
   COACH_HINT_IDS,
   coachHintForClientMessage,
@@ -784,7 +787,19 @@ export function GameTable({
   send: dispatch,
 }: GameTableProps) {
   useRehydrateUiPrefs();
+  const searchParams = useSearchParams();
   const voice = useThemeVoice();
+  const isLocalMode = searchParams.get("mode") === "local";
+  const isLocalHost = searchParams.get("host") === "1";
+  const localEndpoint = searchParams.get("endpoint");
+  const localHostEndpoint = useMemo(() => {
+    if (!isLocalMode) return null;
+    if (localEndpoint) return localEndpoint;
+    if (isLocalHost && typeof window !== "undefined") {
+      return `${window.location.hostname}:${DEFAULT_LAN_PORT}`;
+    }
+    return null;
+  }, [isLocalHost, isLocalMode, localEndpoint]);
   const {
     soundEnabled,
     toggleSound,
@@ -2161,7 +2176,18 @@ export function GameTable({
             )}
 
             {view.phase === "lobby" ? (
-              <LobbyPlayers view={view} voice={voice} send={send} />
+              <div className="flex flex-col gap-3 min-w-0">
+                {isLocalMode ? (
+                  <LocalHostPanel
+                    roomId={view.roomId}
+                    isHost={isLocalHost}
+                    endpoint={localHostEndpoint}
+                    error={error}
+                    connected={connected}
+                  />
+                ) : null}
+                <LobbyPlayers view={view} voice={voice} send={send} />
+              </div>
             ) : (
               <div className="players-with-action-overlay relative flex flex-1 flex-col gap-1.5 sm:gap-2 min-h-0 min-w-0 overflow-hidden">
                 <p className="shrink-0 font-display text-[8px] text-theme-muted text-center tracking-widest">
