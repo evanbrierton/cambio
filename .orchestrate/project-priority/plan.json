@@ -1,0 +1,145 @@
+{
+  "$schema": "/home/ubuntu/.cursor/plugins/cache/cursor-public/9333/46125561306434d8a1d7745d540d8932ab0cd2a2/skills/orchestrate/schemas/plan.schema.json",
+  "goal": "Ship remaining Cambio work per the Project priority order doc: finish Offline P2P Phase 1 (CAM-23 useP2PConnection hook → CAM-24 Play nearby CTA → CAM-25 host reliability) without duplicating GameHost, then Capacitor store testing prep (CAM-40). Online Cloudflare mode must stay unchanged. Reference: https://linear.app/ebrierton-cambio/document/project-priority-order-67a9122bb396",
+  "summary": "Finish Offline LAN Phase 1 (hook + Play nearby), then Capacitor store testing",
+  "rootSlug": "project-priority",
+  "baseBranch": "main",
+  "prBase": "main",
+  "repoUrl": "https://github.com/evanbrierton/cambio",
+  "selfAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
+  "dispatcher": {
+    "firstName": "Evan"
+  },
+  "acceptanceCriteria": [
+    "CAM-23: useP2PConnection hook ships with host/guest LAN play over GameHost",
+    "CAM-24: Play nearby CTA on homepage with local lobby UX",
+    "CAM-25: Wake Lock + visibility pause for local host",
+    "CAM-40: Store testing assets and upload checklist prepared",
+    "Online PartySocket flow regression-free"
+  ],
+  "tasks": [
+    {
+      "name": "p2p-hook",
+      "type": "worker",
+      "scopedGoal": "Implement CAM-23: Add `useP2PConnection` hook. Read bootstrap docs at `.orchestrate/project-priority/bootstrap/phase1-architecture.md` and `.orchestrate/project-priority/bootstrap/issue-specs.md`.\n\nCreate `src/hooks/useP2PConnection.ts` mirroring `useGameConnection` return shape, using `useServerMessages`, `createLanHostRelay`, and `createLanGuestTransport` from `src/p2p/lan-transport.ts`. Host mode instantiates `GameHost` and wires LAN peers as `HostPeer`. Guest mode connects via endpoint param.\n\nUpdate `src/app/play/[roomId]/page.tsx` to use `useP2PConnection` when `mode=local`, passing `host=1`/`join=1`/`endpoint` query params. Keep online mode (`mode` absent or `mode=online`) on `useGameConnection` unchanged.\n\nAdd unit tests. Mark CAM-23 Done in Linear when complete.",
+      "pathsAllowed": [
+        "src/hooks/useP2PConnection.ts",
+        "src/hooks/useP2PConnection.test.ts",
+        "src/app/play/**",
+        "src/p2p/**",
+        "src/game/host.ts"
+      ],
+      "pathsForbidden": [
+        "src/app/page.tsx",
+        "party/**",
+        "apps/native/**"
+      ],
+      "acceptance": [
+        "useP2PConnection return type matches useGameConnection",
+        "mode=local host/guest lobby works over LAN transport",
+        "Online play flow unchanged",
+        "Tests pass: pnpm test src/p2p/ src/hooks/useP2PConnection.test.ts src/game/host.test.ts"
+      ],
+      "verify": "## Setup\npnpm install\n\n## Automated\npnpm test src/p2p/lan-transport.test.ts\npnpm test src/hooks/useP2PConnection.test.ts\npnpm test src/game/host.test.ts\n\n## Manual\n1. Start dev server\n2. Open /play/test?mode=local&host=1&name=Host in two browser tabs (host + guest with endpoint)\n3. Confirm lobby appears for both\n4. Open /play/test?name=Guest (no mode=local) — confirm online path still uses PartySocket\n\n## Gotchas\n- Transport returns null unless mode=local\n- Do not duplicate GameHost logic outside host.ts\n- Freeze connect query like useGameConnection does",
+      "openPR": true
+    },
+    {
+      "name": "verify-p2p-hook",
+      "type": "verifier",
+      "verifies": "p2p-hook",
+      "scopedGoal": "Verify CAM-23 useP2PConnection implementation meets acceptance criteria and online regression is clean."
+    },
+    {
+      "name": "play-nearby",
+      "type": "worker",
+      "scopedGoal": "Implement CAM-24: Add Play nearby lobby flow and local session routing. Read bootstrap docs at `.orchestrate/project-priority/bootstrap/`.\n\nAdd **Play nearby** section to `src/app/page.tsx`:\n- Host: generate room code, navigate to `/play/{code}?mode=local&host=1&name=...`\n- Join: enter room code + host endpoint (IP:port), navigate to `/play/{code}?mode=local&join=1&endpoint=...&name=...`\n\nAdd host lobby UI (new `LocalHostPanel.tsx` or extend GameTable):\n- Show room code, host IP + port, copy-to-clipboard\n- Warning: keep device awake; recommend laptop/tablet as host on mobile\n- Guest error states for unreachable host\n\nExisting Create/Join/Solo/Find Match buttons unchanged. Mark CAM-24 Done in Linear.",
+      "dependsOn": ["p2p-hook"],
+      "pathsAllowed": [
+        "src/app/page.tsx",
+        "src/components/game/**",
+        "src/hooks/**",
+        "src/lib/clipboard.ts"
+      ],
+      "pathsForbidden": [
+        "party/**",
+        "src/p2p/lan-transport.ts",
+        "apps/native/**"
+      ],
+      "acceptance": [
+        "Play nearby host and join flows work from homepage",
+        "Host lobby shows room code and endpoint with copy",
+        "Online homepage buttons unchanged",
+        "Mobile defaults to join with host warning"
+      ],
+      "verify": "## Automated\npnpm test\n\n## Manual\n1. Homepage shows Play nearby section alongside existing buttons\n2. Host flow navigates to local play with generated code\n3. Join flow accepts code + endpoint\n4. Create room / Find Match / Solo still work unchanged",
+      "openPR": true
+    },
+    {
+      "name": "verify-play-nearby",
+      "type": "verifier",
+      "verifies": "play-nearby",
+      "scopedGoal": "Verify CAM-24 Play nearby UX: homepage CTA, local routing, online flows untouched."
+    },
+    {
+      "name": "host-reliability",
+      "type": "worker",
+      "scopedGoal": "Implement CAM-25: Host reliability for local mode. Read bootstrap docs at `.orchestrate/project-priority/bootstrap/`.\n\nCreate `src/hooks/useHostReliability.ts`:\n- Wake Lock while hosting local game (re-request on visibilitychange)\n- Release on game end / leave\n\nAdd visibility pause to `GameHost`:\n- Tab hidden: pause snap timers, broadcast paused state\n- Tab visible: resume, extend snapWindowEndsAt by hidden duration\n- Guests see paused banner\n\nHost UI warnings on mobile; guest disconnect UX. Only active in mode=local host role. Mark CAM-25 Done in Linear.",
+      "dependsOn": ["p2p-hook"],
+      "pathsAllowed": [
+        "src/hooks/useHostReliability.ts",
+        "src/hooks/useHostReliability.test.ts",
+        "src/game/host.ts",
+        "src/game/host.test.ts",
+        "src/components/game/**",
+        "src/hooks/useP2PConnection.ts"
+      ],
+      "pathsForbidden": [
+        "src/app/page.tsx",
+        "party/**",
+        "apps/native/**"
+      ],
+      "acceptance": [
+        "Wake Lock requested during local host session",
+        "Visibility pause/resume works for snap timers",
+        "Guests see paused and disconnected states",
+        "Online mode unaffected"
+      ],
+      "verify": "## Automated\npnpm test src/game/host.test.ts\npnpm test src/hooks/useHostReliability.test.ts\n\n## Manual\n1. Host local game, switch tabs — game pauses\n2. Return to tab — game resumes\n3. Verify Wake Lock on supported browser\n4. Online game unaffected",
+      "openPR": true
+    },
+    {
+      "name": "verify-host-reliability",
+      "type": "verifier",
+      "verifies": "host-reliability",
+      "scopedGoal": "Verify CAM-25 host reliability: Wake Lock, visibility pause, guest UX, online isolation."
+    },
+    {
+      "name": "store-testing-prep",
+      "type": "worker",
+      "scopedGoal": "Implement CAM-40 prep: Capacitor TestFlight and Play Console internal testing readiness. Read `apps/native/README.md` and bootstrap issue spec.\n\nPrepare in repo:\n- Verify/update app icons, splash, display name, bundle IDs in apps/native\n- Draft privacy policy / store metadata templates\n- Document iOS signing + TestFlight upload steps\n- Document Android signing + Play internal track upload steps\n- Create device matrix smoke checklist (create/join/solo/reconnect/background)\n- Note WebView limitations for future Expo decision\n\nIf store credentials unavailable, document operator actions needed. Mark CAM-40 progress in Linear.",
+      "pathsAllowed": [
+        "apps/native/**",
+        "docs/**"
+      ],
+      "pathsForbidden": [
+        "src/**",
+        "party/**",
+        "packages/**"
+      ],
+      "acceptance": [
+        "Store asset checklist complete",
+        "Upload runbooks documented for iOS and Android",
+        "Device smoke checklist committed",
+        "Blockers documented if credentials missing"
+      ],
+      "verify": "## Manual review\n1. apps/native has icons/splash/bundle IDs configured\n2. Upload checklist exists in docs/\n3. Device matrix checklist covers core flows\n4. README updated if steps changed",
+      "openPR": true
+    },
+    {
+      "name": "verify-store-testing-prep",
+      "type": "verifier",
+      "verifies": "store-testing-prep",
+      "scopedGoal": "Verify CAM-40 store testing prep: assets, checklists, and upload documentation are complete."
+    }
+  ]
+}
