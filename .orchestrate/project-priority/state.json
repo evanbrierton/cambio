@@ -79,15 +79,15 @@
       "dependsOn": [
         "play-nearby"
       ],
-      "agentId": null,
-      "runId": null,
-      "parentAgentId": null,
+      "agentId": "bc-c722a0c8-6ff7-4dd7-a668-46f8f06bc17d",
+      "runId": "run-51b01e47-5263-47eb-a131-4bbd4b483030",
+      "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
       "status": "running",
       "resultStatus": null,
       "handoffPath": null,
       "startedAt": "2026-08-24T18:38:13.280Z",
       "finishedAt": null,
-      "lastUpdate": "2026-08-24T18:38:13.280Z",
+      "lastUpdate": "2026-08-24T18:38:18.025Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
@@ -122,7 +122,7 @@
     {
       "name": "verify-host-reliability",
       "type": "verifier",
-      "branch": "orch/project-priority/verify-host-reliability",
+      "branch": "orch/project-priority/host-reliability",
       "startingRef": "orch/project-priority/host-reliability",
       "dependsOn": [
         "host-reliability"
@@ -130,12 +130,12 @@
       "agentId": "bc-bb80ed8e-4d21-425e-9709-824a828d1c93",
       "runId": "run-81aee397-16c8-4a56-87a5-b20b26e8bd2a",
       "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
-      "status": "running",
-      "resultStatus": null,
-      "handoffPath": null,
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-host-reliability.md",
       "startedAt": "2026-08-24T18:30:07.507Z",
-      "finishedAt": null,
-      "lastUpdate": "2026-08-24T18:30:23.114Z",
+      "finishedAt": "2026-08-24T18:47:13.985Z",
+      "lastUpdate": "2026-08-24T18:47:13.985Z",
       "note": null,
       "slackTs": null,
       "prNumber": null,
@@ -234,6 +234,18 @@
     {
       "at": "2026-08-24T18:38:09.955Z",
       "message": "play-nearby: verification self-reported (live-ui-verified)"
+    },
+    {
+      "at": "2026-08-24T18:39:42.589Z",
+      "message": "verify-p2p-hook: SSE idle 312053ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-24T18:44:18.902Z",
+      "message": "verify-play-nearby: SSE idle 308026ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-24T18:44:18.903Z",
+      "message": "verify-play-nearby: tool_call idle 308027ms; last=2026-08-24T18:39:10.876Z"
     }
   ]
 }
