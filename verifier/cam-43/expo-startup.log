@@ -1,0 +1,18 @@
+CAM-43 Expo startup attempts (verifier environment)
+
+Attempt 1: pnpm --filter @cambio/expo web (port 8081)
+Result: Metro bundler failed — Cannot find module 'react-native-worklets/plugin'
+  Source: react-native-css-interop@0.2.6 via nativewind/metro transformer
+
+Attempt 2: pnpm add react-native-worklets@0.12.1 --filter @cambio/expo
+Result: expo start failed — Package subpath './src/lib/TerminalReporter' not exported by metro
+
+Attempt 3: NODE_PATH=/workspace/node_modules/.pnpm/metro@0.81.5/node_modules pnpm start
+Result: Metro started ("Waiting on http://localhost:8081") but web bundle failed on worklets plugin
+
+Attempt 4: pnpm add react-native-worklets@0.4.0 + NODE_PATH workaround
+Result: Web bundling failed — Cannot resolve 'metro-runtime/src/modules/HMRClient' in @expo/metro-runtime
+
+Conclusion: Expo dev server / native UI could not be exercised in this cloud VM without modifying
+target package.json (react-native-worklets peer dep gap + pnpm metro hoisting). Isolated
+`pnpm --filter @cambio/expo typecheck` passes after `pnpm install`.
