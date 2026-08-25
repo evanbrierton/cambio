@@ -1,0 +1,40 @@
+# stack-expo-prs Verifier Execution Log
+# Branch: orch/expo-gametable/stack-expo-prs
+# Date: 2026-08-25
+
+## git state
+$ git branch --show-current
+orch/expo-gametable/stack-expo-prs
+
+$ git log --oneline -5
+e50a134 fix(expo): restore home/lobby UI alongside NativeWind theme picker on stack
+500b05b Merge orch/expo-mobile/expo-themes (PR #242) into stack
+32b18e6 Merge orch/expo-mobile/expo-home-lobby (PR #241) into stack
+6a5cf28 Merge orch/expo-mobile/expo-scaffold (PR #240) into stack
+add0c09 chore(orchestrate): plan run 3 — stack Expo PRs, CI fixes, CAM-44 MVP
+
+## pnpm install
+Exit code: 0 (734 packages added for apps/expo workspace)
+
+## pnpm --filter @cambio/expo typecheck
+> @cambio/expo@0.1.0 typecheck /workspace/apps/expo
+> tsc --noEmit
+Exit code: 0
+
+## conflict marker scan (rg)
+Pattern: ^<<<<<<<|^=======|^>>>>>>>
+Matches: 0
+
+## CAM-43 theme verifier
+$ node verifier/cam-43/verify-nativewind-themes.mjs
+33/33 checks passed (includes vitest theme unit tests 4/4)
+
+## stack-expo-prs artifact verifier
+$ node verifier/stack-expo-prs/verify-stack-expo-prs.mjs
+(all CAM-41/42/43 file + UI presence + typecheck checks — see script output)
+
+## manual artifact confirmation
+- apps/expo/app/index.tsx: create/join/solo lobby flow + NativeThemePicker + ThemedScreen
+- apps/expo/app/play/[roomId].tsx: LobbyView, useGameConnection, ConnectingView
+- NativeWind: tailwind.config.js, global.css, metro withNativeWind, babel nativewind preset
+- Platform adapters: packages/client/src/platform/expo*.ts + init-platform.ts wiring
