@@ -74,10 +74,17 @@ pnpm web
 
 Useful when simulators are unavailable; PartySocket connectivity works against `localhost:8787`.
 
+## Themes (NativeWind)
+
+Home screen includes a theme picker backed by shared tokens in `src/lib/theme-tokens.ts` (extracted from web `globals.css`). Preferences persist via AsyncStorage using keys `cambio-theme` and `cambio-appearance` (same as web cookies).
+
+Web-only effects (scanlines, gradients, glow shadows) are approximated on native — see `docs/mobile/native-theme-approximations.md`.
+
 ## Verify
 
 - Home screen shows deck size from `@cambio/game` (proves package resolution).
 - **PartyServer connectivity** card shows `connected` when `pnpm party:dev` is running.
+- Switch themes on the home screen; restart the app and confirm the selection persists.
 
 ## Typecheck
 
@@ -90,8 +97,10 @@ pnpm --filter @cambio/expo typecheck
 ```
 apps/expo/
 ├── app/              Expo Router routes
-├── src/              Platform init + smoke test
+├── src/              Platform init, theme provider, smoke test
+├── global.css        NativeWind entry
+├── tailwind.config.js
 ├── app.config.ts
-├── metro.config.js   Monorepo workspace resolution
+├── metro.config.js   Monorepo workspace + NativeWind
 └── package.json
 ```

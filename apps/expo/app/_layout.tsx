@@ -1,7 +1,9 @@
+import "../global.css";
 import { Stack } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { initExpoPlatform } from "@/init-platform";
+import { ExpoThemeProvider } from "@/theme/ExpoThemeProvider";
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
@@ -26,12 +28,13 @@ export default function RootLayout() {
   }
 
   return (
-    <Stack
-      screenOptions={{
-        headerStyle: { backgroundColor: "#12061f" },
-        headerTintColor: "#f8fafc",
-        contentStyle: { backgroundColor: "#12061f" },
-      }}
-    />
+    <ExpoThemeProvider>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: "transparent" },
+        }}
+      />
+    </ExpoThemeProvider>
   );
 }

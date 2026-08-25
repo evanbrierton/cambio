@@ -58,9 +58,9 @@ Keys (from `@cambio/client/party`):
 - `cambio-player-{roomId}` — persistent player ID for reconnect
 - `cambio-fresh-{roomId}` — session marker after successful join
 
-## Theme (web-only SSR path)
+## Theme
 
-Theme/appearance cookies (`cambio-theme`, `cambio-appearance`) remain in `src/lib/theme-cookie.ts` for Next.js SSR bootstrap. Client updates go through `ThemeProvider` + `cookies-next`. Native shells will use storage adapter + in-app theme state instead of cookies.
+Theme/appearance cookies (`cambio-theme`, `cambio-appearance`) remain in `src/lib/theme-cookie.ts` for Next.js SSR bootstrap. Client updates go through `ThemeProvider` + `cookies-next`. Expo uses the same keys via `readThemePref` / `writeThemePref` on the AsyncStorage adapter and `ExpoThemeProvider` in `apps/expo/src/theme/`. Shared color tokens: `src/lib/theme-tokens.ts`. Web-only visual effects are documented in `docs/mobile/native-theme-approximations.md`.
 
 ## Sound prefs
 
