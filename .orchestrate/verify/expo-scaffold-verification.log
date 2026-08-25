@@ -1,0 +1,34 @@
+# CAM-41 expo-scaffold verifier run — 2026-08-25
+
+Branch: orch/expo-mobile/expo-scaffold
+
+## Setup
+pnpm install → exit 0 (824 packages added)
+
+## Automated typechecks
+pnpm --filter @cambio/game typecheck → exit 0
+pnpm --filter @cambio/client typecheck → exit 2
+  src/useGameConnection.ts(10,40): error TS2307: Cannot find module '@cambio/game/wire-schema'
+pnpm --filter @cambio/expo typecheck → exit 0
+
+## PartySocket smoke (Node, mirrors PartySmokeTest)
+EXPO_PUBLIC_PARTY_HOST=localhost:8787 node .orchestrate/verify/expo-scaffold-party-smoke.mjs → PASS: connected
+
+## Expo web live UI (party:dev on :8787, expo web on :8081)
+curl http://localhost:8081/ → HTTP 200
+Browser verification:
+- Title "Cambio" visible
+- Subtitle "Expo scaffold · deck size 54 cards"
+- PartyServer connectivity card: green dot, status "Connected", host=localhost:8787 room=expo-smoke
+Screenshot: /opt/cursor/artifacts/expo-web-connected.webp
+
+## Regression checks
+pnpm test → 32 files, 273 tests passed
+pnpm typecheck (root) → exit 2 (apps/expo path aliases @/* not in root tsconfig)
+
+## Acceptance criteria summary
+- apps/expo boots with Expo Router: MET (web bundle + UI)
+- @cambio/game and @cambio/client resolve: MET (deck size 54 from @cambio/game; getPartyHost from @cambio/client)
+- Expo storage/clipboard adapters: MET (expo-storage.ts, expo-clipboard.ts, createExpoPlatformAdapters exported)
+- PartySocket connectivity demonstrated: MET (Node smoke PASS + live UI Connected)
+- pnpm --filter @cambio/expo typecheck passes: MET
