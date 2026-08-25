@@ -1,0 +1,28 @@
+# CAM-42 Verifier Execution Log
+# Branch: orch/expo-mobile/expo-home-lobby
+# Date: 2026-08-25
+
+## Automated
+pnpm install → success (824 packages; expo deps required for typecheck)
+pnpm --filter @cambio/expo typecheck → PASS (exit 0)
+pnpm test → PASS (32 files, 273 tests)
+
+## PartySocket lobby smoke (localhost:8787)
+node .orchestrate/expo-mobile/verify-cam42-lobby.mjs → PASS (allPass: true)
+  create_room: 1 player in lobby
+  solo_vs_bots: 3 players (1 human + 2 bots), isSoloMode true
+  join_by_code: 2 players in lobby
+
+## Web regression
+git diff main...HEAD -- src/ → no changes under src/
+curl http://localhost:3000/ → 200; contains CREATE GAME, FIND MATCH, JOIN, PLAY VS BOTS
+Next.js create-game lobby (browser) → full lobby UI with player list (WebTest HOST)
+
+## Expo web manual (localhost:8081)
+Home screen → PASS (nickname, create/join/solo controls render)
+Create game → navigates to /play/[roomId] but lobby body blank
+Play vs bots → navigates but lobby body blank
+Browser console/network → WebSocket reconnection storm (8000+ connections/min); wrangler logs "Network connection lost"
+
+## Player name persistence
+Not exercised in browser (AsyncStorage on web); helpers exist in packages/client/src/party.ts and wired via usePlayerName hook.
