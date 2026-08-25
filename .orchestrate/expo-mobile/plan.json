@@ -1,0 +1,124 @@
+{
+  "$schema": "/home/ubuntu/.cursor/plugins/cache/cursor-public/9333/46125561306434d8a1d7745d540d8932ab0cd2a2/skills/orchestrate/schemas/plan.schema.json",
+  "goal": "Ship Expo mobile setup per Project priority order: CAM-41 Expo scaffold sharing packages → CAM-42 Home/Lobby screens → CAM-43 NativeWind themes. Offline P2P is deferred. CAM-40 store prep is merged; operator TestFlight/Play uploads remain manual. Reference: https://linear.app/ebrierton-cambio/document/project-priority-order-67a9122bb396",
+  "summary": "Expo mobile scaffold + home/lobby + themes (CAM-41/42/43)",
+  "rootSlug": "expo-mobile",
+  "baseBranch": "evanbrierton/expo-mobile-7bff",
+  "prBase": "main",
+  "repoUrl": "https://github.com/evanbrierton/cambio",
+  "selfAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
+  "dispatcher": {
+    "firstName": "Evan"
+  },
+  "acceptanceCriteria": [
+    "CAM-41: Expo app boots with @cambio/game + @cambio/client wired",
+    "CAM-42: Home and lobby flows work against PartyServer",
+    "CAM-43: Core themes on native via NativeWind",
+    "Next.js web app and Capacitor shell unchanged"
+  ],
+  "tasks": [
+    {
+      "name": "expo-scaffold",
+      "type": "worker",
+      "model": "composer-2-fast",
+      "scopedGoal": "Implement CAM-41: Expo mobile app scaffold. Read `.orchestrate/expo-mobile/bootstrap/architecture.md` and `issue-specs.md`.\n\nCreate `apps/expo/` with Expo SDK 52+ and Expo Router. Package name `@cambio/expo`. Wire workspace deps `@cambio/game` and `@cambio/client`.\n\nAdd Expo platform adapters in `packages/client/src/platform/` (AsyncStorage + expo-clipboard), export from platform index, document `setDefaultPlatformAdapters` usage.\n\nImplement placeholder home screen and a minimal PartySocket connectivity smoke (connect/disconnect log or UI indicator). Env: `EXPO_PUBLIC_PARTY_HOST`.\n\nAdd `apps/expo/README.md` with iOS simulator, Android emulator, Expo Go vs dev client instructions. Mark CAM-41 Done in Linear when complete.",
+      "pathsAllowed": [
+        "apps/expo/**",
+        "packages/client/src/platform/**",
+        "packages/client/package.json",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml",
+        "docs/mobile/**"
+      ],
+      "pathsForbidden": [
+        "src/**",
+        "party/**",
+        "apps/native/**",
+        "packages/game/**"
+      ],
+      "acceptance": [
+        "apps/expo boots with Expo Router",
+        "@cambio/game and @cambio/client resolve in Expo app",
+        "Expo storage/clipboard adapters implemented",
+        "PartySocket connectivity demonstrated",
+        "pnpm --filter @cambio/expo typecheck passes"
+      ],
+      "verify": "## Setup\npnpm install\n\n## Automated\npnpm --filter @cambio/game typecheck\npnpm --filter @cambio/client typecheck\npnpm --filter @cambio/expo typecheck\n\n## Manual\n1. Start party:dev on 8787\n2. Run Expo app (simulator or web export if sim unavailable)\n3. Confirm connectivity smoke shows connected to PartyServer\n\n## Gotchas\n- Do not break existing web or Capacitor paths\n- partysocket may need polyfills for RN — add minimal shims if needed",
+      "openPR": true
+    },
+    {
+      "name": "verify-expo-scaffold",
+      "type": "verifier",
+      "verifies": "expo-scaffold",
+      "model": "composer-2-fast",
+      "scopedGoal": "Verify CAM-41 Expo scaffold: package wiring, adapters, typecheck, PartySocket smoke."
+    },
+    {
+      "name": "expo-home-lobby",
+      "type": "worker",
+      "model": "composer-2-fast",
+      "dependsOn": ["expo-scaffold"],
+      "scopedGoal": "Implement CAM-42: Port Home and Lobby screens to Expo. Read bootstrap docs.\n\nPort create/join/solo from `src/app/page.tsx` and lobby from play flow using `useGameConnection` from `@cambio/client`. Expo Router routes: index (home), play/[roomId] (lobby).\n\nPersist player name via Expo storage adapter. Match core flows; styling can be minimal. Web Next.js unchanged. Mark CAM-42 Done in Linear.",
+      "pathsAllowed": [
+        "apps/expo/**",
+        "packages/client/**"
+      ],
+      "pathsForbidden": [
+        "src/app/**",
+        "src/components/**",
+        "party/**",
+        "apps/native/**"
+      ],
+      "acceptance": [
+        "Create room navigates to lobby",
+        "Join by code works",
+        "Solo vs bots starts game lobby",
+        "Lobby shows connected players",
+        "Web app unchanged"
+      ],
+      "verify": "## Automated\npnpm --filter @cambio/expo typecheck\npnpm test\n\n## Manual\n1. party:dev + Expo app\n2. Create room → see lobby with player\n3. Join from second client if possible\n4. Confirm web homepage still works unchanged",
+      "openPR": true
+    },
+    {
+      "name": "verify-expo-home-lobby",
+      "type": "verifier",
+      "verifies": "expo-home-lobby",
+      "model": "composer-2-fast",
+      "scopedGoal": "Verify CAM-42 home/lobby: create, join, solo, lobby UI, web regression clean."
+    },
+    {
+      "name": "expo-themes",
+      "type": "worker",
+      "model": "composer-2-fast",
+      "dependsOn": ["expo-scaffold"],
+      "scopedGoal": "Implement CAM-43: Port theme system to NativeWind. Read bootstrap docs and `src/app/globals.css` for token inventory.\n\nExtract shared design tokens (JSON or TS) usable by web and Expo. Set up NativeWind in apps/expo. Theme picker on native home screen. Persist theme via storage adapter. Document web-only effects that are approximated. Web CSS path unchanged unless minimal shared token file added. Mark CAM-43 Done in Linear.",
+      "pathsAllowed": [
+        "apps/expo/**",
+        "packages/client/src/platform/**",
+        "src/lib/themes.ts",
+        "src/app/globals.css"
+      ],
+      "pathsForbidden": [
+        "src/app/page.tsx",
+        "src/components/game/**",
+        "party/**",
+        "apps/native/**"
+      ],
+      "acceptance": [
+        "NativeWind configured in Expo",
+        "At least 2 themes render coherently on native",
+        "Theme preference persists",
+        "Web themes still work"
+      ],
+      "verify": "## Automated\npnpm --filter @cambio/expo typecheck\n\n## Manual\n1. Switch themes on Expo home\n2. Restart app — theme persists\n3. Load web app — themes unchanged",
+      "openPR": true
+    },
+    {
+      "name": "verify-expo-themes",
+      "type": "verifier",
+      "verifies": "expo-themes",
+      "model": "composer-2-fast",
+      "scopedGoal": "Verify CAM-43 NativeWind themes: token extraction, native rendering, persistence, web regression."
+    }
+  ]
+}

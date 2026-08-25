@@ -1594,3 +1594,11 @@ export function isThemeId(value: string): value is ThemeId {
 export function getThemeVoice(theme: ThemeId): ThemeVoice {
   return THEME_VOICES[theme];
 }
+
+export {
+  getThemeColorTokens,
+  themeTokensToNativeWindVars,
+  THEME_COLOR_TOKENS,
+  type ThemeColorTokens,
+  type ThemeTokenSet,
+} from "./theme-tokens";
