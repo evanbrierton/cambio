@@ -13,11 +13,8 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  ConnectingView,
-  GameInProgressView,
-  LobbyView,
-} from "@/LobbyView";
+import { GameTable } from "@/components/game/GameTable";
+import { ConnectingView, LobbyView } from "@/LobbyView";
 import { colors } from "@/theme";
 
 const CONNECTING_UI_DELAY_MS = 300;
@@ -74,12 +71,15 @@ export default function PlayScreen() {
     }
   }, [isNavFresh, name, router]);
 
-  const { connected, view, error, send } = useGameConnection(
-    roomId,
-    name,
-    sessionMode,
-    soloOptions,
-  );
+  const {
+    connected,
+    view,
+    error,
+    fleetingPeek,
+    discardDrawFlash,
+    deckDrawFlash,
+    send,
+  } = useGameConnection(roomId, name, sessionMode, soloOptions);
 
   const [showConnecting, setShowConnecting] = useState(false);
 
@@ -155,7 +155,15 @@ export default function PlayScreen() {
           send={send}
         />
       ) : (
-        <GameInProgressView phase={view.phase} />
+        <GameTable
+          view={view}
+          connected={connected}
+          error={error}
+          fleetingPeek={fleetingPeek}
+          discardDrawFlash={discardDrawFlash}
+          deckDrawFlash={deckDrawFlash}
+          send={send}
+        />
       )}
     </SafeAreaView>
   );
