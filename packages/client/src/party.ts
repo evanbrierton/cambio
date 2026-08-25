@@ -1,3 +1,5 @@
+import type { StorageAdapter } from "./platform/types";
+
 const PARTYKIT_PORT = 8787;
 
 export const DEFAULT_PARTY_HOST = "cambio.brierton.workers.dev";
@@ -20,6 +22,10 @@ function isLocalHostname(hostname: string): boolean {
 }
 
 export function getPartyHost(): string {
+  if (process.env.EXPO_PUBLIC_PARTY_HOST) {
+    return process.env.EXPO_PUBLIC_PARTY_HOST;
+  }
+
   if (process.env.NEXT_PUBLIC_PARTYKIT_HOST) {
     return process.env.NEXT_PUBLIC_PARTYKIT_HOST;
   }
@@ -45,3 +51,11 @@ export function freshSessionKey(roomId: string): string {
 export const PLAYER_NAME_KEY = "cambio-player-name";
 
 export const PWA_INSTALL_DISMISS_KEY = "cambio-pwa-install-dismissed";
+
+export function getStoredPlayerName(storage: StorageAdapter): string {
+  return storage.getItem(PLAYER_NAME_KEY) ?? "";
+}
+
+export function setStoredPlayerName(name: string, storage: StorageAdapter): void {
+  storage.setItem(PLAYER_NAME_KEY, name);
+}
