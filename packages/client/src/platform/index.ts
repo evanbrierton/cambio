@@ -36,6 +36,9 @@ export function setDefaultPlatformAdapters(
 
 export * from "./capacitor";
 export * from "./capacitor-clipboard";
+export * from "./expo";
+export * from "./expo-clipboard";
+export * from "./expo-storage";
 export * from "./types";
 export * from "./web-clipboard";
 export * from "./web-storage";

@@ -16,7 +16,26 @@ interface StorageAdapter {
 
 **Capacitor (future):** `@capacitor/preferences` or secure storage plugin implementing the same interface. Inject via `setDefaultPlatformAdapters()` before React mount.
 
-**Expo (future):** `expo-secure-store` for player IDs; AsyncStorage for prefs.
+**Expo:** `@react-native-async-storage/async-storage` for persistent storage (in-memory session storage for reconnect keys within a session). Factories live in `@cambio/client/platform`:
+
+```typescript
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Clipboard from "expo-clipboard";
+import {
+  createExpoPlatformAdapters,
+  setDefaultPlatformAdapters,
+} from "@cambio/client/platform";
+
+const adapters = createExpoPlatformAdapters({
+  asyncStorage: AsyncStorage,
+  clipboard: Clipboard,
+});
+
+await adapters.ready;
+setDefaultPlatformAdapters(adapters);
+```
+
+Call `setDefaultPlatformAdapters()` after `adapters.ready` resolves and before mounting hooks such as `useGameConnection`. Player IDs for secure storage can move to `expo-secure-store` in a later pass.
 
 ## Clipboard
 
