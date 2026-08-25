@@ -9,7 +9,11 @@
     "noEmit": true,
     "isolatedModules": true,
     "jsx": "react-jsx",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "paths": {
+      "@cambio/game": ["../game/src/index.ts"],
+      "@cambio/game/*": ["../game/src/*"]
+    }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"]
 }

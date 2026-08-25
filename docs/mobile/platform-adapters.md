@@ -16,7 +16,26 @@ interface StorageAdapter {
 
 **Capacitor (future):** `@capacitor/preferences` or secure storage plugin implementing the same interface. Inject via `setDefaultPlatformAdapters()` before React mount.
 
-**Expo (future):** `expo-secure-store` for player IDs; AsyncStorage for prefs.
+**Expo:** `@react-native-async-storage/async-storage` for persistent storage (in-memory session storage for reconnect keys within a session). Factories live in `@cambio/client/platform`:
+
+```typescript
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Clipboard from "expo-clipboard";
+import {
+  createExpoPlatformAdapters,
+  setDefaultPlatformAdapters,
+} from "@cambio/client/platform";
+
+const adapters = createExpoPlatformAdapters({
+  asyncStorage: AsyncStorage,
+  clipboard: Clipboard,
+});
+
+await adapters.ready;
+setDefaultPlatformAdapters(adapters);
+```
+
+Call `setDefaultPlatformAdapters()` after `adapters.ready` resolves and before mounting hooks such as `useGameConnection`. Player IDs for secure storage can move to `expo-secure-store` in a later pass.
 
 ## Clipboard
 
@@ -39,9 +58,9 @@ Keys (from `@cambio/client/party`):
 - `cambio-player-{roomId}` — persistent player ID for reconnect
 - `cambio-fresh-{roomId}` — session marker after successful join
 
-## Theme (web-only SSR path)
+## Theme
 
-Theme/appearance cookies (`cambio-theme`, `cambio-appearance`) remain in `src/lib/theme-cookie.ts` for Next.js SSR bootstrap. Client updates go through `ThemeProvider` + `cookies-next`. Native shells will use storage adapter + in-app theme state instead of cookies.
+Theme/appearance cookies (`cambio-theme`, `cambio-appearance`) remain in `src/lib/theme-cookie.ts` for Next.js SSR bootstrap. Client updates go through `ThemeProvider` + `cookies-next`. Expo uses the same keys via `readThemePref` / `writeThemePref` on the AsyncStorage adapter and `ExpoThemeProvider` in `apps/expo/src/theme/`. Shared color tokens: `src/lib/theme-tokens.ts`. Web-only visual effects are documented in `docs/mobile/native-theme-approximations.md`.
 
 ## Sound prefs
 
