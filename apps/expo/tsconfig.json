@@ -18,6 +18,15 @@
       "@/*": [
         "./src/*"
       ],
+      "@cambio/web-lib/*": [
+        "../../src/lib/*"
+      ],
+      "@/game/*": [
+        "../../packages/game/src/*"
+      ],
+      "@/lib/*": [
+        "../../src/lib/*"
+      ],
       "@cambio/game": [
         "../../packages/game/src/index.ts"
       ],
@@ -36,7 +45,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".expo/types/**/*.ts",
-    "expo-env.d.ts"
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
   ],
   "exclude": [
     "node_modules"
