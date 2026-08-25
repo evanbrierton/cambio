@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+/* Color/layout token inventory for native shells: src/lib/theme-tokens.ts */
+
 /* ── Retro Arcade ── */
 :root,
 [data-theme="retro"] {
