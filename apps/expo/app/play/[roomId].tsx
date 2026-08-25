@@ -6,6 +6,7 @@ import {
 } from "@cambio/game";
 import {
   type SessionMode,
+  type SoloOptions,
   useGameConnection,
 } from "@cambio/client";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
@@ -36,14 +37,14 @@ export default function PlayScreen() {
   const roomId = params.roomId ?? "";
   const name = params.name?.trim() ?? "";
   const isNavFresh = params.host === "1" || params.join === "1";
-  const sessionMode: SessionMode = isNavFresh ? "new" : "reconnect";
+  const sessionModeFromParams: SessionMode = isNavFresh ? "new" : "reconnect";
   const isSolo = params.solo === "1";
   const soloBotCount =
     Number.parseInt(params.bots ?? String(DEFAULT_BOT_COUNT), 10) ||
     DEFAULT_BOT_COUNT;
   const soloDifficulty = parseBotDifficulty(params.difficulty ?? null);
 
-  const soloOptions = useMemo(
+  const soloOptionsFromParams = useMemo(
     () =>
       isSolo && isNavFresh
         ? {
@@ -54,7 +55,18 @@ export default function PlayScreen() {
     [isSolo, isNavFresh, soloBotCount, soloDifficulty],
   );
 
-  const urlCleanedRef = useRef(false);
+  const sessionRef = useRef<{
+    mode: SessionMode;
+    soloOptions?: SoloOptions;
+  } | null>(null);
+  if (!sessionRef.current) {
+    sessionRef.current = {
+      mode: sessionModeFromParams,
+      soloOptions: soloOptionsFromParams,
+    };
+  }
+  const sessionMode = sessionRef.current.mode;
+  const soloOptions = sessionRef.current.soloOptions;
 
   useEffect(() => {
     if (isNavFresh && !name) {
@@ -72,10 +84,10 @@ export default function PlayScreen() {
   const [showConnecting, setShowConnecting] = useState(false);
 
   useEffect(() => {
-    if (!view || !isNavFresh || urlCleanedRef.current) return;
-    urlCleanedRef.current = true;
+    if (!view || !isNavFresh) return;
 
     const nextParams: Record<string, string> = { roomId, name };
+    // Keep host/join so sessionMode does not flip and reconnect the socket.
     if (params.host === "1") nextParams.host = "1";
     if (params.join === "1") nextParams.join = "1";
     if (isSolo) {
@@ -84,9 +96,22 @@ export default function PlayScreen() {
       nextParams.difficulty = soloDifficulty;
     }
 
+    const unchanged =
+      params.roomId === nextParams.roomId &&
+      params.name === nextParams.name &&
+      params.host === nextParams.host &&
+      params.join === nextParams.join &&
+      params.solo === nextParams.solo &&
+      params.bots === nextParams.bots &&
+      params.difficulty === nextParams.difficulty;
+    if (unchanged) return;
+
     router.replace({
       pathname: "/play/[roomId]",
-      params: nextParams,
+      params: {
+        ...nextParams,
+        roomId,
+      },
     });
   }, [
     view,
@@ -99,6 +124,11 @@ export default function PlayScreen() {
     router,
     params.host,
     params.join,
+    params.roomId,
+    params.name,
+    params.solo,
+    params.bots,
+    params.difficulty,
   ]);
 
   useEffect(() => {
