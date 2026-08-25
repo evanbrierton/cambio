@@ -76,8 +76,10 @@ Useful when simulators are unavailable; PartySocket connectivity works against `
 
 ## Verify
 
-- Home screen shows deck size from `@cambio/game` (proves package resolution).
-- **PartyServer connectivity** card shows `connected` when `pnpm party:dev` is running.
+- Home screen: enter nickname, create game, join by code, or start solo vs bots.
+- Lobby (`/play/[roomId]`): shows room code, connection status, and connected players via `useGameConnection`.
+- Player name persists across launches (AsyncStorage via platform adapters).
+- PartyServer must be running for lobby connectivity: `pnpm party:dev` with `EXPO_PUBLIC_PARTY_HOST=localhost:8787`.
 
 ## Typecheck
 
