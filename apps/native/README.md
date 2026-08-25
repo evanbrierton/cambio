@@ -97,3 +97,50 @@ After regenerating `ios/` / `android/`, confirm the Capacitor WebView still has 
 
 - **Current (this phase):** remote URL mode (`server.url`) loads the deployed Next.js UI.
 - **Future option:** switch to bundled web assets by building/exporting into `webDir` and removing `server.url` for an offline-capable shell flow.
+
+## Store testing prep (CAM-40)
+
+Identity is centralized in `capacitor.config.ts` and `store.config.json`:
+
+| Field | Value |
+| --- | --- |
+| Display name | Cambio |
+| Bundle / application ID | `ie.brierton.cambio` |
+| Marketing version | `0.1.0` (package.json) |
+
+### Generate icon and splash sources
+
+Brand icon is fetched from production (`/icon/512`) and upscaled into store-ready PNGs:
+
+```bash
+pnpm --filter @cambio/native assets:generate
+```
+
+Outputs: `resources/icon.png` (1024×1024), `resources/splash.png` (2732×2732).
+
+After `cap:add:ios` and `cap:add:android` exist locally, apply assets to native projects:
+
+```bash
+pnpm --filter @cambio/native assets:sync
+```
+
+### Upload runbooks and checklists
+
+| Doc | Purpose |
+| --- | --- |
+| [docs/mobile/store-asset-checklist.md](../../docs/mobile/store-asset-checklist.md) | Pre-upload asset and identity verification |
+| [docs/mobile/ios-testflight-runbook.md](../../docs/mobile/ios-testflight-runbook.md) | Signing + TestFlight upload |
+| [docs/mobile/android-play-internal-runbook.md](../../docs/mobile/android-play-internal-runbook.md) | Signing + Play internal track |
+| [docs/mobile/device-smoke-checklist.md](../../docs/mobile/device-smoke-checklist.md) | Device matrix: create/join/solo/reconnect/background |
+| [docs/mobile/webview-limitations.md](../../docs/mobile/webview-limitations.md) | WebView limits vs future Expo path |
+| [docs/mobile/privacy-policy-template.md](../../docs/mobile/privacy-policy-template.md) | Privacy policy draft |
+| [docs/mobile/store-metadata-template.md](../../docs/mobile/store-metadata-template.md) | App Store / Play listing copy |
+
+### Operator blockers (credentials not in repo)
+
+Store uploads require accounts and secrets outside this repository:
+
+- **Apple:** Developer Program membership, App Store Connect app for `ie.brierton.cambio`, distribution signing
+- **Google:** Play Console developer account, upload keystore (`keystore.properties` local only), internal testing track
+
+See runbooks above for step-by-step operator actions.

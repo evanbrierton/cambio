@@ -1,0 +1,37 @@
+{
+  "appId": "ie.brierton.cambio",
+  "appName": "Cambio",
+  "displayName": {
+    "ios": "Cambio",
+    "android": "Cambio"
+  },
+  "bundleIds": {
+    "ios": "ie.brierton.cambio",
+    "android": "ie.brierton.cambio"
+  },
+  "version": {
+    "marketing": "0.1.0",
+    "iosBuild": "1",
+    "androidVersionCode": 1
+  },
+  "urls": {
+    "productionWeb": "https://cambio.brierton.ie",
+    "privacyPolicy": "https://cambio.brierton.ie/privacy",
+    "supportEmail": "support@brierton.ie",
+    "marketingSite": "https://cambio.brierton.ie"
+  },
+  "storeCategories": {
+    "apple": "Games",
+    "googlePlay": "GAME_CARD"
+  },
+  "contentRating": {
+    "apple": "4+",
+    "googlePlay": "Everyone"
+  },
+  "assetSources": {
+    "icon": "apps/native/resources/icon.png",
+    "splash": "apps/native/resources/splash.png",
+    "webIconRoute": "/icon/512",
+    "regenerate": "pnpm --filter @cambio/native assets:generate"
+  }
+}

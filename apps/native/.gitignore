@@ -2,3 +2,5 @@ node_modules
 android
 ios
 dist
+keystore.properties
+*.jks

@@ -11,7 +11,9 @@
     "cap:add:ios": "cap add ios",
     "cap:add:android": "cap add android",
     "cap:open:ios": "cap open ios",
-    "cap:open:android": "cap open android"
+    "cap:open:android": "cap open android",
+    "assets:generate": "node scripts/generate-resources.mjs",
+    "assets:sync": "pnpm assets:generate && cap-assets generate --assetPath resources --iconBackgroundColor '#12061f' --iconBackgroundColorDark '#12061f' --splashBackgroundColor '#12061f' --splashBackgroundColorDark '#12061f'"
   },
   "dependencies": {
     "@capacitor/clipboard": "^8.0.1",
@@ -22,7 +24,9 @@
   },
   "devDependencies": {
     "@capacitor/android": "^8.5.0",
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.5.0",
-    "@capacitor/ios": "^8.5.0"
+    "@capacitor/ios": "^8.5.0",
+    "sharp": "^0.35.3"
   }
 }
