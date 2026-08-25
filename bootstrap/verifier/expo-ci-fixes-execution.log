@@ -1,0 +1,39 @@
+# expo-ci-fixes verifier execution log
+# Branch: orch/expo-gametable/expo-ci-fixes
+# Date: 2026-08-25
+
+## Automated checks
+
+### pnpm install
+Exit: 0 (733 packages, lockfile up to date)
+
+### pnpm typecheck (root)
+Exit: 0
+
+### pnpm --filter @cambio/client typecheck
+Exit: 0
+
+### pnpm --filter @cambio/expo typecheck
+Exit: 0
+
+### Metro web bundle (pnpm --filter @cambio/expo web -- --port 8081)
+Web Bundled 5786ms expo-router/entry.js (863 modules)
+No react-native-worklets/plugin errors.
+
+## Manual checks
+
+### pnpm party:dev
+Ready on http://0.0.0.0:8787
+
+### Expo web lobby (http://localhost:8081)
+- Created game as VerifierPlayer; room codes I5WCHH / AILMDV
+- Lobby showed player list + Connected (green) for 10+ seconds, no flicker
+- Party server: single 101 Switching Protocols per room (no reconnect storm)
+- Theme Cocoa Night applied; persisted after F5 reload
+
+## Artifacts
+- bootstrap/verifier/expo-ci-fixes-report.md
+- bootstrap/verifier/verifier-expo-lobby-stable.webp
+- bootstrap/verifier/verifier-expo-lobby-no-storm.mp4
+- /opt/cursor/artifacts/verifier-expo-theme-cocoa.webp
+- /opt/cursor/artifacts/verifier-expo-theme-persisted.webp

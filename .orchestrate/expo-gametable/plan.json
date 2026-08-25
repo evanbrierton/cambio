@@ -1,0 +1,131 @@
+{
+  "$schema": "/home/ubuntu/.cursor/plugins/cache/cursor-public/9333/46125561306434d8a1d7745d540d8932ab0cd2a2/skills/orchestrate/schemas/plan.schema.json",
+  "goal": "Run 3 per Project priority order: stack Expo PRs #240→#241→#242, fix run-2 verifier gaps (typecheck, Metro/NativeWind, Expo web lobby reconnect), then CAM-44 GameTable MVP on Expo. Reference: https://linear.app/ebrierton-cambio/document/project-priority-order-67a9122bb396",
+  "summary": "Stack Expo PRs + CI fixes + CAM-44 GameTable MVP",
+  "rootSlug": "expo-gametable",
+  "baseBranch": "evanbrierton/expo-gametable-7bff",
+  "prBase": "main",
+  "repoUrl": "https://github.com/evanbrierton/cambio",
+  "selfAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
+  "dispatcher": {
+    "firstName": "Evan"
+  },
+  "acceptanceCriteria": [
+    "Expo PRs stacked into merge-ready chain on orch/expo-gametable/stack-expo-prs",
+    "Root pnpm typecheck and @cambio/client typecheck pass",
+    "Metro bundles Expo app (NativeWind deps resolved)",
+    "Expo web lobby no longer WS-reconnect storms",
+    "CAM-44 MVP: post-lobby GameTable renders; draw+discard works in solo smoke"
+  ],
+  "tasks": [
+    {
+      "name": "stack-expo-prs",
+      "type": "worker",
+      "model": "composer-2-fast",
+      "scopedGoal": "Stack Expo run-2 PR branches into one merge-ready chain. Read `.orchestrate/expo-gametable/bootstrap/run2-handoffs.md`.\n\nFetch and merge in order onto branch `orch/expo-gametable/stack-expo-prs`:\n1. `orch/expo-mobile/expo-scaffold` (PR #240)\n2. `orch/expo-mobile/expo-home-lobby` (PR #241)\n3. `orch/expo-mobile/expo-themes` (PR #242)\n\nResolve merge conflicts preferring later branch for overlapping files. Push branch. Update PR #242 to target stacked base OR document merge order for human review. Do not merge to main.",
+      "pathsAllowed": [
+        "apps/expo/**",
+        "packages/client/**",
+        "src/lib/theme-tokens.ts",
+        "src/lib/themes.ts",
+        "src/app/globals.css",
+        "docs/mobile/**",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml",
+        "tsconfig.json",
+        "package.json"
+      ],
+      "pathsForbidden": [
+        "src/app/**",
+        "src/components/**",
+        "party/**",
+        "apps/native/**"
+      ],
+      "acceptance": [
+        "Branch orch/expo-gametable/stack-expo-prs contains scaffold+lobby+themes",
+        "pnpm --filter @cambio/expo typecheck passes on stacked branch",
+        "No conflict markers left in tree"
+      ],
+      "verify": "## Automated\npnpm install\npnpm --filter @cambio/expo typecheck\n\n## Manual\nConfirm apps/expo has home, lobby routes, NativeWind config, and platform adapters",
+      "openPR": true
+    },
+    {
+      "name": "verify-stack-expo-prs",
+      "type": "verifier",
+      "verifies": "stack-expo-prs",
+      "model": "composer-2-fast",
+      "scopedGoal": "Verify stacked Expo branch contains CAM-41/42/43 artifacts and typechecks."
+    },
+    {
+      "name": "expo-ci-fixes",
+      "type": "worker",
+      "model": "composer-2-fast",
+      "dependsOn": ["stack-expo-prs"],
+      "scopedGoal": "Fix run-2 verifier gaps on stacked Expo branch. Read bootstrap/run2-handoffs.md.\n\nBranch from `orch/expo-gametable/stack-expo-prs` → `orch/expo-gametable/expo-ci-fixes`.\n\nFixes:\n1. Root tsconfig: exclude apps/expo from root typecheck OR add references so `pnpm typecheck` passes\n2. `@cambio/client` wire-schema type resolution for `@cambio/game/wire-schema`\n3. Metro/NativeWind: add missing deps (e.g. react-native-worklets), fix pnpm hoisting so `pnpm --filter @cambio/expo web` bundles\n4. Expo web lobby WebSocket reconnect loop in play/[roomId].tsx / useGameConnection usage\n\nDo not change web game UI. Open draft PR against main (note stacked dependency).",
+      "pathsAllowed": [
+        "apps/expo/**",
+        "packages/client/**",
+        "packages/game/**",
+        "tsconfig.json",
+        "package.json",
+        "pnpm-lock.yaml",
+        "pnpm-workspace.yaml"
+      ],
+      "pathsForbidden": [
+        "src/components/game/**",
+        "src/app/page.tsx",
+        "party/**",
+        "apps/native/**"
+      ],
+      "acceptance": [
+        "pnpm typecheck passes at repo root",
+        "pnpm --filter @cambio/client typecheck passes",
+        "Expo Metro web bundle succeeds",
+        "Expo web lobby renders player list without WS storm"
+      ],
+      "verify": "## Automated\npnpm install\npnpm typecheck\npnpm --filter @cambio/client typecheck\npnpm --filter @cambio/expo typecheck\n\n## Manual\n1. pnpm party:dev\n2. pnpm --filter @cambio/expo web -- --port 8081\n3. Create game → lobby shows players (no reconnect storm)\n4. Switch theme → persists on reload",
+      "openPR": true
+    },
+    {
+      "name": "verify-expo-ci-fixes",
+      "type": "verifier",
+      "verifies": "expo-ci-fixes",
+      "model": "composer-2-fast",
+      "scopedGoal": "Verify CI/typecheck/Metro/lobby fixes from expo-ci-fixes worker."
+    },
+    {
+      "name": "expo-gametable-mvp",
+      "type": "worker",
+      "model": "composer-2-fast",
+      "dependsOn": ["expo-ci-fixes"],
+      "scopedGoal": "Implement CAM-44 MVP on Expo. Read bootstrap/architecture.md and run2-handoffs.md.\n\nBranch from `orch/expo-gametable/expo-ci-fixes` → `orch/expo-gametable/expo-gametable-mvp`.\n\nPort minimal GameTable to `apps/expo/src/components/game/`:\n- Replace post-lobby placeholder with GameTable view driven by useGameConnection\n- Render player seats, deck, discard, own hand (PixelCard RN port using theme tokens)\n- Wire draw + discard actions for v1; show whose turn\n- Solo vs bots smoke: start game from lobby, draw once, discard\n\nDefer snap overlays, abilities, chat, sounds, game-over polish. Mark CAM-44 In Progress with MVP note in Linear; do not mark Done until full acceptance met. Open draft PR.",
+      "pathsAllowed": [
+        "apps/expo/**",
+        "packages/client/**",
+        "docs/mobile/**"
+      ],
+      "pathsForbidden": [
+        "src/components/game/**",
+        "src/app/**",
+        "party/**",
+        "apps/native/**",
+        "packages/game/**"
+      ],
+      "acceptance": [
+        "Post-lobby shows GameTable not placeholder",
+        "Solo game: draw and discard work via UI",
+        "No game logic duplicated in Expo — uses useGameConnection",
+        "pnpm --filter @cambio/expo typecheck passes"
+      ],
+      "verify": "## Automated\npnpm --filter @cambio/expo typecheck\npnpm test\n\n## Manual\n1. party:dev + Expo web or documented simulator path\n2. Solo vs bots → lobby → host start → GameTable visible\n3. Draw card → discard → turn advances",
+      "openPR": true
+    },
+    {
+      "name": "verify-expo-gametable-mvp",
+      "type": "verifier",
+      "verifies": "expo-gametable-mvp",
+      "model": "composer-2-fast",
+      "scopedGoal": "Verify CAM-44 MVP: GameTable renders, solo draw/discard works, no web regressions."
+    }
+  ]
+}
