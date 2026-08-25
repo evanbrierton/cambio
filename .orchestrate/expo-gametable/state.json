@@ -1,0 +1,221 @@
+{
+  "rootSlug": "expo-gametable",
+  "tasks": [
+    {
+      "name": "stack-expo-prs",
+      "type": "worker",
+      "branch": "orch/expo-gametable/stack-expo-prs",
+      "startingRef": "evanbrierton/expo-gametable-7bff",
+      "dependsOn": [],
+      "agentId": "bc-3a4e9b54-1997-4575-98f7-ed9c52c6c8b9",
+      "runId": "run-96c3410a-9c0d-4736-a047-7da8dc7292e5",
+      "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/stack-expo-prs.md",
+      "startedAt": "2026-08-25T17:35:20.804Z",
+      "finishedAt": "2026-08-25T17:39:49.144Z",
+      "lastUpdate": "2026-08-25T17:39:49.272Z",
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": "type-check-only",
+      "attempts": 1
+    },
+    {
+      "name": "verify-stack-expo-prs",
+      "type": "verifier",
+      "branch": "orch/expo-gametable/stack-expo-prs",
+      "startingRef": "orch/expo-gametable/stack-expo-prs",
+      "dependsOn": [
+        "stack-expo-prs"
+      ],
+      "agentId": "bc-19df0ba6-49ca-4103-8b9f-c182e1d56f6e",
+      "runId": "run-76f807cf-b489-4774-bd91-01c5921d3500",
+      "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-stack-expo-prs.md",
+      "startedAt": "2026-08-25T17:39:55.110Z",
+      "finishedAt": "2026-08-25T17:42:56.517Z",
+      "lastUpdate": "2026-08-25T17:42:56.517Z",
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null,
+      "attempts": 1
+    },
+    {
+      "name": "expo-ci-fixes",
+      "type": "worker",
+      "branch": "orch/expo-gametable/expo-ci-fixes",
+      "startingRef": "evanbrierton/expo-gametable-7bff",
+      "dependsOn": [
+        "stack-expo-prs"
+      ],
+      "agentId": "bc-136d4e00-9460-4ad1-8b6a-7eae9ef6b4e0",
+      "runId": "run-ea42e3ec-c786-42fd-b768-62fc039c1d99",
+      "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/expo-ci-fixes.md",
+      "startedAt": "2026-08-25T17:39:57.734Z",
+      "finishedAt": "2026-08-25T17:48:45.497Z",
+      "lastUpdate": "2026-08-25T17:48:45.512Z",
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": "live-ui-verified",
+      "attempts": 1
+    },
+    {
+      "name": "verify-expo-ci-fixes",
+      "type": "verifier",
+      "branch": "`orch/expo-gametable/expo-ci-fixes` (commit `ce1ec07` — verifier artifacts only; no target source changes)",
+      "startingRef": "orch/expo-gametable/expo-ci-fixes",
+      "dependsOn": [
+        "expo-ci-fixes"
+      ],
+      "agentId": "bc-ee3a85ba-f465-4590-a358-66f4ebfafda6",
+      "runId": "run-fab96f6c-30f2-4c82-add7-41b191df2410",
+      "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-expo-ci-fixes.md",
+      "startedAt": "2026-08-25T17:48:49.411Z",
+      "finishedAt": "2026-08-25T17:59:42.890Z",
+      "lastUpdate": "2026-08-25T17:59:42.890Z",
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null,
+      "attempts": 1
+    },
+    {
+      "name": "expo-gametable-mvp",
+      "type": "worker",
+      "branch": "orch/expo-gametable/expo-gametable-mvp",
+      "startingRef": "evanbrierton/expo-gametable-7bff",
+      "dependsOn": [
+        "expo-ci-fixes"
+      ],
+      "agentId": "bc-4b33b5a7-8f96-4ade-9338-817369282735",
+      "runId": "run-52491bd4-60b6-49f2-911b-df28ba321300",
+      "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/expo-gametable-mvp.md",
+      "startedAt": "2026-08-25T17:49:19.946Z",
+      "finishedAt": "2026-08-25T17:58:43.418Z",
+      "lastUpdate": "2026-08-25T17:58:43.429Z",
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": "live-ui-verified",
+      "attempts": 1
+    },
+    {
+      "name": "verify-expo-gametable-mvp",
+      "type": "verifier",
+      "branch": "`orch/expo-gametable/expo-gametable-mvp` (commit `0270399` — verifier artifacts only)",
+      "startingRef": "orch/expo-gametable/expo-gametable-mvp",
+      "dependsOn": [
+        "expo-gametable-mvp"
+      ],
+      "agentId": "bc-31c6519c-dce7-496c-be4d-56d3a8a1a417",
+      "runId": "run-dcb96790-9e75-4c67-8e4b-f2f58840783c",
+      "parentAgentId": "bc-0a45f17d-eb83-4068-b6cb-a4ebe0f17bff",
+      "status": "handed-off",
+      "resultStatus": "finished",
+      "handoffPath": "handoffs/verify-expo-gametable-mvp.md",
+      "startedAt": "2026-08-25T17:58:44.755Z",
+      "finishedAt": "2026-08-25T18:05:17.377Z",
+      "lastUpdate": "2026-08-25T18:05:17.377Z",
+      "note": null,
+      "slackTs": null,
+      "prNumber": null,
+      "failureMode": null,
+      "verification": null,
+      "attempts": 1
+    }
+  ],
+  "attention": [
+    {
+      "at": "2026-08-25T17:35:20.810Z",
+      "message": "git-sync failed (stack-expo-prs pending -> running): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T17:39:49.148Z",
+      "message": "git-sync failed (stack-expo-prs running -> handed-off): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T17:39:49.272Z",
+      "message": "stack-expo-prs: verification self-reported (type-check-only)"
+    },
+    {
+      "at": "2026-08-25T17:39:55.113Z",
+      "message": "git-sync failed (verify-stack-expo-prs pending -> running): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T17:39:57.737Z",
+      "message": "git-sync failed (expo-ci-fixes pending -> running): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T17:39:59.390Z",
+      "message": "verify-stack-expo-prs: run.wait returned status=error but Agent.getRun still reports running; treating as dropped stream and retrying wait (attempt 1)"
+    },
+    {
+      "at": "2026-08-25T17:42:56.521Z",
+      "message": "git-sync failed (verify-stack-expo-prs running -> handed-off): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T17:48:45.505Z",
+      "message": "git-sync failed (expo-ci-fixes running -> handed-off): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T17:48:45.513Z",
+      "message": "expo-ci-fixes: verification self-reported (live-ui-verified)"
+    },
+    {
+      "at": "2026-08-25T17:48:49.414Z",
+      "message": "git-sync failed (verify-expo-ci-fixes pending -> running): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T17:49:19.950Z",
+      "message": "git-sync failed (expo-gametable-mvp pending -> running): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T17:56:20.905Z",
+      "message": "verify-expo-ci-fixes: SSE idle 341732ms, polled status=running; watchdog still waiting"
+    },
+    {
+      "at": "2026-08-25T17:56:20.911Z",
+      "message": "verify-expo-ci-fixes: tool_call idle 341739ms; last=2026-08-25T17:50:39.172Z"
+    },
+    {
+      "at": "2026-08-25T17:58:43.423Z",
+      "message": "git-sync failed (expo-gametable-mvp running -> handed-off): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T17:58:43.429Z",
+      "message": "expo-gametable-mvp: verification self-reported (live-ui-verified)"
+    },
+    {
+      "at": "2026-08-25T17:58:44.759Z",
+      "message": "git-sync failed (verify-expo-gametable-mvp pending -> running): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T17:59:42.895Z",
+      "message": "git-sync failed (verify-expo-ci-fixes running -> handed-off): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    },
+    {
+      "at": "2026-08-25T18:05:17.381Z",
+      "message": "git-sync failed (verify-expo-gametable-mvp running -> handed-off): Command failed: git -C /workspace/.orchestrate/expo-gametable add /workspace/.orchestrate/expo-gametable/state.json /workspace/.orchestrate/expo-gametable/plan.json /workspace/.orchestrate/expo-gameta…"
+    }
+  ]
+}
