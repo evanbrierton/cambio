@@ -28,6 +28,7 @@ import {
   MessageSquareOff,
   MoreHorizontal,
   Share2,
+  SquarePlay,
   Volume2,
   VolumeX,
   X,
@@ -646,6 +647,14 @@ function PlayerSeat({
           {isOwn ? " (you)" : ""}
         </h2>
         <div className="flex h-4 flex-nowrap items-center justify-center gap-1 overflow-hidden">
+          {emphasizeTurn && (
+            <span title={voice.turn} className="inline-flex shrink-0">
+              <SquarePlay
+                aria-label={voice.turn}
+                className="size-3 text-accent-alt animate-pulse"
+              />
+            </span>
+          )}
           {hasSwapFlash && (
             <span title="SWAPPED" className="inline-flex shrink-0">
               <ArrowLeftRight
@@ -1083,23 +1092,6 @@ export function GameTable({
             ) : undefined,
         }
       : null;
-
-  const viewer = view.players.find((p) => p.id === view.playerId);
-  const isMyTurn =
-    (viewer?.isCurrentTurn ?? false) &&
-    (view.phase === "playing" || view.phase === "cambio_final");
-
-  const turnOnlyToast: GameToastItem | null =
-    !hintsEnabled && !coachActive && isMyTurn
-      ? {
-          id: "turn",
-          message: voice.turn,
-          tone: "turn",
-          pulse: true,
-        }
-      : null;
-
-  const tableHintToast = hintsEnabled ? actionToast : turnOnlyToast;
 
   const showDrawnActionChrome =
     Boolean(view.drawnCard) &&
@@ -1861,15 +1853,15 @@ export function GameTable({
                     : ""
                 } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
               >
-                {tableHintToast ? (
+                {actionToast ? (
                   <div
                     data-table-hint
                     className="table-hint table-hint-slot shrink-0 mx-auto w-full flex items-center justify-center"
                   >
                     <AnimatePresence initial={false} mode="wait">
                       <GameToast
-                        key={tableHintToast.id}
-                        toast={tableHintToast}
+                        key={actionToast.id}
+                        toast={actionToast}
                         inline
                         className="p-2! text-[9px]! sm:text-[10px]! leading-[1.45]! shadow-none"
                       />
