@@ -20,6 +20,10 @@ function isLocalHostname(hostname: string): boolean {
 }
 
 export function getPartyHost(): string {
+  if (process.env.EXPO_PUBLIC_PARTY_HOST) {
+    return process.env.EXPO_PUBLIC_PARTY_HOST;
+  }
+
   if (process.env.NEXT_PUBLIC_PARTYKIT_HOST) {
     return process.env.NEXT_PUBLIC_PARTYKIT_HOST;
   }
