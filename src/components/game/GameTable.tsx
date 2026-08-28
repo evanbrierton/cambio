@@ -648,9 +648,9 @@ function PlayerSeat({
         </h2>
         <div className="flex h-4 flex-nowrap items-center justify-center gap-1 overflow-hidden">
           {emphasizeTurn && (
-            <span title={voice.turn} className="inline-flex shrink-0">
+            <span title={voice.yourTurn} className="inline-flex shrink-0">
               <SquarePlay
-                aria-label={voice.turn}
+                aria-label={voice.yourTurn}
                 className="size-3 text-accent-alt animate-pulse"
               />
             </span>
@@ -1106,7 +1106,7 @@ export function GameTable({
   const showDeckTurnChip = Boolean(currentTurnPlayer) && isTurnPhase;
   const deckTurnChipLabel = currentTurnPlayer
     ? isMyTurn
-      ? voice.turn
+      ? voice.yourTurn
       : voice.turnOf(currentTurnPlayer.name)
     : "";
 
