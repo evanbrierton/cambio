@@ -68,6 +68,7 @@ export type ThemeVoice = {
   gameLog: string;
   host: string;
   turn: string;
+  turnOf: (name: string) => string;
   cambio: string;
   cambioSelf: string;
   cambioFinalRound: string;
@@ -285,6 +286,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     gameLog: "GAME LOG",
     host: "HOST",
     turn: "TURN",
+    turnOf: (name) => `${name.toUpperCase()}'S TURN`,
     cambio: "CAMBIO",
     cambioSelf: "YOU CALLED IT!",
     cambioFinalRound: "CALLED CAMBIO — FINAL ROUND!",
@@ -456,6 +458,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     gameLog: "Table talk",
     host: "Dealer",
     turn: "Your action",
+    turnOf: (name) => `${name}'s action`,
     cambio: "Cambio",
     cambioSelf: "You called Cambio!",
     cambioFinalRound: "called Cambio — final round",
@@ -626,6 +629,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     gameLog: "Party feed",
     host: "Host",
     turn: "Go go go!",
+    turnOf: (name) => `${name}'s turn!`,
     cambio: "Cambio!",
     cambioSelf: "You called it!",
     cambioFinalRound: "called Cambio — last dance!",
@@ -793,6 +797,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     gameLog: "Log",
     host: "Host",
     turn: "Turn",
+    turnOf: (name) => `${name}'s turn`,
     cambio: "Cambio",
     cambioSelf: "You called Cambio",
     cambioFinalRound: "called Cambio — final round",
@@ -959,6 +964,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     gameLog: "Notes",
     host: "Host",
     turn: "Your turn",
+    turnOf: (name) => `${name}'s turn`,
     cambio: "Cambio",
     cambioSelf: "You called Cambio",
     cambioFinalRound: "called Cambio — final round",
@@ -1129,6 +1135,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     gameLog: "Marginalia",
     host: "Librarian",
     turn: "Your turn",
+    turnOf: (name) => `${name}'s turn`,
     cambio: "Cambio",
     cambioSelf: "You closed the book",
     cambioFinalRound: "closed the book — final round",
@@ -1299,6 +1306,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     gameLog: "Campfire tales",
     host: "Host",
     turn: "Your turn",
+    turnOf: (name) => `${name}'s turn`,
     cambio: "Cambio",
     cambioSelf: "You called Cambio",
     cambioFinalRound: "called Cambio — last logs on the fire",
@@ -1467,6 +1475,7 @@ export const THEME_VOICES: Record<ThemeId, ThemeVoice> = {
     gameLog: "Log",
     host: "Host",
     turn: "Turn",
+    turnOf: (name) => `${name}'s turn`,
     cambio: "Cambio",
     cambioSelf: "You called Cambio",
     cambioFinalRound: "called Cambio — final round",

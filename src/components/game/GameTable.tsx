@@ -1093,6 +1093,23 @@ export function GameTable({
         }
       : null;
 
+  const currentTurnPlayer = useMemo(
+    () =>
+      view.players.find((player) => player.isCurrentTurn && !player.isWaiting) ??
+      null,
+    [view.players],
+  );
+  const isTurnPhase =
+    view.phase === "playing" || view.phase === "cambio_final";
+  const isMyTurn =
+    currentTurnPlayer?.id === view.playerId && isTurnPhase;
+  const showDeckTurnChip = Boolean(currentTurnPlayer) && isTurnPhase;
+  const deckTurnChipLabel = currentTurnPlayer
+    ? isMyTurn
+      ? voice.turn
+      : voice.turnOf(currentTurnPlayer.name)
+    : "";
+
   const showDrawnActionChrome =
     Boolean(view.drawnCard) &&
     !snapGivePending &&
@@ -1413,7 +1430,7 @@ export function GameTable({
           !hintsEnabled &&
           isOwn &&
           player.isCurrentTurn &&
-          (view.phase === "playing" || view.phase === "cambio_final")
+          isTurnPhase
         }
         voice={voice}
         onCardClick={handleCardClick}
@@ -1843,16 +1860,31 @@ export function GameTable({
             {view.phase !== "lobby" && (
               <div
                 ref={tableDeckRef}
-                className={`table-deck pixel-border bg-surface flex flex-col min-h-0 ${
+                className={`table-deck pixel-border bg-surface flex flex-col min-h-0 relative ${
                   playerGridEnabled
                     ? "table-deck-compact shrink-0"
                     : "px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 gap-2 sm:gap-2.5 flex-1 max-h-[min(42vh,22rem)]"
+                } ${
+                  isMyTurn && !snapWindowActive
+                    ? "table-deck-your-turn ring-2 ring-accent-alt shadow-glow-accent-alt"
+                    : ""
                 } ${
                   view.canDrawFromDeck && !snapGivePending
                     ? "table-deck-drawable ring-2 ring-accent-alt"
                     : ""
                 } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
               >
+                {showDeckTurnChip ? (
+                  <span
+                    className={`table-deck-turn-chip chip-btn ${
+                      isMyTurn ? "table-deck-turn-chip-mine" : ""
+                    }`}
+                    aria-live="polite"
+                  >
+                    {deckTurnChipLabel}
+                  </span>
+                ) : null}
+
                 {actionToast ? (
                   <div
                     data-table-hint

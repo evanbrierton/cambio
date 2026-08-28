@@ -3247,6 +3247,54 @@ html.native-shell [data-pwa-install] {
   --table-drawn-h: 6.25rem;
   --table-pile-w: 3.5rem;
   --table-pile-h: 5rem;
+  position: relative;
+}
+
+.table-deck-turn-chip {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 2;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  font-size: 8px;
+  line-height: 1.25;
+  padding: 0.3rem 0.55rem;
+  white-space: nowrap;
+  max-width: calc(100% - 1rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-color: var(--accent-alt);
+  color: var(--accent-alt);
+  background: var(--surface-elevated);
+}
+
+.table-deck-turn-chip-mine {
+  border-color: var(--accent-alt);
+  color: var(--accent-alt);
+  background: var(--swap-hint);
+  animation: table-turn-chip-pulse 1.8s ease-in-out infinite;
+}
+
+.table-deck-your-turn {
+  background: color-mix(in srgb, var(--accent-alt) 14%, var(--surface));
+}
+
+@keyframes table-turn-chip-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.82;
+  }
+}
+
+@media (min-width: 640px) {
+  .table-deck-turn-chip {
+    font-size: 9px;
+    padding: 0.35rem 0.65rem;
+  }
 }
 
 /* Grid view: keep the table compact so player seats keep the vertical space */
