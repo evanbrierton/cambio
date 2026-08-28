@@ -3271,7 +3271,10 @@ html.native-shell [data-pwa-install] {
   max-width: calc(100% - 1rem);
   overflow: visible;
   text-overflow: ellipsis;
-  border-color: var(--accent-alt);
+  border-color: var(--border);
+  border-bottom-width: 0;
+  border-radius: var(--radius-chip) var(--radius-chip) 0 0;
+  box-shadow: none;
   color: var(--accent-alt);
   background: var(--surface);
   isolation: isolate;
@@ -3280,17 +3283,16 @@ html.native-shell [data-pwa-install] {
 .table-deck-turn-chip::after {
   content: "";
   position: absolute;
-  left: calc(-1 * var(--border-weight));
-  right: calc(-1 * var(--border-weight));
+  left: var(--border-weight);
+  right: var(--border-weight);
   top: 50%;
-  height: calc(var(--border-weight) + 2px);
+  height: var(--border-weight);
   transform: translateY(-50%);
   background: inherit;
   z-index: -1;
 }
 
 .table-deck-turn-chip-mine {
-  border-color: var(--accent-alt);
   color: var(--accent-alt);
   background: color-mix(in srgb, var(--accent-alt) 22%, var(--surface));
   box-shadow: 0 0 12px 2px var(--glow-accent-alt);
