@@ -1865,9 +1865,7 @@ export function GameTable({
                     ? "table-deck-compact shrink-0"
                     : "px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 gap-2 sm:gap-2.5 flex-1 max-h-[min(42vh,22rem)]"
                 } ${
-                  isMyTurn && !snapWindowActive
-                    ? "table-deck-your-turn ring-2 ring-accent-alt shadow-glow-accent-alt"
-                    : ""
+                  isMyTurn && !snapWindowActive ? "table-deck-your-turn" : ""
                 } ${
                   view.canDrawFromDeck && !snapGivePending
                     ? "table-deck-drawable ring-2 ring-accent-alt"
