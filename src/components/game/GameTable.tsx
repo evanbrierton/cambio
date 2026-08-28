@@ -1859,31 +1859,38 @@ export function GameTable({
           >
             {view.phase !== "lobby" && (
               <div
-                ref={tableDeckRef}
-                className={`table-deck pixel-border bg-surface flex flex-col min-h-0 relative ${
+                className={`table-deck-shell min-w-0 ${
                   playerGridEnabled
-                    ? "table-deck-compact shrink-0"
-                    : "px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 gap-2 sm:gap-2.5 flex-1 max-h-[min(42vh,22rem)]"
-                } ${
-                  isMyTurn && !snapWindowActive ? "table-deck-your-turn" : ""
-                } ${
-                  view.canDrawFromDeck && !snapGivePending
-                    ? "table-deck-drawable ring-2 ring-accent-alt"
-                    : ""
-                } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
+                    ? "shrink-0"
+                    : "flex-1 min-h-0 max-h-[min(42vh,22rem)]"
+                }`}
               >
-                {showDeckTurnChip ? (
-                  <span
-                    className={`table-deck-turn-chip chip-btn ${
-                      isMyTurn ? "table-deck-turn-chip-mine" : ""
-                    }`}
-                    aria-live="polite"
-                  >
-                    {deckTurnChipLabel}
-                  </span>
-                ) : null}
+                <div
+                  ref={tableDeckRef}
+                  className={`table-deck pixel-border bg-surface flex flex-col min-h-0 relative h-full ${
+                    playerGridEnabled
+                      ? "table-deck-compact shrink-0"
+                      : "px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 gap-2 sm:gap-2.5"
+                  } ${
+                    isMyTurn && !snapWindowActive ? "table-deck-your-turn" : ""
+                  } ${
+                    view.canDrawFromDeck && !snapGivePending
+                      ? "table-deck-drawable ring-2 ring-accent-alt"
+                      : ""
+                  } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
+                >
+                  {showDeckTurnChip ? (
+                    <span
+                      className={`table-deck-turn-chip chip-btn ${
+                        isMyTurn ? "table-deck-turn-chip-mine" : ""
+                      }`}
+                      aria-live="polite"
+                    >
+                      {deckTurnChipLabel}
+                    </span>
+                  ) : null}
 
-                {actionToast ? (
+                  {actionToast ? (
                   <div
                     data-table-hint
                     className="table-hint table-hint-slot shrink-0 mx-auto w-full flex items-center justify-center"
@@ -2179,6 +2186,7 @@ export function GameTable({
                     </AnimatePresence>
                   </div>
                 ) : null}
+              </div>
               </div>
             )}
 

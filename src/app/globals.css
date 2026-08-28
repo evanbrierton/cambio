@@ -3248,6 +3248,13 @@ html.native-shell [data-pwa-install] {
   --table-pile-w: 3.5rem;
   --table-pile-h: 5rem;
   position: relative;
+  overflow: visible;
+}
+
+.table-deck-shell {
+  position: relative;
+  /* Reserve space above the deck border for the turn chip's upper half. */
+  padding-top: 0.75rem;
 }
 
 .table-deck-turn-chip {
@@ -3310,6 +3317,10 @@ html.native-shell [data-pwa-install] {
   .table-deck-turn-chip {
     font-size: 9px;
     padding: 0.35rem 0.65rem;
+  }
+
+  .table-deck-shell {
+    padding-top: 0.875rem;
   }
 }
 
