@@ -35,7 +35,8 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 import { PixelCard } from "@/components/cards/PixelCard";
 import { CambioCallOverlay } from "@/components/game/CambioCallOverlay";
 import { ChatPanel } from "@/components/game/ChatPanel";
@@ -877,6 +878,7 @@ export function GameTable({
   const snapHapticKeyRef = useRef<string | null>(null);
   const cambioHapticKeyRef = useRef<string | null>(null);
   const tableDeckRef = useRef<HTMLDivElement>(null);
+  const deckTurnChipRef = useRef<HTMLSpanElement>(null);
 
   useGameSounds(
     view,
@@ -1109,6 +1111,32 @@ export function GameTable({
       ? voice.yourTurn
       : voice.turnOf(currentTurnPlayer.name)
     : "";
+
+  const [deckTurnChipHalfWidth, setDeckTurnChipHalfWidth] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!showDeckTurnChip) {
+      setDeckTurnChipHalfWidth(0);
+      return;
+    }
+
+    const el = deckTurnChipRef.current;
+    if (!el) return;
+
+    const measure = () => setDeckTurnChipHalfWidth(el.offsetWidth / 2);
+    measure();
+
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [showDeckTurnChip, deckTurnChipLabel]);
+
+  const deckTurnChipShellStyle =
+    deckTurnChipHalfWidth > 0
+      ? ({
+          "--table-deck-turn-chip-half": `${deckTurnChipHalfWidth}px`,
+        } as CSSProperties)
+      : undefined;
 
   const showDrawnActionChrome =
     Boolean(view.drawnCard) &&
@@ -1864,10 +1892,11 @@ export function GameTable({
                     ? "shrink-0"
                     : "flex-1 min-h-0 max-h-[min(42vh,22rem)]"
                 }`}
+                style={deckTurnChipShellStyle}
               >
                 <div
                   ref={tableDeckRef}
-                  className={`table-deck pixel-border bg-surface flex flex-col min-h-0 relative h-full ${
+                  className={`table-deck pixel-border bg-surface flex flex-col min-h-0 relative flex-1 ${
                     playerGridEnabled
                       ? "table-deck-compact shrink-0"
                       : "px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 gap-2 sm:gap-2.5"
@@ -1875,21 +1904,12 @@ export function GameTable({
                     isMyTurn && !snapWindowActive ? "table-deck-your-turn" : ""
                   } ${
                     view.canDrawFromDeck && !snapGivePending
-                      ? "table-deck-drawable ring-2 ring-accent-alt"
+                      ? showDeckTurnChip
+                        ? "table-deck-drawable"
+                        : "table-deck-drawable ring-2 ring-accent-alt"
                       : ""
                   } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
                 >
-                  {showDeckTurnChip ? (
-                    <span
-                      className={`table-deck-turn-chip chip-btn ${
-                        isMyTurn ? "table-deck-turn-chip-mine" : ""
-                      }`}
-                      aria-live="polite"
-                    >
-                      {deckTurnChipLabel}
-                    </span>
-                  ) : null}
-
                   {actionToast ? (
                   <div
                     data-table-hint
@@ -2187,6 +2207,17 @@ export function GameTable({
                   </div>
                 ) : null}
               </div>
+                {showDeckTurnChip ? (
+                  <span
+                    ref={deckTurnChipRef}
+                    className={`table-deck-turn-chip ${
+                      isMyTurn ? "table-deck-turn-chip-mine" : ""
+                    }`}
+                    aria-live="polite"
+                  >
+                    {deckTurnChipLabel}
+                  </span>
+                ) : null}
               </div>
             )}
 
