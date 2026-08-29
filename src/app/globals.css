@@ -3257,64 +3257,32 @@ html.native-shell [data-pwa-install] {
   flex-direction: column;
   align-items: stretch;
   min-width: 0;
-  --table-deck-turn-chip-inset: 0.625rem;
-  --table-deck-turn-chip-half: 4rem;
-  padding-top: var(--table-deck-turn-chip-inset);
-}
-
-.table-deck-shell:has(.table-deck-turn-chip) .table-deck {
-  position: relative;
-  z-index: 1;
-  border-top-color: transparent;
-}
-
-.table-deck-shell:has(.table-deck-turn-chip) .table-deck::before,
-.table-deck-shell:has(.table-deck-turn-chip) .table-deck::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  height: var(--border-weight);
-  width: max(0px, calc(50% - var(--table-deck-turn-chip-half)));
-  background: var(--border);
-  pointer-events: none;
-}
-
-.table-deck-shell:has(.table-deck-turn-chip) .table-deck::before {
-  left: 0;
-}
-
-.table-deck-shell:has(.table-deck-turn-chip) .table-deck::after {
-  right: 0;
+  gap: 0.375rem;
 }
 
 .table-deck-turn-chip {
-  --table-deck-turn-chip-bg: var(--surface-card);
-  position: absolute;
-  top: var(--table-deck-turn-chip-inset);
-  left: 50%;
-  z-index: 3;
-  transform: translate(-50%, -50%);
+  align-self: center;
+  flex-shrink: 0;
   pointer-events: none;
   font-family: var(--font-display);
   font-size: 8px;
   line-height: 1.25;
   letter-spacing: var(--display-tracking);
   text-transform: var(--display-transform);
-  padding: 0.3rem 0.55rem;
+  padding: 0.25rem 0.55rem;
   white-space: nowrap;
   max-width: calc(100% - 1rem);
   overflow: hidden;
   text-overflow: ellipsis;
   border: var(--border-weight) solid var(--border);
-  border-bottom-color: var(--table-deck-turn-chip-bg);
   border-radius: var(--radius-chip);
   box-shadow: none;
   color: var(--accent-alt);
-  background-color: var(--table-deck-turn-chip-bg);
+  background-color: var(--surface-card);
 }
 
 .table-deck-turn-chip-mine {
-  --table-deck-turn-chip-bg: color-mix(
+  background: color-mix(
     in srgb,
     var(--accent-alt) 22%,
     var(--surface-card)
@@ -3342,13 +3310,9 @@ html.native-shell [data-pwa-install] {
 }
 
 @media (min-width: 640px) {
-  .table-deck-shell {
-    --table-deck-turn-chip-inset: 0.75rem;
-  }
-
   .table-deck-turn-chip {
     font-size: 9px;
-    padding: 0.35rem 0.65rem;
+    padding: 0.3rem 0.65rem;
   }
 }
 
