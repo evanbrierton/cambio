@@ -3247,6 +3247,73 @@ html.native-shell [data-pwa-install] {
   --table-drawn-h: 6.25rem;
   --table-pile-w: 3.5rem;
   --table-pile-h: 5rem;
+  position: relative;
+  overflow: visible;
+}
+
+.table-deck-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  min-width: 0;
+  gap: 0.375rem;
+}
+
+.table-deck-turn-chip {
+  align-self: center;
+  flex-shrink: 0;
+  pointer-events: none;
+  font-family: var(--font-display);
+  font-size: 8px;
+  line-height: 1.25;
+  letter-spacing: var(--display-tracking);
+  text-transform: var(--display-transform);
+  padding: 0.25rem 0.55rem;
+  white-space: nowrap;
+  max-width: calc(100% - 1rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border: var(--border-weight) solid var(--border);
+  border-radius: var(--radius-chip);
+  box-shadow: none;
+  color: var(--accent-alt);
+  background-color: var(--surface-card);
+}
+
+.table-deck-turn-chip-mine {
+  background: color-mix(
+    in srgb,
+    var(--accent-alt) 22%,
+    var(--surface-card)
+  );
+  box-shadow: 0 0 12px 2px var(--glow-accent-alt);
+}
+
+.table-deck-your-turn {
+  background: color-mix(in srgb, var(--accent-alt) 14%, var(--surface));
+  animation: table-deck-your-turn-glow 2s ease-in-out infinite;
+}
+
+@keyframes table-deck-your-turn-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--accent-alt) 55%, transparent),
+      0 0 14px 2px var(--glow-accent-alt);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px var(--accent-alt),
+      0 0 26px 6px var(--glow-accent-alt);
+  }
+}
+
+@media (min-width: 640px) {
+  .table-deck-turn-chip {
+    font-size: 9px;
+    padding: 0.3rem 0.65rem;
+  }
 }
 
 /* Grid view: keep the table compact so player seats keep the vertical space */

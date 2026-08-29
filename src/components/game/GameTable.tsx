@@ -28,6 +28,7 @@ import {
   MessageSquareOff,
   MoreHorizontal,
   Share2,
+  SquarePlay,
   Volume2,
   VolumeX,
   X,
@@ -646,6 +647,14 @@ function PlayerSeat({
           {isOwn ? " (you)" : ""}
         </h2>
         <div className="flex h-4 flex-nowrap items-center justify-center gap-1 overflow-hidden">
+          {emphasizeTurn && (
+            <span title={voice.yourTurn} className="inline-flex shrink-0">
+              <SquarePlay
+                aria-label={voice.yourTurn}
+                className="size-3 text-accent-alt animate-pulse"
+              />
+            </span>
+          )}
           {hasSwapFlash && (
             <span title="SWAPPED" className="inline-flex shrink-0">
               <ArrowLeftRight
@@ -1084,22 +1093,22 @@ export function GameTable({
         }
       : null;
 
-  const viewer = view.players.find((p) => p.id === view.playerId);
+  const currentTurnPlayer = useMemo(
+    () =>
+      view.players.find((player) => player.isCurrentTurn && !player.isWaiting) ??
+      null,
+    [view.players],
+  );
+  const isTurnPhase =
+    view.phase === "playing" || view.phase === "cambio_final";
   const isMyTurn =
-    (viewer?.isCurrentTurn ?? false) &&
-    (view.phase === "playing" || view.phase === "cambio_final");
-
-  const turnOnlyToast: GameToastItem | null =
-    !hintsEnabled && !coachActive && isMyTurn
-      ? {
-          id: "turn",
-          message: voice.turn,
-          tone: "turn",
-          pulse: true,
-        }
-      : null;
-
-  const tableHintToast = hintsEnabled ? actionToast : turnOnlyToast;
+    currentTurnPlayer?.id === view.playerId && isTurnPhase;
+  const showDeckTurnChip = Boolean(currentTurnPlayer) && isTurnPhase;
+  const deckTurnChipLabel = currentTurnPlayer
+    ? isMyTurn
+      ? voice.yourTurn
+      : voice.turnOf(currentTurnPlayer.name)
+    : "";
 
   const showDrawnActionChrome =
     Boolean(view.drawnCard) &&
@@ -1421,7 +1430,7 @@ export function GameTable({
           !hintsEnabled &&
           isOwn &&
           player.isCurrentTurn &&
-          (view.phase === "playing" || view.phase === "cambio_final")
+          isTurnPhase
         }
         voice={voice}
         onCardClick={handleCardClick}
@@ -1850,26 +1859,45 @@ export function GameTable({
           >
             {view.phase !== "lobby" && (
               <div
-                ref={tableDeckRef}
-                className={`table-deck pixel-border bg-surface flex flex-col min-h-0 ${
+                className={`table-deck-shell min-w-0 ${
                   playerGridEnabled
-                    ? "table-deck-compact shrink-0"
-                    : "px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 gap-2 sm:gap-2.5 flex-1 max-h-[min(42vh,22rem)]"
-                } ${
-                  view.canDrawFromDeck && !snapGivePending
-                    ? "table-deck-drawable ring-2 ring-accent-alt"
-                    : ""
-                } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
+                    ? "shrink-0"
+                    : "flex-1 min-h-0 max-h-[min(42vh,22rem)]"
+                }`}
               >
-                {tableHintToast ? (
+                {showDeckTurnChip ? (
+                  <span
+                    className={`table-deck-turn-chip ${
+                      isMyTurn ? "table-deck-turn-chip-mine" : ""
+                    }`}
+                    aria-live="polite"
+                  >
+                    {deckTurnChipLabel}
+                  </span>
+                ) : null}
+                <div
+                  ref={tableDeckRef}
+                  className={`table-deck pixel-border bg-surface flex flex-col min-h-0 relative flex-1 ${
+                    playerGridEnabled
+                      ? "table-deck-compact shrink-0"
+                      : "px-2 py-2 sm:px-3 sm:py-2.5 lg:px-4 lg:py-3 gap-2 sm:gap-2.5"
+                  } ${
+                    isMyTurn && !snapWindowActive ? "table-deck-your-turn" : ""
+                  } ${
+                    view.canDrawFromDeck && !snapGivePending
+                      ? "table-deck-drawable ring-2 ring-accent-alt"
+                      : ""
+                  } ${snapWindowActive ? "snap-window-deck ring-4 ring-danger/70" : ""}`}
+                >
+                  {actionToast ? (
                   <div
                     data-table-hint
                     className="table-hint table-hint-slot shrink-0 mx-auto w-full flex items-center justify-center"
                   >
                     <AnimatePresence initial={false} mode="wait">
                       <GameToast
-                        key={tableHintToast.id}
-                        toast={tableHintToast}
+                        key={actionToast.id}
+                        toast={actionToast}
                         inline
                         className="p-2! text-[9px]! sm:text-[10px]! leading-[1.45]! shadow-none"
                       />
@@ -2157,6 +2185,7 @@ export function GameTable({
                     </AnimatePresence>
                   </div>
                 ) : null}
+              </div>
               </div>
             )}
 
